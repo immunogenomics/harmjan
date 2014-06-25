@@ -15,6 +15,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,8 +56,10 @@ public class ScatterPlot2 {
     private boolean interceptAtZero;
     private double rangeX;
     private double rangeY;
-    private double unitX;
-    private double unitY;
+    private double unitX = Double.NaN;
+    private double unitY = Double.NaN;
+    private final String xAxisTitle;
+    private final String yAxisTitle;
 
     public ScatterPlot2(double[][] x, double[][] y, boolean interceptAtZero, String[] plotTitles, String xAxisTitle, String yAxisTitle,
             String figureTitle, int plotWidth, int plotHeight, int plotMargin, int margin, int nrColumns, String outputFileName) {
@@ -71,6 +74,8 @@ public class ScatterPlot2 {
         this.nrColumns = nrColumns;
         this.outfilename = outputFileName;
         this.interceptAtZero = interceptAtZero;
+        this.xAxisTitle = xAxisTitle;
+        this.yAxisTitle = yAxisTitle;
         if (outputFileName.toLowerCase().endsWith(".jpg")) {
             this.format = ScatterPlot.OUTPUTFORMAT.JPG;
         } else if (outputFileName.toLowerCase().endsWith(".png")) {
@@ -99,7 +104,7 @@ public class ScatterPlot2 {
             figureHeight = (2 * margin) + (nrRows * plotHeight) + ((nrRows - 1) * plotMargin);
         }
 
-        System.out.println("Figure will be " + nrColumns + " columns and " + nrRows + " rows");
+        System.out.println("Scatterplot will be " + nrColumns + " columns and " + nrRows + " rows");
 
         if (format == ScatterPlot.OUTPUTFORMAT.PDF) {
             Rectangle rectangle = new Rectangle(figureWidth, figureHeight);
@@ -144,13 +149,13 @@ public class ScatterPlot2 {
         g2d.setColor(color);
 //        g2d.drawRect(margin, margin, graphHeight - (2 * margin), graphWidth - (2 * margin));
 
-        g2d.setColor(color);
-
+        g2d.drawString(figureTitle, margin, margin/2);
         // 
         determineRange();
 
         // draw axes
         drawAxis();
+
     }
 
     private void determineRange() {
@@ -197,10 +202,12 @@ public class ScatterPlot2 {
 
 //        System.out.println("MinX: " + minX + "\nMaxX: " + maxX + "\nMinY: " + minY + "\nMaxY: " + maxY + "\nRangeX: " + rangeX + "\nRangeY: " + rangeY + "\nUnitX: " + unitX + "\nUnitY: " + unitY);
         if (Double.isNaN(unitX)) {
+
             unitX = determineUnit(rangeX);
             if (unitX >= Math.abs(minX) && unitX >= Math.abs(maxX)) {
                 unitX /= 10;
             }
+            System.out.println("Determined unitX: " + unitX);
         }
         if (Double.isNaN(unitY)) {
             unitY = determineUnit(rangeY);
@@ -208,6 +215,7 @@ public class ScatterPlot2 {
             if (unitY >= Math.abs(minY) && unitY >= Math.abs(maxY)) {
                 unitY /= 10;
             }
+            System.out.println("Determined unitY: " + unitY);
         }
 
         // round off the limits towards the unit
@@ -241,7 +249,7 @@ public class ScatterPlot2 {
         }
 
         remainder = Math.abs(minY) % unitY; // -8 , unit == 10, remainder = 8 // diff = 2
-        System.out.println(minY + "\t" + unitY + "\t" + remainder);
+//        System.out.println(minY + "\t" + unitY + "\t" + remainder);
         if (remainder > 0d && minY != 0) {
             if (minY < 0) {
                 minY -= (unitY - remainder);
@@ -249,7 +257,7 @@ public class ScatterPlot2 {
                 minY -= remainder;
             }
         }
-        System.out.println(minY + "\t" + unitY + "\t" + remainder);
+//        System.out.println(minY + "\t" + unitY + "\t" + remainder);
         rangeY = Math.abs(minY - maxY);
         if (rangeY == 0) {
             maxY = unitY;
@@ -287,118 +295,131 @@ public class ScatterPlot2 {
         FontMetrics fontmetrics = g2d.getFontMetrics();
         int tickFontHeight = fontmetrics.getHeight();
 
+        AffineTransform cc = new AffineTransform();
+        cc.setToRotation( -(Math.PI / 2.0));
+        AffineTransform norm = new AffineTransform();
+
         // x-axis
-        for (int c = 0; c < nrColumns; c++) {
+        for (int sample = 0; sample < x.length; sample++) {
+            int r = sample / nrColumns;
+            int c = sample % nrColumns;
             int columnXStart = margin + (c * plotWidth) + (c * plotMargin);
-            for (int r = 0; r < nrRows; r++) {
-                int rowYStart = margin + (r * plotHeight) + (r * plotMargin);
+            int rowYStart = margin + (r * plotHeight) + (r * plotMargin);
 
-                // draw box ?
-                g2d.drawRect(columnXStart, rowYStart, plotWidth, plotHeight);
+            g2d.drawString(plotTitles[sample], columnXStart, rowYStart - 20);
 
-                int xposYAxis = 0;
-                int yposXAxis = 0;
-                if (minY >= 0) {
-                    // all Y values above 0, X axis starts at bottom left: |_
-                    g2d.drawLine(columnXStart, rowYStart + plotHeight, columnXStart + plotWidth, rowYStart + plotHeight);
-                    yposXAxis = rowYStart + plotHeight;
-                } else if (maxY <= 0) {
-                    // all Y values below 0, X axis starts at top left 
-                    g2d.drawLine(columnXStart, rowYStart, columnXStart + plotWidth, rowYStart);
-                    yposXAxis = rowYStart;
-                } else {
-                    // X-axis crosses the y-axis somewhere, at DIFF
-                    // this method does show some rounding errors at the moment..
-                    int diff = (int) Math.ceil((Math.abs(minY) / rangeY) * plotHeight);
-                    yposXAxis = rowYStart + plotHeight - diff;
-                    g2d.drawLine(columnXStart, yposXAxis, columnXStart + plotWidth, yposXAxis);
+            // draw box ?
+            g2d.drawRect(columnXStart - 10, rowYStart - 10, plotWidth + 20, plotHeight + 20);
 
-                }
+            g2d.drawString(xAxisTitle, columnXStart, rowYStart + plotHeight + 20);
+            g2d.setTransform(cc);
 
-                // y-axis
-                if (minX > 0) {
-                    // all X values above 0, Y-axis starts at top left
-                    g2d.drawLine(columnXStart, rowYStart, columnXStart, rowYStart + plotHeight);
-                    xposYAxis = columnXStart;
-                } else if (maxX <= 0) {
-                    // all X values below 0, axis starts at top right 
-                    g2d.drawLine(columnXStart + plotWidth, rowYStart, columnXStart + plotWidth, rowYStart + plotHeight);
-                    xposYAxis = columnXStart + plotWidth;
-                } else {
-                    // Y-axis crosses the X-axis somewhere, at DIFF
-                    // this method does show some rounding errors at the moment..
-                    int diff = (int) Math.ceil((Math.abs(minX) / rangeX) * plotWidth);
-                    xposYAxis = columnXStart + diff;
-                    g2d.drawLine(xposYAxis, rowYStart, xposYAxis, rowYStart + plotHeight);
+            g2d.drawString(yAxisTitle, columnXStart - 40, rowYStart + plotHeight);
 
-                }
+            g2d.setTransform(norm);
 
-                // X-ticks
-                if (!Double.isNaN(unitX)) {
-                    // start drawing from minX, add one unitX at a time..
-                    // first round minX using the unitX
-                    double tickX = minX - (minX % unitX);
-
-                    while (tickX <= maxX) {
-
-                        double nonroundedPerc = Math.abs(minX - tickX) / rangeX;
-//                double roundedPerc = roundToDecimals((nonroundedPerc), 2);
-                        int diff = (int) Math.floor(nonroundedPerc * plotWidth); // for the position relative to min and maxX
-
-                        String tickLabelFormatted = null;
-                        if (unitX > 10000 || unitX < 0.001) {
-                            tickLabelFormatted = new DecimalFormat("0.#E0").format(tickX);
-                        } else {
-                            tickLabelFormatted = new DecimalFormat("#.###").format(tickX);
-                        }
-
-                        if (tickX == 0) {
-                            g2d.drawLine(xposYAxis, yposXAxis - 3, xposYAxis, yposXAxis + 3);
-                            int nrPixelsString = g2d.getFontMetrics().stringWidth(tickLabelFormatted) / 2;
-                            g2d.drawString(tickLabelFormatted, columnXStart + diff - nrPixelsString, yposXAxis + tickFontHeight + 3);
-
-                        } else {
-                            g2d.drawLine(columnXStart + diff, yposXAxis - 3, columnXStart + diff, yposXAxis + 3);
-                            int nrPixelsString = g2d.getFontMetrics().stringWidth(tickLabelFormatted) / 2;
-                            g2d.drawString(tickLabelFormatted, columnXStart + diff - nrPixelsString, yposXAxis + tickFontHeight + 3);
-
-                        }
-
-                        tickX += unitX;
-
-                    }
-                }
-
-                // Y-ticks
-                if (!Double.isNaN(unitY)) {
-                    double tickY = minY - (minY % unitY);
-                    while (tickY <= maxY) {
-
-                        double nonroundedPerc = Math.abs(minY - tickY) / rangeY;
-
-//                double perc = roundToDecimals((Math.abs(minY - tickY) / rangeY), 2);
-                        int diff = (int) Math.floor(nonroundedPerc * plotHeight);
-                        String tickLabelFormatted = null;
-                        if (unitY > 100000 || unitY < 0.0001) {
-                            tickLabelFormatted = new DecimalFormat("0.#E0").format(tickY);
-                        } else {
-                            tickLabelFormatted = new DecimalFormat("#.###").format(tickY);
-                        }
-
-                        if (tickY == 0) {
-                            g2d.drawLine(xposYAxis - 3, yposXAxis, xposYAxis + 3, yposXAxis);
-                            g2d.drawString(tickLabelFormatted, xposYAxis - g2d.getFontMetrics().stringWidth(tickLabelFormatted) - 5, rowYStart + plotHeight - diff + (tickFontHeight / 2) - 3);
-                        } else {
-                            g2d.drawLine(xposYAxis - 3, rowYStart + plotHeight - diff, xposYAxis + 3, rowYStart + plotHeight - diff);
-                            g2d.drawString(tickLabelFormatted, xposYAxis - g2d.getFontMetrics().stringWidth(tickLabelFormatted) - 5, rowYStart + plotHeight - diff + (tickFontHeight / 2) - 3);
-                        }
-
-                        tickY += unitY;
-                    }
-                }
+            int xposYAxis = 0;
+            int yposXAxis = 0;
+            if (minY >= 0) {
+                // all Y values above 0, X axis starts at bottom left: |_
+                g2d.drawLine(columnXStart, rowYStart + plotHeight, columnXStart + plotWidth, rowYStart + plotHeight);
+                yposXAxis = rowYStart + plotHeight;
+            } else if (maxY <= 0) {
+                // all Y values below 0, X axis starts at top left 
+                g2d.drawLine(columnXStart, rowYStart, columnXStart + plotWidth, rowYStart);
+                yposXAxis = rowYStart;
+            } else {
+                // X-axis crosses the y-axis somewhere, at DIFF
+                // this method does show some rounding errors at the moment..
+                int diff = (int) Math.ceil((Math.abs(minY) / rangeY) * plotHeight);
+                yposXAxis = rowYStart + plotHeight - diff;
+                g2d.drawLine(columnXStart, yposXAxis, columnXStart + plotWidth, yposXAxis);
 
             }
+
+            // y-axis
+            if (minX > 0) {
+                // all X values above 0, Y-axis starts at top left
+                g2d.drawLine(columnXStart, rowYStart, columnXStart, rowYStart + plotHeight);
+                xposYAxis = columnXStart;
+            } else if (maxX <= 0) {
+                // all X values below 0, axis starts at top right 
+                g2d.drawLine(columnXStart + plotWidth, rowYStart, columnXStart + plotWidth, rowYStart + plotHeight);
+                xposYAxis = columnXStart + plotWidth;
+            } else {
+                // Y-axis crosses the X-axis somewhere, at DIFF
+                // this method does show some rounding errors at the moment..
+                int diff = (int) Math.ceil((Math.abs(minX) / rangeX) * plotWidth);
+                xposYAxis = columnXStart + diff;
+                g2d.drawLine(xposYAxis, rowYStart, xposYAxis, rowYStart + plotHeight);
+
+            }
+
+            // X-ticks
+            if (!Double.isNaN(unitX)) {
+                // start drawing from minX, add one unitX at a time..
+                // first round minX using the unitX
+                double tickX = minX - (minX % unitX);
+
+                while (tickX <= maxX) {
+
+                    double nonroundedPerc = Math.abs(minX - tickX) / rangeX;
+//                double roundedPerc = roundToDecimals((nonroundedPerc), 2);
+                    int diff = (int) Math.floor(nonroundedPerc * plotWidth); // for the position relative to min and maxX
+
+                    String tickLabelFormatted = null;
+                    if (unitX > 10000 || unitX < 0.001) {
+                        tickLabelFormatted = new DecimalFormat("0.#E0").format(tickX);
+                    } else {
+                        tickLabelFormatted = new DecimalFormat("#.###").format(tickX);
+                    }
+
+                    if (tickX == 0) {
+                        g2d.drawLine(xposYAxis, yposXAxis - 3, xposYAxis, yposXAxis + 3);
+                        int nrPixelsString = g2d.getFontMetrics().stringWidth(tickLabelFormatted) / 2;
+                        g2d.drawString(tickLabelFormatted, columnXStart + diff - nrPixelsString, yposXAxis + tickFontHeight + 3);
+
+                    } else {
+                        g2d.drawLine(columnXStart + diff, yposXAxis - 3, columnXStart + diff, yposXAxis + 3);
+                        int nrPixelsString = g2d.getFontMetrics().stringWidth(tickLabelFormatted) / 2;
+                        g2d.drawString(tickLabelFormatted, columnXStart + diff - nrPixelsString, yposXAxis + tickFontHeight + 3);
+
+                    }
+
+                    tickX += unitX;
+
+                }
+            }
+
+            // Y-ticks
+            if (!Double.isNaN(unitY)) {
+                double tickY = minY - (minY % unitY);
+                while (tickY <= maxY) {
+
+                    double nonroundedPerc = Math.abs(minY - tickY) / rangeY;
+
+//                double perc = roundToDecimals((Math.abs(minY - tickY) / rangeY), 2);
+                    int diff = (int) Math.floor(nonroundedPerc * plotHeight);
+                    String tickLabelFormatted = null;
+                    if (unitY > 100000 || unitY < 0.0001) {
+                        tickLabelFormatted = new DecimalFormat("0.#E0").format(tickY);
+                    } else {
+                        tickLabelFormatted = new DecimalFormat("#.###").format(tickY);
+                    }
+
+                    if (tickY == 0) {
+                        g2d.drawLine(xposYAxis - 3, yposXAxis, xposYAxis + 3, yposXAxis);
+                        g2d.drawString(tickLabelFormatted, xposYAxis - g2d.getFontMetrics().stringWidth(tickLabelFormatted) - 5, rowYStart + plotHeight - diff + (tickFontHeight / 2) - 3);
+                    } else {
+                        g2d.drawLine(xposYAxis - 3, rowYStart + plotHeight - diff, xposYAxis + 3, rowYStart + plotHeight - diff);
+                        g2d.drawString(tickLabelFormatted, xposYAxis - g2d.getFontMetrics().stringWidth(tickLabelFormatted) - 5, rowYStart + plotHeight - diff + (tickFontHeight / 2) - 3);
+                    }
+
+                    tickY += unitY;
+                }
+            }
         }
+
         g2d.setFont(oriFont);
         g2d.setColor(originalColor);
 
@@ -406,30 +427,23 @@ public class ScatterPlot2 {
 
     private void plot() {
 
-        int c = 0;
-        int r = 0;
+        for (int sample = 0; sample < x.length; sample++) {
+            double[] xtmp = x[sample];
+            double[] ytmp = y[sample];
 
-        for (int plot = 0; plot < x.length; plot++) {
-            double[] xtmp = x[plot];
-            double[] ytmp = y[plot];
-
-            if (c == nrColumns - 1) {
-                r++;
-                c = 0;
-            }
+            int r = sample / nrColumns;
+            int c = sample % nrColumns;
 
             int columnXStart = margin + (c * plotWidth) + (c * plotMargin);
             int rowYStart = margin + (r * plotHeight) + (r * plotMargin);
-
-            for (int i = 0; i < x.length; i++) {
+            g2d.setColor(new Color(0, 0, 0));
+            for (int i = 0; i < xtmp.length; i++) {
 
 //                if (category != null && colors != null) {
 //                    g2d.setColor(colors[category[i]]);
 //                } else {
 //                    g2d.setColor(new Color(0, 128, 255, 64));
 //                }
-                g2d.setColor(new Color(0, 128, 255, 64));
-
                 double xval = xtmp[i];
                 double yval = ytmp[i];
 
@@ -450,11 +464,12 @@ public class ScatterPlot2 {
                 }
 
                 int posX = columnXStart + (int) Math.ceil((Math.abs(minX - xval) / rangeX) * plotWidth);
-                int posY = rowYStart - (int) Math.ceil((Math.abs(minY - yval) / rangeY) * plotHeight);
+                int posY = (rowYStart + plotHeight) - (int) Math.ceil((Math.abs(minY - yval) / rangeY) * plotHeight);
 
-                g2d.fillOval(posX - 1, posY - 1, 2, 2);
+                g2d.fillOval(posX - 2, posY - 2, 4, 4);
             }
 
+            c++;
         }
 
     }
