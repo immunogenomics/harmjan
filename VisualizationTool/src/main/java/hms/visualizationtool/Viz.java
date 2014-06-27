@@ -5,6 +5,11 @@
  */
 package hms.visualizationtool;
 
+import hms.hwestra.utilities.bedfile.Track;
+import hms.hwestra.utilities.bedfile.Feature;
+import hms.hwestra.utilities.features.Chromosome;
+import hms.hwestra.utilities.features.Strand;
+import hms.hwestra.utilities.bedfile.BedFileReader;
 import com.lowagie.text.DocumentException;
 import hms.visualizationtool.Viz.Output;
 import java.awt.BasicStroke;

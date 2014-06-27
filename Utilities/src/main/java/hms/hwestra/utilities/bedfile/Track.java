@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.visualizationtool;
+package hms.hwestra.utilities.bedfile;
 
+import hms.hwestra.utilities.features.Chromosome;
+import hms.hwestra.utilities.features.Strand;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -32,11 +34,11 @@ public class Track {
         features.add(f);
     }
 
-    void addReadLengthToDist(int len) {
+    public void addReadLengthToDist(int len) {
 
     }
 
-    void addReadLengthToDist(int len, Chromosome lineChr) {
+    public void addReadLengthToDist(int len, Chromosome lineChr) {
         if (len >= 500) {
             len = 499;
         }
@@ -52,11 +54,11 @@ public class Track {
         return stop;
     }
 
-    Iterable<Feature> getFeatures() {
+    public Iterable<Feature> getFeatures() {
         return features;
     }
 
-    int getNrReads() {
+    public int getNrReads() {
         return features.size();
     }
 
@@ -67,7 +69,7 @@ public class Track {
 
     }
 
-    void printNrFeatures() {
+    public void printNrFeatures() {
         System.out.println(features.size() + " features in track.");
     }
 

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.visualizationtool;
+package hms.hwestra.utilities.features;
 
 /**
  *
@@ -13,7 +13,7 @@ public enum Strand {
 
     POS("+",1), NEG("-",2), NA("NA",0);
 
-    static Strand parseStr(String string) {
+    public static Strand parseStr(String string) {
         if (string.equals("+")) {
             return Strand.POS;
         }
@@ -38,7 +38,8 @@ public enum Strand {
         return strand;
     }
 
-    int getNumber() {
+    public int getNumber() {
         return num;
     }
+    
 }

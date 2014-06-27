@@ -3,10 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.visualizationtool;
+package hms.hwestra.utilities.bedfile;
 
+import hms.hwestra.utilities.features.Chromosome;
+import hms.hwestra.utilities.features.Strand;
 import java.io.IOException;
 import umcg.genetica.io.text.TextFile;
+
+
 
 /**
  *

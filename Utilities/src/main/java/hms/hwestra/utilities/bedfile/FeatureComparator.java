@@ -3,8 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.visualizationtool;
+package hms.hwestra.utilities.bedfile;
 
+import hms.hwestra.utilities.bedfile.Feature;
+import hms.hwestra.utilities.features.Strand;
+import hms.hwestra.utilities.features.Strand;
 import java.util.Comparator;
 
 /**
@@ -15,6 +18,11 @@ public class FeatureComparator implements Comparator<Feature> {
 
     @Override
     public int compare(Feature t, Feature t1) {
+        if(t.getChromosome().getNumber() > t1.getChromosome().getNumber()){
+            return 1;
+        } else if(t.getChromosome().getNumber() < t1.getChromosome().getNumber()){
+            return -1;
+        }
         
         if (t.equals(t1)) {
             return 0;

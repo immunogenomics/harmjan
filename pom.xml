@@ -9,6 +9,7 @@
         <module>RNAAccess</module>
         <module>VisualizationTool</module>
         <module>PolyPeak</module>
+        <module>Utilities</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

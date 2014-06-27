@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.visualizationtool;
+package hms.hwestra.utilities.bedfile;
 
+import hms.hwestra.utilities.features.Chromosome;
+import hms.hwestra.utilities.features.Strand;
 import java.util.Objects;
 
 /**
@@ -40,6 +42,10 @@ public class Feature {
 
     public int getStart() {
         return start;
+    }
+    
+    public Chromosome getChromosome(){
+        return chr;
     }
 
     @Override
@@ -147,13 +153,13 @@ public class Feature {
         return comp.compare(this, otherFeature);
     }
 
-    void setPeakValues(int peakPos, double foldChange, double peakQ) {
+    public void setPeakValues(int peakPos, double foldChange, double peakQ) {
         this.peakPos = peakPos;
         this.foldChange = foldChange;
         this.peakQ = peakQ;
     }
 
-    double getPeakQ(){
+    public double getPeakQ(){
         return peakQ;
     }
     
@@ -161,7 +167,7 @@ public class Feature {
         return foldChange;
     }
     
-    int getPeakPos(){
+    public int getPeakPos(){
         return peakPos;
     }
 }
