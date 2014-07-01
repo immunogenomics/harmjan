@@ -6,41 +6,31 @@
 package hms.hwestra.utilities.features;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 /**
  *
  * @author Harm-Jan
  */
-public class Transcript {
+public class Transcript extends Feature {
 
-    private final String name;
-    private final Chromosome chromosome;
-    private final Strand strand;
     private final Gene gene;
     private ArrayList<Exon> exons;
 
-    int start = Integer.MAX_VALUE;
-    int stop = -Integer.MAX_VALUE;
 
     public Transcript(String name, Chromosome chromosome, Strand strand, Gene gene) {
         this.name = name;
         this.chromosome = chromosome;
         this.strand = strand;
         this.gene = gene;
-
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Chromosome getChromosome() {
-        return chromosome;
-    }
-
-    public Strand getStrand() {
-        return strand;
+    public Transcript(String name, Chromosome chromosome, Strand strand, Gene gene, int start, int stop) {
+        this.name = name;
+        this.chromosome = chromosome;
+        this.strand = strand;
+        this.gene = gene;
+        this.start = start;
+        this.stop = stop;
     }
 
     public Gene getGene() {
@@ -51,66 +41,24 @@ public class Transcript {
         return exons;
     }
 
-    public int getStart() {
-        return start;
-    }
-
-    public int getStop() {
-        return stop;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 47 * hash + Objects.hashCode(this.name);
-        hash = 47 * hash + Objects.hashCode(this.chromosome);
-        hash = 47 * hash + Objects.hashCode(this.strand);
-        hash = 47 * hash + Objects.hashCode(this.gene);
-        hash = 47 * hash + this.start;
-        hash = 47 * hash + this.stop;
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Transcript other = (Transcript) obj;
-        if (!Objects.equals(this.name, other.name)) {
-            return false;
-        }
-        if (this.chromosome != other.chromosome) {
-            return false;
-        }
-        if (this.strand != other.strand) {
-            return false;
-        }
-        if (!Objects.equals(this.gene, other.gene)) {
-            return false;
-        }
-        if (this.start != other.start) {
-            return false;
-        }
-        if (this.stop != other.stop) {
-            return false;
-        }
-        return true;
-    }
-
     public void addExon(Exon e) {
+        if(exons == null){
+            exons = new ArrayList<>();
+        }
         int estart = e.getStart();
         int estop = e.getStop();
-        if(estart < start){
+        if (estart < start) {
             start = estart;
         }
-        if(estop > stop){
+        if (estop > stop) {
             stop = estop;
         }
         exons.add(e);
+    }
+
+    @Override
+    public String toString() {
+        return "Transcript{" + "name=" + name + ", chromosome=" + chromosome + ", strand=" + strand + ", gene=" + gene.getName() + ", start=" + start + ", stop=" + stop + '}';
     }
 
 }

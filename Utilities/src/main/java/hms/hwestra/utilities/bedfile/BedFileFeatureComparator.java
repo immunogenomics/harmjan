@@ -5,8 +5,6 @@
  */
 package hms.hwestra.utilities.bedfile;
 
-import hms.hwestra.utilities.bedfile.Feature;
-import hms.hwestra.utilities.features.Strand;
 import hms.hwestra.utilities.features.Strand;
 import java.util.Comparator;
 
@@ -14,10 +12,10 @@ import java.util.Comparator;
  *
  * @author Harm-Jan
  */
-public class FeatureComparator implements Comparator<Feature> {
+public class BedFileFeatureComparator implements Comparator<BedFileFeature> {
 
     @Override
-    public int compare(Feature t, Feature t1) {
+    public int compare(BedFileFeature t, BedFileFeature t1) {
         if(t.getChromosome().getNumber() > t1.getChromosome().getNumber()){
             return 1;
         } else if(t.getChromosome().getNumber() < t1.getChromosome().getNumber()){
@@ -32,7 +30,7 @@ public class FeatureComparator implements Comparator<Feature> {
 
             if (t.getStart() >= t1.getStart() && t.getStop() <= t1.getStop()) {
                 if (t.getStrand() == t1.getStrand()) {
-                    return 0;
+                    return 1;
                 }
                 if (t.getStrand() == Strand.NEG){
                     return 1;

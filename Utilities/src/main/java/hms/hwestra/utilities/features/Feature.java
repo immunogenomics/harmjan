@@ -3,32 +3,35 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.rnaaccess.probeannotation;
+package hms.hwestra.utilities.features;
 
-import hms.hwestra.utilities.features.Chromosome;
 import java.util.Objects;
 
 /**
  *
- * @author Harm-Jan
+ * @author hwestra
  */
-public class Probe {
+public class Feature {
 
-    private final Chromosome chromosome;
-    private final int start;
-    private final int stop;
-    private final String name;
-
-    public Probe(Chromosome chromosome, int start, int stop, String name) {
-        this.chromosome = chromosome;
-        this.start = start;
-        this.stop = stop;
-        this.name = name;
-    }
-
+    Chromosome chromosome;
+    String name;
+    Strand strand;
+    int start = Integer.MAX_VALUE;
+    int stop = -Integer.MAX_VALUE;
+    
     public Chromosome getChromosome() {
         return chromosome;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public Strand getStrand() {
+        return strand;
+    }
+
+    
 
     public int getStart() {
         return start;
@@ -38,17 +41,14 @@ public class Probe {
         return stop;
     }
 
-    public String getName() {
-        return name;
-    }
-
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 19 * hash + Objects.hashCode(this.chromosome);
-        hash = 19 * hash + this.start;
-        hash = 19 * hash + this.stop;
-        hash = 19 * hash + Objects.hashCode(this.name);
+        int hash = 5;
+        hash = 67 * hash + Objects.hashCode(this.chromosome);
+        hash = 67 * hash + Objects.hashCode(this.name);
+        hash = 67 * hash + Objects.hashCode(this.strand);
+        hash = 67 * hash + this.start;
+        hash = 67 * hash + this.stop;
         return hash;
     }
 
@@ -60,8 +60,14 @@ public class Probe {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final Probe other = (Probe) obj;
+        final Feature other = (Feature) obj;
         if (this.chromosome != other.chromosome) {
+            return false;
+        }
+        if (!this.name.equals(other.name)) {
+            return false;
+        }
+        if (this.strand != other.strand) {
             return false;
         }
         if (this.start != other.start) {
@@ -70,16 +76,14 @@ public class Probe {
         if (this.stop != other.stop) {
             return false;
         }
-        if (!Objects.equals(this.name, other.name)) {
-            return false;
-        }
         return true;
     }
-    
-    
 
-    public boolean overlaps(Probe that) {
-        if (chromosome != that.getChromosome()) {
+    public boolean overlaps(Feature that) {
+        if (this.equals(that)) {
+            return true;
+        }
+        if (this.chromosome != that.chromosome) {
             return false;
         }
 
@@ -91,5 +95,4 @@ public class Probe {
         }
         return this.stop > that.start && this.stop < that.stop;
     }
-    
 }

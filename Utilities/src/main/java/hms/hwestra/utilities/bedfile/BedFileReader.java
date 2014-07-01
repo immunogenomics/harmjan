@@ -67,19 +67,19 @@ public class BedFileReader {
             if (chr == lineChr) {
 
                 if (lineStart <= start && lineStop <= stop && lineStop >= start) {
-                    Feature f = new Feature(lineChr, lineStrand, track, lineStart, lineStop);
+                    BedFileFeature f = new BedFileFeature(lineChr, lineStrand, track, lineStart, lineStop);
                     if(peakFiles){
                         f.setPeakValues(peakPos, foldChange, peakQ);
                     }
                     track.addFeature(f);
                 }
                 if (lineStart >= start && lineStop >= stop && lineStart <= stop) {
-                    Feature f = new Feature(lineChr, lineStrand, track, lineStart, lineStop);
+                    BedFileFeature f = new BedFileFeature(lineChr, lineStrand, track, lineStart, lineStop);
                     f.setPeakValues(peakPos, foldChange, peakQ);
                     track.addFeature(f);
                 }
                 if (lineStart >= start && lineStop <= stop) {
-                    Feature f = new Feature(lineChr, lineStrand, track, lineStart, lineStop);
+                    BedFileFeature f = new BedFileFeature(lineChr, lineStrand, track, lineStart, lineStop);
                     f.setPeakValues(peakPos, foldChange, peakQ);
                     track.addFeature(f);
                 }

@@ -13,7 +13,7 @@ import java.util.Objects;
  *
  * @author Harm-Jan
  */
-public class Feature {
+public class BedFileFeature {
 
     private final Chromosome chr;
     private final Strand str;
@@ -24,7 +24,7 @@ public class Feature {
     private double foldChange;
     private double peakQ;
 
-    public Feature(Chromosome chr, Strand str, Track track, int start, int stop) {
+    public BedFileFeature(Chromosome chr, Strand str, Track track, int start, int stop) {
         this.chr = chr;
         this.str = str;
         this.track = track;
@@ -67,7 +67,7 @@ public class Feature {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final Feature other = (Feature) obj;
+        final BedFileFeature other = (BedFileFeature) obj;
         if (this.chr != other.chr) {
             return false;
         }
@@ -91,7 +91,7 @@ public class Feature {
             return -1;
         }
 
-        final Feature other = (Feature) obj;
+        final BedFileFeature other = (BedFileFeature) obj;
         if (!Objects.equals(this.track, other.track)) {
             return -1;
         }
@@ -127,7 +127,7 @@ public class Feature {
 
     }
 
-    public boolean overlaps(Feature that) {
+    public boolean overlaps(BedFileFeature that) {
         if (this.chr != that.chr) {
             return false;
         }
@@ -141,15 +141,15 @@ public class Feature {
         return this.stop > that.start && this.stop < that.stop;
     }
 
-    public boolean overlapsStrand(Feature that) {
+    public boolean overlapsStrand(BedFileFeature that) {
         if (this.str != that.str) {
             return false;
         }
         return overlaps(that);
     }
 
-    public int compare(Feature otherFeature) {
-        FeatureComparator comp = new FeatureComparator();
+    public int compare(BedFileFeature otherFeature) {
+        BedFileFeatureComparator comp = new BedFileFeatureComparator();
         return comp.compare(this, otherFeature);
     }
 

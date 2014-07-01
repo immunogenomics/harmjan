@@ -133,8 +133,18 @@ public enum Chromosome {
         }
         if (chrStr.equals("chrx")) {
             return Chromosome.X;
+        } 
+        if(chrStr.equals("chrm") || chrStr.equals("chrmt")){
+            return Chromosome.MT;
         }
 
         return Chromosome.NA;
     }
+
+    @Override
+    public String toString() {
+        return this.getName();
+    }
+    
+    
 }

@@ -12,39 +12,20 @@ import java.util.Objects;
  *
  * @author Harm-Jan
  */
-public class Exon {
+public class Exon extends Feature {
 
-    private final Chromosome chromosome;
-    private final String name;
-
-    private final Strand strand;
-
-    private  ArrayList<Transcript> transcripts;
+    private ArrayList<Transcript> transcripts;
     private final Gene gene;
-
-    int start = Integer.MAX_VALUE;
-    int stop = -Integer.MAX_VALUE;
 
     public Exon(String name, Chromosome chr, Strand strand, Gene gene, int start, int stop) {
         this.name = name;
         this.chromosome = chr;
         this.strand = strand;
-        
+
         this.gene = gene;
         this.start = start;
         this.stop = stop;
-    }
 
-    public Chromosome getChromosome() {
-        return chromosome;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Strand getStrand() {
-        return strand;
     }
 
     public ArrayList<Transcript> getTranscripts() {
@@ -55,59 +36,16 @@ public class Exon {
         return gene;
     }
 
-    public int getStart() {
-        return start;
-    }
-
-    public int getStop() {
-        return stop;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 37 * hash + Objects.hashCode(this.chromosome);
-        hash = 37 * hash + Objects.hashCode(this.name);
-        hash = 37 * hash + Objects.hashCode(this.strand);
-        hash = 37 * hash + Objects.hashCode(this.gene);
-        hash = 37 * hash + this.start;
-        hash = 37 * hash + this.stop;
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Exon other = (Exon) obj;
-        if (this.chromosome != other.chromosome) {
-            return false;
-        }
-        if (!Objects.equals(this.name, other.name)) {
-            return false;
-        }
-        if (this.strand != other.strand) {
-            return false;
-        }
-        if (!Objects.equals(this.gene, other.gene)) {
-            return false;
-        }
-        if (this.start != other.start) {
-            return false;
-        }
-        if (this.stop != other.stop) {
-            return false;
-        }
-        return true;
-    }
-
     public void addTranscript(Transcript t) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (this.transcripts == null) {
+            this.transcripts = new ArrayList<Transcript>();
+        }
+        this.transcripts.add(t);
     }
-    
-    
+
+    @Override
+    public String toString() {
+        return "Exon{" + "chromosome=" + chromosome + ", name=" + name + ", strand=" + strand + ", gene=" + gene.getName() + ", start=" + start + ", stop=" + stop + '}';
+    }
+
 }

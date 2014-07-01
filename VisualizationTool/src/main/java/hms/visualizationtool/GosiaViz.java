@@ -6,7 +6,7 @@
 package hms.visualizationtool;
 
 import hms.hwestra.utilities.bedfile.Track;
-import hms.hwestra.utilities.bedfile.Feature;
+import hms.hwestra.utilities.bedfile.BedFileFeature;
 import hms.hwestra.utilities.features.Chromosome;
 import hms.hwestra.utilities.features.Strand;
 import hms.hwestra.utilities.bedfile.BedFileReader;
@@ -448,12 +448,12 @@ public class GosiaViz {
                             Track t = reader.read(bedFileDir + file, file, Chromosome.parseChr(chrStr), windowStart, windowStop, true);
                             // bin the peaks
 
-                            Set<Feature> featureSet = t.getFeatureSet(Chromosome.parseChr(chrStr), Strand.POS, windowStart, windowStop);
+                            Set<BedFileFeature> featureSet = t.getFeatureSet(Chromosome.parseChr(chrStr), Strand.POS, windowStart, windowStop);
 
                             int yPos = distPlotStartY + y * (distPlotSize + distplotMargin);
                             System.out.println(featureSet.size());
                             Stroke defaultStroke = g2d.getStroke();
-                            for (Feature f : featureSet) {
+                            for (BedFileFeature f : featureSet) {
                                 g2d.setColor(new Color(0, 125, 255, 64));
                                 int start = f.getStart();
                                 int stop = f.getStop();

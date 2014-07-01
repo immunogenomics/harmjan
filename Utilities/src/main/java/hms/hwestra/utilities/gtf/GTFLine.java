@@ -7,6 +7,9 @@ package hms.hwestra.utilities.gtf;
 
 import hms.hwestra.utilities.features.Chromosome;
 import hms.hwestra.utilities.features.Strand;
+import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import umcg.genetica.text.Strings;
 
 /**
@@ -14,10 +17,10 @@ import umcg.genetica.text.Strings;
  * @author Harm-Jan
  */
 public class GTFLine {
-   
-    private final String attribStr;
-    private final Chromosome chr;
-    private final Strand str;
+
+    private String attribStr;
+    private Chromosome chr;
+    private Strand str;
     private int start;
     private int stop;
     private Double score;
@@ -26,53 +29,61 @@ public class GTFLine {
     private String geneName;
     private String transcriptId;
     private String tssId;
-    private final String typeStr;
+    private String typeStr;
 
     public GTFLine(String ln) {
-        String[] elems = Strings.tab.split(ln);
-        String sequenceStr = elems[0];
-        String sourceStr = elems[1];
-        typeStr = new String(elems[2]).intern();
-        String startStr = elems[3];
-        String stopStr = elems[4];
-        String scoreStr = elems[5];
-        String strandStr = elems[6];
-        String frameStr = elems[7];
-        attribStr = elems[8];
-
-        chr = Chromosome.parseChr(sequenceStr);
-        str = Strand.parseStr(strandStr);
-        start = Integer.parseInt(startStr);
-        stop = Integer.parseInt(stopStr);
-        score = null;
-        frame = null;
         try {
-            score = Double.parseDouble(scoreStr);
-        } catch (NumberFormatException e) {
+            String[] elems = Strings.tab.split(ln);
+            String sequenceStr = elems[0];
+            String sourceStr = elems[1];
+            typeStr = new String(elems[2].getBytes("UTF-8")).intern();
+            String startStr = elems[3];
+            String stopStr = elems[4];
+            String scoreStr = elems[5];
+            String strandStr = elems[6];
+            String frameStr = elems[7];
+            attribStr = elems[8];
 
-        }
-        try {
-            frame = Double.parseDouble(frameStr);
-        } catch (NumberFormatException e) {
+            chr = Chromosome.parseChr(sequenceStr);
+            str = Strand.parseStr(strandStr);
+            start = Integer.parseInt(startStr);
+            stop = Integer.parseInt(stopStr);
+            score = null;
+            frame = null;
+            try {
+                score = Double.parseDouble(scoreStr);
+            } catch (NumberFormatException e) {
 
+            }
+            try {
+                frame = Double.parseDouble(frameStr);
+            } catch (NumberFormatException e) {
+
+            }
+
+            String[] attribElems = attribStr.split("; ");
+
+            for (String attribElem : attribElems) {
+                String[] attribSubElems = attribElem.split(" ");
+                String property = attribSubElems[0].toLowerCase().replaceAll(" ", "");
+                String value = attribSubElems[1].replaceAll("\"", "");
+                if (property.equals("gene_id")) {
+                    geneId = new String(value.getBytes("UTF-8")).intern();
+                } else if (property.equals("gene_name")) {
+                    geneName = new String(value.getBytes("UTF-8")).intern();
+                } else if (property.equals("transcript_id")) {
+                    transcriptId = new String(value.getBytes("UTF-8")).intern();
+                } else if (property.equals("tss_id")) {
+                    tssId = new String(value.getBytes("UTF-8")).intern();
+                }
+            }
+            if (geneName != null && tssId != null) {
+                geneName += "_" + tssId;
+            }
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(GTFLine.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        String[] attribElems = attribStr.split(";");
-        for (String attribElem : attribElems) {
-            String[] attribSubElems = attribElem.split(" ");
-            String property = attribSubElems[0].toLowerCase();
-            String value = attribSubElems[1].replaceAll("\"", "");
-            if (property.equals("gene_id")) {
-                geneId = new String(value).intern();
-            } else if (property.equals("gene_name")) {
-                geneName = new String(value).intern();
-            } else if (property.equals("transcript_id")) {
-               transcriptId=new String(value).intern();
-            } else if (property.equals("tss_id")) {
-                tssId = new String(value).intern();
-            } 
-        }
-        
     }
 
     public String getTranscriptId() {
@@ -122,6 +133,10 @@ public class GTFLine {
     public String getType() {
         return typeStr;
     }
-    
-    
+
+    @Override
+    public String toString() {
+        return "GTFLine{" + "attribStr=" + attribStr + ", chr=" + chr + ", str=" + str + ", start=" + start + ", stop=" + stop + ", score=" + score + ", frame=" + frame + ", geneId=" + geneId + ", geneName=" + geneName + ", transcriptId=" + transcriptId + ", tssId=" + tssId + ", typeStr=" + typeStr + '}';
+    }
+
 }

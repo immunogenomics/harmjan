@@ -6,7 +6,7 @@
 package hms.visualizationtool;
 
 import hms.hwestra.utilities.bedfile.Track;
-import hms.hwestra.utilities.bedfile.Feature;
+import hms.hwestra.utilities.bedfile.BedFileFeature;
 import hms.hwestra.utilities.features.Chromosome;
 import hms.hwestra.utilities.features.Strand;
 import hms.hwestra.utilities.bedfile.BedFileReader;
@@ -324,8 +324,8 @@ public class Viz {
         int bpPerBin = (stop - start) / nrBins;
         double[][] bins = new double[2][nrBins];
 
-        Set<Feature> features = track.getFeatureSet(chr, Strand.POS, start, stop);
-        for (Feature f : features) {
+        Set<BedFileFeature> features = track.getFeatureSet(chr, Strand.POS, start, stop);
+        for (BedFileFeature f : features) {
             int fstart = f.getStart();
             int fstop = f.getStop();
             Strand s = f.getStrand();
@@ -364,7 +364,7 @@ public class Viz {
         int[][] bins = new int[2][nrBins];
         int maxLength = maxReadLength;
 
-        for (Feature f : track.getFeatures()) {
+        for (BedFileFeature f : track.getFeatures()) {
             int fstart = f.getStart();
             int fstop = f.getStop();
 
@@ -399,20 +399,20 @@ public class Viz {
         // + strand features first
 
         int y = 0;
-        Set<Feature> features = null;
+        Set<BedFileFeature> features = null;
         features = track.getFeatureSet(chr, Strand.NEG, windowStart, windowEnd);
 
         System.out.println(features.size() + " features found within window...");
-        HashSet<Feature> visitedFeatures = new HashSet<Feature>();
+        HashSet<BedFileFeature> visitedFeatures = new HashSet<BedFileFeature>();
         int bpInWindow = windowEnd - windowStart;
         int featHeight = 5;
         int featMargin = 3;
 //        boolean plot = false;
         while (visitedFeatures.size() != features.size()) {
 
-            Set<Feature> otherFeaturesAtY = new HashSet<Feature>();
+            Set<BedFileFeature> otherFeaturesAtY = new HashSet<BedFileFeature>();
             int yStart = plotYStart + (y * featHeight) + (y * featMargin);
-            for (Feature f : features) {
+            for (BedFileFeature f : features) {
 
                 Color boxcolor = null;
                 Color linecolor = null;
@@ -455,7 +455,7 @@ public class Viz {
 
                     } else {
                         boolean overlaps = false;
-                        for (Feature otherFeature : otherFeaturesAtY) {
+                        for (BedFileFeature otherFeature : otherFeaturesAtY) {
                             if (f.overlaps(otherFeature)) {
                                 overlaps = true;
                             }
@@ -515,8 +515,8 @@ public class Viz {
             int[] negBaseSeen = new int[windowsize];
             int[] posBaseSeen = new int[windowsize];
 
-            Set<Feature> features = get.getFeatureSet(chr, Strand.POS, i, i + windowsize);
-            for (Feature f : features) {
+            Set<BedFileFeature> features = get.getFeatureSet(chr, Strand.POS, i, i + windowsize);
+            for (BedFileFeature f : features) {
                 int fstart = f.getStart();
                 int fstop = f.getStop();
                 Strand s = f.getStrand();

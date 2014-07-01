@@ -16,7 +16,7 @@ import java.util.TreeSet;
  */
 public class Track {
 
-    private final TreeSet<Feature> features;
+    private final TreeSet<BedFileFeature> features;
     private final String name;
     private final int start;
     private final int stop;
@@ -25,12 +25,12 @@ public class Track {
 
     public Track(String name, int start, int stop) {
         this.name = name;
-        this.features = new TreeSet<>(new FeatureComparator());
+        this.features = new TreeSet<>(new BedFileFeatureComparator());
         this.start = start;
         this.stop = stop;
     }
 
-    public void addFeature(Feature f) {
+    public void addFeature(BedFileFeature f) {
         features.add(f);
     }
 
@@ -54,7 +54,7 @@ public class Track {
         return stop;
     }
 
-    public Iterable<Feature> getFeatures() {
+    public Iterable<BedFileFeature> getFeatures() {
         return features;
     }
 
@@ -62,9 +62,9 @@ public class Track {
         return features.size();
     }
 
-    public NavigableSet<Feature> getFeatureSet(Chromosome chr, Strand strand, int start, int end) {
-        Feature left = new Feature(chr, strand, null, start, start);
-        Feature right = new Feature(chr, strand, null, end, end);
+    public NavigableSet<BedFileFeature> getFeatureSet(Chromosome chr, Strand strand, int start, int end) {
+        BedFileFeature left = new BedFileFeature(chr, strand, null, start, start);
+        BedFileFeature right = new BedFileFeature(chr, strand, null, end, end);
         return features.subSet(left, true, right, true);
 
     }

@@ -35,11 +35,21 @@ public enum Strand {
 
     @Override
     public String toString() {
-        return strand;
+        return this.getName();
     }
 
     public int getNumber() {
         return num;
+    }
+    
+    public String getName(){
+        if(this == Strand.NEG){
+            return "-";
+        } else if(this == Strand.POS){
+            return "+";
+        } else {
+            return "NA";
+        }
     }
     
 }
