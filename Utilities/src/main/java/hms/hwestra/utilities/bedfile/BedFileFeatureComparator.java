@@ -5,6 +5,7 @@
  */
 package hms.hwestra.utilities.bedfile;
 
+import hms.hwestra.utilities.features.BedFileFeature;
 import hms.hwestra.utilities.features.Strand;
 import java.util.Comparator;
 

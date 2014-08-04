@@ -13,14 +13,49 @@ import java.util.Objects;
  */
 public class Feature {
 
-    Chromosome chromosome;
-    String name;
-    Strand strand;
-    int start = Integer.MAX_VALUE;
-    int stop = -Integer.MAX_VALUE;
-    
+    protected Chromosome chromosome;
+    protected String name;
+    protected Strand strand;
+    protected int start = Integer.MAX_VALUE;
+    protected int stop = -Integer.MAX_VALUE;
+    protected int nrAT;
+    protected int nrGC;
+    protected int nrN;
+
     public Chromosome getChromosome() {
         return chromosome;
+    }
+
+    public void setChromosome(Chromosome chromosome) {
+        this.chromosome = chromosome;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setStrand(Strand strand) {
+        this.strand = strand;
+    }
+
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public void setStop(int stop) {
+        this.stop = stop;
+    }
+
+    public void setNrAT(int nrAT) {
+        this.nrAT = nrAT;
+    }
+
+    public void setNrGC(int nrGC) {
+        this.nrGC = nrGC;
+    }
+
+    public void setNrN(int nrN) {
+        this.nrN = nrN;
     }
 
     public String getName() {
@@ -30,8 +65,6 @@ public class Feature {
     public Strand getStrand() {
         return strand;
     }
-
-    
 
     public int getStart() {
         return start;
@@ -64,9 +97,12 @@ public class Feature {
         if (this.chromosome != other.chromosome) {
             return false;
         }
-        if (!this.name.equals(other.name)) {
-            return false;
+        if (this.name != null && other.name != null) {
+            if (!this.name.equals(other.name)) {
+                return false;
+            }
         }
+
         if (this.strand != other.strand) {
             return false;
         }
@@ -82,17 +118,71 @@ public class Feature {
     public boolean overlaps(Feature that) {
         if (this.equals(that)) {
             return true;
+
         }
-        if (this.chromosome != that.chromosome) {
+        if (this.chromosome.getNumber() != that.chromosome.getNumber()) {
+//            System.out.println("chr diff");
             return false;
         }
 
         if (this.start >= that.start && this.stop <= that.stop) {
             return true;
+            //   this     |-| 
+            //   that    |---|
+
         }
+        if (that.start >= this.start && that.stop <= this.stop) {
+            return true;
+            //   this    |---| 
+            //   that     |-|
+        }
+        
         if (this.start >= that.start && this.start < that.stop) {
             return true;
+            //   this      |---| 
+            //   that    |---|    
         }
-        return this.stop > that.start && this.stop < that.stop;
+        if(this.start < that.start && this.stop > that.start){
+            return true;
+            //   this  |---| 
+            //   that    |---|    
+        }
+        
+        
+        
+        
+        return false;
     }
+
+    public void setBaseProperties(int nrAT, int nrGC, int nrN) {
+        this.nrAT = nrAT;
+        this.nrGC = nrGC;
+        this.nrN = nrN;
+    }
+
+    public int getNrAT() {
+        return nrAT;
+    }
+
+    public int getNrGC() {
+        return nrGC;
+    }
+
+    public int getNrN() {
+        return nrN;
+    }
+
+    public double getGCContent() {
+        return (double) nrGC / (nrGC + nrAT + nrN);
+    }
+
+    public int getBaseSum() {
+        return (nrGC + nrAT + nrN);
+    }
+
+    @Override
+    public String toString() {
+        return "Feature{" + "chromosome=" + chromosome + ", name=" + name + ", strand=" + strand + ", start=" + start + ", stop=" + stop + ", nrAT=" + nrAT + ", nrGC=" + nrGC + ", nrN=" + nrN + '}';
+    }
+
 }

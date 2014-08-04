@@ -61,4 +61,9 @@ public class Transcript extends Feature {
         return "Transcript{" + "name=" + name + ", chromosome=" + chromosome + ", strand=" + strand + ", gene=" + gene.getName() + ", start=" + start + ", stop=" + stop + '}';
     }
 
+
+    
+
+  
+
 }

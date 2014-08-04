@@ -5,6 +5,10 @@
  */
 package hms.hwestra.utilities.features;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.SortedSet;
+
 /**
  *
  * @author Harm-Jan

@@ -11,7 +11,7 @@ package hms.hwestra.utilities.features;
  */
 public enum Strand {
 
-    POS("+",1), NEG("-",2), NA("NA",0);
+    POS("+",0), NEG("-",1), NA("NA",2);
 
     public static Strand parseStr(String string) {
         if (string.equals("+")) {

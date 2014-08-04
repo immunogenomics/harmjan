@@ -67,6 +67,7 @@ public class GTFLine {
                 String[] attribSubElems = attribElem.split(" ");
                 String property = attribSubElems[0].toLowerCase().replaceAll(" ", "");
                 String value = attribSubElems[1].replaceAll("\"", "");
+                value = value.replaceAll(";", "");
                 if (property.equals("gene_id")) {
                     geneId = new String(value.getBytes("UTF-8")).intern();
                 } else if (property.equals("gene_name")) {
@@ -79,6 +80,7 @@ public class GTFLine {
             }
             if (geneName != null && tssId != null) {
                 geneName += "_" + tssId;
+                
             }
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(GTFLine.class.getName()).log(Level.SEVERE, null, ex);

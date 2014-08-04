@@ -1,4 +1,4 @@
-package hms.rnaaccess;
+package hms.hwestra.rnaaccess;
 
 import java.io.File;
 import java.io.IOException;

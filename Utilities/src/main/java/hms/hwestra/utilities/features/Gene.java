@@ -15,6 +15,7 @@ import java.util.Objects;
 public class Gene extends Feature {
 
     ArrayList<Transcript> transcripts;
+    private String geneId;
 
     public Gene(String name, Chromosome chromosome, Strand strand) {
         this.name = name;
@@ -44,7 +45,7 @@ public class Gene extends Feature {
 
     @Override
     public String toString() {
-        return "Gene{" + "chromosome=" + chromosome + ", name=" + name + ", strand=" + strand + ", start=" + start + ", stop=" + stop + '}';
+        return "Gene{" + "chromosome=" + chromosome + ", geneId=" + geneId + ", name=" + name + ", strand=" + strand + ", start=" + start + ", stop=" + stop + '}';
     }
 
     public void getBounds() {
@@ -60,4 +61,11 @@ public class Gene extends Feature {
         }
     }
 
+    public void setGeneId(String geneId) {
+        this.geneId = geneId;
+    }
+
+    public String getGeneId(){
+        return geneId;
+    }
 }

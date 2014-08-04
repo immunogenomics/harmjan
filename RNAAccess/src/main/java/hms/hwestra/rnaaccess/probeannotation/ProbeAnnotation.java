@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.rnaaccess.probeannotation;
+package hms.hwestra.rnaaccess.probeannotation;
 
 import hms.hwestra.utilities.features.Probe;
 import hms.hwestra.utilities.features.Chromosome;
 import hms.hwestra.utilities.features.Exon;
+import hms.hwestra.utilities.features.Feature;
 import hms.hwestra.utilities.features.FeatureComparator;
 import hms.hwestra.utilities.features.Gene;
 import hms.hwestra.utilities.features.Strand;
@@ -16,6 +17,8 @@ import hms.hwestra.utilities.gtf.GTFAnnotation;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -23,8 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.sf.picard.reference.FastaSequenceFile;
 import net.sf.picard.reference.ReferenceSequence;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 
 /**
@@ -37,6 +38,9 @@ public class ProbeAnnotation {
         String probeFile = "/Data/Projects/RNAAccess/Smita's data/nexterarapidcapture_exome_probes_v1.1.bed";
         String genomeFasta = "/Data/Annotation/UCSC/genome.fa";
         String geneGTF = "/Data/Annotation/UCSC/genes.gtf";
+
+        // correlate GC content per gene with gene expression values
+        String expFile = "/Data/Projects/RNAAccess/Saturation/AllSamples.txt";
 
         // annotate RNA Access probes
         // --------------------------
@@ -55,8 +59,12 @@ public class ProbeAnnotation {
             // determine GC content for transcripts and probes
             p.determineGCContentForTranscriptsAndProbes(genomeFasta, outfile + "-GCContent.txt", geneGTF + "-GCContent.txt");
 
+            //
+            p.createAnnotationFileForGeneExpFile(expFile, expFile + "_GCContentData.txt");
         } catch (IOException ex) {
             Logger.getLogger(ProbeAnnotation.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            Logger.getLogger(ProbeAnnotation.class.getName()).log(Level.SEVERE, null, e);
         }
 
     }
@@ -72,8 +80,8 @@ public class ProbeAnnotation {
         TextFile tf = new TextFile(probeFile, TextFile.R);
         String[] elems = tf.readLineElems(TextFile.tab);
 
-        FeatureComparator comp = new FeatureComparator();
-        probes = new TreeSet<Probe>(new FeatureComparator());
+        FeatureComparator comp = new FeatureComparator(false);
+        probes = new TreeSet<Probe>(new FeatureComparator(false));
         ArrayList<Probe> probeList = new ArrayList<Probe>();
         while (elems != null) {
             Chromosome chr = Chromosome.parseChr(elems[0]);
@@ -93,7 +101,7 @@ public class ProbeAnnotation {
                     }
                 }
 
-                System.exit(0);
+                //System.exit(0);
             } else {
                 probes.add(probe);
             }
@@ -156,15 +164,7 @@ public class ProbeAnnotation {
                     }
 
                     for (Transcript t : transcripts) {
-                        if (p.getStart() >= t.getStart() && p.getStop() <= t.getStop()) {
-                            // perfect overlap
-                            overlappingTranscripts.add(t);
-
-                        } else if (p.getStart() < t.getStart() && p.getStop() > t.getStart()) {
-                            // partial overlap
-                            overlappingTranscripts.add(t);
-                        } else if (p.getStart() < t.getStop() && p.getStop() > t.getStop()) {
-                            // more partial overlap
+                        if (p.overlaps(t)) {
                             overlappingTranscripts.add(t);
                         }
                     }
@@ -181,20 +181,12 @@ public class ProbeAnnotation {
                             overlappingTranscriptAnnotStr += ";" + t.getChromosome().getName() + ":" + t.getStrand() + ":" + t.getStart() + "-" + t.getStop();
                         }
                         for (Exon e : exons) {
-                            if (p.getStart() >= e.getStart() && p.getStop() <= e.getStop()) {
-                                // perfect overlap
-                                overlappingExons.add(e);
-                            } else if (p.getStart() < e.getStart() && p.getStop() > e.getStart()) {
-                                // partial overlap
-                                overlappingExons.add(e);
-                            } else if (p.getStart() < e.getStop() && p.getStop() > e.getStop()) {
-                                // more partial overlap
+                            if (p.overlaps(e)) {
                                 overlappingExons.add(e);
                             }
                         }
 
                         for (Exon e : overlappingExons) {
-
                             if (overlappingExonStr == null) {
                                 overlappingExonStr = e.getName();
                                 overlappingExonAnnotStr = e.getChromosome().getName() + ":" + e.getStrand() + ":" + e.getStart() + "-" + e.getStop();
@@ -206,9 +198,9 @@ public class ProbeAnnotation {
                         }
 
                     }
+
                 }
             }
-
             outfile.writeln(p.getName() + "\t" + p.getChromosome().getName() + "\t" + p.getStart() + "\t" + p.getStop()
                     + "\t" + overlappingGeneStr + "\t" + overlappingGeneAnnotStr
                     + "\t" + overlappingTranscriptStr + "\t" + overlappingTranscriptAnnotStr
@@ -257,12 +249,12 @@ public class ProbeAnnotation {
                 byte[] subsequence = new byte[stop - start];
                 // System.out.println(p.getName() + "\t" + p.getChromosome().getName() + "\t" + start + "\t" + stop + "\t" + bases.length + "\t" + subsequence.length);
                 System.arraycopy(bases, start, subsequence, 0, subsequence.length);
-                Pair<Triple<Integer, Integer, Integer>, Double> gcContent = determineGCContent(subsequence);
+                determineGCContent(subsequence, p);
                 tfProbeAnnotOut.writeln(p.getName() + "\t" + p.getChromosome().getName() + "\t" + p.getStart() + "\t" + p.getStop()
-                        + "\t" + gcContent.getLeft().getLeft()
-                        + "\t" + gcContent.getLeft().getMiddle()
-                        + "\t" + gcContent.getLeft().getRight()
-                        + "\t" + gcContent.getRight()
+                        + "\t" + p.getNrAT()
+                        + "\t" + p.getNrGC()
+                        + "\t" + p.getNrN()
+                        + "\t" + p.getGCContent()
                 );
                 writeSequence(tfProbeSequenceOut, p.getName(), subsequence);
             }
@@ -284,14 +276,15 @@ public class ProbeAnnotation {
                     ctr += len;
                 }
 
-                Pair<Triple<Integer, Integer, Integer>, Double> gcContent = determineGCContent(subsequence);
+                determineGCContent(subsequence, t);
                 Gene parentGene = t.getGene();
+
                 tfTranscriptAnnotOut.writeln(parentGene.getName() + "\t" + parentGene.getChromosome().getName() + "\t" + parentGene.getStart() + "\t" + parentGene.getStop()
                         + "\t" + t.getName() + "\t" + t.getChromosome().getName() + "\t" + t.getStart() + "\t" + t.getStop() + "\t" + exons.size() + "\t" + totalLength
-                        + "\t" + gcContent.getLeft().getLeft()
-                        + "\t" + gcContent.getLeft().getMiddle()
-                        + "\t" + gcContent.getLeft().getRight()
-                        + "\t" + gcContent.getRight()
+                        + "\t" + t.getNrAT()
+                        + "\t" + t.getNrGC()
+                        + "\t" + t.getNrN()
+                        + "\t" + t.getGCContent()
                 );
             }
             seq = fastaFile.nextSequence();
@@ -301,7 +294,7 @@ public class ProbeAnnotation {
         tfProbeSequenceOut.close();
     }
 
-    private Pair<Triple<Integer, Integer, Integer>, Double> determineGCContent(byte[] sequence) {
+    private void determineGCContent(byte[] sequence, Feature f) {
 
         int nrGC = 0;
         int nrAT = 0;
@@ -319,14 +312,111 @@ public class ProbeAnnotation {
 
         }
 
-        double gcContent = (double) nrGC / (nrGC + nrAT + nrN);
+        f.setBaseProperties(nrAT, nrGC, nrN);
 
-        return new Pair<Triple<Integer, Integer, Integer>, Double>(new Triple<Integer, Integer, Integer>(nrGC, nrAT, nrN), gcContent);
     }
 
     private void writeSequence(TextFile tfProbeSequenceOut, String name, byte[] sequence) throws IOException {
         tfProbeSequenceOut.writeln(">" + name);
         tfProbeSequenceOut.writeln(new String(sequence, "UTF-8"));
+    }
+
+    private void createAnnotationFileForGeneExpFile(String expFile, String outputfile) throws IOException {
+        TextFile tf = new TextFile(expFile, TextFile.R);
+        tf.readLineElems(TextFile.tab);
+        String[] elems = tf.readLineElems(TextFile.tab);
+        ArrayList<String> rowNames = new ArrayList<String>();
+        while (elems != null) {
+            rowNames.add(elems[0]);
+            elems = tf.readLineElems(TextFile.tab);
+        }
+        tf.close();
+
+        // try to find the genes that belong to this geneName
+        Collection<Gene> genes = gtf.getGenes();
+        HashMap<String, Gene> strToGene = new HashMap<String, Gene>();
+
+        for (Gene g : genes) {
+            strToGene.put(g.getName(), g);
+//            System.out.println(g.getName());
+        }
+
+        TextFile tfOut = new TextFile(outputfile, TextFile.W);
+        // write header
+        tfOut.writeln("Gene\tTranscript\tNrProbes\tProbeGC\tGeneLen\tNrExons\tNrExonBases\tExonGCContent");
+
+        for (String row : rowNames) {
+            String[] rowElems = row.split("-");
+
+            String geneName = rowElems[1] + "_" + rowElems[2];
+            Gene g = strToGene.get(geneName);
+
+            // take the longest transcript
+            if (g == null) {
+                System.out.println(row + "/" + geneName);
+                tfOut.writeln(
+                        row
+                        + "\t-"
+                        + "\t-"
+                        + "\t-"
+                        + "\t-"
+                        + "\t-"
+                        + "\t-"
+                        + "\t-"
+                );
+            } else {
+
+                ArrayList<Transcript> transcripts = g.getTranscripts();
+                Transcript maxT = null;
+                int len = 0;
+                for (Transcript t : transcripts) {
+
+                    int mrT = t.getStop() - t.getStart();
+                    if (mrT > len) {
+                        len = mrT;
+                        maxT = t;
+                    }
+
+                }
+                // get probes for T
+
+                if (maxT != null) {
+                    Set<Probe> selectedProbes = probes.subSet(new Probe(g.getChromosome(), g.getStart(), g.getStart(), ""), true,
+                            new Probe(g.getChromosome(), g.getStop(), g.getStop(), ""), true);
+
+                    double d = 0;
+
+                    for (Probe p : selectedProbes) {
+                        d += p.getGCContent();
+                    }
+
+                    tfOut.writeln(
+                            row
+                            + "\t" + maxT.getName()
+                            + "\t" + selectedProbes.size()
+                            + "\t" + (d / selectedProbes.size())
+                            + "\t" + (g.getStop() - g.getStart())
+                            + "\t" + maxT.getExons().size()
+                            + "\t" + maxT.getBaseSum()
+                            + "\t" + maxT.getGCContent()
+                    );
+                } else {
+                    tfOut.writeln(
+                            row
+                            + "\t-"
+                            + "\t-"
+                            + "\t-"
+                            + "\t-"
+                            + "\t-"
+                            + "\t-"
+                            + "\t-"
+                    );
+                }
+
+            }
+        }
+        tfOut.close();
+
     }
 
 }

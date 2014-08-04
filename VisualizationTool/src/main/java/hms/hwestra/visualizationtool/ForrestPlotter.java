@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.visualizationtool;
+package hms.hwestra.visualizationtool;
 
 import umcg.genetica.graphics.ForestPlot;
 import umcg.genetica.io.text.TextFile;

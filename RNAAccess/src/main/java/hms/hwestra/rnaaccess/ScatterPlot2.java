@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.rnaaccess;
+package hms.hwestra.rnaaccess;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;

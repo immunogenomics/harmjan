@@ -5,12 +5,12 @@
  */
 package hms.hwestra.utilities.bedfile;
 
+import hms.hwestra.utilities.features.Track;
 import hms.hwestra.utilities.features.Chromosome;
+import hms.hwestra.utilities.features.Feature;
 import hms.hwestra.utilities.features.Strand;
 import java.io.IOException;
 import umcg.genetica.io.text.TextFile;
-
-
 
 /**
  *
@@ -22,7 +22,9 @@ public class BedFileReader {
         TextFile tf = new TextFile(file, TextFile.R);
 
         System.out.println("Reading file: " + file);
-        System.out.println("Filtering for Chr: " + chr.getName() + "\t " + start + " - " + stop);
+        if (chr != null) {
+            System.out.println("Filtering for Chr: " + chr.getName() + "\t " + start + " - " + stop);
+        }
 
         // chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
         String[] elems = tf.readLineElems(TextFile.tab);
@@ -32,18 +34,22 @@ public class BedFileReader {
         while (elems != null) {
 
             int len = 0;
-            Chromosome lineChr = Chromosome.parseChr(elems[0]);
-            Strand lineStrand = Strand.parseStr(elems[5]);
-            int lineStart = -1;
-            int lineStop = -1;
+            Chromosome featureChr = Chromosome.parseChr(elems[0]);
+
+            Strand featureStrand = Strand.NA;
+
+            featureStrand = Strand.parseStr(elems[elems.length - 1]);
+
+            int featureStart = -1;
+            int featureStop = -1;
             try {
-                lineStart = Integer.parseInt(elems[1]);
+                featureStart = Integer.parseInt(elems[1]);
             } catch (NumberFormatException e) {
                 System.out.println("Could not parse chromosome start position: " + elems[1]);
             }
 
             try {
-                lineStop = Integer.parseInt(elems[2]);
+                featureStop = Integer.parseInt(elems[2]);
             } catch (NumberFormatException e) {
                 System.out.println("Could not parse chromosome stop position: " + elems[2]);
             }
@@ -51,7 +57,7 @@ public class BedFileReader {
             int peakPos = 0;
             double peakQ = 0;
             double foldChange = 0;
-            if (peakFiles) {
+            if (peakFiles && elems.length > 4) {
                 try {
                     peakPos = Integer.parseInt(elems[4]);
                     peakQ = Double.parseDouble(elems[elems.length - 1]);
@@ -62,35 +68,49 @@ public class BedFileReader {
                 }
             }
 
-            len = lineStop - lineStart;
+            len = featureStop - featureStart;
+            boolean add = false;
+            if (chr == null) {
+                add = true;
+            } else if (chr == featureChr) {
 
-            if (chr == lineChr) {
-
-                if (lineStart <= start && lineStop <= stop && lineStop >= start) {
-                    BedFileFeature f = new BedFileFeature(lineChr, lineStrand, track, lineStart, lineStop);
-                    if(peakFiles){
-                        f.setPeakValues(peakPos, foldChange, peakQ);
-                    }
-                    track.addFeature(f);
+                if (featureStart <= start && featureStop <= stop && featureStop >= start) {
+                    add = true;
                 }
-                if (lineStart >= start && lineStop >= stop && lineStart <= stop) {
-                    BedFileFeature f = new BedFileFeature(lineChr, lineStrand, track, lineStart, lineStop);
-                    f.setPeakValues(peakPos, foldChange, peakQ);
-                    track.addFeature(f);
+                if (featureStart >= start && featureStop >= stop && featureStart <= stop) {
+                    add = true;
                 }
-                if (lineStart >= start && lineStop <= stop) {
-                    BedFileFeature f = new BedFileFeature(lineChr, lineStrand, track, lineStart, lineStop);
-                    f.setPeakValues(peakPos, foldChange, peakQ);
-                    track.addFeature(f);
+                if (featureStart >= start && featureStop <= stop) {
+                    add = true;
                 }
             }
+            if (add) {
+                Feature f = new Feature();
+                f.setChromosome(featureChr);
+                f.setStrand(featureStrand);
+                f.setStart(featureStart);
+                f.setStop(featureStop);
+                if (peakFiles) {
+//                        f.setPeakValues(peakPos, foldChange, peakQ);
+                }
+//                if (track.containsFeature(f)) {
+//                    System.out.println("Duplicate feature: " + f.toString());
+//                } else {
+                track.addFeature(f);
+//                }
+                // System.out.println(f.toString());
+            }
+
             length += len;
             nrReads++;
-            track.addReadLengthToDist(len, lineChr);
             elems = tf.readLineElems(TextFile.tab);
         }
+
         tf.close();
-        System.out.println("Average length: " + ((double) length / nrReads) + "\tNumber of reads: " + nrReads);
+
+        System.out.println(
+                "Average length: " + ((double) length / nrReads) + "\tNumber of reads: " + nrReads
+        );
         track.printNrFeatures();
         return track;
     }

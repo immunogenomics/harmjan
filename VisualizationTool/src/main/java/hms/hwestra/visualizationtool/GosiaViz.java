@@ -3,14 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.visualizationtool;
+package hms.hwestra.visualizationtool;
 
-import hms.hwestra.utilities.bedfile.Track;
-import hms.hwestra.utilities.bedfile.BedFileFeature;
+import hms.hwestra.utilities.features.Track;
+import hms.hwestra.utilities.features.BedFileFeature;
 import hms.hwestra.utilities.features.Chromosome;
 import hms.hwestra.utilities.features.Strand;
 import hms.hwestra.utilities.bedfile.BedFileReader;
 import com.lowagie.text.DocumentException;
+import hms.hwestra.utilities.features.Feature;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -94,6 +95,7 @@ public class GosiaViz {
             GosiaViz vis = new GosiaViz();
             double minP = 5E-8;
             String gwasCatalog = "C:\\Work\\DNASe\\2014-05-19-GWASCatalog.txt";
+            String loci = "";
             String trait = "Rheumatoid arthritis";
             String features = "C:\\Work\\Ensembl\\structures.txt";
             String bedFileDir = "C:\\Work\\DNASe\\";
@@ -448,15 +450,16 @@ public class GosiaViz {
                             Track t = reader.read(bedFileDir + file, file, Chromosome.parseChr(chrStr), windowStart, windowStop, true);
                             // bin the peaks
 
-                            Set<BedFileFeature> featureSet = t.getFeatureSet(Chromosome.parseChr(chrStr), Strand.POS, windowStart, windowStop);
+                            Set<Feature> featureSet = t.getFeatureSet(Chromosome.parseChr(chrStr), windowStart, windowStop);
 
                             int yPos = distPlotStartY + y * (distPlotSize + distplotMargin);
                             System.out.println(featureSet.size());
                             Stroke defaultStroke = g2d.getStroke();
-                            for (BedFileFeature f : featureSet) {
+                            for (Feature f : featureSet) {
+                                BedFileFeature f2 = (BedFileFeature) f;
                                 g2d.setColor(new Color(0, 125, 255, 64));
-                                int start = f.getStart();
-                                int stop = f.getStop();
+                                int start =  f2.getStart();
+                                int stop =  f2.getStop();
 
                                 if (start < windowStart) {
                                     start = windowStart;
@@ -467,19 +470,19 @@ public class GosiaViz {
                                 int startX = figureMargin + (start - windowStart) / bpPerPixel;
                                 int stopX = figureMargin + (stop - windowStart) / bpPerPixel;
 
-                                double peakQ = f.getPeakQ();
-                                if (peakQ > 100) {
-                                    peakQ = 100;
-                                }
-                                int peakHeight = (int) Math.ceil((peakQ / 100) * distPlotSize);
-
-                                g2d.fillRect(startX, yPos + distPlotSize - peakHeight, stopX - startX, peakHeight);
-
-                                int peakPos = f.getPeakPos();
-                                int peakPosX = figureMargin + (peakPos - windowStart) / bpPerPixel;
+//                                double peakQ =  f2.getPeakQ();
+//                                if (peakQ > 100) {
+//                                    peakQ = 100;
+//                                }
+//                                int peakHeight = (int) Math.ceil((peakQ / 100) * distPlotSize);
+//
+//                                g2d.fillRect(startX, yPos + distPlotSize - peakHeight, stopX - startX, peakHeight);
+//
+//                                int peakPos =  f2.getPeakPos();
+//                                int peakPosX = figureMargin + (peakPos - windowStart) / bpPerPixel;
                                 g2d.setColor(new Color(0, 125, 255, 255));
                                 g2d.setStroke(line2pt);
-                                g2d.drawLine(peakPosX, yPos + distPlotSize - peakHeight, peakPosX, yPos + distPlotSize);
+//                                g2d.drawLine(peakPosX, yPos + distPlotSize - peakHeight, peakPosX, yPos + distPlotSize);
                                 System.out.println(stopX - startX);
                                 g2d.setStroke(defaultStroke);
                             }
@@ -502,7 +505,6 @@ public class GosiaViz {
                         g2d.setColor(new Color(255, 125, 0, 64));
                         g2d.setStroke(dashed);
                         for (String proxy : proxies) {
-
                             Integer id = ds.getSnpToSNPId().get(proxy);
                             int snpPos = ds.getChrPos(id);
                             snpXPos = figureMargin + (snpPos - windowStart) / bpPerPixel;

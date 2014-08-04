@@ -3,15 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.visualizationtool;
+package hms.hwestra.visualizationtool;
 
-import hms.hwestra.utilities.bedfile.Track;
-import hms.hwestra.utilities.bedfile.BedFileFeature;
+import hms.hwestra.utilities.features.Track;
+import hms.hwestra.utilities.features.BedFileFeature;
 import hms.hwestra.utilities.features.Chromosome;
 import hms.hwestra.utilities.features.Strand;
 import hms.hwestra.utilities.bedfile.BedFileReader;
 import com.lowagie.text.DocumentException;
-import hms.visualizationtool.Viz.Output;
+import hms.hwestra.utilities.features.Feature;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -75,17 +76,18 @@ public class Viz {
 
     public static void main(String[] args) {
         try {
-            String file = "C:\\Work\\EpigenomeRoadmap\\CD8_Naive_Primary_Cells\\Histone_H3K27ac\\BI.CD8_Naive_Primary_Cells.H3K27ac.Donor_101_8_pooled_leukopaks_Jan_20_2011.bed.gz";
+            String file = "/Data/Gosia/bedfiles/UCSF-UBC.Breast_vHMEC.H3K4me1.RM035.HS1994.bed.gz";
             BedFileReader f = new BedFileReader();
 
             int width = 1000;
-            int margin = 20;
-            int start = 0;
-            Chromosome chr = Chromosome.ONE;
-            int stop = chr.getLength();
+            int margin = 100;
+            
+            Chromosome chr = Chromosome.FIVE;
+            int start = 56025316; // 56025316-56041464
+            int stop = 56041464;
 
             // read all data
-            Track t = f.read(file, "NaivePrimaryCD8", Chromosome.ONE, start, stop, false);
+            Track t = f.read(file, "NaivePrimaryCD8", chr, start, stop, false);
 
 //            start = 117294211;
 //            stop = 117294211 + 5000000;
@@ -93,13 +95,15 @@ public class Viz {
             tracks.add(t);
 
             Viz v = new Viz();
-            String outputDir = "C:\\Work\\EpigenomeRoadmap\\viz2.png";
+            String outputDir = "/Data/Gosia/viz2.png";
             try {
                 v.viz(tracks, chr, start, stop, outputDir, Output.PNG);
             } catch (DocumentException ex) {
                 Logger.getLogger(Viz.class.getName()).log(Level.SEVERE, null, ex);
             }
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e){
             e.printStackTrace();
         }
     }
@@ -324,8 +328,8 @@ public class Viz {
         int bpPerBin = (stop - start) / nrBins;
         double[][] bins = new double[2][nrBins];
 
-        Set<BedFileFeature> features = track.getFeatureSet(chr, Strand.POS, start, stop);
-        for (BedFileFeature f : features) {
+        Set<Feature> features = track.getFeatureSet(chr, start, stop);
+        for (Feature f : features) {
             int fstart = f.getStart();
             int fstop = f.getStop();
             Strand s = f.getStrand();
@@ -339,12 +343,13 @@ public class Viz {
             if (fstart >= start && fstop <= stop) {
                 for (int i = fstart; i < fstop; i++) {
                     int binNo = (int) Math.ceil((i - start) / bpPerBin);
-                    if (binNo > nrBins) {
+                    if (binNo >= nrBins) {
                         binNo = nrBins - 1;
                     }
                     if (binNo < 0) {
                         binNo = 0;
                     }
+                    
 
                     bins[s.getNumber()][binNo]++;
 
@@ -364,7 +369,7 @@ public class Viz {
         int[][] bins = new int[2][nrBins];
         int maxLength = maxReadLength;
 
-        for (BedFileFeature f : track.getFeatures()) {
+        for (Feature f : track.getFeatures()) {
             int fstart = f.getStart();
             int fstop = f.getStop();
 
@@ -399,20 +404,20 @@ public class Viz {
         // + strand features first
 
         int y = 0;
-        Set<BedFileFeature> features = null;
-        features = track.getFeatureSet(chr, Strand.NEG, windowStart, windowEnd);
+        Set<Feature> features = null;
+        features = track.getFeatureSet(chr, windowStart, windowEnd);
 
         System.out.println(features.size() + " features found within window...");
-        HashSet<BedFileFeature> visitedFeatures = new HashSet<BedFileFeature>();
+        HashSet<Feature> visitedFeatures = new HashSet<Feature>();
         int bpInWindow = windowEnd - windowStart;
         int featHeight = 5;
         int featMargin = 3;
 //        boolean plot = false;
         while (visitedFeatures.size() != features.size()) {
 
-            Set<BedFileFeature> otherFeaturesAtY = new HashSet<BedFileFeature>();
+            Set<Feature> otherFeaturesAtY = new HashSet<Feature>();
             int yStart = plotYStart + (y * featHeight) + (y * featMargin);
-            for (BedFileFeature f : features) {
+            for (Feature f : features) {
 
                 Color boxcolor = null;
                 Color linecolor = null;
@@ -455,7 +460,7 @@ public class Viz {
 
                     } else {
                         boolean overlaps = false;
-                        for (BedFileFeature otherFeature : otherFeaturesAtY) {
+                        for (Feature otherFeature : otherFeaturesAtY) {
                             if (f.overlaps(otherFeature)) {
                                 overlaps = true;
                             }
@@ -515,8 +520,8 @@ public class Viz {
             int[] negBaseSeen = new int[windowsize];
             int[] posBaseSeen = new int[windowsize];
 
-            Set<BedFileFeature> features = get.getFeatureSet(chr, Strand.POS, i, i + windowsize);
-            for (BedFileFeature f : features) {
+            Set<Feature> features = get.getFeatureSet(chr, i, i + windowsize);
+            for (Feature f : features) {
                 int fstart = f.getStart();
                 int fstop = f.getStop();
                 Strand s = f.getStrand();

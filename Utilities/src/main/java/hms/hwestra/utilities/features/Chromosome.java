@@ -55,8 +55,8 @@ public enum Chromosome {
     public int getLength() {
         return length;
     }
-    
-     public int getNumber() {
+
+    public int getNumber() {
         return number;
     }
 
@@ -133,8 +133,8 @@ public enum Chromosome {
         }
         if (chrStr.equals("chrx")) {
             return Chromosome.X;
-        } 
-        if(chrStr.equals("chrm") || chrStr.equals("chrmt")){
+        }
+        if (chrStr.equals("chrm") || chrStr.equals("chrmt")) {
             return Chromosome.MT;
         }
 
@@ -145,6 +145,8 @@ public enum Chromosome {
     public String toString() {
         return this.getName();
     }
-    
-    
+
+    public boolean equals(Chromosome other) {
+        return this.number == other.number;
+    }
 }

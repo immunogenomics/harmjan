@@ -52,6 +52,7 @@ public class GTFAnnotation {
 
                 String transcriptName = lineObj.getTranscriptId();
                 Gene tmpGene = new Gene(geneName, lineObj.getChr(), lineObj.getStr());
+                tmpGene.setGeneId(lineObj.getGeneId());
                 if (strToGene.containsKey(tmpGene.toString())) {
                     // continue annotating transcripts and exons with this gene
 //                System.out.println("getting gene: " + geneName);
@@ -105,10 +106,14 @@ public class GTFAnnotation {
         // set the relative start and end positions of each gene and transcript
         genes = strToGene.values();
 
+        for(Gene g: genes){
+            g.getBounds();
+        }
+        
     }
 
     public TreeSet<Gene> getGeneTree() {
-        TreeSet<Gene> geneTree = new TreeSet<Gene>(new FeatureComparator());
+        TreeSet<Gene> geneTree = new TreeSet<Gene>(new FeatureComparator(true));
         for (Gene g : genes) {
             g.getBounds();
             geneTree.add(g);
@@ -116,12 +121,12 @@ public class GTFAnnotation {
         return geneTree;
     }
 
-    public void getGenes() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public Collection<Gene> getGenes() {
+        return genes;
     }
 
     public TreeSet<Transcript> getTranscriptTree() {
-        TreeSet<Transcript> transcriptTree = new TreeSet<Transcript>(new FeatureComparator());
+        TreeSet<Transcript> transcriptTree = new TreeSet<Transcript>(new FeatureComparator(true));
         for (Gene g : genes) {
             transcriptTree.addAll(g.getTranscripts());
         }
