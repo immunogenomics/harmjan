@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hms.hwestra.polypeak;
+package hms.hwestra.utilities.bamfile;
 
 import htsjdk.samtools.BAMIndexMetaData;
 import htsjdk.samtools.BAMIndexer;
@@ -20,7 +20,10 @@ import htsjdk.samtools.filter.AggregateFilter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import org.apache.log4j.Logger;
+//import org.apache.logging.log4j.Logger;
+
+
+
 import umcg.genetica.containers.Pair;
 
 /**
@@ -33,7 +36,7 @@ public class BamFileReader {
     private final SamReader reader;
     private final AggregateFilter filter;
 
-    private static final Logger LOG = Logger.getLogger(BamFileReader.class);
+//    private static final Logger LOG = Logger.getLogger(BamFileReader.class);
 
     public BamFileReader(File bamFile, AggregateFilter filter, boolean indexFileWhenNotIndexed) throws IOException {
         this.filter = filter;
@@ -49,21 +52,21 @@ public class BamFileReader {
             reader = tmpreader;
             SAMFileHeader header = reader.getFileHeader();
             if (!header.getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
-                LOG.warn("Sort order is not based on coordinate, so access may be slow for: " + bamFile.getAbsolutePath());
+//                LOG.warn("Sort order is not based on coordinate, so access may be slow for: " + bamFile.getAbsolutePath());
             }
         } else {
             tmpreader.close();
-            LOG.info("BAM file does not have an index: " + bamFile.getAbsolutePath());
+//            LOG.info("BAM file does not have an index: " + bamFile.getAbsolutePath());
             if (indexFileWhenNotIndexed) {
                 // index file
-                LOG.info("Indexing BAM file: " + bamFile.getAbsolutePath());
+//                LOG.info("Indexing BAM file: " + bamFile.getAbsolutePath());
                 SAMFileReader samfileReader = new SAMFileReader(bamFile);
                 String outputPath = bamFile.getAbsolutePath();
 //                outputPath = outputPath.substring(3);
                 outputPath += ".bai";
                 BAMIndexer.createIndex(samfileReader, new File(outputPath));
                 samfileReader.close();
-                LOG.info("Done indexing: " + outputPath);
+//                LOG.info("Done indexing: " + outputPath);
             }
             tmpreader = SamReaderFactory.make()
                     .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
@@ -72,18 +75,18 @@ public class BamFileReader {
             reader = tmpreader;
 
             SAMFileHeader header = reader.getFileHeader();
-            LOG.info("Summary:");
-            LOG.info("Creator: " + header.getCreator());
-            LOG.info("Sequences: " + header.getSequenceDictionary().getSequences().size());
-            LOG.info("");
+//            LOG.info("Summary:");
+//            LOG.info("Creator: " + header.getCreator());
+//            LOG.info("Sequences: " + header.getSequenceDictionary().getSequences().size());
+//            LOG.info("");
             int nrAligned = 0;
             int nrNonAligned = 0;
             int nrTotal = 0;
             for (SAMSequenceRecord record : header.getSequenceDictionary().getSequences()) {
-
-                LOG.info("Sequence: " + record.getSequenceName());
-                LOG.info("\tSequence index: " + record.getSequenceIndex());
-                LOG.info("\tSequence len: " + record.getSequenceLength());
+//
+//                LOG.info("Sequence: " + record.getSequenceName());
+//                LOG.info("\tSequence index: " + record.getSequenceIndex());
+//                LOG.info("\tSequence len: " + record.getSequenceLength());
                 BAMIndexMetaData metaData = reader.indexing().getIndex().getMetaData(record.getSequenceIndex());
                 int tmpnrAligned = metaData.getAlignedRecordCount();
                 int tmpnrNonAligned = metaData.getAlignedRecordCount();
@@ -91,18 +94,18 @@ public class BamFileReader {
                 nrAligned += tmpnrAligned;
                 nrNonAligned += tmpnrNonAligned;
                 nrTotal += tmpnrTotal;
-                LOG.info("\tAligned: " + tmpnrAligned);
-                LOG.info("\tNonAligned: " + tmpnrNonAligned);
-                LOG.info("\tNrTotal: " + tmpnrTotal + "\n");
+//                LOG.info("\tAligned: " + tmpnrAligned);
+//                LOG.info("\tNonAligned: " + tmpnrNonAligned);
+//                LOG.info("\tNrTotal: " + tmpnrTotal + "\n");
 
             }
             
             System.out.println("");
             
-            LOG.info("Total Aligned: " + nrAligned);
-            LOG.info("Total NonAligned: " + nrNonAligned);
-            LOG.info("Total NrTotal: " + nrTotal);
-            LOG.info("");
+//            LOG.info("Total Aligned: " + nrAligned);
+//            LOG.info("Total NonAligned: " + nrNonAligned);
+//            LOG.info("Total NrTotal: " + nrTotal);
+//            LOG.info("");
 
         }
 
@@ -134,6 +137,8 @@ public class BamFileReader {
         }
         return new Pair<Integer, Integer>(nrPassingFilter, nrNotPassingFilter);
     }
+    
+    
     
     public BrowseableBAMIndex getIndexMetaData(){
         return reader.indexing().getBrowseableIndex();

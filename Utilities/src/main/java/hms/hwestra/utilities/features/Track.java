@@ -6,7 +6,6 @@
 package hms.hwestra.utilities.features;
 
 import java.util.NavigableSet;
-import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -19,7 +18,7 @@ public class Track extends Feature {
 
     public Track(String name, int start, int stop) {
         this.name = name;
-        this.features = new TreeSet<>(new FeatureComparator(false));
+        this.features = new TreeSet<Feature>(new FeatureComparator(false));
         this.start = start;
         this.stop = stop;
     }

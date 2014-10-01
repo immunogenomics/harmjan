@@ -43,7 +43,7 @@ public class Transcript extends Feature {
 
     public void addExon(Exon e) {
         if(exons == null){
-            exons = new ArrayList<>();
+            exons = new ArrayList<Exon>();
         }
         int estart = e.getStart();
         int estop = e.getStop();

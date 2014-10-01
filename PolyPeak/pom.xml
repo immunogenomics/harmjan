@@ -15,15 +15,10 @@
             <version>1.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>htsjdk</groupId>
-            <artifactId>htsjdk</artifactId>
-            <version>1.115</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/libs/htsjdk-1.115.jar</systemPath>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>Utilities</artifactId>
+            <version>${project.version}</version>
         </dependency>
-        
-       
-
     </dependencies>
     
     <build>

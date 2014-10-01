@@ -1,20 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>hms</groupId>
-    <artifactId>RNAAccess</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <parent>
+        <groupId>hms.hwestra</groupId>
+        <artifactId>hmsprojects</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>Resequencing</artifactId>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
-            <groupId>nl.systemsgenetics</groupId>
-            <artifactId>genetica-libraries</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>1.2</version>
         </dependency>
         <dependency>
-            <groupId>hms.hwestra</groupId>
+            <groupId>htsjdk</groupId>
+            <artifactId>htsjdk</artifactId>
+            <version>1.121</version>
+        </dependency>
+        <dependency>
+            <groupId>picard</groupId>
+            <artifactId>picard</artifactId>
+            <version>1.121</version>
+        </dependency>
+        <dependency>
+            <groupId>snappy</groupId>
+            <artifactId>snappy</artifactId>
+            <version>1.0.3-rc3</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>Utilities</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
     <build>
@@ -27,7 +45,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>hms.rnaaccess.CollectBamFiles</mainClass>
+                            <mainClass>hms.hwestra.resequencing.Resequencing</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
@@ -45,9 +63,7 @@
         </plugins>
     </build>
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
     </properties>
-    
 </project>
