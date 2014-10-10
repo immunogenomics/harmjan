@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 //import org.apache.logging.log4j.Logger;
 
-
-
 import umcg.genetica.containers.Pair;
 
 /**
@@ -37,7 +35,6 @@ public class BamFileReader {
     private final AggregateFilter filter;
 
 //    private static final Logger LOG = Logger.getLogger(BamFileReader.class);
-
     public BamFileReader(File bamFile, AggregateFilter filter, boolean indexFileWhenNotIndexed) throws IOException {
         this.filter = filter;
         this.bamFile = bamFile;
@@ -99,24 +96,28 @@ public class BamFileReader {
 //                LOG.info("\tNrTotal: " + tmpnrTotal + "\n");
 
             }
-            
+
             System.out.println("");
-            
+
 //            LOG.info("Total Aligned: " + nrAligned);
 //            LOG.info("Total NonAligned: " + nrNonAligned);
 //            LOG.info("Total NrTotal: " + nrTotal);
 //            LOG.info("");
-
         }
 
     }
 
+    public SAMRecordIterator iterator() {
+        return reader.iterator();
+    }
+
     public SAMRecord[] query(String chr, int positionBegin, int positionEnd, boolean overlapRequired) {
         SAMRecordIterator iterator = reader.query(chr, positionBegin, positionEnd, overlapRequired);
+        
         ArrayList<SAMRecord> records = new ArrayList<SAMRecord>();
         while (iterator.hasNext()) {
             SAMRecord record = iterator.next();
-            if (!filter.filterOut(record)) {
+            if (filter == null || !filter.filterOut(record)) {
                 records.add(record);
             }
         }
@@ -129,7 +130,7 @@ public class BamFileReader {
         int nrNotPassingFilter = 0;
         while (iterator.hasNext()) {
             SAMRecord record = iterator.next();
-            if (!filter.filterOut(record)) {
+            if (filter == null || !filter.filterOut(record)) {
                 nrPassingFilter++;
             } else {
                 nrNotPassingFilter++;
@@ -138,13 +139,11 @@ public class BamFileReader {
         return new Pair<Integer, Integer>(nrPassingFilter, nrNotPassingFilter);
     }
     
-    
-    
-    public BrowseableBAMIndex getIndexMetaData(){
+    public BrowseableBAMIndex getIndexMetaData() {
         return reader.indexing().getBrowseableIndex();
     }
-    
-    public SAMFileHeader getHeader(){
+
+    public SAMFileHeader getHeader() {
         return reader.getFileHeader();
     }
 

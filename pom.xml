@@ -11,7 +11,7 @@
         <module>PolyPeak</module>
         <module>Utilities</module>
         <module>MiscScripts</module>
-        <module>Resequencing</module>
+        <module>NGS</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

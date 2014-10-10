@@ -6,7 +6,7 @@
         <artifactId>hmsprojects</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>Resequencing</artifactId>
+    <artifactId>NGS</artifactId>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
@@ -45,7 +45,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>hms.hwestra.resequencing.Resequencing</mainClass>
+                            <mainClass>hms.hwestra.ngs.Resequencing</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
@@ -66,4 +66,5 @@
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
     </properties>
+    <name>NGS</name>
 </project>
