@@ -24,8 +24,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.sf.picard.reference.FastaSequenceFile;
-import net.sf.picard.reference.ReferenceSequence;
 import umcg.genetica.io.text.TextFile;
 
 /**
@@ -215,8 +213,9 @@ public class ProbeAnnotation {
         TreeSet<Transcript> transcripts = gtf.getTranscriptTree();
 
         // open fasta
-        FastaSequenceFile fastaFile = new FastaSequenceFile(new File(genomeFasta), false);
-        ReferenceSequence seq = fastaFile.nextSequence();
+        
+        htsjdk.samtools.reference.FastaSequenceFile fastaFile = new htsjdk.samtools.reference.FastaSequenceFile(new File(genomeFasta), false);
+        htsjdk.samtools.reference.ReferenceSequence seq = fastaFile.nextSequence();
         int windowSize = 10000000;
         TextFile tfProbeAnnotOut = new TextFile(probeOut, TextFile.W);
         tfProbeAnnotOut.writeln("Probe\tChr\tChrStart\tChrStop\tnrGC\tnrAT\tnrN\t%GC");

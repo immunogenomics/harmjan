@@ -22,6 +22,11 @@ public class SortableSNP implements Comparable<SortableSNP> {
     public String name = null;
 
     public final double effect;
+
+    @Override
+    public String toString() {
+        return "SortableSNP{" + "s=" + s + ", chr=" + chr + ", chrpos=" + chrpos + ", id=" + id + ", name=" + name + ", effect=" + effect + '}';
+    }
     
     public SortableSNP(String name, int id, byte chr, int chrpos, SORTBY s) {
         this.s = s;

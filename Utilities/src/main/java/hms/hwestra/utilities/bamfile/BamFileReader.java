@@ -20,7 +20,7 @@ import htsjdk.samtools.filter.AggregateFilter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-//import org.apache.logging.log4j.Logger;
+import java.util.logging.Level;
 
 import umcg.genetica.containers.Pair;
 
@@ -33,8 +33,9 @@ public class BamFileReader {
     private final File bamFile;
     private final SamReader reader;
     private final AggregateFilter filter;
-
+    static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(BamFileReader.class.getName());
 //    private static final Logger LOG = Logger.getLogger(BamFileReader.class);
+
     public BamFileReader(File bamFile, AggregateFilter filter, boolean indexFileWhenNotIndexed) throws IOException {
         this.filter = filter;
         this.bamFile = bamFile;
@@ -49,21 +50,21 @@ public class BamFileReader {
             reader = tmpreader;
             SAMFileHeader header = reader.getFileHeader();
             if (!header.getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
-//                LOG.warn("Sort order is not based on coordinate, so access may be slow for: " + bamFile.getAbsolutePath());
+                LOG.log(Level.WARNING, "Sort order is not based on coordinate, so access may be slow for: {0}", bamFile.getAbsolutePath());
             }
         } else {
             tmpreader.close();
-//            LOG.info("BAM file does not have an index: " + bamFile.getAbsolutePath());
+            LOG.log(Level.INFO, "BAM file does not have an index: {0}", bamFile.getAbsolutePath());
             if (indexFileWhenNotIndexed) {
                 // index file
-//                LOG.info("Indexing BAM file: " + bamFile.getAbsolutePath());
+                LOG.log(Level.INFO, "Indexing BAM file: {0}", bamFile.getAbsolutePath());
                 SAMFileReader samfileReader = new SAMFileReader(bamFile);
                 String outputPath = bamFile.getAbsolutePath();
 //                outputPath = outputPath.substring(3);
                 outputPath += ".bai";
                 BAMIndexer.createIndex(samfileReader, new File(outputPath));
                 samfileReader.close();
-//                LOG.info("Done indexing: " + outputPath);
+                LOG.log(Level.INFO, "Done indexing: {0}", outputPath);
             }
             tmpreader = SamReaderFactory.make()
                     .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
@@ -71,39 +72,41 @@ public class BamFileReader {
                     .open(bamFile);
             reader = tmpreader;
 
-            SAMFileHeader header = reader.getFileHeader();
-//            LOG.info("Summary:");
-//            LOG.info("Creator: " + header.getCreator());
-//            LOG.info("Sequences: " + header.getSequenceDictionary().getSequences().size());
-//            LOG.info("");
-            int nrAligned = 0;
-            int nrNonAligned = 0;
-            int nrTotal = 0;
-            for (SAMSequenceRecord record : header.getSequenceDictionary().getSequences()) {
-//
-//                LOG.info("Sequence: " + record.getSequenceName());
-//                LOG.info("\tSequence index: " + record.getSequenceIndex());
-//                LOG.info("\tSequence len: " + record.getSequenceLength());
-                BAMIndexMetaData metaData = reader.indexing().getIndex().getMetaData(record.getSequenceIndex());
-                int tmpnrAligned = metaData.getAlignedRecordCount();
-                int tmpnrNonAligned = metaData.getAlignedRecordCount();
-                int tmpnrTotal = tmpnrAligned + tmpnrNonAligned;
-                nrAligned += tmpnrAligned;
-                nrNonAligned += tmpnrNonAligned;
-                nrTotal += tmpnrTotal;
-//                LOG.info("\tAligned: " + tmpnrAligned);
-//                LOG.info("\tNonAligned: " + tmpnrNonAligned);
-//                LOG.info("\tNrTotal: " + tmpnrTotal + "\n");
-
-            }
-
-            System.out.println("");
-
-//            LOG.info("Total Aligned: " + nrAligned);
-//            LOG.info("Total NonAligned: " + nrNonAligned);
-//            LOG.info("Total NrTotal: " + nrTotal);
-//            LOG.info("");
         }
+
+        SAMFileHeader header = reader.getFileHeader();
+        LOG.info("Summary:");
+        LOG.log(Level.INFO, "File name: "+bamFile.getAbsolutePath());
+        LOG.log(Level.INFO, "Creator: {0}", header.getCreator());
+        LOG.log(Level.INFO, "Sequences: {0}", header.getSequenceDictionary().getSequences().size());
+        LOG.info("");
+        int nrAligned = 0;
+        int nrNonAligned = 0;
+        int nrTotal = 0;
+        for (SAMSequenceRecord record : header.getSequenceDictionary().getSequences()) {
+//
+            LOG.log(Level.INFO, "Sequence: {0}", record.getSequenceName());
+            LOG.log(Level.INFO, "\tSequence index: {0}", record.getSequenceIndex());
+            LOG.log(Level.INFO, "\tSequence len: {0}", record.getSequenceLength());
+            BAMIndexMetaData metaData = reader.indexing().getIndex().getMetaData(record.getSequenceIndex());
+            int tmpnrAligned = metaData.getAlignedRecordCount();
+            int tmpnrNonAligned = metaData.getAlignedRecordCount();
+            int tmpnrTotal = tmpnrAligned + tmpnrNonAligned;
+            nrAligned += tmpnrAligned;
+            nrNonAligned += tmpnrNonAligned;
+            nrTotal += tmpnrTotal;
+            LOG.log(Level.INFO, "\tAligned: {0}", tmpnrAligned);
+            LOG.log(Level.INFO, "\tNonAligned: {0}", tmpnrNonAligned);
+            LOG.log(Level.INFO, "\tNrTotal: {0}\n", tmpnrTotal);
+
+        }
+
+        System.out.println("");
+
+        LOG.log(Level.INFO, "Total Aligned: {0}", nrAligned);
+        LOG.log(Level.INFO, "Total NonAligned: {0}", nrNonAligned);
+        LOG.log(Level.INFO, "Total NrTotal: {0}", nrTotal);
+        LOG.info("");
 
     }
 
@@ -113,7 +116,7 @@ public class BamFileReader {
 
     public SAMRecord[] query(String chr, int positionBegin, int positionEnd, boolean overlapRequired) {
         SAMRecordIterator iterator = reader.query(chr, positionBegin, positionEnd, overlapRequired);
-        
+
         ArrayList<SAMRecord> records = new ArrayList<SAMRecord>();
         while (iterator.hasNext()) {
             SAMRecord record = iterator.next();
@@ -136,9 +139,10 @@ public class BamFileReader {
                 nrNotPassingFilter++;
             }
         }
+
         return new Pair<Integer, Integer>(nrPassingFilter, nrNotPassingFilter);
     }
-    
+
     public BrowseableBAMIndex getIndexMetaData() {
         return reader.indexing().getBrowseableIndex();
     }

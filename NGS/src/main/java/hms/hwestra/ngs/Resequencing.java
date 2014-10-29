@@ -58,7 +58,7 @@ public class Resequencing {
         try {
 
             args = new String[]{
-                "/Data/ATAC-seq/GSE47753/data.txt",
+                "/Data/ATAC-seq/GSE47753/data2.txt",
                 "/Data/ATAC-seq/GSE47753/Stats"};
 
             Resequencing.readsPerChromosomePerReadGroup(args);
@@ -465,13 +465,11 @@ public class Resequencing {
             while (iterator.hasNext()) {
 
                 SAMRecord record = iterator.next();
-
-                // let's do a naïve approach first
-                Chromosome chr = Chromosome.parseChr(record.getMateReferenceName());
-                SAMReadGroupRecord readgroup = record.getReadGroup();
                 String sample = fileName;
                 String[] sampleNameElems = sample.split("/");
                 sample = sampleNameElems[sampleNameElems.length - 1];
+                Chromosome chr = Chromosome.parseChr(record.getReferenceName());
+                SAMReadGroupRecord readgroup = record.getReadGroup();
                 if (readgroup != null) {
                     sample = readgroup.getSample();
                 }
@@ -481,45 +479,72 @@ public class Resequencing {
                     s = new ReadGroup();
                     samples.add(sample);
                     s.name = sample;
+                    strToSample.put(sample, s);
                     System.out.println("found new Readgroup: " + sample);
                 }
 
-                byte[] qual = record.getBaseQualities();
-                for (int o = 0; o < qual.length; o++) {
-                    byte qualval = qual[o];
-                    if (qualval >= 60) {
-                        qualval = 59;
+                if (record.getDuplicateReadFlag()) {
+                    if (record.getReadNegativeStrandFlag()) {
+                        s.dupsPerChr[0][chr.getNumber()]++;
+                    } else {
+                        s.dupsPerChr[1][chr.getNumber()]++;
                     }
-                    s.baseQualPerPos[o][qualval]++;
                 }
+
+                if (!record.getDuplicateReadFlag() && record.getProperPairFlag() && !record.getReadUnmappedFlag()) {
+                    // let's do a naïve approach first
+
+                    byte[] qual = record.getBaseQualities();
+                    for (int position = 0; position < qual.length; position++) {
+                        byte qualval = qual[position];
+                        if (qualval >= 60) {
+                            System.out.println(qualval);
+                            qualval = 59;
+                        }
+                        if (record.getReadNegativeStrandFlag()) {
+                            s.baseQualPerPosNegStrand[position][qualval]++;
+                        } else {
+                            s.baseQualPerPosPosStrand[position][qualval]++;
+                        }
+
+                    }
 
 //                if (record.getProperPairFlag()) {
-                if (record.getFirstOfPairFlag()) {
+                    if (record.getFirstOfPairFlag()) {
 //                        if (!record.getMateUnmappedFlag()) {
-                    s.readsPairedPerChr[chr.getNumber()]++;
-//                        }
+                        if (record.getReadNegativeStrandFlag()) {
+                            s.readsPairedPerChr[1][chr.getNumber()]++;
+                        } else {
+                            s.readsPairedPerChr[0][chr.getNumber()]++;
+                        }
 
-                }
+                    }
 //                }
 
-                s.readsPerChr[chr.getNumber()]++;
+                    if (record.getReadNegativeStrandFlag()) {
+                        s.readsPerChr[1][chr.getNumber()]++;
+                    } else {
+                        s.readsPerChr[0][chr.getNumber()]++;
+                    }
 
-                if (record.getDuplicateReadFlag()) {
-                    s.dupsPerChr[chr.getNumber()]++;
+                    int mapq = record.getMappingQuality();
+                    if (mapq > 99) {
+                        mapq = 0;
+                    }
+
+                    if (record.getReadNegativeStrandFlag()) {
+                        s.mapqPerChrNegStrand[chr.getNumber()][mapq]++;
+                    } else {
+                        s.mapqPerChrPosStrand[chr.getNumber()][mapq]++;
+                    }
+
+                    q++;
+                    if (q % 10000000 == 0) {
+                        System.out.println(q + " fragments processed ");
+                    }
+
                 }
 
-                int mapq = record.getMappingQuality();
-                if (mapq > 99) {
-                    mapq = 0;
-                }
-
-                s.mapqPerChr[chr.getNumber()][mapq]++;
-                q++;
-                if (q % 10000000 == 0) {
-                    System.out.println(q + " fragments processed ");
-                }
-
-                strToSample.put(sample, s);
             }
 
             reader.close();
@@ -549,9 +574,9 @@ public class Resequencing {
             String chrOutput3 = chr.getName();
 
             for (String sample : samples) {
-                chrOutput += "\t" + strToSample.get(sample).readsPerChr[chr.getNumber()];
-                chrOutput2 += "\t" + strToSample.get(sample).dupsPerChr[chr.getNumber()];
-                chrOutput3 += "\t" + strToSample.get(sample).readsPairedPerChr[chr.getNumber()];
+                chrOutput += "\t" + strToSample.get(sample).readsPerChr[0][chr.getNumber()] + "; " + strToSample.get(sample).readsPerChr[1][chr.getNumber()];;
+                chrOutput2 += "\t" + strToSample.get(sample).dupsPerChr[0][chr.getNumber()] + "; " + strToSample.get(sample).dupsPerChr[1][chr.getNumber()];
+                chrOutput3 += "\t" + strToSample.get(sample).readsPairedPerChr[0][chr.getNumber()] + "; " + strToSample.get(sample).readsPairedPerChr[1][chr.getNumber()];
             }
             outputf1.writeln(chrOutput);
             outputf2.writeln(chrOutput2);
@@ -567,35 +592,37 @@ public class Resequencing {
             ReadGroup s = strToSample.get(sample);
             TextFile outf = new TextFile(output + "-" + sampleNameElems[sampleNameElems.length - 1] + "-MapQPerChr.txt", TextFile.W);
             header = "Chr";
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 61; i++) {
                 header += "\t" + i;
             }
             outf.writeln(header);
             for (Chromosome chr : allChr) {
                 String chrOutput = chr.getName();
-                for (int i = 0; i < 100; i++) {
-                    chrOutput += "\t" + s.mapqPerChr[chr.getNumber()][i];
+                for (int i = 0; i < 61; i++) {
+                    chrOutput += "\t" + s.mapqPerChrPosStrand[chr.getNumber()][i] + "; " + s.mapqPerChrNegStrand[chr.getNumber()][i];
                 }
                 outf.writeln(chrOutput);
             }
-
             outf.close();
 
             TextFile outf2 = new TextFile(output + "-" + sampleNameElems[sampleNameElems.length - 1] + "-BaseQualPerPos.txt", TextFile.W);
             header = "Pos";
-            for (int i = 0; i < 60; i++) {
-                header += "\t" + i;
+            for (int i = 0; i < 51; i++) {
+                header += "\t" + i; //+"\tAverage";
             }
             outf2.writeln(header);
-            for (int p = 0; p < 100; p++) {
-                String outputStr = "" + p;
-                for (int i = 0; i < 60; i++) {
-                    outputStr += "\t" + s.baseQualPerPos[p][i];
+            for (int pos = 0; pos < 50; pos++) {
+                String outputStr = "" + pos;
+                for (int qual = 0; qual < 60; qual++) {
+                    outputStr += "\t" + s.baseQualPerPosPosStrand[pos][qual] + "; " + s.baseQualPerPosNegStrand[pos][qual];
                 }
                 outf2.writeln(outputStr);
             }
 
             outf2.close();
+
+            s.plotQualPerPos(output);
+            s.plotMapQPerChr(output);
 
         }
     }

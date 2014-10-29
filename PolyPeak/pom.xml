@@ -10,14 +10,19 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
-            <groupId>nl.systemsgenetics</groupId>
-            <artifactId>genetica-libraries</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>Utilities</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     
