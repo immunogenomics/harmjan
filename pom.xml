@@ -12,6 +12,7 @@
         <module>Utilities</module>
         <module>MiscScripts</module>
         <module>NGS</module>
+        <module>GoSCializer</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

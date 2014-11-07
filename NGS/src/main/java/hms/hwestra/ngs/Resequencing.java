@@ -23,6 +23,8 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamFileHeaderMerger;
 import java.io.File;
@@ -31,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
@@ -55,18 +59,23 @@ public class Resequencing {
 
     private Resequencing(String[] args) {
 
-        try {
+        if (args.length < 3) {
+            System.out.println("usage: input outdir stripoldqualityscores");
+        } else {
+            try {
+                splitPerChromosomeRemoveDuplicateReadsAndQualityScores(args[0], args[1], Boolean.parseBoolean(args[2]));
 
-            args = new String[]{
-                "/Data/ATAC-seq/GSE47753/data2.txt",
-                "/Data/ATAC-seq/GSE47753/Stats"};
-
-            Resequencing.readsPerChromosomePerReadGroup(args);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+//        try {
+//
+//            args = new String[]{
+//                "/Data/ATAC-seq/GSE47753/data2.txt",
+//                "/Data/ATAC-seq/GSE47753/Stats"};
+//
+//            Resequencing.readsPerChromosomePerReadGroup(args);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 //        // dedup sort index
 //        if (args.length < 2) {
 //            System.out.println("Usage: in tmp");
@@ -78,22 +87,26 @@ public class Resequencing {
 //            this.indexDedupSortIndex(fileIn, tmpdir);
 //
 //        }
-        // 
-        /*
-         // rewrite platform tags
-         if (args.length < 3) {
-         System.out.println("Usage: in out tmp");
-         } else {
-         String fileIn = args[0];
-         String fileOut = args[1];
-         String tmpdir = args[2];
-         try {
-         this.rewritePlatform(fileIn, fileOut, tmpdir);
-         } catch (IOException ex) {
-         Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
-         }
-         }
-         */
+                //
+            /*
+                 // rewrite platform tags
+                 if (args.length < 3) {
+                 System.out.println("Usage: in out tmp");
+                 } else {
+                 String fileIn = args[0];
+                 String fileOut = args[1];
+                 String tmpdir = args[2];
+                 try {
+                 this.rewritePlatform(fileIn, fileOut, tmpdir);
+                 } catch (IOException ex) {
+                 Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
+                 }
+                 }
+                 */
+            } catch (IOException ex) {
+                Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     private void combine(String[] args) {
@@ -194,6 +207,98 @@ public class Resequencing {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+    }
+
+    private void splitPerChromosomeRemoveDuplicateReadsAndQualityScores(String fileIn, String outDir, boolean stripOldQualityMetrics) throws IOException {
+        outDir = Gpio.formatAsDirectory(outDir);
+        Gpio.createDir(outDir);
+        SAMFileReader reader = new SAMFileReader(new File(fileIn));
+        SAMFileHeader header = reader.getFileHeader();
+
+        SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
+
+        List<SAMSequenceRecord> sequences = sequenceDictionary.getSequences();
+        List<SAMReadGroupRecord> var = header.getReadGroups();
+
+        // create a new BAM file writer for each sequence
+        HashMap<String, Integer> writerIndex = new HashMap<String, Integer>();
+        ArrayList<SAMFileWriter> writers = new ArrayList<SAMFileWriter>();
+        ArrayList<String> resultingBAMFiles = new ArrayList<String>();
+        int samWriterIndex = 0;
+        for (SAMSequenceRecord sequence : sequences) {
+            ArrayList<SAMSequenceRecord> sequenceList = new ArrayList<SAMSequenceRecord>();
+            sequenceList.add(sequence);
+            SAMSequenceDictionary dict = new SAMSequenceDictionary(sequences);
+            SAMFileHeader head = new SAMFileHeader();
+            head.setSequenceDictionary(dict);
+            head.setGroupOrder(header.getGroupOrder());
+            head.setComments(header.getComments());
+            head.setProgramRecords(header.getProgramRecords());
+            head.setReadGroups(header.getReadGroups());
+            head.setSortOrder(header.getSortOrder());
+            head.setTextHeader(header.getTextHeader());
+            head.setValidationErrors(header.getValidationErrors());
+
+            String outfile = outDir + sequence.getSequenceName() + ".bam";
+            resultingBAMFiles.add(outfile);
+            System.out.println("Found sequence: " + sequence.getSequenceName() + ". Will output here: " + outfile);
+
+            SAMFileWriter outputSam = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, new File(outfile));
+
+            writers.add(outputSam);
+
+            writerIndex.put(sequence.getSequenceName(), samWriterIndex);
+            samWriterIndex++;
+        }
+
+        SAMRecordIterator iterator = reader.iterator();
+        SAMFileWriter currentWriter = null;
+        String currentReference = null;
+        int readCtr = 0;
+        while (iterator.hasNext()) {
+            SAMRecord record = iterator.next();
+            String reference = record.getReferenceName();
+
+            if (currentReference == null || !reference.equals(currentReference)) {
+                System.out.println("Switchting reference: " + reference);
+                Integer referenceIndex = writerIndex.get(reference);
+                if (referenceIndex == null) {
+                    System.err.println("ERROR could not find writer for reference: " + reference);
+                }
+                currentWriter = writers.get(referenceIndex);
+                currentReference = reference;
+            }
+
+            // strip 
+            if (stripOldQualityMetrics) {
+                record.setOriginalBaseQualities(null);
+            }
+
+            if (currentWriter != null) {
+                currentWriter.addAlignment(record);
+            } else {
+                System.err.println("ERROR: there is no reference writer for record: " + record.getSAMString());
+            }
+            readCtr++;
+            if (readCtr % 1000000 == 0) {
+                System.out.println("Reads parsed: " + readCtr);
+            }
+        }
+
+        System.out.println("Reads parsed total: " + readCtr);
+
+        iterator.close();
+
+        for (SAMFileWriter w : writers) {
+            w.close();
+
+            // index resulting BAM files
+        }
+
+        for (String file : resultingBAMFiles) {
+            indexBAM(new File(file));
         }
 
     }
