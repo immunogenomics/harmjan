@@ -257,33 +257,40 @@ public class Resequencing {
         SAMFileWriter currentWriter = null;
         String currentReference = null;
         int readCtr = 0;
+        int nrDups = 0;
         while (iterator.hasNext()) {
             SAMRecord record = iterator.next();
             String reference = record.getReferenceName();
 
-            if (currentReference == null || !reference.equals(currentReference)) {
-                System.out.println("Switchting reference: " + reference);
-                Integer referenceIndex = writerIndex.get(reference);
-                if (referenceIndex == null) {
-                    System.err.println("ERROR could not find writer for reference: " + reference);
+            if (!record.getDuplicateReadFlag()) {
+                if (currentReference == null || !reference.equals(currentReference)) {
+                    System.out.println("Switching reference: " + reference);
+                    Integer referenceIndex = writerIndex.get(reference);
+                    if (referenceIndex == null) {
+                        System.err.println("ERROR could not find writer for reference: " + reference);
+                    } else {
+                        currentWriter = writers.get(referenceIndex);
+                        currentReference = reference;
+                    }
                 }
-                currentWriter = writers.get(referenceIndex);
-                currentReference = reference;
-            }
 
-            // strip 
-            if (stripOldQualityMetrics) {
-                record.setOriginalBaseQualities(null);
-            }
+                // strip 
+                if (stripOldQualityMetrics) {
+                    record.setOriginalBaseQualities(null);
+                }
 
-            if (currentWriter != null) {
-                currentWriter.addAlignment(record);
+                if (currentWriter != null) {
+                    currentWriter.addAlignment(record);
+                } else {
+                    System.err.println("ERROR: there is no reference writer for record: " + record.getSAMString());
+                }
+
             } else {
-                System.err.println("ERROR: there is no reference writer for record: " + record.getSAMString());
+                nrDups++;
             }
             readCtr++;
             if (readCtr % 1000000 == 0) {
-                System.out.println("Reads parsed: " + readCtr);
+                System.out.println("Reads parsed: " + readCtr + "\t" + nrDups);
             }
         }
 

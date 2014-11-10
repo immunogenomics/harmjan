@@ -6,25 +6,15 @@
 package hms.hwestra.goscializer;
 
 import hms.hwestra.utilities.features.Chromosome;
-import hms.hwestra.utilities.features.Feature;
-import htsjdk.tribble.readers.TabixReader;
-import htsjdk.tribble.readers.TabixReader.Iterator;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import umcg.genetica.containers.SortableSNP;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
 
 /**
  *
@@ -37,6 +27,8 @@ public class Goscializer {
      */
     public static void main(String[] args) {
 
+        
+        
         if (args.length < 12) {
             System.out.println("usage:");
             // System.out.println("snpfile tabixdir r2 ldwindow ldwindowextend annotationfile outputdir");
