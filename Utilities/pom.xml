@@ -46,12 +46,6 @@
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>2.0.2</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
             <version>3.2</version>
@@ -61,6 +55,11 @@
             <groupId>gov.nist.math</groupId>
             <artifactId>jama</artifactId>
             <version>1.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-1.2-api</artifactId>
+            <version>2.1</version>
         </dependency>
     </dependencies>
     <properties>

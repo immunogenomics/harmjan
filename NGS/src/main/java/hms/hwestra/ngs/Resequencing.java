@@ -297,7 +297,8 @@ public class Resequencing {
         System.out.println("Reads parsed total: " + readCtr);
 
         iterator.close();
-
+        reader.close();
+        
         for (SAMFileWriter w : writers) {
             w.close();
 
