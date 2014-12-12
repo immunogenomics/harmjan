@@ -10,6 +10,7 @@ import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.BrowseableBAMIndex;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -19,7 +20,7 @@ import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.filter.AggregateFilter;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,13 +79,14 @@ public class BamFileReader {
         logger.info("Summary:");
         logger.info("File name: " + bamFile.getAbsolutePath());
         logger.info("Creator: " + header.getCreator());
-        logger.info("Sequences: " + header.getSequenceDictionary().getSequences().size());
         logger.info("");
         int nrAligned = 0;
         int nrNonAligned = 0;
         int nrTotal = 0;
+        int nrSequences = 0;
         for (SAMSequenceRecord record : header.getSequenceDictionary().getSequences()) {
 //
+            nrSequences++;
             logger.debug("Sequence: " + record.getSequenceName());
             logger.debug("Sequence index: " + record.getSequenceIndex());
             logger.debug("Sequence len: " + record.getSequenceLength());
@@ -92,7 +94,7 @@ public class BamFileReader {
             int tmpnrAligned = metaData.getAlignedRecordCount();
             int tmpnrNonAligned = metaData.getAlignedRecordCount();
             int tmpnrTotal = tmpnrAligned + tmpnrNonAligned;
-            
+
             nrAligned += tmpnrAligned;
             nrNonAligned += tmpnrNonAligned;
             nrTotal += tmpnrTotal;
@@ -100,15 +102,13 @@ public class BamFileReader {
             logger.debug("NonAligned: " + tmpnrNonAligned);
             logger.debug("NrTotal: " + tmpnrTotal);
 
-            
         }
 
-        logger.info("");
-
-        logger.info("Total Aligned: " + nrAligned);
-        logger.info("Total NonAligned: " + nrNonAligned);
-        logger.info("Total NrTotal: " + nrTotal);
-        logger.info("");
+        logger.info("Sequences: " + nrSequences);
+        logger.info("Aligned reads: " + nrAligned);
+        logger.info("NonAligned reads: " + nrNonAligned);
+        logger.info("NrTotal reads: " + nrTotal);
+        logger.info("Readgroups: " + header.getReadGroups().size());
 
     }
 
@@ -152,4 +152,9 @@ public class BamFileReader {
     public void close() throws IOException {
         reader.close();
     }
+
+    public List<SAMReadGroupRecord> getReadGroups() {
+        return reader.getFileHeader().getReadGroups();
+    }
+
 }
