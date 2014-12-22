@@ -7,27 +7,31 @@ package nl.harmjanwestra.ngs;
 
 import com.lowagie.text.DocumentException;
 import htsjdk.samtools.*;
-import htsjdk.samtools.filter.*;
+import htsjdk.samtools.filter.AggregateFilter;
+import htsjdk.samtools.filter.DuplicateReadFilter;
+import htsjdk.samtools.filter.FailsVendorReadQualityFilter;
+import htsjdk.samtools.filter.SamRecordFilter;
 import nl.harmjanwestra.ngs.containers.ReadGroup;
 import nl.harmjanwestra.ngs.graphics.LocusCoveragePlot;
 import nl.harmjanwestra.ngs.wrappers.MarkDups;
 import nl.harmjanwestra.ngs.wrappers.SortBAM;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
-import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.features.FeatureComparator;
-import org.broadinstitute.gatk.engine.filters.MalformedReadFilter;
+import nl.harmjanwestra.utilities.features.*;
+import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.vcf.VCFVariantType;
 import org.broadinstitute.gatk.engine.filters.MappingQualityUnavailableFilter;
-import org.broadinstitute.gatk.engine.filters.MateSameStrandFilter;
 import org.broadinstitute.gatk.engine.filters.UnmappedReadFilter;
-import org.broadinstitute.gatk.tools.walkers.haplotypecaller.HCMappingQualityFilter;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.math.stats.HWE;
+import umcg.genetica.text.Strings;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author hwestra
@@ -48,16 +52,32 @@ public class Resequencing {
 
 	private Resequencing(String[] args) {
 
-		String regions = args[0];
-		String bamfile = args[1];
-		String output = args[2];
 
+//		String indir = "/Data/Projects/2014-FR-Reseq/2014-12-18-HaplotypeCallerVariants-762samples/merged.vqsr.vcf";
+//		String outdir = "/Data/Projects/2014-FR-Reseq/2014-12-18-HaplotypeCallerVariants-762samples/summary.txt";
 		try {
+//
+//			summarizeVCF(indir, outdir);
+//
+//			System.out.println("done");
+//			System.exit(0);
 
-//            determineCoverageForRegions(regions, bamfile, output);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+			String regions = args[0]; //"/Data/Projects/2014-Epipilot/atac/feat.txt";
+			String bam = args[1]; //"/Data/ATAC-seq/GSE47753/SRR891270/SRR891270-sort-dedup-sort.bam";
+			int readLength = 35;
+			String output = args[2]; // "/Data/Projects/2014-Epipilot/atac/";
+			String gtf = args[3];
+			determineCoverageForRegions(regions, bam, readLength, gtf, output);
+			if (args.length < 2) {
+				System.out.println("usage: indir outdir");
+			}
+//
+//        try {
+//            vcfMerge(args[0], args[1]);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        indexDedupSortIndex(args[0], args[1]);
 
 //        if (args.length < 3) {
 //            System.out.println("usage: input outdir stripoldqualityscores");
@@ -107,6 +127,9 @@ public class Resequencing {
 //                Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
 //            }
 //        }
+		} catch (IOException ex) {
+			Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
+		}
 	}
 
 	private void combine(String[] args) {
@@ -421,46 +444,48 @@ public class Resequencing {
 		BAMIndexer.createIndex(reader, new File(in.getAbsolutePath() + ".bai"));
 	}
 
-	private void indexDedupSortIndex(String fileIn, String tmpdir) {
+	private void indexDedupSortIndex(String f2, String tmpdir) {
 
-		String[] filesInDir = Gpio.getListOfFiles(fileIn);
-		for (String f : filesInDir) {
-			String path = fileIn + f;
-			if (Gpio.isDir(path)) {
-				String[] filesInDir2 = Gpio.getListOfFiles(path);
-				for (String f2 : filesInDir2) {
-					f2 = Gpio.formatAsDirectory(path) + f2;
-					if (f2.endsWith(".bam")) {
-						System.out.println("Running file:" + f2);
-						System.out.println("-----------------------");
-						System.out.println("");
-						System.out.println("");
-						File infile = new File(f2);
-						File sortout = new File(f2.substring(0, f2.length() - 4) + "-sort.bam");
+//        String[] filesInDir = Gpio.getListOfFiles(fileIn);
+//        for (String f : filesInDir) {
+//            String path = fileIn + f;
+//            System.out.println("f: "+path);
+//            if (Gpio.isDir(path)) {
+//                String[] filesInDir2 = Gpio.getListOfFiles(path);
+//                for (String f2 : filesInDir2) {
+//                    f2 = Gpio.formatAsDirectory(path) + f2;
+		System.out.println(f2);
+		if (f2.endsWith(".bam") || f2.endsWith(".sam")) {
+			System.out.println("Running file:" + f2);
+			System.out.println("-----------------------");
+			System.out.println("");
+			System.out.println("");
+			File infile = new File(f2);
+			File sortout = new File(f2.substring(0, f2.length() - 4) + "-sort.bam");
 
-						if (!sortout.exists()) {
-							SortBAM sb = new SortBAM(infile, sortout, new File(tmpdir));
-							indexBAM(sortout);
-						}
+			if (!sortout.exists()) {
+				SortBAM sb = new SortBAM(infile, sortout, new File(tmpdir));
+				indexBAM(sortout);
+			}
 
-						// sort
-						// dedup
-						File dedupped = new File(f2.substring(0, f2.length() - 4) + "-sort-dedup.bam");
-						File deduppedmetrics = new File(f2.substring(0, f2.length() - 4) + "-sort-dedupmetrics.txt");
+			// sort
+			// dedup
+			File dedupped = new File(f2.substring(0, f2.length() - 4) + "-sort-dedup.bam");
+			File deduppedmetrics = new File(f2.substring(0, f2.length() - 4) + "-sort-dedupmetrics.txt");
 
-						if (!dedupped.exists()) {
-							MarkDups dupMark = new MarkDups(sortout, dedupped, deduppedmetrics, new File(tmpdir));
-							indexBAM(dedupped);
-							File sortout2 = new File(f2.substring(0, f2.length() - 4) + "-sort-dedup-sort.bam");
-							SortBAM sb = new SortBAM(dedupped, sortout2, new File(tmpdir));
-							indexBAM(sortout2);
-							dedupped.delete();
-						}
-					}
-
-				}
+			if (!dedupped.exists()) {
+				MarkDups dupMark = new MarkDups(sortout, dedupped, deduppedmetrics, new File(tmpdir));
+				indexBAM(dedupped);
+				File sortout2 = new File(f2.substring(0, f2.length() - 4) + "-sort-dedup-sort.bam");
+				SortBAM sb = new SortBAM(dedupped, sortout2, new File(tmpdir));
+				indexBAM(sortout2);
+				dedupped.delete();
 			}
 		}
+//
+//                }
+//            }
+//        }
 	}
 
 	private static void mappingStatistics(String[] args) throws IOException {
@@ -741,12 +766,17 @@ public class Resequencing {
 		}
 	}
 
-	private void determineCoverageForRegions(String regionsBedFile3, String bamfile, int readLength, String output) throws IOException {
+	private void determineCoverageForRegions(String regionsBedFile3, String bamfile, int readLength, String gtf, String output) throws IOException {
 		int doubleReadLength = readLength * 2;
 		TextFile tf = new TextFile(regionsBedFile3, TextFile.R);
 		ArrayList<Feature> features = new ArrayList<Feature>();
 		String[] header = tf.readLineElems(TextFile.tab); // if any
 		String[] ln = tf.readLineElems(TextFile.tab);
+
+		GTFAnnotation annot = new GTFAnnotation(gtf);
+		TreeSet<Gene> annotationTree = annot.getGeneTree();
+
+
 		int maxLen = 0;
 		int minLen = Integer.MAX_VALUE;
 		while (ln != null) {
@@ -774,110 +804,140 @@ public class Resequencing {
 		// This is the aggregate filter that haplotypecaller uses.
 		ArrayList<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
 		filters.add(new DuplicateReadFilter());
-		filters.add(new NotPrimaryAlignmentFilter());
+//        filters.add(new NotPrimaryAlignmentFilter());
 		filters.add(new FailsVendorReadQualityFilter());
 		filters.add(new UnmappedReadFilter());
 		filters.add(new MappingQualityUnavailableFilter());
-		filters.add(new HCMappingQualityFilter());
-		filters.add(new MalformedReadFilter());
-
+//        filters.add(new HCMappingQualityFilter());
+		// filters.add(new MalformedReadFilter());
 
 		// add read mate should map to same strand
-		filters.add(new MateSameStrandFilter());
-
+//        filters.add(new MateSameStrandFilter());
 		AggregateFilter aggregateFilter = new AggregateFilter(filters);
 		BamFileReader reader = new BamFileReader(new File(bamfile), aggregateFilter, false);
 		List<SAMReadGroupRecord> readGroups = reader.getReadGroups();
 
 		// map readgroups to samplenames
 		HashMap<SAMReadGroupRecord, Integer> readgroupMap = new HashMap<SAMReadGroupRecord, Integer>();
-		String[] samples = new String[readGroups.size()];
-		int rgctr = 0;
-		for (SAMReadGroupRecord r : readGroups) {
-			readgroupMap.put(r, rgctr);
-			samples[rgctr] = r.getSample();
-			rgctr++;
+		String[] samples = null;
+
+		if (readGroups.size() > 0) {
+			samples = new String[readGroups.size()];
+			int rgctr = 0;
+			for (SAMReadGroupRecord r : readGroups) {
+				readgroupMap.put(r, rgctr);
+				samples[rgctr] = r.getSample();
+				rgctr++;
+			}
+		} else {
+			System.err.println("WARNING: no readgroups found");
+			samples = new String[1];
+			samples[0] = bamfile;
+
 		}
 
+//        TextFile tf1 = new TextFile(output + "LocusCoveragePerBP.txt", TextFile.W);
+//        TextFile tf2 = new TextFile(output + "LocusCoveragePerSample.txt", TextFile.W);
+		for (Feature region : features) {
 
+			Chromosome featureChr = region.getChromosome();
+			int featureStart = region.getStart();
+			int featureStop = region.getStop();
+			int featureSize = featureStop - featureStart;
 
-		for (Feature f : features) {
+			SAMRecordIterator iterator = reader.query("chr" + featureChr.getNumber(), featureStart - doubleReadLength, featureStop + doubleReadLength, false);
 
-			Chromosome featureChr = f.getChromosome();
-			int featureStart = f.getStart();
-			int featureStop = f.getStop();
-			int featureSize = (featureStop - featureStart) + 2 * doubleReadLength;
-			SAMRecordIterator iterator = reader.query("" + featureChr.getNumber(), featureStart - doubleReadLength, featureStop + doubleReadLength, false);
+			int[][] coverageMapNegStrand = new int[samples.length][featureSize];
+//            int[][] coverageMapPosStrand = new int[samples.length][featureSize];
 
-			int[][] coverageMapNegStrand = new int[readGroups.size()][featureSize];
-			int[][] coverageMapPosStrand = new int[readGroups.size()][featureSize];
-
-			int basequalthreshold = 50;
-
+			int basequalthreshold = 0;
+			int nrRecords = 0;
+			int nrFilteredRecords = 0;
 			while (iterator.hasNext()) {
 
 				SAMRecord record = iterator.next();
-
+				nrRecords++;
 				// record passes filter
 				if (!aggregateFilter.filterOut(record)) {
+					nrFilteredRecords++;
 					// do stuff to the record.
 
 					// get the records readgroup
-					SAMReadGroupRecord readGroup = record.getReadGroup();
-					Integer rgId = readgroupMap.get(readGroup);
-					if (rgId == null) {
-						System.err.println("Readgroup not found: " + readGroup.getDescription());
+					Integer rgId = null;
+					if (readGroups.size() > 1) {
+						SAMReadGroupRecord readGroup = record.getReadGroup();
+						rgId = readgroupMap.get(readGroup);
 					} else {
-						// map it to the feature coverage map
-						int[][] toMapTo = coverageMapPosStrand;
-						if (record.getReadNegativeStrandFlag()) {
-							toMapTo = coverageMapNegStrand;
-						}
+						rgId = 0;
+					}
 
-						//    -- if paired end, check whether other pair is present
-						Cigar cigar = record.getCigar();
-						List<CigarElement> cigarElements = cigar.getCigarElements();
+					// map it to the feature coverage map
+					int[][] toMapTo = coverageMapNegStrand;
+//                    if (record.getReadNegativeStrandFlag()) {
+//                        toMapTo = coverageMapNegStrand;
+//                    }
 
-						int mapPos = record.getAlignmentStart();
+					//    -- if paired end, check whether other pair is present
+					Cigar cigar = record.getCigar();
+					List<CigarElement> cigarElements = cigar.getCigarElements();
 
-						int windowRelativePosition = mapPos - featureStart - doubleReadLength; // left most pos
-						int readPosition = 0; // relative position in read/fragment
+					int mapPos = record.getAlignmentStart();
 
-						byte[] baseQual = record.getBaseQualities();
-						byte[] bases = record.getReadBases();
+					int windowRelativePosition = mapPos - featureStart; // left most pos
+					int readPosition = 0; // relative position in read/fragment
 
-						// main loop
-						for (CigarElement e : cigarElements) {
-							int cigarElementLength = e.getLength();
+					byte[] baseQual = record.getBaseQualities();
+					byte[] bases = record.getReadBases();
 
-							switch (e.getOperator()) {
-								case H:
-									break;
-								case P:
-									break;
-								case S: // soft clip
-									readPosition += cigarElementLength;
-									break;
-								case N: // ref skip
-									windowRelativePosition += cigarElementLength;
-									break;
-								case D: // deletion
-									windowRelativePosition += cigarElementLength;
-									break;
-								case I: // insertion
-									windowRelativePosition += cigarElementLength;
-									break;
-								case M:
-								case EQ:
-								case X:
-									int endPosition = readPosition + cigarElementLength;
-									for (int pos = readPosition; pos < endPosition; pos++) {
-										byte base = bases[pos];
-										if (windowRelativePosition >= 0) { // the read could overlap the leftmost edge of this window
+					// main loop
+//                    System.out.println(nrFilteredRecords + "\t" + record.getCigarString());
+//                    System.out.println("mappos: " + mapPos);
+//                    System.out.println("feats: " + featureStart);
+//                    System.out.println("diff: " + (mapPos - featureStart));
+//                    System.out.println("W: " + windowRelativePosition);
+					for (CigarElement e : cigarElements) {
+						int cigarElementLength = e.getLength();
+
+						switch (e.getOperator()) {
+							case H: // hard clip
+								break;
+							case P: // padding
+								break;
+							case S: // soft clip
+								readPosition += cigarElementLength;
+								break;
+							case N: // ref skip
+								windowRelativePosition += cigarElementLength;
+								break;
+							case D: // deletion
+								windowRelativePosition += cigarElementLength;
+								break;
+							case I: // insertion
+								windowRelativePosition += cigarElementLength;
+								break;
+							case M:
+							case EQ:
+							case X:
+//                                System.out.println("M: " + cigarElementLength);
+//                                System.out.println("r: " + readPosition);
+								int endPosition = readPosition + cigarElementLength;
+//                                System.out.println("e: " + endPosition);
+//                                System.out.println("w:" + windowRelativePosition);
+								for (int pos = readPosition; pos < endPosition; pos++) {
+									byte base = 0;
+									if (bases.length > pos) {
+										base = bases[pos];
+
+										if (windowRelativePosition >= 0 && windowRelativePosition < featureSize) { // the read could overlap the leftmost edge of this window
 											//    -- for each base pos: check basequal
+//                                        if (windowRelativePosition > 685) {
+////                                            System.out.println(baseQual[readPosition] + "\t" + base);
+//
+//                                        }
 											if (baseQual[readPosition] > basequalthreshold) {
+
 												//    -- determine number of A/T/C/G/N bases
-												if (base == 64 || base == 97) {
+												if (base == 65 || base == 97) {
 													toMapTo[rgId][windowRelativePosition]++;
 												} else if (base == 67 || base == 99) {
 													toMapTo[rgId][windowRelativePosition]++;
@@ -885,35 +945,54 @@ public class Resequencing {
 													toMapTo[rgId][windowRelativePosition]++;
 												} else if (base == 84 || base == 116) {
 													toMapTo[rgId][windowRelativePosition]++;
+												} else {
+													System.err.println("unparsed base: " + base);
 												}
 											}
 										}
-									} // if pos < readposition
-									readPosition += cigarElementLength;
-									break;
-								default:
-									System.out.println("Unknown CIGAR operator found: " + e.getOperator().toString());
-									System.out.println("In read: " + record.toString());
-									break;
-							} // switch operator
-						} // for each cigarelement
-					}
+										windowRelativePosition++;
+									} else {
+										System.err.println("Trying to access base: " + pos + " but length == " + bases.length);
+										System.err.println(record.toString());
+									}
+
+								} // if pos < readposition
+								readPosition += cigarElementLength;
+								break;
+							default:
+								System.out.println("Unknown CIGAR operator found: " + e.getOperator().toString());
+								System.out.println("In read: " + record.toString());
+								break;
+						} // switch operator
+					} // for each cigarelement
+
 				}
 			}
+			iterator.close();
+
+			System.out.println(region.getChromosome().getName() + "-" + region.getStart() + ":" + region.getStop());
+			System.out.println("Fragments: " + nrRecords);
+			System.out.println("Fragments filtered: " + nrFilteredRecords);
 
 			// now plot the coverage per sample
-
 			int pageMargin = 50;
 			int betweenPlotMargin = 25;
-			int plotIndividualWidth = maxLen;
-			int plotIndividualHeight = 10;
+			int plotIndividualWidth = featureSize;
+			int plotIndividualHeight = featureSize / 4;
 
-			int pageHeight = (pageMargin * 2) + (betweenPlotMargin * (readGroups.size() - 1)) + (plotIndividualHeight * readGroups.size());
+
+			NavigableSet<Gene> s = annot.getGeneTree().subSet(new Gene("", featureChr, Strand.POS, featureStart, featureStart), true,
+					new Gene("", featureChr, Strand.NEG, featureStop, featureStop), true);
+			Gene[] genes = s.toArray(new Gene[0]);
+
+
+			int pageHeight = (pageMargin * 2) + (betweenPlotMargin * (samples.length - 1)) + (plotIndividualHeight * samples.length) + (genes.length * 25);
 			int pageWidth = pageMargin * 2 + plotIndividualWidth;
 
-
-			String name = output + "Locus-" + features.toString() + ".pdf";
+			String name = output + "Locus-" + region.getChromosome().getName() + "-" + region.getStart() + ":" + region.getStop() + ".pdf";
 			try {
+
+
 				LocusCoveragePlot plot = new LocusCoveragePlot(name, pageWidth, pageHeight);
 
 				plot.setMargin(pageMargin);
@@ -922,25 +1001,491 @@ public class Resequencing {
 				plot.setPlotIndividualHeight(plotIndividualHeight);
 
 				plot.setRowLabels(samples);
-				plot.setCoverageData(coverageMapPosStrand, coverageMapNegStrand);
-				plot.setFeature(f);
-				plot.setFeatureMargin(doubleReadLength);
-				// plot.setVariants();
-				plot.setMaxCoverage(50);
-				plot.draw();
+				plot.setCoverageData(coverageMapNegStrand, null);
+				plot.setFeature(region);
+				plot.setGenes(genes);
 
+
+				// plot.setVariants();
+				plot.setMaxCoverage(10);
+				plot.draw();
 
 				plot.close();
 			} catch (DocumentException e) {
 				e.printStackTrace();
 			}
 
-
+//            for (int i = 0; i < featureSize; i++) {
+//                System.out.println(i + "\t" + coverageMapNegStrand[0][i]);
+//            }
+//            // write average coverage to text file
+//            // locus coverage per bp
+//            int[] coveragePerBp = new int[featureSize];
+//            for (int pos = doubleReadLength; pos < doubleReadLength + featureSize; pos++) {
+//                int sum1 = 0;
+//                for (int s = 0; s < coverageMapPosStrand.length; s++) {
+//                    sum1 += coverageMapNegStrand[s][pos] + coverageMapPosStrand[s][pos];
+//                }
+//
+//                sum1 = (int) Math.ceil((double) sum1 / coverageMapNegStrand.length);
+//                coveragePerBp[pos - doubleReadLength] = sum1;
+//            }
+//
+//            int[] coveragePerLocus = new int[readGroups.size()];
 		}
-
 
 		reader.close();
 
 	}
+
+	private void vcfMerge(String dir, String outputdir) throws IOException {
+
+		String[] files = new String[25];
+		for (int i = 1; i < 23; i++) {
+			files[i - 1] = dir + "/" + i + ".vcf";
+		}
+		files[22] = dir + "/X.vcf";
+		files[23] = dir + "/Y.vcf";
+		files[24] = dir + "/MT.vcf";
+
+//        Arrays.sort(files, new AlphaNumericComparator());
+		for (String f : files) {
+			System.out.println(f);
+		}
+
+		System.out.println("Found " + files.length + " VCF files in your dir: " + dir);
+
+		ArrayList<String> sampleNames = new ArrayList<String>();
+		HashMap<String, Integer> sampleToId = new HashMap<String, Integer>();
+
+		// index the samples
+		HashSet<String> headerLines = new HashSet<String>();
+
+		TextFile merged = new TextFile(outputdir + "merged.vcf", TextFile.W);
+
+		int q = 0;
+		for (String vcffile : files) {
+			TextFile tf = new TextFile(vcffile, TextFile.R);
+			String[] elems = tf.readLineElems(TextFile.tab);
+
+			while (elems != null) {
+
+				if (elems[0].startsWith("##")) {
+					// superheader
+					if (!elems[0].startsWith("##GATKCommandLine=")) { // don't need this.
+						String ln = Strings.concat(elems, Strings.tab);
+						if (!headerLines.contains(ln)) {
+							merged.writeln(ln);
+							headerLines.add(ln);
+						}
+
+					}
+				} else if (elems[0].startsWith("#CHROM")) {
+					// header
+					// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1
+
+					if (q != 0) {
+						if (elems.length - 9 != sampleNames.size()) {
+							System.err.println("ERROR: not same number of samples in vcf: " + vcffile);
+							System.exit(-1);
+						}
+					}
+
+					for (int i = 9; i < elems.length; i++) {
+						String sample = elems[i];
+						if (!sampleToId.containsKey(sample)) {
+							if (q != 0) {
+								System.out.println("Don't support non-shared samples at this time.");
+								System.out.println("New sample detected: " + sample + " in file: " + vcffile);
+								System.exit(-1);
+							}
+							sampleNames.add(sample);
+							sampleToId.put(sample, sampleToId.size());
+						}
+					}
+				} else {
+					break;
+				}
+				elems = tf.readLineElems(TextFile.tab);
+			}
+
+			tf.close();
+
+			q++;
+			System.out.println("Total samples: " + sampleToId.size() + " after file: " + vcffile);
+		}
+
+		// write the rest of the header.
+		String headerLn = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
+		for (String sampleName : sampleNames) {
+			headerLn += "\t" + sampleName;
+		}
+		merged.writeln(headerLn);
+
+		for (String vcffile : files) {
+			TextFile tf = new TextFile(vcffile, TextFile.R);
+			String[] elems = tf.readLineElems(TextFile.tab);
+
+			int[] sampleToNewSample = new int[sampleNames.size()];
+			for (int i = 0; i < sampleToNewSample.length; i++) {
+				sampleToNewSample[i] = -9;
+			}
+
+			HashSet<String> samples = new HashSet<String>();
+			while (elems != null) {
+
+				if (elems[0].startsWith("##")) {
+					// superheader // skip it for now
+				} else if (elems[0].startsWith("#CHROM")) {
+					// header
+					// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1
+					for (int i = 9; i < elems.length; i++) {
+						String sample = elems[i];
+
+						// index
+						Integer newIndex = sampleToId.get(sample);
+						sampleToNewSample[newIndex] = i;
+						samples.add(sample);
+					}
+				} else {
+					if (samples.size() != sampleNames.size()) {
+						System.err.println("ERROR: not same number of samples: ");
+						System.exit(-1);
+					}
+					// must be something else.
+					StringBuilder builder = new StringBuilder();
+					for (int i = 0; i < 9; i++) {
+						builder.append(elems[i]);
+						if (i < 8) {
+							builder.append("\t");
+						}
+					}
+					for (int i : sampleToNewSample) {
+						if (i < 0) {
+							System.err.println("Error in file - missing sample:" + vcffile);
+							System.exit(-1);
+						}
+						builder.append("\t");
+						builder.append(elems[i]);
+					}
+					merged.writeln(builder.toString());
+				}
+				elems = tf.readLineElems(TextFile.tab);
+			}
+
+			tf.close();
+
+		}
+		merged.close();
+
+	}
+
+	public void summarizeVCF(String vcffile, String outputFileLoc) throws IOException {
+
+		TextFile tf = new TextFile(vcffile, TextFile.R);
+		String[] elems = tf.readLineElems(TextFile.tab);
+
+		String[] samples = null;
+
+		HashMap<String, Integer> infoToColumn = new HashMap<String, Integer>();
+
+		int novelSNPs = 0;
+		int novelIndels = 0;
+		int knownIndels = 0;
+		int knownSNPs = 0;
+
+		int nrVariants = 0;
+		ArrayList<String> columnNames = new ArrayList<String>();
+
+		while (elems != null) {
+
+			if (elems[0].startsWith("##")) {
+				// superheader
+
+			} else if (elems[0].startsWith("#CHROM")) {
+				// header
+				// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1   SAMPLE2
+			} else {
+				// line
+				String[] infoColumns = elems[7].split(";");
+				for (String infoColumn : infoColumns) {
+					// column name separated by  =
+					String[] infocolumnelems = infoColumn.split("=");
+					String infocolumnName = infocolumnelems[0];
+					if (!infoToColumn.containsKey(infocolumnName)) {
+						infoToColumn.put(infocolumnName, infoToColumn.size());
+						columnNames.add(infocolumnName);
+					}
+				}
+
+				nrVariants++;
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
+		tf.close();
+
+
+		System.out.println(nrVariants + " variants and  " + infoToColumn.size() + " pieces of info per variant");
+
+		double[][] values = new double[nrVariants][infoToColumn.size()];
+		boolean[] biAllelic = new boolean[nrVariants];
+		boolean[] isKnown = new boolean[nrVariants];
+
+		int variant = 0;
+		tf.open();
+		elems = tf.readLineElems(TextFile.tab);
+		TextFile outputFileWriter = new TextFile(outputFileLoc, TextFile.W);
+		String header = "Chrom\tPos\tId\tRef\tAlt\tQual\tFilter\tType\tisBiallelic\tCallRate\tHWEP\tMAF\tminorAllele\tnrAlleles\t" + Strings.concat(columnNames, Strings.tab);
+
+		outputFileWriter.writeln(header);
+		while (elems != null) {
+
+			Chromosome chr = Chromosome.NA;
+			if (elems[0].startsWith("##")) {
+				// superheader
+
+			} else if (elems[0].startsWith("#CHROM")) {
+				// header
+				// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1   SAMPLE2
+				samples = new String[elems.length - 9];
+
+				System.arraycopy(elems, 9, samples, 0, elems.length - 9);
+
+			} else {
+				// line
+				String ref = elems[3];
+				String alt = elems[4];
+				chr = Chromosome.parseChr(elems[0]);
+				String[] alternates = alt.split(",");
+				String[] alleles = new String[1 + alternates.length];
+				alleles[0] = ref.intern();
+				for (int i = 0; i < alternates.length; i++) {
+					alleles[i + 1] = alternates[i].intern();
+				}
+
+
+				VCFVariantType type = VCFVariantType.parseType(ref, alt);
+				biAllelic[variant] = type.isBiallelic();
+				String[] infoColumns = elems[7].split(";");
+				for (String infoColumn : infoColumns) {
+					// column name separated by  =
+					String[] infocolumnelems = infoColumn.split("=");
+					String infocolumnName = infocolumnelems[0];
+					if (infocolumnelems.length == 1) {
+						Integer id = infoToColumn.get(infocolumnName);
+						values[variant][id] = 1d;
+
+					} else {
+						String value = infocolumnelems[1];
+
+						Integer id = infoToColumn.get(infocolumnName);
+
+						if (infocolumnName.equals("culprit")) {
+							Integer id2 = infoToColumn.get(value);
+							values[variant][id] = id2;
+						} else {
+
+							try {
+								values[variant][id] = Double.parseDouble(value);
+							} catch (NumberFormatException e) {
+								String[] valueElems = value.split(",");
+								if (valueElems.length > 1 && infocolumnName.equals("MLEAC") ||
+										infocolumnName.equals("MLEAF") ||
+										infocolumnName.equals("AC") ||
+										infocolumnName.equals("AF")) {
+									values[variant][id] = -1; // now we know that these are multi-allelic
+								} else {
+									System.out.println("Error: could not parse " + value + " for infoElem: " + infocolumnName + " and variant: " + elems[0] + "\t" + elems[1] + "\t" + elems[2]);
+								}
+
+							}
+
+						}
+					}
+				}
+
+				String[] format = elems[8].split(":");
+				int gtCol = -1; // genotype
+				int adCol = -1; // Allelic depths for the ref and alt alleles in the order listed
+				int dpCol = -1; // Approximate read depth (reads with MQ=255 or with bad mates are filtered)
+				int gqCol = -1; // Genotype Quality
+				int plCol = -1; // Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
+				for (int c = 0; c < format.length; c++) {
+					if (format[c].equals("GT")) {
+						gtCol = c;
+					} else if (format[c].equals("AD")) {
+						adCol = c;
+					} else if (format[c].equals("DP")) {
+						dpCol = c;
+					} else if (format[c].equals("GQ")) {
+						gqCol = c;
+					} else if (format[c].equals("PL")) {
+						plCol = c;
+					}
+				}
+
+				byte[] sampleGenotypes = new byte[elems.length - 9];
+
+				byte[][] sampleAlleles = new byte[elems.length - 9][2];
+
+				int nrHets = 0;
+				int nrHomAA = 0;
+				int nrHomBB = 0;
+
+				int nrTotal = 0;
+				int nrCalled = 0;
+				for (int e = 9; e < elems.length; e++) {
+					int samplePos = e - 9;
+					nrTotal += 2;
+					String sampleColumn = elems[e];
+					if (sampleColumn.equals("./.")) {
+						// not called
+						sampleGenotypes[samplePos] = -1;
+					} else {
+
+						String[] sampleElems = sampleColumn.split(":");
+
+						if (gtCol != -1) {
+							String gt = sampleElems[gtCol];
+							String[] gtElems = gt.split("/");
+							String allele1 = gtElems[0];
+							String allele2 = gtElems[1];
+							byte allele1b = -1;
+							byte allele2b = -1;
+							if (allele1.equals(".")) {
+								// missing
+								sampleAlleles[samplePos][0] = -1;
+								System.out.println("allele 1 mising");
+							} else {
+								nrCalled++;
+								allele1b = Byte.parseByte(allele1);
+
+							}
+							if (allele2.equals(".")) {
+								// missing
+								sampleAlleles[samplePos][1] = -1;
+								System.out.println("allele 2 mising");
+							} else {
+								nrCalled++;
+								allele2b = Byte.parseByte(allele2);
+							}
+
+
+							if (type.isBiallelic()) {
+								// this should change for chr X: there we should only count alleles for females
+								if (allele1b != -1 && allele2b != -1) {
+									if (allele1b == allele2b) {
+										sampleGenotypes[samplePos] = allele1b; // homozygote AA
+										if (allele1b == 1) {
+											sampleGenotypes[samplePos]++; // homozygote BB
+											nrHomBB++;
+										} else {
+											nrHomAA++;
+										}
+									} else {
+										sampleGenotypes[samplePos] = 1; // heterozygote AB
+										nrHets++;
+									}
+
+								}
+
+							} else {
+								// leave it for now..
+								sampleGenotypes[samplePos] = -1;
+							}
+
+						}
+
+						if (adCol != -1) {
+							// Allelic depths for the ref and alt alleles in the order listed
+							String ad = sampleElems[adCol];
+							String[] adElems = ad.split(",");
+
+						}
+
+						if (dpCol != -1) {
+							// Approximate read depth (reads with MQ=255 or with bad mates are filtered)
+							String dp = sampleElems[dpCol];
+							String[] dpElems = dp.split(",");
+						}
+
+						if (gqCol != -1) {
+							// Genotype Quality
+							String gq = sampleElems[gqCol];
+							String[] gqElems = gq.split(",");
+						}
+
+						if (plCol != -1) {
+							// Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
+							String pl = sampleElems[plCol];
+							String[] plElems = pl.split(",");
+						}
+
+
+					}
+				}
+
+				// determine MAF, HWEP, CR
+				double maf = 0;
+				double hwep = 1;
+				double cr = (double) nrCalled / nrTotal;
+				String minorAllele = alleles[0];
+				if (type.isBiallelic()) {
+					int freqAlleleA = 2 * nrHomAA + nrHets; // genotypeFreq[0] + genotypeFreq[1];
+					int freqAlleleB = 2 * nrHomBB + nrHets; // genotypeFreq[2] + genotypeFreq[1];
+
+					maf = (double) (freqAlleleA) / (nrCalled);
+					minorAllele = alleles[0];
+					if (freqAlleleA > freqAlleleB) {
+						minorAllele = alleles[1];
+						maf = 1 - maf;
+					}
+					hwep = HWE.calculateExactHWEPValue(nrHets, nrHomAA, nrHomBB);
+
+				}
+
+				// write the info elems to disk
+				outputFileWriter.append(elems[0] + "\t" +
+						elems[1] + "\t" +
+						elems[2] + "\t" +
+						elems[3] + "\t" +
+						elems[4] + "\t" +
+						elems[5] + "\t" +
+						elems[6]);
+				outputFileWriter.append("\t");
+				outputFileWriter.append(type.toString());
+				outputFileWriter.append("\t");
+				outputFileWriter.append("" + type.isBiallelic());
+				outputFileWriter.append("\t");
+				outputFileWriter.append("" + cr);
+				outputFileWriter.append("\t");
+				outputFileWriter.append("" + hwep);
+				outputFileWriter.append("\t");
+				outputFileWriter.append("" + maf);
+				outputFileWriter.append("\t");
+				outputFileWriter.append("" + minorAllele);
+				outputFileWriter.append("\t");
+				outputFileWriter.append("" + alleles.length);
+
+				for (int i = 0; i < values[variant].length; i++) {
+					outputFileWriter.append("\t");
+					outputFileWriter.append("" + values[variant][i]);
+
+				}
+				outputFileWriter.append("\n");
+
+				variant++;
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
+
+		outputFileWriter.close();
+
+		//
+
+	}
+
 
 }

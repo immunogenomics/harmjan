@@ -18,9 +18,9 @@ public class CollectTrackingFiles {
     public static void main(String[] args) {
 
         try {
-            String startdir = "E:\\";
+            String startdir = "/Data/Projects/2014-Epipilot/rna-seq/coreunit/";
             File f = new File(startdir);
-            String outdir = "c:\\work\\RNAAccess\\CufflinksSamples\\";
+            String outdir = "/Data/Projects/2014-Epipilot/rna-seq/tracking/";
             CollectTrackingFiles c = new CollectTrackingFiles();
             c.run(f, outdir);
         } catch (IOException e) {
@@ -40,19 +40,21 @@ public class CollectTrackingFiles {
                     run(f, outdir);
                 } else {
                     if (f.getName().contains("fpkm_tracking")) {
-                        if (f.getAbsolutePath().contains("cufflinks")) {
+//                        System.out.println(f+" in "+outdir);
+                        if (f.getAbsolutePath().contains("genes")) {
 
                             String dirName = dir.getAbsolutePath();
 //                            sampleName = sampleName.substring(i);
 
-                            String[] elems = dirName.split("\\\\");
+                            String[] elems = dirName.split("/");
 
-                            String sampleName = elems[elems.length - 3];
+                            String sampleName = elems[elems.length - 1];
+
                             System.out.println(sampleName);
 
                             System.out.println("Found file: " + dir.getAbsolutePath() + " / " + f.getName());
-                            Gpio.createDir(outdir + "\\" + sampleName);
-                            Gpio.copyFile(dir.getAbsolutePath() + "\\" + f.getName(), outdir + "\\" + sampleName + "\\" + f.getName());
+//                            Gpio.createDir(outdir + "/" + sampleName);
+                            Gpio.copyFile(dir.getAbsolutePath() + "/" + f.getName(), outdir + "/" + sampleName + "-" + f.getName());
                         }
 
                     }

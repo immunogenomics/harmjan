@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -39,32 +40,52 @@ import umcg.genetica.util.Primitives;
 public class CombineTrackingFiles {
 
     public static void main(String[] args) {
-        String inDir = "C:\\Work\\RNAAccess\\CufflinksSamples\\";
-        String selection = "genes.fpkm_tracking";
-        String outdir = "C:\\Work\\RNAAccess\\CufflinksSamples\\";
-        String outFile = outdir + "genes.fpkm_tracking_combined";
+//        String inDir = "/Data/Projects/2014-Epipilot/rna-seq/tracking/samples/";
+//        String selection = "genes.fpkm_tracking";
+//        String outdir = "/Data/Projects/2014-Epipilot/rna-seq/tracking/";
+//        String outFile = outdir + "genes.fpkm_tracking_combined";
         CombineTrackingFiles f = new CombineTrackingFiles();
         try {
-//            f.combineTrackingFiles(inDir, selection, outdir, outFile);
-            double maxPercMissing = 0.95;
+//            File indir = new File(inDir);
+//
+//            File[] files = indir.listFiles();
+//            f.combineTrackingFiles(files, selection, outdir, outFile);
+//            double maxPercMissing = 1;
 //            DoubleMatrixDataset<String, String> ds = DoubleMatrixDataset.loadDoubleData(outFile + ".txt");
-//            String trimmedFile = outFile + "_RemovedGenesWithMaxPercZero-" + maxPercMissing + ".txt";
-//            ds = f.removeGenesWithNullExpression(0.95, ds, trimmedFile);
-//            
-
-            // C:\Work\RNAAccess\CufflinksSamples\QNNormalized
-            String normalizedDataset = inDir + "\\genes.fpkm_tracking_combined.txt";
-//            String normalizedDataset = inDir + "\\QNNormalized\\genes.fpkm_tracking_combined_RemovedGenesWithMaxPercZero-0.95.ProbesWithZeroVarianceRemoved.QuantileNormalized.txt.gz";
-//            String normalizedDataset = inDir + "\\QNNormalized\\genes.fpkm_tracking_combined_RemovedGenesWithMaxPercZero-0.95.ProbesWithZeroVarianceRemoved.Log2Transformed.txt.gz";
-//            
+//            HashSet<String> rowsToInclude = new HashSet<String>();
+//            for (int r = 0; r < ds.rows(); r++) {
+//                int missing = 0;
+//                for (int c = 0; c < ds.columns(); c++) {
+//                    if (ds.getElement(r, c) == 0d || Double.isNaN(ds.getElement(r, c))) {
+//                        missing++;
+//                    }
+//                }
+//
+//                if (missing == ds.columns()) {
+//                    System.out.println(ds.getRowObjects().get(r) + "\t" + r);
+//                } else {
+//                    rowsToInclude.add(ds.getRowObjects().get(r));
+//                }
+//            }
+//            ds = DoubleMatrixDataset.loadSubsetOfTextDoubleData(outFile + ".txt", "\t", rowsToInclude, null);
+//            ds.save(outFile + "-withoutZeros.txt");
+        String normalizedDataset = "/Data/Projects/2014-Epipilot/rna-seq/tracking/genes.fpkm_tracking_combined-withoutZeros.ProbesWithZeroVarianceRemoved.CovariatesRemoved.txt.gz";
+        
+////            
+//
+//            // C:\Work\RNAAccess\CufflinksSamples\QNNormalized
+//            String normalizedDataset = inDir + "\\genes.fpkm_tracking_combined.txt";
+////            String normalizedDataset = inDir + "\\QNNormalized\\genes.fpkm_tracking_combined_RemovedGenesWithMaxPercZero-0.95.ProbesWithZeroVarianceRemoved.QuantileNormalized.txt.gz";
+////            String normalizedDataset = inDir + "\\QNNormalized\\genes.fpkm_tracking_combined_RemovedGenesWithMaxPercZero-0.95.ProbesWithZeroVarianceRemoved.Log2Transformed.txt.gz";
+////            
             DoubleMatrixDataset<String, String> ds = DoubleMatrixDataset.loadDoubleData(normalizedDataset);
-            boolean trimZeros = false;
-            if (trimZeros) {
-                String trimmedFile = outFile + "_RemovedGenesWithMaxPercZero-" + maxPercMissing + ".txt";
-                ds = f.removeGenesWithNullExpression(0.95, ds, trimmedFile);
-                normalizedDataset = trimmedFile;
-            }
-            
+//            boolean trimZeros = false;
+//            if (trimZeros) {
+//                String trimmedFile = outFile + "_RemovedGenesWithMaxPercZero-" + maxPercMissing + ".txt";
+//                ds = f.removeGenesWithNullExpression(0.95, ds, trimmedFile);
+//                normalizedDataset = trimmedFile;
+//            }
+//            
             String vbpOutFileName = normalizedDataset + "_SampleDistributions.pdf";
             f.drawViolinPlotsPerSample(ds, vbpOutFileName, false);
             String correlationOutput = normalizedDataset + "_CorrelationMatrix";
@@ -81,9 +102,7 @@ public class CombineTrackingFiles {
         }
     }
 
-    private void combineTrackingFiles(String inDir, String selection, String outdir, String outFile) throws IOException, Exception {
-        File startDir = new File(inDir);
-        File[] subDirs = startDir.listFiles();
+    private void combineTrackingFiles(File[] inFiles, String selection, String outdir, String outFile) throws IOException, Exception {
 
         HashMap<String, Integer> geneIndex = new HashMap<String, Integer>();
 
@@ -91,85 +110,82 @@ public class CombineTrackingFiles {
         ArrayList<String> samples = new ArrayList<String>();
         HashMap<String, Integer> sampleIndex = new HashMap<String, Integer>();
 
-        for (File dir : subDirs) {
-            if (dir.isDirectory()) {
-                if (sampleIndex.containsKey(dir.getName())) {
-                    System.out.println("Sample is already processed.");
+        for (File f : inFiles) {
 
-                } else {
-                    samples.add(dir.getName());
-                    sampleIndex.put(dir.getName(), sampleIndex.size());
-                }
+            if (sampleIndex.containsKey(f.getName())) {
+                System.out.println("Sample is already processed.");
 
-                File[] files = dir.listFiles();
-                for (File f : files) {
-                    String fileName = f.getName();
-                    if (fileName.contains(selection)) {
-                        TextFile tf = new TextFile(f, TextFile.R);
-                        String[] lineElems = tf.readLineElems(TextFile.tab);
-                        int geneCol = 0;
-                        int trackingCol = 0;
-                        int tssIdCol = 0;
-                        int fpkmCol = 0;
-                        int fpkmHiCol = 0;
-                        int fpkmLoCol = 0;
-                        System.out.println("Header length: " + lineElems.length);
-                        for (int i = 0; i < lineElems.length; i++) {
-                            String e = lineElems[i];
-                            if (e.equals("gene_id")) {
-                                geneCol = i;
-                            }
-                            //tss_id
-                            if (e.equals("tss_id")) {
-                                tssIdCol = i;
-                            }
-                            if (e.equals("tracking_id")) {
-                                trackingCol = i;
-                            }
-                            if (e.equals("FPKM")) {
-                                fpkmCol = i;
-                            }
-                            if (e.equals("FPKM_conf_hi")) {
-                                fpkmHiCol = i;
-                            }
-                            if (e.equals("FPKM_conf_lo")) {
-                                fpkmLoCol = i;
-                            }
-                        }
-                        System.out.println(f.getName());
-                        System.out.println("geneCol\t" + geneCol);
-                        System.out.println("trackingCol\t" + trackingCol);
-                        System.out.println("fpkmCol\t" + fpkmCol);
-                        System.out.println("fpkmHiCol\t" + fpkmHiCol);
-                        System.out.println("fpkmLoCol\t" + fpkmLoCol);
-                        lineElems = tf.readLineElems(TextFile.tab);
+            } else {
+                samples.add(f.getName());
+                sampleIndex.put(f.getName(), sampleIndex.size());
+            }
 
-                        while (lineElems != null) {
-
-                            String gene = lineElems[geneCol];
-                            String tssId = lineElems[tssIdCol];
-                            String track = lineElems[trackingCol];
-                            String fpkm = lineElems[fpkmCol];
-                            String fpkmHi = lineElems[fpkmHiCol];
-                            String fpkmLo = lineElems[fpkmLoCol];
-
-                            double dFpkm = Double.parseDouble(fpkm);
-                            double dFpkmHi = Double.parseDouble(fpkmHi);
-                            double dFpkmLo = Double.parseDouble(fpkmLo);
-
-                            String combinedId = track + "_" + gene + "_" + tssId;
-                            if (geneIndex.containsKey(combinedId)) {
-//                                System.out.println("Gene already processed: " + combinedId);
-                            } else {
-                                genes.add(combinedId);
-                                geneIndex.put(combinedId, geneIndex.size());
-                            }
-                            lineElems = tf.readLineElems(TextFile.tab);
-                        }
-                        tf.close();
+            String fileName = f.getName();
+            if (fileName.contains(selection)) {
+                TextFile tf = new TextFile(f, TextFile.R);
+                String[] lineElems = tf.readLineElems(TextFile.tab);
+                int geneCol = 0;
+                int trackingCol = 0;
+                int tssIdCol = 0;
+                int fpkmCol = 0;
+                int fpkmHiCol = 0;
+                int fpkmLoCol = 0;
+                System.out.println("Header length: " + lineElems.length);
+                for (int i = 0; i < lineElems.length; i++) {
+                    String e = lineElems[i];
+                    if (e.equals("gene_id")) {
+                        geneCol = i;
+                    }
+                    //tss_id
+                    if (e.equals("locus")) {
+                        tssIdCol = i;
+                    }
+                    if (e.equals("tracking_id")) {
+                        trackingCol = i;
+                    }
+                    if (e.equals("FPKM")) {
+                        fpkmCol = i;
+                    }
+                    if (e.equals("FPKM_conf_hi")) {
+                        fpkmHiCol = i;
+                    }
+                    if (e.equals("FPKM_conf_lo")) {
+                        fpkmLoCol = i;
                     }
                 }
+                System.out.println(f.getName());
+                System.out.println("geneCol\t" + geneCol);
+                System.out.println("trackingCol\t" + trackingCol);
+                System.out.println("fpkmCol\t" + fpkmCol);
+                System.out.println("fpkmHiCol\t" + fpkmHiCol);
+                System.out.println("fpkmLoCol\t" + fpkmLoCol);
+                lineElems = tf.readLineElems(TextFile.tab);
+
+                while (lineElems != null) {
+
+                    String gene = lineElems[geneCol];
+                    String tssId = lineElems[tssIdCol];
+                    String track = lineElems[trackingCol];
+                    String fpkm = lineElems[fpkmCol];
+                    String fpkmHi = lineElems[fpkmHiCol];
+                    String fpkmLo = lineElems[fpkmLoCol];
+
+                    double dFpkm = Double.parseDouble(fpkm);
+                    double dFpkmHi = Double.parseDouble(fpkmHi);
+                    double dFpkmLo = Double.parseDouble(fpkmLo);
+
+                    String combinedId = track + "_" + tssId;
+                    if (geneIndex.containsKey(combinedId)) {
+//                                System.out.println("Gene already processed: " + combinedId);
+                    } else {
+                        genes.add(combinedId);
+                        geneIndex.put(combinedId, geneIndex.size());
+                    }
+                    lineElems = tf.readLineElems(TextFile.tab);
+                }
+                tf.close();
             }
+
         }
 
         System.out.println(geneIndex.size() + " genes detected. ");
@@ -179,79 +195,77 @@ public class CombineTrackingFiles {
         double[][] fpkmsLo = new double[geneIndex.size()][sampleIndex.size()];
         double[][] fpkmsHi = new double[geneIndex.size()][sampleIndex.size()];
 
-        for (File dir : subDirs) {
-            if (dir.isDirectory()) {
-                Integer sampleId = sampleIndex.get(dir.getName());
-                File[] files = dir.listFiles();
-                for (File f : files) {
-                    String fileName = f.getName();
-                    if (fileName.contains(selection)) {
-                        TextFile tf = new TextFile(f, TextFile.R);
-                        String[] lineElems = tf.readLineElems(TextFile.tab);
-                        int geneCol = 0;
-                        int trackingCol = 0;
-                        int tssIdCol = 0;
-                        int fpkmCol = 0;
-                        int fpkmHiCol = 0;
-                        int fpkmLoCol = 0;
-                        System.out.println("Header length: " + lineElems.length);
-                        for (int i = 0; i < lineElems.length; i++) {
-                            String e = lineElems[i];
-                            if (e.equals("gene_id")) {
-                                geneCol = i;
-                            }
-                            //tss_id
-                            if (e.equals("tss_id")) {
-                                tssIdCol = i;
-                            }
-                            if (e.equals("tracking_id")) {
-                                trackingCol = i;
-                            }
-                            if (e.equals("FPKM")) {
-                                fpkmCol = i;
-                            }
-                            if (e.equals("FPKM_conf_hi")) {
-                                fpkmHiCol = i;
-                            }
-                            if (e.equals("FPKM_conf_lo")) {
-                                fpkmLoCol = i;
-                            }
-                        }
-                        System.out.println(f.getName());
-                        System.out.println("geneCol\t" + geneCol);
-                        System.out.println("trackingCol\t" + trackingCol);
-                        System.out.println("fpkmCol\t" + fpkmCol);
-                        System.out.println("fpkmHiCol\t" + fpkmHiCol);
-                        System.out.println("fpkmLoCol\t" + fpkmLoCol);
-                        lineElems = tf.readLineElems(TextFile.tab);
+        for (File f : inFiles) {
 
-                        while (lineElems != null) {
+            Integer sampleId = sampleIndex.get(f.getName());
 
-                            String gene = lineElems[geneCol];
-                            String tssId = lineElems[tssIdCol];
-                            String track = lineElems[trackingCol];
-                            String fpkm = lineElems[fpkmCol];
-                            String fpkmHi = lineElems[fpkmHiCol];
-                            String fpkmLo = lineElems[fpkmLoCol];
-
-                            double dFpkm = Double.parseDouble(fpkm);
-                            double dFpkmHi = Double.parseDouble(fpkmHi);
-                            double dFpkmLo = Double.parseDouble(fpkmLo);
-
-                            String combinedId = track + "_" + gene + "_" + tssId;
-
-                            Integer geneId = geneIndex.get(combinedId);
-
-                            fpkms[geneId][sampleId] = dFpkm;
-                            fpkmsLo[geneId][sampleId] = dFpkmLo;
-                            fpkmsHi[geneId][sampleId] = dFpkmHi;
-
-                            lineElems = tf.readLineElems(TextFile.tab);
-                        }
-                        tf.close();
+            String fileName = f.getName();
+            if (fileName.contains(selection)) {
+                TextFile tf = new TextFile(f, TextFile.R);
+                String[] lineElems = tf.readLineElems(TextFile.tab);
+                int geneCol = 0;
+                int trackingCol = 0;
+                int tssIdCol = 0;
+                int fpkmCol = 0;
+                int fpkmHiCol = 0;
+                int fpkmLoCol = 0;
+                System.out.println("Header length: " + lineElems.length);
+                for (int i = 0; i < lineElems.length; i++) {
+                    String e = lineElems[i];
+                    if (e.equals("gene_id")) {
+                        geneCol = i;
+                    }
+                    //tss_id
+                    if (e.equals("locus")) {
+                        tssIdCol = i;
+                    }
+                    if (e.equals("tracking_id")) {
+                        trackingCol = i;
+                    }
+                    if (e.equals("FPKM")) {
+                        fpkmCol = i;
+                    }
+                    if (e.equals("FPKM_conf_hi")) {
+                        fpkmHiCol = i;
+                    }
+                    if (e.equals("FPKM_conf_lo")) {
+                        fpkmLoCol = i;
                     }
                 }
+                System.out.println(f.getName());
+                System.out.println("geneCol\t" + geneCol);
+                System.out.println("trackingCol\t" + trackingCol);
+                System.out.println("fpkmCol\t" + fpkmCol);
+                System.out.println("fpkmHiCol\t" + fpkmHiCol);
+                System.out.println("fpkmLoCol\t" + fpkmLoCol);
+                lineElems = tf.readLineElems(TextFile.tab);
+
+                while (lineElems != null) {
+
+                    String gene = lineElems[geneCol];
+                    String tssId = lineElems[tssIdCol];
+                    String track = lineElems[trackingCol];
+                    String fpkm = lineElems[fpkmCol];
+                    String fpkmHi = lineElems[fpkmHiCol];
+                    String fpkmLo = lineElems[fpkmLoCol];
+
+                    double dFpkm = Double.parseDouble(fpkm);
+                    double dFpkmHi = Double.parseDouble(fpkmHi);
+                    double dFpkmLo = Double.parseDouble(fpkmLo);
+
+                    String combinedId = track + "_" + tssId;
+
+                    Integer geneId = geneIndex.get(combinedId);
+
+                    fpkms[geneId][sampleId] = dFpkm;
+                    fpkmsLo[geneId][sampleId] = dFpkmLo;
+                    fpkmsHi[geneId][sampleId] = dFpkmHi;
+
+                    lineElems = tf.readLineElems(TextFile.tab);
+                }
+                tf.close();
             }
+
         }
 
         DoubleMatrixDataset<String, String> ds = new DoubleMatrixDataset<String, String>();
@@ -493,7 +507,6 @@ public class CombineTrackingFiles {
             int startY = margin + (row * marginBetween) + (row * plotSize);
 
             // System.out.println(sample + "\t" + row + "\t" + col + "\t" + startX + "\t" + startY);
-
             // draw bars
             int barWidth = (plotSize / nrBins);
             for (int bin = 0; bin < nrBins; bin++) {

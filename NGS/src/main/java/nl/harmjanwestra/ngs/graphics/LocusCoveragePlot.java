@@ -1,18 +1,21 @@
 package nl.harmjanwestra.ngs.graphics;
 
 import com.lowagie.text.DocumentException;
+import nl.harmjanwestra.utilities.features.Exon;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.Gene;
+import nl.harmjanwestra.utilities.features.Transcript;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import umcg.genetica.util.Primitives;
 
 import java.awt.*;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 /**
  * Created by hwestra on 12/11/14.
  */
 public class LocusCoveragePlot extends DefaultGraphics {
-
 
 	private int plotIndividualHeight;
 	private int plotIndividualWidth;
@@ -24,11 +27,11 @@ public class LocusCoveragePlot extends DefaultGraphics {
 	private Feature feature;
 	private int featureMargin;
 	private int maxCoverage = -1;
+	private Gene[] genes;
 
 	public LocusCoveragePlot(String name, int pageWidth, int pageHeight) throws FileNotFoundException, DocumentException {
 		super(name, pageWidth, pageHeight);
 	}
-
 
 	public void setMargin(int pageMargin) {
 		this.pageMargin = pageMargin;
@@ -79,15 +82,65 @@ public class LocusCoveragePlot extends DefaultGraphics {
 		int nrSamples = coverageMapPosStr.length;
 		int x0 = pageMargin;
 
-		// determine scaling
-		int featureSize = feature.getStop() - feature.getStart();
-		int featureSizePlusMargin = featureSize + (2 * featureMargin);
-		double marginPercentOfTotalWindow = featureMargin / featureSizePlusMargin;
-		int nrMarginPixels = (int) Math.floor(marginPercentOfTotalWindow * plotIndividualWidth);
+		// draw genes
+		g2d.setColor(new Color(0, 0, 0));
+		int genesheight = 0;
+		if (genes != null) {
+			int nrGenes = genes.length;
 
+			int y0 = pageMargin;
+
+			for (int i = 0; i < nrGenes; i++) {
+
+				int y1 = y0 + (i * 15);
+				Gene g = genes[i];
+				ArrayList<Transcript> transcripts = g.getTranscripts();
+				g2d.drawString(g.getName(), x0, y1);
+				double pixelPerBP = (double) plotIndividualWidth / (feature.getStop() - feature.getStart());
+				for (Transcript t : transcripts) {
+					ArrayList<Exon> exons = t.getExons();
+					int tsRelativeStart = t.getStart() - feature.getStart();
+					if (tsRelativeStart < 0) {
+						tsRelativeStart = 0;
+					}
+					int tsRelativeStop = t.getStop() - feature.getStop();
+					if (tsRelativeStart > 0) {
+						tsRelativeStop = 0;
+					}
+
+					g2d.drawLine(x0 + tsRelativeStart, y1 + 5, x0 + plotIndividualWidth + tsRelativeStop, y1 + 5);
+					for (Exon e : exons) {
+						int start = e.getStart();
+						int stop = e.getStop();
+						if (start < feature.getStart()) {
+							start = feature.getStart();
+						}
+						if (stop > feature.getStop()) {
+							stop = feature.getStop();
+						}
+
+						if (start <= feature.getStop()) {
+							int nrBpForExon = stop - start;
+							int nrPixelsWidth = (int) Math.ceil(nrBpForExon * pixelPerBP);
+							int relativeBpStart = start - feature.getStart();
+							int nrPixelsStart = (int) Math.ceil(relativeBpStart * pixelPerBP);
+							g2d.fillRect(x0 + nrPixelsStart, y1, nrPixelsWidth, 10);
+						}
+					}
+				}
+
+			}
+			genesheight = (genes.length * 25);
+
+		}
+
+
+		// determine scaling
 		for (int row = 0; row < nrSamples; row++) {
 
-			int y0 = pageMargin + (row * betweenPlotMargin) + (row * plotIndividualHeight);
+
+			int y0 = pageMargin + (row * betweenPlotMargin) + (row * plotIndividualHeight) + genesheight;
+
 
 			// plot a grey line halfway (if strandedness)
 			if (coverageMapNegStr != null) {
@@ -97,20 +150,19 @@ public class LocusCoveragePlot extends DefaultGraphics {
 				g2d.drawLine(x0, halfway, x0 + plotIndividualWidth, halfway);
 			}
 
-			if (rowLabels != null) {
-				g2d.setColor(new Color(0, 0, 0));
-				g2d.setFont(SMALL_FONT);
-				g2d.drawString(rowLabels[row], x0, y0 - 10);
-			}
 
 			// indicate the buffer zone
 			g2d.setStroke(dashed);
 			g2d.setColor(Color.lightGray);
-			g2d.drawLine(x0 + nrMarginPixels, y0, x0 + nrMarginPixels, y0 + plotIndividualHeight);
-			g2d.drawLine(x0 + plotIndividualWidth + nrMarginPixels, y0, x0 + plotIndividualWidth + nrMarginPixels, y0 + plotIndividualHeight);
+			g2d.drawLine(x0, y0, x0, y0 + plotIndividualHeight);
+			g2d.drawLine(x0 + plotIndividualWidth, y0, x0 + plotIndividualWidth, y0 + plotIndividualHeight);
 
 			// plot the bins for this sample
-			int[] negStr = coverageMapNegStr[row];
+			int[] negStr = null;
+			if (coverageMapNegStr != null) {
+				negStr = coverageMapNegStr[row];
+			}
+
 			int[] posStr = coverageMapPosStr[row];
 
 			// determine max if max has not been set (although may now vary between samples)
@@ -124,16 +176,23 @@ public class LocusCoveragePlot extends DefaultGraphics {
 				}
 			}
 
+			if (rowLabels != null) {
+				g2d.setColor(new Color(0, 0, 0));
+				g2d.setFont(SMALL_FONT);
+				g2d.drawString(rowLabels[row] + " max coverage: " + maxCoverage, x0, y0 - 10);
+			}
+
+
 			for (int bin = 0; bin < posStr.length; bin++) {
 				double binPerc = (double) bin / posStr.length;
-				int binX0 = (int) Math.floor(binPerc * plotIndividualWidth);
+				int binX0 = x0 + (int) Math.floor(binPerc * plotIndividualWidth);
 
 				if (coverageMapNegStr != null) {
 					// plot both str
 					int maxPlotPixels = plotIndividualHeight / 2;
 
-					double percentOfMaxPos = posStr[bin] / maxCoverage;
-					double percentOfMaxNeg = negStr[bin] / maxCoverage;
+					double percentOfMaxPos = (double) posStr[bin] / maxCoverage;
+					double percentOfMaxNeg = (double) negStr[bin] / maxCoverage;
 
 					int pixelsPos = (int) Math.floor(percentOfMaxPos * maxPlotPixels);
 					int pixelsNeg = (int) Math.floor(percentOfMaxNeg * maxPlotPixels);
@@ -154,16 +213,20 @@ public class LocusCoveragePlot extends DefaultGraphics {
 				} else {
 					// only plot positive str
 					int maxPlotPixels = plotIndividualHeight;
-					double percentOfMaxPos = posStr[bin] / maxCoverage;
+					double percentOfMaxPos = (double) posStr[bin] / maxCoverage;
 					int pixelsPos = (int) Math.floor(percentOfMaxPos * maxPlotPixels);
 					if (pixelsPos > maxPlotPixels) {
 						pixelsPos = maxPlotPixels;
 					}
 					int halfway = y0 + (plotIndividualHeight);
 					g2d.setColor(new Color(255, 128, 0));
-					g2d.fillOval(binX0 - 1, halfway - pixelsPos - 1, 2, 2);
+					g2d.fillRect(binX0, halfway - pixelsPos, 1, pixelsPos);
 				}
 			}
 		}
+	}
+
+	public void setGenes(Gene[] genes) {
+		this.genes = genes;
 	}
 }
