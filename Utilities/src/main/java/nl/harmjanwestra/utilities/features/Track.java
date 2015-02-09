@@ -9,75 +9,78 @@ import java.util.NavigableSet;
 import java.util.TreeSet;
 
 /**
- *
  * @author Harm-Jan
  */
 public class Track extends Feature {
 
-    private TreeSet<Feature> features;
+	private TreeSet<Feature> features;
 
-    public Track(String name, int start, int stop) {
-        this.name = name;
-        this.features = new TreeSet<Feature>(new FeatureComparator(false));
-        this.start = start;
-        this.stop = stop;
-    }
+	public Track(String name) {
+		this(name, 0, Integer.MAX_VALUE);
+	}
 
-    public void addFeature(Feature f) {
-        features.add(f);
-    }
+	public Track(String name, int start, int stop) {
+		this.name = name;
+		this.features = new TreeSet<Feature>(new FeatureComparator(false));
+		this.start = start;
+		this.stop = stop;
+	}
 
-    public Iterable<Feature> getFeatures() {
-        return features;
-    }
+	public void addFeature(Feature f) {
+		features.add(f);
+	}
 
-    public int getNrReads() {
-        return features.size();
-    }
+	public Iterable<Feature> getFeatures() {
+		return features;
+	}
 
-    public NavigableSet<Feature> getFeatureSet(Chromosome chr, int start, int end) {
-        Feature left = new Feature();
-        Feature right = new Feature();
-        left.setChromosome(chr);
-        left.setStart(start);
-        left.setStop(start);
-        left.setStrand(Strand.POS);
-        right.setChromosome(chr);
-        right.setStart(end);
-        right.setStop(end);
-        right.setStrand(Strand.NEG);
-        NavigableSet<Feature> set = features.subSet(left, true, right, true);
-        System.out.println(set.size() + "\t" + left.toString() + "\t" + right.toString());
-        return set;
-    }
+	public int getNrReads() {
+		return features.size();
+	}
 
-    public void printNrFeatures() {
-        System.out.println(features.size() + " features in track.");
-    }
+	public NavigableSet<Feature> getFeatureSet(Chromosome chr, int start, int end) {
+		Feature left = new Feature();
+		Feature right = new Feature();
+		left.setChromosome(chr);
+		left.setStart(start);
+		left.setStop(start);
+		left.setStrand(Strand.POS);
+		right.setChromosome(chr);
+		right.setStart(end);
+		right.setStop(end);
+		right.setStrand(Strand.NEG);
+		NavigableSet<Feature> set = features.subSet(left, true, right, true);
+		System.out.println(set.size() + "\t" + left.toString() + "\t" + right.toString());
+		return set;
+	}
 
-    public void setFeatures(NavigableSet<Feature> f) {
-        this.features = new TreeSet<Feature>(new FeatureComparator(false));
-        features.addAll(f);
-    }
+	public void printNrFeatures() {
+		System.out.println(features.size() + " features in track.");
+	}
 
-    public Track getSubset(Chromosome chr, int start, int stop) {
-        Track t = new Track(this.name, start, stop);
-        NavigableSet<Feature> set = getFeatureSet(chr, start, stop);
+	public void setFeatures(NavigableSet<Feature> f) {
+		this.features = new TreeSet<Feature>(new FeatureComparator(false));
+		features.addAll(f);
+	}
 
-        t.setFeatures(set);
-        return t;
-    }
+	public Track getSubset(Chromosome chr, int start, int stop) {
+		Track t = new Track(this.name, start, stop);
+		NavigableSet<Feature> set = getFeatureSet(chr, start, stop);
 
-    public int getNrFeatures() {
-        return features.size();
-    }
+		t.setFeatures(set);
+		return t;
+	}
 
-    public boolean containsFeature(Feature f) {
-        return features.contains(f);
-    }
-    
-    public void addFeatures(Track t){
-        features.addAll(t.features);
-    }
+	public int getNrFeatures() {
+		return features.size();
+	}
+
+	public boolean containsFeature(Feature f) {
+		return features.contains(f);
+	}
+
+	public void addFeatures(Track t) {
+		features.addAll(t.features);
+	}
 
 }

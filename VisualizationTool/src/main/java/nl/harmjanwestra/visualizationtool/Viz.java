@@ -87,12 +87,12 @@ public class Viz {
             int stop = 56041464;
 
             // read all data
-            Track t = f.read(file, "NaivePrimaryCD8", chr, start, stop, false);
+//            Track t = f.read(file, "NaivePrimaryCD8", chr, s0tart, stop, false);
 
 //            start = 117294211;
 //            stop = 117294211 + 5000000;
             ArrayList<Track> tracks = new ArrayList<Track>();
-            tracks.add(t);
+//            tracks.add(t);
 
             Viz v = new Viz();
             String outputDir = "/Data/Gosia/viz2.png";

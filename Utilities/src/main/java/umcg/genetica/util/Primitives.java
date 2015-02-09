@@ -221,4 +221,12 @@ public class Primitives {
         return arr;
     }
 
+    public static int[] toPrimitiveArr(Integer[] toArray) {
+        int[] arr = new int[toArray.length];
+        for (int i = 0; i < toArray.length; i++) {
+            arr[i] = toArray[i];
+        }
+        return arr;
+    }
+
 }

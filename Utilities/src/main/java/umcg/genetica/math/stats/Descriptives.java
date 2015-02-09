@@ -29,6 +29,14 @@ public class Descriptives {
         return (sum / (double) v.length);
     }
 
+    public static double mean(int[] v) {
+        double sum = 0;
+        for (int k = 0; k < v.length; k++) {
+            sum += v[k];
+        }
+        return (sum / (double) v.length);
+    }
+
     /**
      * Calculate the variance for an array of floats
      *
@@ -143,6 +151,19 @@ public class Descriptives {
     }
 
     public static double variance(double[] v, double mean) {
+        double ans = 0.0;
+        for (int i = 0; i < v.length; i++) {
+            ans += (v[i] - mean) * (v[i] - mean);
+        }
+        return ans / (v.length - 1);
+    }
+
+    public static double variance(int[] v){
+        double mean = mean(v);
+        return variance(v,mean);
+    }
+
+    public static double variance(int[] v, double mean) {
         double ans = 0.0;
         for (int i = 0; i < v.length; i++) {
             ans += (v[i] - mean) * (v[i] - mean);

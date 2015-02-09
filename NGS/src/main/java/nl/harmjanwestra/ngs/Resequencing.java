@@ -19,9 +19,10 @@ import nl.harmjanwestra.utilities.bamfile.BamFileReader;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFVariantType;
+import org.broadinstitute.gatk.engine.filters.FailsVendorQualityCheckFilter;
 import org.broadinstitute.gatk.engine.filters.MappingQualityUnavailableFilter;
+import org.broadinstitute.gatk.engine.filters.NotPrimaryAlignmentFilter;
 import org.broadinstitute.gatk.engine.filters.UnmappedReadFilter;
-import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.HWE;
@@ -30,8 +31,6 @@ import umcg.genetica.text.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author hwestra
@@ -44,7 +43,9 @@ public class Resequencing {
 	public static void main(String[] args) {
 		// TODO code application logic here
 
+		// Resequencing s = new Resequencing(args);
 		Resequencing s = new Resequencing(args);
+
 
 	}
 
@@ -55,22 +56,22 @@ public class Resequencing {
 
 //		String indir = "/Data/Projects/2014-FR-Reseq/2014-12-18-HaplotypeCallerVariants-762samples/merged.vqsr.vcf";
 //		String outdir = "/Data/Projects/2014-FR-Reseq/2014-12-18-HaplotypeCallerVariants-762samples/summary.txt";
-		try {
+//		try {
+////
+////			summarizeVCF(indir, outdir);
+////
+////			System.out.println("done");
+////			System.exit(0);
 //
-//			summarizeVCF(indir, outdir);
-//
-//			System.out.println("done");
-//			System.exit(0);
-
-			String regions = args[0]; //"/Data/Projects/2014-Epipilot/atac/feat.txt";
-			String bam = args[1]; //"/Data/ATAC-seq/GSE47753/SRR891270/SRR891270-sort-dedup-sort.bam";
-			int readLength = 35;
-			String output = args[2]; // "/Data/Projects/2014-Epipilot/atac/";
-			String gtf = args[3];
-			determineCoverageForRegions(regions, bam, readLength, gtf, output);
-			if (args.length < 2) {
-				System.out.println("usage: indir outdir");
-			}
+//			String regions = args[0]; //"/Data/Projects/2014-Epipilot/atac/feat.txt";
+//			String bam = args[1]; //"/Data/ATAC-seq/GSE47753/SRR891270/SRR891270-sort-dedup-sort.bam";
+//			int readLength = 35;
+//			String output = args[2]; // "/Data/Projects/2014-Epipilot/atac/";
+//			String gtf = args[3];
+//			determineCoverageForRegions(regions, bam, readLength, gtf, output);
+//			if (args.length < 2) {
+//				System.out.println("usage: indir outdir");
+//			}
 //
 //        try {
 //            vcfMerge(args[0], args[1]);
@@ -79,160 +80,194 @@ public class Resequencing {
 //        }
 //        indexDedupSortIndex(args[0], args[1]);
 
-//        if (args.length < 3) {
-//            System.out.println("usage: input outdir stripoldqualityscores");
-//        } else {
-//            try {
-//                splitPerChromosomeRemoveDuplicateReadsAndQualityScores(args[0], args[1], Boolean.parseBoolean(args[2]));
-//
-////        try {
-////
-////            args = new String[]{
-////                "/Data/ATAC-seq/GSE47753/data2.txt",
-////                "/Data/ATAC-seq/GSE47753/Stats"};
-////
-////            Resequencing.readsPerChromosomePerReadGroup(args);
-////
-////        } catch (Exception e) {
-////            e.printStackTrace();
-////        }
-////        // dedup sort index
-////        if (args.length < 2) {
-////            System.out.println("Usage: in tmp");
-////        } else {
-////            String fileIn = args[0];
-////
-////            String tmpdir = args[1];
-////
-////            this.indexDedupSortIndex(fileIn, tmpdir);
-////
-////        }
-//                //
-//            /*
-//                 // rewrite platform tags
-//                 if (args.length < 3) {
-//                 System.out.println("Usage: in out tmp");
-//                 } else {
-//                 String fileIn = args[0];
-//                 String fileOut = args[1];
-//                 String tmpdir = args[2];
-//                 try {
-//                 this.rewritePlatform(fileIn, fileOut, tmpdir);
-//                 } catch (IOException ex) {
-//                 Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
-//                 }
-//                 }
-//                 */
-//            } catch (IOException ex) {
-//                Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-		} catch (IOException ex) {
-			Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
-		}
-	}
+		if (args.length < 2) {
+			// System.out.println("usage: input outdir stripoldqualityscores");
+			System.out.println("usage: bamfile outfile");
+		} else {
+			try {
+				String listFile = args[0];
+				String outdir = args[1];
+				String tmpdir = args[2];
 
-	private void combine(String[] args) {
-		cli = new CLI(args);
+				TextFile tf = new TextFile(listFile, TextFile.R);
+				String[] filesIn = tf.readAsArray();
+				tf.close();
 
-		// stuff for merger
-		// get list of samples to use
-		try {
-			CoverageMatrix mat = new CoverageMatrix(cli.getCoverageMatrix());
+				TextFile listOut = new TextFile(outdir+"SamplesRecoded.list", TextFile.W);
 
-			String indir = cli.getBamFileIndir();
-			String outdir = cli.getBamFileOutdir();
+				for (String s : filesIn) {
 
-			indir = Gpio.formatAsDirectory(indir);
-			outdir = Gpio.formatAsDirectory(outdir);
-			Gpio.createDir(outdir);
-			String tmpdir = outdir + "tmp";
-			tmpdir = Gpio.formatAsDirectory(tmpdir);
-			Gpio.createDir(tmpdir);
-			String suffix = cli.getBamSuffix();
+					String[] bamfilelems = s.split("/");
+					String bamfile = bamfilelems[bamfilelems.length - 1];
+					String[] sampleelems = bamfile.split("\\.");
+					String sample = sampleelems[0];
+					String outfile = outdir + sample + ".bam";
 
-			ArrayList<Pair<String, ArrayList<String>>> samples = mat.selectSamples(cli.getCoverageThresholdColumn(), cli.getCoverageThreshold(), outdir);
-			System.out.println(samples.size() + " samples selected");
-			TextFile outfile = new TextFile(outdir + "SamplesToUse.txt", TextFile.W);
+					this.rewritePlatform(s, outfile, tmpdir);
 
-			for (Pair<String, ArrayList<String>> p : samples) {
+					listOut.writeln(outfile);
 
-				String sampleName = p.getLeft();
-				ArrayList<String> dups = p.getRight();
 
-				if (dups.size() > 1) {
-					// check whether files are actually there..
-					int d = 0;
-					ArrayList<File> finalFiles = new ArrayList<File>();
-					System.out.println(sampleName + "\thas " + dups.size() + " duplicates");
-					for (String f : dups) {
-						if (Gpio.exists(indir + f + "." + suffix)) {
-							d++;
-							finalFiles.add(new File(indir + f + "." + suffix));
-						} else {
-							System.out.println(sampleName + "\tFile not found: " + indir + f + "." + suffix);
-						}
-					}
-					System.out.println(sampleName + "\tFinal duplication size: " + finalFiles.size());
-					if (finalFiles.size() > 1) {
-
-						// merge bam files
-						File outputFile = new File(outdir + sampleName + "_merged.bam");
-						System.out.println(sampleName + "\tMerging BAM files");
-						mergeBamFiles(sampleName, finalFiles, outputFile);
-						// dedup
-
-						File deduppedOut = new File(outdir + sampleName + "_merged.dedup.bam");
-						File deduppedMetricsOut = new File(outdir + sampleName + "_merged.dedupmetrics.txt");
-						System.out.println(sampleName + "\tDeduplicating alignments in BAM file" + outputFile.getAbsolutePath());
-						System.out.println(sampleName + "\tWriting to: " + deduppedOut.getAbsolutePath());
-						MarkDups md = new MarkDups(outputFile, deduppedOut, deduppedMetricsOut, new File(tmpdir));
-// md.go();
-						// sort file
-						File deduppedSortOut = new File(outdir + sampleName + "_merged.dedup.sort.bam");
-						SortBAM sb = new SortBAM(deduppedOut, deduppedSortOut, new File(tmpdir));
-
-						// index
-						indexBAM(deduppedSortOut);
-						outfile.writeln(deduppedSortOut.getAbsolutePath());
-					} else {
-						// print filename to file
-						if (finalFiles.size() == 1) {
-							// check whether the file has been indexed..
-
-							if (!Gpio.exists(finalFiles.get(0).getAbsolutePath() + ".bai")) {
-								System.out.println(sampleName + "\tIndexing BAM: " + finalFiles.get(0).getAbsolutePath());
-								indexBAM(finalFiles.get(0));
-							}
-							outfile.writeln(finalFiles.get(0).getAbsolutePath());
-						}
-					}
-
-				} else {
-					// check whether file is there,
-					String f = dups.get(0);
-					System.out.println(sampleName + "\thas no duplicates.");
-					if (Gpio.exists(indir + f + "." + suffix)) {
-						outfile.writeln(indir + f + "." + suffix);
-						// check whether file has been indexed...
-						if (!Gpio.exists(indir + f + "." + suffix + ".bai")) {
-							System.out.println(sampleName + "\tIndexing BAM: " + indir + f + "." + suffix);
-							indexBAM(new File(indir + f + "." + suffix));
-						}
-						System.out.println(sampleName + "\tFound file: " + indir + f + "." + suffix);
-					} else {
-						System.out.println(sampleName + "\tCould not find file: " + indir + f + "." + suffix);
-					}
 				}
 
+
+				listOut.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			outfile.close();
-
-		} catch (IOException e) {
-			e.printStackTrace();
+//			try {
+//
+//				splitPerChromosomeRemoveDuplicateReadsAndQualityScores(args[0], args[1], Boolean.parseBoolean(args[2]));
+////
+//////        try {
+//////
+//////            args = new String[]{
+//////                "/Data/ATAC-seq/GSE47753/data2.txt",
+//////                "/Data/ATAC-seq/GSE47753/Stats"};
+//////
+//////            Resequencing.readsPerChromosomePerReadGroup(args);
+//////
+//////        } catch (Exception e) {
+//////            e.printStackTrace();
+//////        }
+//////        // dedup sort index
+//////        if (args.length < 2) {
+//////            System.out.println("Usage: in tmp");
+//////        } else {
+//////            String fileIn = args[0];
+//////
+//////            String tmpdir = args[1];
+//////
+//////            this.indexDedupSortIndex(fileIn, tmpdir);
+//////
+//////        }
+////                //
+////            /*
+////                 // rewrite platform tags
+////                 if (args.length < 3) {
+////                 System.out.println("Usage: in out tmp");
+////                 } else {
+////                 String fileIn = args[0];
+////                 String fileOut = args[1];
+////                 String tmpdir = args[2];
+////                 try {
+////                 this.rewritePlatform(fileIn, fileOut, tmpdir);
+////                 } catch (IOException ex) {
+////                 Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
+////                 }
+////                 }
+////                 */
+////            } catch (IOException ex) {
+////                Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
+////            }
+////        }
+//			} catch (IOException ex) {
+//				Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
+//			}
 		}
-
 	}
+
+//	private void combine(String[] args) {
+//		cli = new CLI(args);
+//
+//		// stuff for merger
+//		// get list of samples to use
+//		try {
+//			CoverageMatrix mat = new CoverageMatrix(cli.getCoverageMatrix());
+//
+//			String indir = cli.getBamFileIndir();
+//			String outdir = cli.getBamFileOutdir();
+//
+//			indir = Gpio.formatAsDirectory(indir);
+//			outdir = Gpio.formatAsDirectory(outdir);
+//			Gpio.createDir(outdir);
+//			String tmpdir = outdir + "tmp";
+//			tmpdir = Gpio.formatAsDirectory(tmpdir);
+//			Gpio.createDir(tmpdir);
+//			String suffix = cli.getBamSuffix();
+//
+//			ArrayList<Pair<String, ArrayList<String>>> samples = mat.selectSamples(cli.getCoverageThresholdColumn(), cli.getCoverageThreshold(), outdir);
+//			System.out.println(samples.size() + " samples selected");
+//			TextFile outfile = new TextFile(outdir + "SamplesToUse.txt", TextFile.W);
+//
+//			for (Pair<String, ArrayList<String>> p : samples) {
+//
+//				String sampleName = p.getLeft();
+//				ArrayList<String> dups = p.getRight();
+//
+//				if (dups.size() > 1) {
+//					// check whether files are actually there..
+//					int d = 0;
+//					ArrayList<File> finalFiles = new ArrayList<File>();
+//					System.out.println(sampleName + "\thas " + dups.size() + " duplicates");
+//					for (String f : dups) {
+//						if (Gpio.exists(indir + f + "." + suffix)) {
+//							d++;
+//							finalFiles.add(new File(indir + f + "." + suffix));
+//						} else {
+//							System.out.println(sampleName + "\tFile not found: " + indir + f + "." + suffix);
+//						}
+//					}
+//					System.out.println(sampleName + "\tFinal duplication size: " + finalFiles.size());
+//					if (finalFiles.size() > 1) {
+//
+//						// merge bam files
+//						File outputFile = new File(outdir + sampleName + "_merged.bam");
+//						System.out.println(sampleName + "\tMerging BAM files");
+//						mergeBamFiles(sampleName, finalFiles, outputFile);
+//						// dedup
+//
+//						File deduppedOut = new File(outdir + sampleName + "_merged.dedup.bam");
+//						File deduppedMetricsOut = new File(outdir + sampleName + "_merged.dedupmetrics.txt");
+//						System.out.println(sampleName + "\tDeduplicating alignments in BAM file" + outputFile.getAbsolutePath());
+//						System.out.println(sampleName + "\tWriting to: " + deduppedOut.getAbsolutePath());
+//						MarkDups md = new MarkDups(outputFile, deduppedOut, deduppedMetricsOut, new File(tmpdir));
+//// md.go();
+//						// sort file
+//						File deduppedSortOut = new File(outdir + sampleName + "_merged.dedup.sort.bam");
+//						SortBAM sb = new SortBAM(deduppedOut, deduppedSortOut, new File(tmpdir));
+//
+//						// index
+//						indexBAM(deduppedSortOut);
+//						outfile.writeln(deduppedSortOut.getAbsolutePath());
+//					} else {
+//						// print filename to file
+//						if (finalFiles.size() == 1) {
+//							// check whether the file has been indexed..
+//
+//							if (!Gpio.exists(finalFiles.get(0).getAbsolutePath() + ".bai")) {
+//								System.out.println(sampleName + "\tIndexing BAM: " + finalFiles.get(0).getAbsolutePath());
+//								indexBAM(finalFiles.get(0));
+//							}
+//							outfile.writeln(finalFiles.get(0).getAbsolutePath());
+//						}
+//					}
+//
+//				} else {
+//					// check whether file is there,
+//					String f = dups.get(0);
+//					System.out.println(sampleName + "\thas no duplicates.");
+//					if (Gpio.exists(indir + f + "." + suffix)) {
+//						outfile.writeln(indir + f + "." + suffix);
+//						// check whether file has been indexed...
+//						if (!Gpio.exists(indir + f + "." + suffix + ".bai")) {
+//							System.out.println(sampleName + "\tIndexing BAM: " + indir + f + "." + suffix);
+//							indexBAM(new File(indir + f + "." + suffix));
+//						}
+//						System.out.println(sampleName + "\tFound file: " + indir + f + "." + suffix);
+//					} else {
+//						System.out.println(sampleName + "\tCould not find file: " + indir + f + "." + suffix);
+//					}
+//				}
+//
+//			}
+//			outfile.close();
+//
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//
+//	}
 
 	private void splitPerChromosomeRemoveDuplicateReadsAndQualityScores(String fileIn, String outDir, boolean stripOldQualityMetrics) throws IOException {
 		outDir = Gpio.formatAsDirectory(outDir);
@@ -253,7 +288,7 @@ public class Resequencing {
 		for (SAMSequenceRecord sequence : sequences) {
 			ArrayList<SAMSequenceRecord> sequenceList = new ArrayList<SAMSequenceRecord>();
 			sequenceList.add(sequence);
-			SAMSequenceDictionary dict = new SAMSequenceDictionary(sequences);
+			SAMSequenceDictionary dict = new SAMSequenceDictionary(sequenceList);
 			SAMFileHeader head = new SAMFileHeader();
 			head.setSequenceDictionary(dict);
 			head.setGroupOrder(header.getGroupOrder());
@@ -281,11 +316,21 @@ public class Resequencing {
 		String currentReference = null;
 		int readCtr = 0;
 		int nrDups = 0;
+		ArrayList<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
+		filters.add(new NotPrimaryAlignmentFilter());
+		filters.add(new FailsVendorQualityCheckFilter());
+		filters.add(new DuplicateReadFilter());
+		filters.add(new UnmappedReadFilter());
+		filters.add(new MappingQualityUnavailableFilter());
+
+
+		AggregateFilter filter = new AggregateFilter(filters);
 		while (iterator.hasNext()) {
 			SAMRecord record = iterator.next();
 			String reference = record.getReferenceName();
 
-			if (!record.getDuplicateReadFlag()) {
+			if (!filter.filterOut(record)) {
+
 				if (currentReference == null || !reference.equals(currentReference)) {
 					System.out.println("Switching reference: " + reference);
 					Integer referenceIndex = writerIndex.get(reference);
@@ -398,6 +443,7 @@ public class Resequencing {
 		SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, true);
 		MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, false);
 
+
 		SAMFileHeader header = headerMerger.getMergedHeader();
 		header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 		List<SAMReadGroupRecord> var = header.getReadGroups();
@@ -503,7 +549,7 @@ public class Resequencing {
 		// open a wrapper around the HTSJDK
 //        BamFileReader[] readerList = new BamFileReader[fileList.length];
 		for (String fileName : fileList) {
-			BamFileReader reader = new BamFileReader(new File(fileName), null, true);
+			BamFileReader reader = new BamFileReader(new File(fileName));
 
 			SAMRecordIterator iterator = reader.iterator();
 			while (iterator.hasNext()) {
@@ -597,7 +643,7 @@ public class Resequencing {
 		for (String fileName : fileList) {
 			int q = 0;
 			System.out.println("Opening file: " + fileName);
-			BamFileReader reader = new BamFileReader(new File(fileName), null, true);
+			BamFileReader reader = new BamFileReader(new File(fileName));
 
 			SAMRecordIterator iterator = reader.iterator();
 			while (iterator.hasNext()) {
@@ -773,6 +819,7 @@ public class Resequencing {
 		String[] header = tf.readLineElems(TextFile.tab); // if any
 		String[] ln = tf.readLineElems(TextFile.tab);
 
+
 		GTFAnnotation annot = new GTFAnnotation(gtf);
 		TreeSet<Gene> annotationTree = annot.getGeneTree();
 
@@ -813,8 +860,9 @@ public class Resequencing {
 
 		// add read mate should map to same strand
 //        filters.add(new MateSameStrandFilter());
-		AggregateFilter aggregateFilter = new AggregateFilter(filters);
-		BamFileReader reader = new BamFileReader(new File(bamfile), aggregateFilter, false);
+
+
+		BamFileReader reader = new BamFileReader(new File(bamfile));
 		List<SAMReadGroupRecord> readGroups = reader.getReadGroups();
 
 		// map readgroups to samplenames
@@ -858,7 +906,8 @@ public class Resequencing {
 				SAMRecord record = iterator.next();
 				nrRecords++;
 				// record passes filter
-				if (!aggregateFilter.filterOut(record)) {
+//				if (!f.filterOut(record)) {
+				if (true) {
 					nrFilteredRecords++;
 					// do stuff to the record.
 
@@ -1487,5 +1536,117 @@ public class Resequencing {
 
 	}
 
+	public void determineReadsAndDuplicationsPerChr(String bamfile, String outputfile) throws IOException {
+
+		int nrReadsUnmapped = 0;
+		int nrWithMateUnmapped = 0;
+
+		int total = 0;
+
+		int[] nrMarkedDuplicatesPerChr = new int[27];
+		int[] nrReadsMappedPerChr = new int[27];
+
+		int[] nrFragmentsMappedPerChr = new int[27];
+		int[] nrFragmentsMappedWithMatesOnOppositeStrandsPerChr = new int[27];
+		int[] nrUniqueReadsWMapQ30PerChr = new int[27];
+
+		BamFileReader reader = new BamFileReader(bamfile);
+		SAMRecordIterator iterator = reader.iterator();
+
+		int nrReadsProcessed = 0;
+		SAMRecord record = iterator.next();
+		while (iterator.hasNext()) {
+
+			total++;
+
+			if (record.getReadUnmappedFlag()) {
+				nrReadsUnmapped++;
+			} else {
+				Chromosome c = Chromosome.parseChr(record.getReferenceName());
+				boolean dup = record.getDuplicateReadFlag();
+				int chr = c.getNumber();
+				if (chr > 25) {
+					chr = 26;
+				}
+				nrReadsMappedPerChr[chr]++;
+				if (dup) {
+					nrMarkedDuplicatesPerChr[chr]++;
+				} else {
+
+					int mapq = record.getMappingQuality();
+					if (mapq > 30) {
+						nrUniqueReadsWMapQ30PerChr[chr]++;
+					}
+				}
+			}
+
+
+			if (record.getFirstOfPairFlag()) {
+				if (record.getMateUnmappedFlag() || record.getReadUnmappedFlag()) {
+					// unpaired mate
+					nrWithMateUnmapped++;
+				} else {
+					Chromosome c = Chromosome.parseChr(record.getReferenceName());
+					Chromosome c2 = Chromosome.parseChr(record.getMateReferenceName());
+
+
+					boolean negStr = record.getReadNegativeStrandFlag();
+					boolean negStrMate = record.getMateNegativeStrandFlag();
+					if (c.equals(c2)) {
+						// both mate pairs on same chr
+
+						int chr = c.getNumber();
+						if (chr > 25) {
+							chr = 26;
+						}
+
+						if ((negStr && !negStrMate) || (!negStr && negStrMate)) {
+							nrFragmentsMappedWithMatesOnOppositeStrandsPerChr[chr]++;
+						}
+						nrFragmentsMappedPerChr[chr]++;
+					}
+				}
+			}
+			record = iterator.next();
+			nrReadsProcessed++;
+			if (nrReadsProcessed % 1000000 == 0) {
+				System.out.println(nrReadsProcessed + " reads processed");
+			}
+		}
+
+		TextFile outfile = new TextFile(outputfile, TextFile.W);
+
+		outfile.writeln("Chr" +
+				"\tChrSize" +
+				"\tnrReadsMappedPerChr" +
+				"\tnrReadsMarkedDuplicatesPerChr" +
+				"\tnrUniqueReadsWMapQ30PerChr" +
+				"\tnrFragmentsMappedPerChr" +
+				"\tnrFragmentsMappedWithMatesOnOppositeStrandsPerChr");
+
+		for (int i = 1; i < nrFragmentsMappedPerChr.length; i++) {
+			Chromosome c = Chromosome.parseChr("" + i);
+			if (i == 23) {
+				c = Chromosome.parseChr("ChrX");
+			} else if (i == 24) {
+				c = Chromosome.parseChr("ChrY");
+			} else if (i == 25) {
+				c = Chromosome.parseChr("MT");
+			}
+			outfile.writeln(c.getName() +
+							"\t" + c.getLength() +
+							"\t" + nrReadsMappedPerChr[i] +
+							"\t" + nrMarkedDuplicatesPerChr[i] +
+							"\t" + nrUniqueReadsWMapQ30PerChr[i] +
+							"\t" + nrFragmentsMappedPerChr[i] +
+							"\t" + nrFragmentsMappedWithMatesOnOppositeStrandsPerChr[i]
+			);
+		}
+
+		outfile.writeln("total nr reads:\t" + total);
+		outfile.writeln("total nr reads unmapped:\t" + nrReadsUnmapped);
+		outfile.writeln("total nr reads mate unmapped:\t" + nrWithMateUnmapped);
+		outfile.close();
+	}
 
 }

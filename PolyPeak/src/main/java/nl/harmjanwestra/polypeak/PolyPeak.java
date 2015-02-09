@@ -1,291 +1,268 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package nl.harmjanwestra.polypeak;
 
-import nl.harmjanwestra.utilities.bamfile.BamFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
-import java.io.File;
-import java.io.IOException;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import htsjdk.samtools.filter.AggregateFilter;
+import nl.harmjanwestra.polypeak.containers.Sample;
+import nl.harmjanwestra.polypeak.containers.Sequence;
+import nl.harmjanwestra.polypeak.containers.SequenceLibrary;
+import nl.harmjanwestra.polypeak.tasks.ModelBuildingTask;
+import nl.harmjanwestra.polypeak.tasks.PileUp;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.features.Track;
+import umcg.genetica.io.text.TextFile;
 import umcg.genetica.util.RunTimer;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
- *
- * @author Harm-Jan
+ * Created by hwestra on 1/6/15.
  */
 public class PolyPeak {
 
-    private static final Logger LOG = LogManager.getLogger();
-    
+	private boolean checkSampleNamesInBAMFiles = true;
 
-    String tmpFile = null;
+	private Sample[] samples;
+	private HashMap<String, Sample> sampleNameToSample;
+	private Track callRegions;
+	private Track blackListedRegions;
+	private AggregateFilter filter = null;
 
-    public static void main(String[] args) {
-        String file = "/Data/ATAC-seq/GSE47753/SRR891269/SRR891269-sort-dedup-sort.bam";
-        PolyPeak p = new PolyPeak(file);
+	private String outputDirectory = "";
+	private int nrThreads;
 
-        
-    }
+	public static void main(String[] args) {
+		PolyPeak p = new PolyPeak();
 
-    int windowsize = 10000;
+		if (args.length < 3) {
+			System.out.println("usage: files.txt outdir nrthreads");
+		} else {
 
-    public PolyPeak(String file) {
-        this.tmpFile = file;
-        try {
-            run();
-        } catch (IOException ex) {
-            LOG.error(ex.getMessage());
-            System.exit(-1);
-        }
-        System.exit(0);
-    }
+			String sampleFileName = args[0]; //"/Data/ATAC-seq/GSE47753/dataWSampleNames.txt";
+			String outputdirectory = args[1]; //"/Data/ATAC-seq/TestOutput/";
+			int nrThreads = Integer.parseInt(args[2]);
+			String regionListFile = null;
+			String blackListFile = null;
+			try {
+				p.run(sampleFileName, regionListFile, blackListFile, outputdirectory, nrThreads);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		System.exit(0);
+	}
 
-    private void run() throws IOException {
+	public void run(String sampleFileName, String regionListFile, String blackListFile, String outputDirectory, int nrThreads) throws IOException {
 
-        // set up windows
-        // we should know the sizes of each of the chromosomes beforehand
-        // they are hardcoded right now
-        // keep a running total coverage distribution (e.g. coverage vs count)
-        //
-        // for a given sample
-        // -- open bam file reader
-        BamFileReader reader = new BamFileReader(new File(tmpFile), null, false);
-            // -- keep a distribution of d versus correlation 500x100
+		RunTimer timer = new RunTimer();
+		timer.start();
 
-        // determine the reference chromosome names +  from the header
-        // some constants
-        int basequalthreshold = 10;
-        int windowSize = 10000;
-        int mapQThreshold = 20;
+		this.nrThreads = nrThreads;
+		this.outputDirectory = outputDirectory;
 
-        boolean pairedReadData = true;
-        int windowOverlap = windowSize / 10;
-        int maxD = windowSize / 2;
-        int[][] crossCorrelationDistribution = new int[maxD][100]; // [d][corr]
+		// read sample definition
+		System.out.println("Initializing samples");
+		initializeSamples(sampleFileName);
+		System.out.println(samples.length + " samples found.");
+		System.out.println("The data contains information on: " + SequenceLibrary.getSequences().size() + " sequences");
 
-        int windowSizeWithOverlap = windowSize + (2 * windowOverlap);
+		// read blacklisted regions
+		if (blackListFile != null) {
+			blackListedRegions = loadRegionsFromFile(blackListFile);
+		} else {
+			System.out.println("No blacklisted regions loaded.");
+		}
 
-        // iterate chromosomes
-        Chromosome[] allChromosomes = Chromosome.values();
-        long basesprocessed = 0;
-        long fragmentsprocessed = 0;
-        RunTimer timer = new RunTimer();
-        int maxInsertSize = 5000;
-        int maxReadLen = 200;
-        for (Chromosome chr : allChromosomes) {
-            LOG.info("Processing: " + chr.toString());
-            int chromosomeLength = chr.getLength();
-            int windowStart = 0;
-            while (windowStart < chromosomeLength) {
-                // get all reads in window
-                // for a given window
-                int windowStop = windowStart + windowSize;
-                int nA = 0;
-                int nT = 0;
-                int nC = 0;
-                int nG = 0;
-                int nN = 0;
+		// initialize regions to call
+		if (regionListFile != null) {
+			callRegions = loadRegionsFromFile(regionListFile);
+		} else {
+			System.out.println("Running on all available regions.");
+		}
 
-                SAMRecordIterator recordIterator = null;
-                try {
-                    recordIterator = reader.query("" + 1, windowStart - windowOverlap, windowStop + windowOverlap, true);
-                } catch (IllegalStateException e) {
-                    LOG.error(e.getMessage());
-                }
+		// TODO: initialize filter
+		// TODO: initialize sequence library to add only sequences that we are interested in
 
-                int nrReadsWindowTotal = 0;
-                if (recordIterator != null) {
-                    // -- determine read coverage per strand
-                    int[][] coverage = new int[2][windowSizeWithOverlap]; // [strand][position] 
-                    int[][] insertLengthDist = new int[2][maxInsertSize];
-                    int[][] readLengthDistribution = new int[2][maxReadLen];
 
-                    //    -- get read
-                    int actualWindowStart = windowStart - windowOverlap;
-                    while (recordIterator.hasNext()) {
-                        //    -- get mapq > 20
-                        int matchingBases = 0;
-                        SAMRecord record = recordIterator.next();
-                        int mapQ = record.getMappingQuality();
-                        int insertSize = record.getInferredInsertSize();
-                        if (mapQ > mapQThreshold && insertSize > 0) {
-                            //    -- if paired end, check whether other pair is present
-                            if (!pairedReadData || properPairFilter(record)) {
-                                //    -- parse cigar
-                                nrReadsWindowTotal++;
-                                Cigar cigar = record.getCigar();
-                                List<CigarElement> cigarElements = cigar.getCigarElements();
+		// TODO: initialize filters
+		// determine whether PileUp should filter records:
+		if (filter != null) {
+			PileUp.setFilter(filter);
+		}
 
-                                int mapPos = record.getAlignmentStart();
-                                int windowRelativePosition = mapPos - actualWindowStart;
+		// determine D for each sample, for each reader
+		System.out.println("Building model for samples individually");
 
-                                boolean negStrandFlag = record.getReadNegativeStrandFlag();
-                                int strand = 0;
-                                if (negStrandFlag) {
-                                    strand = 1;
-                                }
-                                int readPosition = 0;
+		// get autosomes
+		HashSet<Sequence> selectedChromosomes = new HashSet<Sequence>();
+		for (int i = 1; i < 23; i++) {
+			selectedChromosomes.add(new Sequence("" + i));
+		}
 
-                                byte[] baseQual = record.getBaseQualities();
-                                byte[] bases = record.getReadBases();
-                                if (insertSize > maxInsertSize) {
-                                    insertLengthDist[strand][maxInsertSize - 1]++;
-                                } else {
-                                    insertLengthDist[strand][insertSize]++;
-                                }
 
-                                fragmentsprocessed++;
-                                for (CigarElement e : cigarElements) {
-                                    int cigarElementLength = e.getLength();
+		determineModelForEachSample(selectedChromosomes);
 
-                                    switch (e.getOperator()) {
-                                        case H:
-                                            break;
-                                        case P:
-                                            break;
-                                        case S: // soft clip
-                                            readPosition += cigarElementLength;
-                                            break;
-                                        case N: // ref skip
-                                            windowRelativePosition += cigarElementLength;
-                                            break;
-                                        case D: // deletion
-                                            windowRelativePosition += cigarElementLength;
-                                            break;
-                                        case I: // insertion
-                                            windowRelativePosition += cigarElementLength;
-                                            break;
-                                        case M:
-                                        case EQ:
-                                        case X:
-                                            int endPosition = readPosition + cigarElementLength;
-                                            for (int pos = readPosition; pos < endPosition; pos++) {
-                                                byte base = bases[pos];
-                                                boolean properbase = false;
-                                                if (windowRelativePosition >= 0) { // the read could overlap the leftmost edge of this window
-                                                    if (base == 78 || base == 110) {
-                                                        nN++;
-                                                    }
+		// perform joint pileup
+		performJointCalling();
 
-                                                    //    -- for each base pos: check whether basequal > 50
-                                                    if (baseQual[readPosition] > basequalthreshold) {
-                                                        //    -- determine number of A/T/C/G/N bases
-                                                        if (base == 64 || base == 97) {
-                                                            nA++;
-                                                            properbase = true;
-                                                            matchingBases++;
-                                                        } else if (base == 67 || base == 99) {
-                                                            nC++;
-                                                            properbase = true;
-                                                            matchingBases++;
-                                                        } else if (base == 71 || base == 103) {
-                                                            nG++;
-                                                            properbase = true;
-                                                            matchingBases++;
-                                                        } else if (base == 84 || base == 116) { // extend to capture U?
-                                                            nT++;
-                                                            properbase = true;
-                                                            matchingBases++;
-                                                        }
-                                                    }
+		// close all sample BAM file readers
+		for (Sample sample : samples) {
+			sample.close();
+		}
 
-                                                }
-                                                if (properbase) {
-                                                    coverage[strand][windowRelativePosition]++;
-                                                    basesprocessed++;
-                                                }
-                                            } // if pos < readposition
-                                            readPosition += cigarElementLength;
-                                            break;
-                                        default:
-                                            LOG.warn("Unknown CIGAR operator found: " + e.getOperator().toString());
-                                            LOG.warn("In read: " + record.toString());
-                                            break;
-                                    } // switch operator
-                                } // for each cigarelement
-                                readLengthDistribution[strand][matchingBases]++;
-                            } // if paired read or properpair 
-                        } // if mapq > threshold
+		System.out.println("Done processing. Processing time: " + timer.getTimeDesc());
 
-                    } // for each samrecord
-                    if (fragmentsprocessed % 100000 == 0) {
-                        long diff = timer.getTimeDiff();
-                        long seconds = diff / 1000;
-                        double basesPerSecond = fragmentsprocessed / seconds;
-                        LOG.info(fragmentsprocessed + " fragments processed in " + timer.getTimeDesc(diff) + " - " + basesPerSecond + " bases/second");
-                    }
-                    recordIterator.close();
-                    // determine mean insert length and variance
-                    double meanInsertLengthPosStrand = JSci.maths.ArrayMath.mean(insertLengthDist[0]);
-                    double varInsertPosStrand = JSci.maths.ArrayMath.variance(insertLengthDist[0]);
+	}
 
-                    double meanInsertLengthNegStrand = JSci.maths.ArrayMath.mean(insertLengthDist[1]);
-                    double varInsertNegStrand = JSci.maths.ArrayMath.variance(insertLengthDist[1]);
 
-                    // determine mean read length and variance
-                    double meanReadLengthPosStrand = JSci.maths.ArrayMath.mean(readLengthDistribution[0]);
-                    double varReadPosStrand = JSci.maths.ArrayMath.variance(readLengthDistribution[0]);
+	private void determineModelForEachSample(HashSet<Sequence> selectedChromosomes) {
+		// perform calculations for each sample on individual threads
+		System.out.println("Opening threadpool for " + nrThreads + " threads.");
+		ExecutorService threadPool = Executors.newFixedThreadPool(nrThreads);
+		CompletionService<Boolean> pool = new ExecutorCompletionService<Boolean>(threadPool);
 
-                    double meanReadLengthNegStrand = JSci.maths.ArrayMath.mean(readLengthDistribution[1]);
-                    double varReadNegStrand = JSci.maths.ArrayMath.variance(readLengthDistribution[1]);
+		for (Sample s : samples) {
+			ModelBuildingTask task = new ModelBuildingTask();
+			task.setSample(s);
+			task.setSelectedChromosomes(selectedChromosomes);
+			task.setOutputDirectory(outputDirectory);
+			pool.submit(task);
+		}
 
-                    // determine mean coverage and variance
-                    double meanCoveragePosStrand = JSci.maths.ArrayMath.mean(coverage[0]);
-                    double varCoveragePosStrand = JSci.maths.ArrayMath.variance(coverage[0]);
+		int returned = 0;
+		while (returned < samples.length) {
 
-                    double meanCoverageNegStrand = JSci.maths.ArrayMath.mean(coverage[1]);
-                    double varCoverageNegStrand = JSci.maths.ArrayMath.variance(coverage[1]);
+			try {
+				Boolean result = pool.take().get();
+				if (result) {
+					returned++;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
-                    LOG.info("Chromosome position: " + chr.getName() + ":" + windowStart + "-" + windowStop + "\tNr reads: " + nrReadsWindowTotal);
-                    LOG.debug("---");
-                    LOG.debug("QTY\t\tPositive Strand\tNegative Strand");
-                    LOG.debug("Mean insert size:\t" + meanInsertLengthPosStrand + "\t" + meanInsertLengthNegStrand);
-                    LOG.debug("Variance insert:\t" + varInsertPosStrand + "\t" + varInsertNegStrand);
-                    LOG.debug("Mean read length:\t" + meanReadLengthPosStrand + "\t" + meanReadLengthNegStrand);
-                    LOG.debug("Variance read len:\t" + varReadPosStrand + "\t" + varReadNegStrand);
-                    LOG.debug("Mean coverage:\t" + meanCoveragePosStrand + "\t" + meanCoverageNegStrand);
-                    LOG.debug("Variance coverage:\t" + varCoveragePosStrand + "\t" + varCoverageNegStrand);
-                    LOG.debug("---");
-                    long sum = nA + nC + nT + nG + nN;
-                    LOG.debug("nrA: " + nA);
-                    LOG.debug("nrC: " + nC);
-                    LOG.debug("nrT: " + nT);
-                    LOG.debug("nrG: " + nG);
-                    LOG.debug("nrN: " + nN);
-                    LOG.debug("sum: " + sum);
-                    LOG.debug("");
+		}
+		System.out.println("Closed down threads");
 
-                }
+	}
 
-                windowStart += windowSize;
-            } // while windowstart < chr size
-        } // for all chromsoomes
+	private void performJointCalling() {
+		// initialize threadpool
+		// perform calculations for each sample on individual threads
 
-        // -- over a random selection of windows:
-        //    -- determine correlation between strands
-        //    -- set d += half window size
-        //    -- recalculate correlation
-        //    -- determine d with highest correlation
-        //  
-        reader.close();
+		// load windows over all samples in parallel from disk
+		// pile-up the reads in another thread
+		// we can only run one window at once
+	}
 
-    }
 
-    private boolean properPairFilter(SAMRecord record) {
-        // -- if paired end, check whether other pair is present
-        // -- check whether read pair maps to same chr;
-        // -- check whether read pair maps to same strand;
+	// TODO: this needs to be changed to something that can use flexible sequence names
+	// this method currently uses the Chromosome object, which cannot account for weird contig names
+	private Track loadRegionsFromFile(String regionListFile) throws IOException {
+		BedFileReader reader = new BedFileReader();
+		return reader.read(regionListFile, "");
+	}
 
-        return true;
-    }
+	private void initializeSamples(String sampleFileName) throws IOException {
+
+		System.out.println("Parsing sample information: " + sampleFileName);
+		TextFile tf = new TextFile(sampleFileName, TextFile.R);
+
+		String[] elems = tf.readLineElems(TextFile.tab);
+		HashMap<String, ArrayList<File>> sampleFiles = new HashMap<String, ArrayList<File>>();
+
+		int ln = 1;
+		HashMap<String, Boolean> controlStatus = new HashMap<String, Boolean>();
+		HashSet<String> allSamples = new HashSet<String>();
+		while (elems != null) {
+
+			if (elems.length < 3) {
+				System.err.println("Error: " + sampleFileName + " wrong format on line: " + ln);
+				// throw new IllegalFormatException("Error: "+sampleFileName+ " does not have the correct format.");
+			} else {
+				if (elems.length >= 3) {
+					String sampleName = elems[0].trim();
+					String control = elems[1].trim();
+					String fileName = elems[2].trim();
+
+					if (sampleName.length() == 0) {
+						System.err.println("Warning: sample name is empty on line: " + ln);
+						// throw new IllegalFormatException("Error: "+sampleFileName+ " does not have the correct format.");
+						break; // just break for now
+					}
+
+					if (fileName.length() == 0) {
+						System.err.println("Warning: file name is empty on line: " + ln);
+						// throw new IllegalFormatException("Error: "+sampleFileName+ " does not have the correct format.");
+						break; // just break for now
+					}
+
+					boolean isControl = false;
+					try {
+						isControl = Boolean.parseBoolean(control);
+					} catch (NumberFormatException e) {
+						System.err.println("Expecting boolean at column 2 for line " + ln + " found " + control + " assuming control == false");
+						// throw new IllegalFormatException("Error: "+sampleFileName+ " does not have the correct format.");
+						break; // just break for now
+					}
+
+					File f = new File(fileName);
+					if (!f.exists()) {
+						System.err.println("Warning: " + fileName + " defined for sample " + sampleName + " does not exist.");
+					} else {
+						allSamples.add(sampleName);
+						ArrayList<File> filesForSample = sampleFiles.get(sampleName);
+						if (filesForSample == null) {
+							filesForSample = new ArrayList<File>();
+						}
+
+						Boolean currentStatus = controlStatus.get(sampleName);
+						if (currentStatus == null) {
+							controlStatus.put(sampleName, isControl);
+						} else {
+							if (!controlStatus.equals(isControl)) {
+								System.err.println("Sample " + sampleName + " control status: " + controlStatus + " but found " + isControl + " on line: " + ln);
+							}
+						}
+						filesForSample.add(f);
+						sampleFiles.put(sampleName, filesForSample);
+					}
+
+				}
+				elems = tf.readLineElems(TextFile.tab);
+				ln++;
+			}
+		}
+		tf.close();
+
+		for (String sample : allSamples) {
+			if (!sampleFiles.containsKey(sample)) {
+				System.err.println("Warning: " + sample + " is defined in sample definition, but suitable BAM files found.");
+			}
+		}
+
+		// now initializing sample objects
+		ArrayList<Sample> tmpSamples = new ArrayList<Sample>();
+		Set<Map.Entry<String, ArrayList<File>>> sampleFileEntrySet = sampleFiles.entrySet();
+		sampleNameToSample = new HashMap<String, Sample>();
+		for (Map.Entry<String, ArrayList<File>> entry : sampleFileEntrySet) {
+			String sampleName = entry.getKey();
+			ArrayList<File> fileNames = entry.getValue();
+			Sample tmpSample = new Sample(sampleName, fileNames.toArray(new File[0]), checkSampleNamesInBAMFiles, controlStatus.get(sampleName));
+			if (tmpSample.hasReaders()) {
+				if (sampleNameToSample.containsKey(sampleName)) {
+					System.err.println("Error: something went wrong when loading samples");
+				} else {
+					sampleNameToSample.put(sampleName, tmpSample);
+				}
+				tmpSamples.add(tmpSample);
+			}
+		}
+		samples = tmpSamples.toArray(new Sample[0]);
+	}
+
 }

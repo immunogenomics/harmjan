@@ -14,7 +14,7 @@ public enum Chromosome {
     ONE(1, "Chr1", 248956422),
     TWO(2, "Chr2", 242193529),
     THREE(3, "Chr3", 198295559),
-    FOUR(4, "Chr4", 19021455),
+    FOUR(4, "Chr4", 190214555),
     FIVE(5, "Chr5", 181538259),
     SIX(6, "Chr6", 170805979),
     SEVEN(7, "Chr7", 159345973),
@@ -36,7 +36,7 @@ public enum Chromosome {
     X(23, "ChrX", 156040895),
     Y(24, "ChrY", 57227415),
     MT(25, "ChrMT", 1),
-    NA(0, "N/A", 1);
+    NA(Integer.MAX_VALUE, "N/A", 1);
 
     private final int number;
     private final String name;
