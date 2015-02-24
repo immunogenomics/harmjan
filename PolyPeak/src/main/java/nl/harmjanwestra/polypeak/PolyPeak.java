@@ -231,11 +231,10 @@ public class PolyPeak {
 						filesForSample.add(f);
 						sampleFiles.put(sampleName, filesForSample);
 					}
-
 				}
-				elems = tf.readLineElems(TextFile.tab);
-				ln++;
 			}
+			elems = tf.readLineElems(TextFile.tab);
+			ln++;
 		}
 		tf.close();
 

@@ -140,7 +140,7 @@ public class PileUp {
 											nN++;
 										} else if (baseQual[readPosition] > basequalthreshold) { //    -- for each base pos: check whether basequal > 50
 											//    -- determine number of A/T/C/G/N bases
-											if (base == 64 || base == 97) {
+											if (base == 65 || base == 97) {
 												nA++;
 												properbase = true;
 											} else if (base == 67 || base == 99) {

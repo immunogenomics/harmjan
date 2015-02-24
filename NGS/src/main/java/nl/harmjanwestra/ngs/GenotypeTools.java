@@ -1,9 +1,12 @@
 package nl.harmjanwestra.ngs;
 
+import com.xeiam.xchart.BitmapEncoder;
+import com.xeiam.xchart.Chart;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFVariantType;
 import umcg.genetica.containers.Pair;
+import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.io.trityper.util.BaseAnnot;
 import umcg.genetica.math.stats.Correlation;
@@ -12,27 +15,402 @@ import umcg.genetica.text.Strings;
 import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * Created by hwestra on 2/4/15.
  */
-public class VCFTools {
+public class GenotypeTools {
 
 
 	public static void main(String[] args) {
 		try {
-			VCFTools t = new VCFTools();
+			GenotypeTools t = new GenotypeTools();
+//
+//			t.compareFamFileWithSampleList("/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC.fam",
+//					"/Data/Projects/2014-FR-Reseq/RASequencingSamples-ReWrite-seqIdToImmunoChip.txt");
+//
+//			String mapfile = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra.map";
+//			String mapfileout = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_liftover.map";
+//			String liftoverbed = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_liftover.bed";
+////			t.convertPostLiftOverMAP(mapfile, mapfileout, liftoverbed);
+//			t.rewriteRSNamesUsingDBSNP();
 			String vcf = args[0];
 			String plink = args[1];
 			String out = args[2];
+			t.summarizeVCF(vcf, out + "Summary.txt");
+			t.determineVCFSummaryStatistics(vcf, out + "SampleCallrate.txt");
 			t.compareVCFGenotypesToPedAndMap(vcf, plink, out);
+
+//			String seqIdToImmunoChip = "/Data/Projects/2014-FR-Reseq/RASequencingSamples-ReWrite-seqIdToImmunoChip.txt";
+//			String famfileIn = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra.ped";
+//			String famfileOut = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_rewrite.ped";
+//			t.rewriteFamFileSampleNames(seqIdToImmunoChip, famfileIn, famfileOut);
+
+
 		} catch (IOException e) {
 			e.printStackTrace();
 
+		}
+
+	}
+
+	private void rewriteFamFileSampleNames(String seqIdToImmunoChip, String famfileIn, String famfileOut) throws IOException {
+		TextFile tf = new TextFile(seqIdToImmunoChip, TextFile.R);
+		HashMap<String, String> idToId = new HashMap<String, String>();
+		String[] elems = tf.readLineElems(Strings.tab);
+		while (elems != null) {
+			idToId.put(elems[1], elems[0]);
+			elems = tf.readLineElems(Strings.tab);
+		}
+		tf.close();
+
+		TextFile tf2 = new TextFile(famfileIn, TextFile.R);
+		TextFile tf2out = new TextFile(famfileOut, TextFile.W);
+		elems = tf2.readLineElems(Strings.tab);
+		while (elems != null) {
+
+
+			String sample = elems[1];
+			String newId = idToId.get(sample);
+			if (newId != null) {
+				elems[1] = newId;
+			}
+
+			tf2out.writeln(Strings.concat(elems, Strings.tab));
+
+			elems = tf2.readLineElems(Strings.tab);
+		}
+		tf2out.close();
+		tf2.close();
+
+	}
+
+
+	private void rewriteRSNamesUsingDBSNP() throws IOException {
+		String rsMergeFile = "/Data/dbSNP/b142/RsMergeArch.bcp";
+		String rsRemoveFile = "";
+		String mapfileIn = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_liftover.map";
+		String mapfileOut = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_liftover_newRSIds.map";
+		int dbsnpB = 138;
+		HashMap<String, String> rsToNewRs = new HashMap<String, String>();
+
+		TextFile tfmap = new TextFile(mapfileIn, TextFile.R);
+		String[] elems = tfmap.readLineElems(Strings.whitespace);
+		while (elems != null) {
+			String rs = elems[1];
+			// System.out.println("Found a snp: " + rs);
+			rsToNewRs.put(rs, null);
+			elems = tfmap.readLineElems(Strings.whitespace);
+		}
+		tfmap.close();
+		System.out.println("Done parsing map file: " + mapfileIn);
+		HashSet<String> removedRs = new HashSet<String>();
+
+//			TextFile tfrem = new TextFile(rsRemoveFile, TextFile.R);
+//			elems = tfrem.readLineElems(TextFile.tab);
+//			while (elems != null) {
+//
+//
+//
+//				elems = tfrem.readLineElems(TextFile.tab);
+//			}
+//			tfrem.close();
+
+
+		System.out.println("Parsing: " + rsMergeFile);
+		TextFile tfRsMerge = new TextFile(rsMergeFile, TextFile.R);
+		elems = tfRsMerge.readLineElems(TextFile.tab);
+
+		HashMap<String, String> lowToHigh = new HashMap<String, String>();
+		HashSet<String> visitedLow = new HashSet<String>();
+		int ln = 0;
+		while (elems != null) {
+			String high = "rs" + elems[0]; // original ID (possibly in our MAP file)
+			String low = "rs" + elems[1]; // new ID
+			String build = elems[2];
+			Integer bInt = Integer.parseInt(build);
+			if (bInt <= dbsnpB) {
+				if (rsToNewRs.containsKey(high)) { // check whether this SNP is relevant
+					if (lowToHigh.containsKey(low)) { // check whether we've already assigned this low RS to another variant in our list
+						System.err.println("WARNING: introducing duplicate: " + high + "\tand " + lowToHigh.get(low) + " share " + low);
+
+						int i = 1;
+						String newLow = low + "_dup" + i;
+						while (lowToHigh.containsKey(newLow)) {
+							newLow = low + "_dup" + i;
+							i++;
+						}
+
+						lowToHigh.put(newLow, high);
+						rsToNewRs.put(high, newLow);
+					} else {
+
+						if (rsToNewRs.containsKey(low)) {
+							System.err.println("WARNING: replacing: " + high + " with " + low + " but " + low + " is already in the map file.");
+
+							int i = 1;
+							String newLow = low + "_dup" + i;
+							while (lowToHigh.containsKey(newLow)) {
+								newLow = low + "_dup" + i;
+								i++;
+							}
+
+							rsToNewRs.put(high, newLow);
+							lowToHigh.put(newLow, high);
+							System.out.println("New Name: " + newLow);
+						} else {
+							lowToHigh.put(low, high);
+							rsToNewRs.put(high, low);
+						}
+					}
+
+
+				}
+			}
+			elems = tfRsMerge.readLineElems(TextFile.tab);
+			ln++;
+			if (ln % 1000000 == 0) {
+				System.out.println(ln + " lns parsed.");
+			}
+		}
+		tfRsMerge.close();
+
+		System.out.println("Parsing stuff");
+		TextFile outmap = new TextFile(mapfileOut, TextFile.W);
+		tfmap.open();
+		elems = tfmap.readLineElems(Strings.whitespace);
+		while (elems != null) {
+			String rs = elems[1];
+			String newStr = rsToNewRs.get(rs);
+
+
+			if (newStr == null) {
+				// just output
+
+			} else {
+				System.out.println("Replacing: " + rs + " by " + newStr);
+				elems[1] = newStr;
+
+			}
+			String outln = Strings.concat(elems, Strings.tab);
+			outmap.writeln(outln);
+
+			elems = tfmap.readLineElems(Strings.whitespace);
+		}
+		tfmap.close();
+		outmap.close();
+
+		System.out.println("Done");
+	}
+
+	private void convertPostLiftOverMAP(String mapfile, String mapfileout, String liftoverbed) throws IOException {
+
+
+		HashMap<String, Integer> variantToPos = new HashMap<String, Integer>();
+		TextFile tf1 = new TextFile(liftoverbed, TextFile.R);
+		String[] bedelems = tf1.readLineElems(TextFile.tab);
+		while (bedelems != null) {
+			String variant = bedelems[3];
+			Integer pos = Integer.parseInt(bedelems[1]);
+			variantToPos.put(variant, pos);
+			bedelems = tf1.readLineElems(TextFile.tab);
+		}
+		tf1.close();
+
+		TextFile tf = new TextFile(mapfile, TextFile.R);
+		TextFile out = new TextFile(mapfileout, TextFile.W);
+		String[] elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+			String variant = elems[1];
+			Integer newPosition = variantToPos.get(variant);
+			if (newPosition == null) {
+				for (int i = 0; i < elems.length; i++) {
+					elems[i] = "hg18_" + elems[i];
+				}
+			} else {
+				elems[3] = "" + newPosition;
+			}
+
+			out.writeln(Strings.concat(elems, Strings.tab));
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
+		out.close();
+	}
+
+	private HashMap<String, Integer> index(String[] s) {
+		int c = 0;
+		HashMap<String, Integer> index = new HashMap<String, Integer>();
+		for (String s1 : s) {
+			index.put(s1, c);
+			c++;
+		}
+		return index;
+	}
+
+	private void determineVCFSummaryStatistics(String vcf, String out) throws IOException {
+		ArrayList<String> vcfSamples = getVCFSamples(vcf);
+		System.out.println(vcfSamples.size() + " samples loaded from VCF");
+
+		HashMap<String, Integer> sampleMap = index(vcfSamples.toArray(new String[0]));
+// get variants from VCF
+		ArrayList<Feature> variantsOnVCF = getVariantsFromVCF(vcf);
+		System.out.println(variantsOnVCF.size() + " variants on VCF");
+
+		ArrayList<String> autosomal = new ArrayList<String>();
+		HashMap<Feature, Integer> variantMap = new HashMap<Feature, Integer>();
+		int ctr = 0;
+		for (Feature f : variantsOnVCF) {
+			if (!f.getChromosome().equals(Chromosome.X)) {
+				variantMap.put(f, ctr);
+				autosomal.add(f.getChromosome().getName() + ":" + f.getStart());
+				ctr++;
+			}
+		}
+		Pair<byte[][], String[]> genotypePair = loadVCFGenotypes(vcf, sampleMap, variantMap);
+		// byte[sample][variant]
+
+		writeGenotypes(genotypePair, vcfSamples, autosomal, out + "allVCFGenotypes.txt");
+		byte[][] genotypes = genotypePair.getLeft();
+		String[] alleles = genotypePair.getRight();
+		Triple<Pair<double[], String[]>, double[], double[]> params = getGenotypeParams(genotypePair);
+		double[] mafs = params.getLeft().getLeft();
+
+
+		TextFile outf = new TextFile(out, TextFile.W);
+		double[] xvals = new double[genotypes.length];
+		double[] sampleCR = new double[genotypes.length];
+		for (int sample = 0; sample < genotypes.length; sample++) {
+			int nrTotal = 0;
+			int nrCalled = 0;
+			for (int gt = 0; gt < genotypes[sample].length; gt++) {
+				//if (mafs[gt] > 0.01) {
+				if (genotypes[sample][gt] == -1) {
+
+				} else {
+					nrCalled++;
+				}
+				nrTotal++;
+				//}
+			}
+			double cr = (double) nrCalled / nrTotal;
+			sampleCR[sample] = cr;
+			outf.writeln(vcfSamples.get(sample) + "\t" + cr + "\t" + nrCalled + "\t" + nrTotal);
+		}
+		outf.close();
+
+		Arrays.sort(sampleCR);
+
+		Coverage c = new Coverage();
+		Chart barchart = c.initBarChart("Call-rate per sample", "Sample", "Call-rate", 1200, 800, true, 50);
+		barchart.addSeries("Series1", xvals, sampleCR);
+		barchart.getStyleManager().setLegendVisible(false);
+		BitmapEncoder.saveBitmapWithDPI(barchart, out + "SampleCallRate", BitmapEncoder.BitmapFormat.PNG, 300);
+
+
+	}
+
+
+	/*
+	// determine MAF, HWEP, CR
+				double maf = 0;
+				double hwep = 1;
+				double cr = (double) nrCalled / nrTotal;
+				String minorAllele = alleles[0];
+				if (type.isBiallelic()) {
+					int freqAlleleA = 2 * nrHomAA + nrHets; // genotypeFreq[0] + genotypeFreq[1];
+					int freqAlleleB = 2 * nrHomBB + nrHets; // genotypeFreq[2] + genotypeFreq[1];
+
+					maf = (double) (freqAlleleA) / (nrCalled);
+					minorAllele = alleles[0];
+					if (freqAlleleA > freqAlleleB) {
+						minorAllele = alleles[1];
+						maf = 1 - maf;
+					}
+					hwep = HWE.calculateExactHWEPValue(nrHets, nrHomAA, nrHomBB);
+
+				}
+	 */
+
+	private Triple<Pair<double[], String[]>, double[], double[]> getGenotypeParams(Pair<byte[][], String[]> genotypePair) {
+		byte[][] genotypes = genotypePair.getLeft();
+		String[] alleles = genotypePair.getRight();
+
+		String[] minorAlleles = new String[alleles.length];
+		double[] mafs = new double[alleles.length];
+		double[] crs = new double[alleles.length];
+		double[] hwes = new double[alleles.length];
+		for (int gt = 0; gt < genotypes[0].length; gt++) {
+			String[] gtAlleles = alleles[gt].split("/");
+			String allele1 = gtAlleles[0];
+			String allele2 = gtAlleles[1];
+			int nrCalled = 0;
+			int nrTotal = 0;
+			int nrHomAA = 0;
+			int nrHomBB = 0;
+			int nrHets = 0;
+			for (int sample = 0; sample < genotypes.length; sample++) {
+				if (genotypes[sample][gt] == -1) {
+					// missing
+				} else if (genotypes[sample][gt] == 0) {
+					nrHomAA++;
+					nrCalled += 2;
+				} else if (genotypes[sample][gt] == 1) {
+					nrHets++;
+					nrCalled += 2;
+				} else {
+					nrHomBB++;
+					nrCalled += 2;
+				}
+				nrTotal += 2;
+			}
+			int freqAlleleA = 2 * nrHomAA + nrHets; // genotypeFreq[0] + genotypeFreq[1];
+			int freqAlleleB = 2 * nrHomBB + nrHets; // genotypeFreq[2] + genotypeFreq[1];
+			double maf = (double) (freqAlleleA) / (nrCalled);
+			String minorAllele = allele1;
+			if (freqAlleleA > freqAlleleB) {
+				maf = 1 - maf;
+				minorAllele = allele2;
+			}
+			minorAlleles[gt] = minorAllele;
+			double cr = (double) nrCalled / nrTotal;
+			double hwep = HWE.calculateExactHWEPValue(nrHets, nrHomAA, nrHomBB);
+			mafs[gt] = maf;
+			crs[gt] = cr;
+			hwes[gt] = hwep;
+			// System.out.println(gt + "\t" + cr + "\t" + maf);
+		}
+		return new Triple<Pair<double[], String[]>, double[], double[]>(new Pair<double[], String[]>(mafs, minorAlleles), crs, hwes);
+	}
+
+
+	public void compareFamFileWithSampleList(String famfile, String sampleList) throws IOException {
+		TextFile tf = new TextFile(sampleList, TextFile.R);
+		String[] listofSamples = tf.readAsArray(1, TextFile.tab);
+		tf.close();
+
+		tf = new TextFile(sampleList, TextFile.R);
+		String[] listofSamples2 = tf.readAsArray(0, TextFile.tab);
+		tf.close();
+
+
+		ArrayList<Pair<String, String>> famSamples = parseFam(famfile);
+		HashMap<String, Pair<String, String>> samplesInFam = new HashMap<String, Pair<String, String>>();
+		for (Pair<String, String> p : famSamples) {
+			samplesInFam.put(p.getRight(), p);
+		}
+
+
+		for (int num = 0; num < listofSamples.length; num++) {
+			String s = listofSamples[num];
+			String s2 = listofSamples2[num];
+			if (samplesInFam.containsKey(s)) {
+				Pair<String, String> p = samplesInFam.get(s);
+				System.out.println("Found:\t" + p.getLeft() + "\t" + p.getRight());
+			} else {
+				System.out.println("Not found:\t" + s2 + "\t" + s);
+			}
 		}
 
 	}
@@ -41,14 +419,18 @@ public class VCFTools {
 
 		// get samples from plink data
 
-		ArrayList<String> famSamples = parseFam(plinkfile + ".fam");
+		ArrayList<Pair<String, String>> famSamples = parseFam(plinkfile + ".fam");
 		System.out.println(famSamples.size() + " samples loaded from PED/MAP");
 		// get samples from VCF
 		ArrayList<String> vcfSamples = getVCFSamples(vcf);
 		System.out.println(vcfSamples.size() + " samples loaded from VCF");
 
 		// intersect samples
-		HashSet<String> intersectedSamples = intersectSamples(famSamples, vcfSamples);
+		ArrayList<String> samplesInFam = new ArrayList<String>();
+		for (Pair<String, String> p : famSamples) {
+			samplesInFam.add(p.getRight());
+		}
+		HashSet<String> intersectedSamples = intersectSamples(samplesInFam, vcfSamples);
 
 		System.out.println(intersectedSamples.size() + " samples shared");
 		writeHash(intersectedSamples, out + "sharedSamples.txt");
@@ -106,74 +488,204 @@ public class VCFTools {
 		Pair<byte[][], String[]> pedGenotypesPair = loadPedGenotypes(plinkfile + ".ped", plinkfile + ".map", sampleMap, variantMap);
 		writeGenotypes(pedGenotypesPair, samples, variants, out + "pedGenotypes.txt");
 
-
 		// compare alleles
-
 		String[] allelesVCF = vcfGenotypesPair.getRight();
 		String[] allelesPED = pedGenotypesPair.getRight();
 
-		boolean[] excludeVariant = new boolean[allelesPED.length];
-		boolean[] flipGenotypes = new boolean[allelesPED.length];
 
-		System.out.println("vcf vcf correlations");
-		correlateRows(vcfGenotypesPair, vcfGenotypesPair, samples, out + "vcfSampleCorrelations.txt", excludeVariant, flipGenotypes);
-		System.out.println("ped ped correlations");
-		correlateRows(pedGenotypesPair, pedGenotypesPair, samples, out + "pedSampleCorrelations.txt", excludeVariant, flipGenotypes);
+//		System.out.println("vcf vcf correlations");
+//		correlateSamples(vcfGenotypesPair, vcfGenotypesPair, samples, out + "vcfSampleCorrelations.txt", excludeVariant, flipGenotypes);
+//		System.out.println("ped ped correlations");
+//		correlateSamples(pedGenotypesPair, pedGenotypesPair, samples, out + "pedSampleCorrelations.txt", excludeVariant, flipGenotypes);
 
-		Pair<boolean[], boolean[]> flipvariants = determineAlleleFlips(allelesPED, allelesVCF, variants, out + "vcfpedAlleleFlips.txt");
-		excludeVariant = flipvariants.getLeft();
-		flipGenotypes = flipvariants.getRight();
+
+		Triple<Pair<double[], String[]>, double[], double[]> vcfParams = getGenotypeParams(vcfGenotypesPair);
+		Triple<Pair<double[], String[]>, double[], double[]> pedParams = getGenotypeParams(pedGenotypesPair);
+		double mafThreshold = 0.01;
+		double crThreshold = 0.05;
+		Pair<boolean[], boolean[]> flipvariants = determineAlleleFlipsAndExcludeVariants(allelesPED, pedParams.getLeft(), allelesVCF, vcfParams.getLeft(), variants, out + "vcfpedAlleleFlips.txt",
+				mafThreshold, crThreshold);
+		boolean[] excludeVariant = flipvariants.getLeft();
+		boolean[] flipGenotypes = flipvariants.getRight();
 
 		// correlate samples
 		System.out.println("vcf ped sample correlations");
-		double[][] correlations = correlateRows(vcfGenotypesPair, pedGenotypesPair, samples, out + "vcfpedSampleCorrelations.txt", excludeVariant, flipGenotypes);
 
 
-		writeBestCorrelations(correlations, samples, out + "vcfpedBestSampleCorrelations.txt");
+		Pair<double[][], double[][]> correlationOutputSamples = correlateSamples(vcfGenotypesPair, pedGenotypesPair, samples, out + "vcfpedSampleCorrelations.txt", excludeVariant, flipGenotypes);
+
+
+		boolean[] sampleSwapped = writeBestCorrelations(correlationOutputSamples, samples, out + "vcfpedBestSampleCorrelations.txt");
 
 		// correlate variants
 		System.out.println("vcf ped genotype correlations");
-		double[][] variantCorrelations = correlateColumns(vcfGenotypesPair, pedGenotypesPair, variants, out + "vcfpedGenotypeCorrelations.txt", excludeVariant, flipGenotypes);
-		writeBestCorrelations(variantCorrelations, variants, out + "vcfpedBestGenotypeCorrelations.txt");
 
-		// determine genetic similarity in VCF
 
-		// determine call rates per sample in VCF
+		Pair<double[][], double[][]> correlationOutputVariants = correlateVariants(vcfGenotypesPair, pedGenotypesPair, variants, out + "vcfpedGenotypeCorrelations.txt", excludeVariant, flipGenotypes, sampleSwapped);
+		writeBestCorrelations(correlationOutputVariants, variants, out + "vcfpedBestGenotypeCorrelations.txt");
+
+		// write discordantGenotypes
+		writeDiscordantGenotypes(vcfGenotypesPair, pedGenotypesPair, variants, out + "discordantGenotypes.txt", excludeVariant, flipGenotypes, sampleSwapped, samples);
 
 
 	}
 
-	private void writeBestCorrelations(double[][] correlations, ArrayList<String> labels, String out) throws IOException {
+	private void writeDiscordantGenotypes(Pair<byte[][], String[]> vcfGenotypesPair, Pair<byte[][], String[]> pedGenotypesPair, ArrayList<String> variants, String outputFileName, boolean[] excludeVariant, boolean[] flipGenotypes, boolean[] sampleSwapped, ArrayList<String> samples) throws IOException {
+
+		TextFile out = new TextFile(outputFileName, TextFile.W);
+
+		String header = "Variant\tAllelesVCF\tAllelesPED (after flip)\tFlipped\tSample\tGenotypeVCF\tGenotypePED (after flip)\tGenotypeVCFAlleles\tGenotypePEDAlleles (after flip)";
+		out.writeln(header);
+
+		byte[][] genotypesVCF = vcfGenotypesPair.getLeft();
+		String[] allelesVCF = vcfGenotypesPair.getRight();
+		byte[][] genotypesPED = pedGenotypesPair.getLeft();
+		String[] allelesPED = pedGenotypesPair.getRight();
+
+		for (int v = 0; v < variants.size(); v++) {
+			if (!excludeVariant[v]) {
+				String variantOut = variants.get(v);
+
+				String variantAllelesVCF = allelesVCF[v];
+				String[] allelesVCFArr = variantAllelesVCF.split("/");
+				String variantAllelesPED = allelesPED[v];
+				String[] allelesPEDArr = variantAllelesPED.split("/");
+
+				boolean flipped = flipGenotypes[v];
+				if (flipped) {
+					String all1 = allelesPEDArr[0];
+					String all2 = allelesPEDArr[1];
+					allelesPEDArr[0] = all2;
+					allelesPEDArr[1] = all1;
+				}
+
+
+				variantOut += "\t" + variantAllelesVCF + "\t" + allelesPEDArr[0] + "/" + allelesPEDArr[1] + "\t" + flipped;
+
+				for (int s = 0; s < genotypesPED.length; s++) {
+					if (!sampleSwapped[s]) {
+
+						int gt1 = genotypesVCF[s][v];
+						int gt2 = genotypesPED[s][v];
+
+						if (flipped) {
+							gt2 = Math.abs(gt2 - 2);
+							if (gt2 == 3) {
+								gt2 = -1;
+							}
+						}
+
+
+						if (gt1 != gt2 || variants.get(v).equals("Chr15:79152806")) {
+							String sample = samples.get(s);
+
+							String ln = variantOut + "\t" +
+									sample + "\t" +
+									gt1 + "\t" +
+									gt2 + "\t" +
+									gtToAlleles(allelesVCFArr, gt1) + "\t" +
+									gtToAlleles(allelesPEDArr, gt2);
+							out.writeln(ln);
+						}
+
+					}
+				}
+			}
+		}
+
+		out.close();
+
+	}
+
+	private String gtToAlleles(String[] alleles, int gt) {
+		if (gt == 0) {
+			return alleles[0] + "/" + alleles[0];
+		} else if (gt == 1) {
+			return alleles[0] + "/" + alleles[1];
+		} else if (gt == 2) {
+			return alleles[1] + "/" + alleles[1];
+		} else {
+			return "NA";
+		}
+	}
+
+	private boolean[] writeBestCorrelations(Pair<double[][], double[][]> correlationInput, ArrayList<String> labels, String out) throws IOException {
+		double[][] correlations = correlationInput.getLeft();
+		double[][] n = correlationInput.getRight();
 		TextFile outf = new TextFile(out, TextFile.W);
-		outf.writeln("Label\tCorrelation\tBestMatch\tBestCorrelation\tMatch");
+		outf.writeln("Label\t" +
+				"Correlation\t" +
+				"n\t" +
+				"BestMatch\t" +
+				"BestCorrelation\t" +
+				"n\t" +
+				"Match");
+		boolean[] sampleSwapped = new boolean[labels.size()];
 		for (int i = 0; i < labels.size(); i++) {
 
-			String ln = labels.get(i);
-			ln += "\t" + correlations[i][i];
+			String ln = labels.get(i) + "\t"
+					+ correlations[i][i]
+					+ "\t" + n[i][i];
+
 			double max = -1;
 			double origMax = -1;
 			int maxS = i;
 			for (int j = 0; j < labels.size(); j++) {
 				double corr = correlations[i][j];
-				double absCorr = Math.abs(corr);
-				if (absCorr > max) {
-					max = absCorr;
-					origMax = corr;
-					maxS = j;
+				if (!Double.isNaN(corr)) {
+					double absCorr = Math.abs(corr);
+					if (absCorr > max) {
+						max = absCorr;
+						origMax = corr;
+						maxS = j;
+					}
 				}
 			}
-			ln += "\t" + labels.get(maxS) + "\t" + origMax + "\t" + (maxS == i);
+			if (max == -1) {
+				ln += "\tUnknown" +
+						"\tNaN" +
+						"\t0" +
+						"\tUnknown";
+				sampleSwapped[i] = true;
+			} else {
+				ln += "\t" + labels.get(maxS) + "\t"
+						+ origMax + "\t"
+						+ n[i][maxS] + "\t"
+						+ (maxS == i);
+				sampleSwapped[i] = !(maxS == i);
+			}
 			outf.writeln(ln);
 		}
 		outf.close();
+		return sampleSwapped;
 	}
 
-	private Pair<boolean[], boolean[]> determineAlleleFlips(String[] allelesPED, String[] allelesVCF, ArrayList<String> variants, String out) throws IOException {
+	private Pair<boolean[], boolean[]> determineAlleleFlipsAndExcludeVariants(String[] allelesPED, Pair<double[], String[]> pedMinorAlleles,
+																			  String[] allelesVCF, Pair<double[], String[]> vcfMinorAlleles,
+																			  ArrayList<String> variants, String out,
+																			  double mafThreshold, double crThreshold) throws IOException {
 		boolean[] excludeVariant = new boolean[allelesPED.length];
 		boolean[] flipGenotypes = new boolean[allelesPED.length];
 
+		double[] mafsPED = pedMinorAlleles.getLeft();
+		String[] minorAllelesPED = pedMinorAlleles.getRight();
+
+		double[] mafsVCF = vcfMinorAlleles.getLeft();
+		String[] minorAllelesVCF = vcfMinorAlleles.getRight();
+
+		/*
+		for (int variant = 0; variant < excludeVariant.length; variant++) {
+			if (mafs[variant] < mafThreshold || cr[variant] < crTheshold)) {
+				excludeVariant[variant] = true;
+				System.out.println("excluding variant: " + variants.get(variant) + "\t" + mafs[variant] + "\t" + cr[variant]);
+			}
+		}
+		 */
 		TextFile outf = new TextFile(out, TextFile.W);
-		outf.writeln("variant\tallelesPED\tallelesVCF\tflip\tIncompatibility\tExcludeVariant");
+		outf.writeln("variant\t" +
+				"allelesPED\tminorAllelePED\tmafPED\t" +
+				"allelesVCF\tminorAlleleVCF\tmafVCF\t" +
+				"deltaMAF\tflip\tReason\tExcludeVariant");
 
 
 		for (int a = 0; a < allelesPED.length; a++) {
@@ -183,59 +695,63 @@ public class VCFTools {
 			String allele1vcf = alleleVCF.split("/")[0];
 			String allele2ped = allelePED.split("/")[1];
 			String allele2vcf = alleleVCF.split("/")[1];
-			Boolean flipAlleles = BaseAnnot.flipalleles(allelePED, allele1ped, alleleVCF, allele1vcf);
-			if (flipAlleles == null) {
 
 
-				if (allele2ped == null || allele1ped == null || allele1vcf == null || allele2vcf == null) {
-					excludeVariant[a] = true;
-//					System.err.println("ERROR in alleles : ped: " + allelePED + "\t" + alleleVCF + " for variant: " + variants.get(a));
-					outf.writeln(variants.get(a) + "\t" + allelesPED[a] + "\t" + allelesVCF[a] + "\t" + false + "\tNull\ttrue");
-				} else {
-					if (isComplement(allele1ped, allele2ped) || isComplement(allele1vcf, allele2vcf)) {
-//						System.err.println("Complimentary alleles : ped: " + allelePED + "\t" + alleleVCF + " for variant: " + variants.get(a));
-						outf.writeln(variants.get(a) + "\t" + allelesPED[a] + "\t" + allelesVCF[a] + "\t" + false + "\tCompliment\tfalse");
+			String output = variants.get(a) + "\t" +
+					allelesPED[a] + "\t" + minorAllelesPED[a] + "\t" + mafsPED[a] + "\t" +
+					allelesVCF[a] + "\t" + minorAllelesVCF[a] + "\t" + mafsVCF[a] + "\t" + Math.abs(mafsVCF[a] - mafsPED[a]);
+
+
+			if (allele2ped.equals("null") || allele1ped.equals("null") || allele1vcf.equals("null") || allele2vcf.equals("null")) {
+				output += "\tfalse\tNullAllele\ttrue";
+				excludeVariant[a] = true;
+			} else {
+				if (allele1ped.equals(BaseAnnot.getComplement(allele2ped)) && allele1vcf.equals(BaseAnnot.getComplement(allele2vcf))) {
+
+
+					// A/T or G/C SNP
+					// try to figure out allele flip on the basis of minor alleles
+
+					String minorAllelePED = minorAllelesPED[a];
+					String minorAlleleVCF = minorAllelesVCF[a];
+					boolean flipAlleles = false;
+					if ((allele1ped.equals(minorAllelePED) && allele1vcf.equals(minorAlleleVCF)) || (allele2ped.equals(minorAllelePED) && allele2vcf.equals(minorAlleleVCF))) {
+						// same direction
+
 					} else {
-						// System.err.println("Incompatible alleles : ped: " + allelePED + "\t" + alleleVCF + " for variant: " + variants.get(a));
-						outf.writeln(variants.get(a) + "\t" + allelesPED[a] + "\t" + allelesVCF[a] + "\t" + false + "\tIncompatible\ttrue");
+						flipAlleles = true;
+					}
+
+					output += "\t" + flipAlleles + "\tComplement\t" + false;
+					flipGenotypes[a] = flipAlleles;
+
+					excludeVariant[a] = false;
+				} else {
+					Boolean flipAlleles = BaseAnnot.flipalleles(allelePED, allele1ped, alleleVCF, allele1vcf);
+					if (flipAlleles == null) {
 						excludeVariant[a] = true;
+						output += "\tfalse\tIncompatibleAlleles\ttrue";
+					} else {
+						output += "\t" + flipAlleles + "\tOK\tfalse";
+						flipGenotypes[a] = flipAlleles;
 					}
 				}
-
-
-			} else {
-				if (flipAlleles) {
-//					System.out.println("Alleles should be flipped: ped: " + allelePED + "\t" + alleleVCF + " for variant: " + variants.get(a));
-					outf.writeln(variants.get(a) + "\t" + allelesPED[a] + "\t" + allelesVCF[a] + "\t" + flipAlleles + "\tOK\tfalse");
-				} else {
-//					System.out.println("Alleles equal: ped: " + allelePED + "\t" + alleleVCF + " for variant: " + variants.get(a));
-					outf.writeln(variants.get(a) + "\t" + allelesPED[a] + "\t" + allelesVCF[a] + "\t" + flipAlleles + "\tOK\tfalse");
-				}
-				flipGenotypes[a] = flipAlleles;
 			}
+			outf.writeln(output);
 		}
 		outf.close();
 		return new Pair<boolean[], boolean[]>(excludeVariant, flipGenotypes);
 	}
 
-	private boolean isComplement(String allele1ped, String allele2ped) {
-		if ((allele1ped.equals("A") && allele2ped.equals("T")) || (allele1ped.equals("T") && allele2ped.equals("A"))) {
-			return true;
-		} else if ((allele1ped.equals("G") && allele2ped.equals("C")) || (allele1ped.equals("C") && allele2ped.equals("G"))) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	private double[][] correlateRows(Pair<byte[][], String[]> genotypesPair1,
-									 Pair<byte[][], String[]> genotypesPair2, ArrayList<String> samples, String s,
-									 boolean[] excludeCols, boolean[] flipAlleles) throws IOException {
+	private Pair<double[][], double[][]> correlateSamples(Pair<byte[][], String[]> genotypesPair1,
+														  Pair<byte[][], String[]> genotypesPair2, ArrayList<String> samples, String s,
+														  boolean[] excludeCols, boolean[] flipAlleles) throws IOException {
 
 		double[][] correlations = new double[samples.size()][samples.size()];
 
 		byte[][] genotypes1 = genotypesPair1.getLeft();
 		byte[][] genotypes2 = genotypesPair2.getLeft();
+		double[][] n = new double[samples.size()][samples.size()];
 
 		for (int i = 0; i < samples.size(); i++) {
 
@@ -259,68 +775,98 @@ public class VCFTools {
 				double[] g2 = Primitives.toPrimitiveArr(d2.toArray(new Double[0]));
 				correlations[i][j] = Correlation.correlate(g1, g2);
 				correlations[j][i] = correlations[i][j];
+				n[i][j] = d1.size();
+				n[j][i] = d1.size();
 			}
 		}
 
 		writeCorrelationMatrix(correlations, samples, s);
+		writeCorrelationMatrix(n, samples, s + "-n.txt");
 
-		return correlations;
+		return new Pair<double[][], double[][]>(correlations, n);
 	}
 
-	private double[][] correlateColumns(Pair<byte[][], String[]> genotypesPair1,
-										Pair<byte[][], String[]> genotypesPair2, ArrayList<String> variants, String s,
-										boolean[] excludeCols, boolean[] flipAlleles) throws IOException {
+	private Pair<double[][], double[][]> correlateVariants(Pair<byte[][], String[]> genotypesPair1,
+														   Pair<byte[][], String[]> genotypesPair2, ArrayList<String> variants, String s,
+														   boolean[] excludeVariants, boolean[] flipAlleles, boolean[] sampleSwapped) throws IOException {
 
 		double[][] correlations = new double[variants.size()][variants.size()];
-
+		double[][] n = new double[variants.size()][variants.size()];
 		byte[][] genotypes1 = genotypesPair1.getLeft();
 		byte[][] genotypes2 = genotypesPair2.getLeft();
 
-		for (int i = 0; i < variants.size(); i++) {
+		for (int variantId1 = 0; variantId1 < variants.size(); variantId1++) {
 
-			for (int j = 0; j < variants.size(); j++) {
-				ArrayList<Double> d1 = new ArrayList<Double>();
-				ArrayList<Double> d2 = new ArrayList<Double>();
+			if (!excludeVariants[variantId1]) {
+				for (int variantId2 = 0; variantId2 < variants.size(); variantId2++) {
+					if (!excludeVariants[variantId2]) {
 
-				boolean flip2 = flipAlleles[j];
 
-				for (int k = 0; k < genotypes1.length; k++) {
+						ArrayList<Double> d1 = new ArrayList<Double>();
+						ArrayList<Double> d2 = new ArrayList<Double>();
 
-					double gt1 = (double) genotypes2[k][i];
-					double gt2 = (double) genotypes2[k][j];
+						boolean flip2 = flipAlleles[variantId2];
 
-					if (gt1 != -1 && gt2 != -1 && !excludeCols[i] && !excludeCols[j]) {
-						d1.add(gt1);
+						for (int sample = 0; sample < genotypes1.length; sample++) {
 
-						if (flip2) {
-							gt2 = Math.abs(gt2 - 2);
+							double gt1 = (double) genotypes1[sample][variantId1];
+							double gt2 = (double) genotypes2[sample][variantId2];
+
+							if (!sampleSwapped[sample] && gt1 != -1 && gt2 != -1) {
+								d1.add(gt1);
+
+								if (flip2) {
+									gt2 = Math.abs(gt2 - 2);
+								}
+								d2.add(gt2);
+							}
 						}
-						d2.add(gt2);
-					}
-				}
 
-				double[] g1 = Primitives.toPrimitiveArr(d1.toArray(new Double[0]));
-				double[] g2 = Primitives.toPrimitiveArr(d2.toArray(new Double[0]));
+						double[] g1 = Primitives.toPrimitiveArr(d1.toArray(new Double[0]));
+						double[] g2 = Primitives.toPrimitiveArr(d2.toArray(new Double[0]));
 
-				double c = Correlation.correlate(g1, g2);
-				if (d1.isEmpty()) {
-					if (!excludeCols[i] && !excludeCols[j]) {
-						System.err.println("ERROR: no genotypes for variants: " + variants.get(i) + " or " + variants.get(j));
+						double c = JSci.maths.ArrayMath.correlation(g1, g2);
+						if (d1.isEmpty()) {
+							if (!excludeVariants[variantId1] && !excludeVariants[variantId2]) {
+								System.err.println("ERROR: no genotypes for variants: " + variants.get(variantId1) + " or " + variants.get(variantId2));
+								c = Double.NaN;
+							} else {
+								c = Double.NaN;
+							}
+						}
+						correlations[variantId1][variantId2] = c;
+						n[variantId1][variantId2] = d1.size();
+						n[variantId2][variantId1] = d1.size();
+						correlations[variantId2][variantId1] = c;
+
+						if (variants.get(variantId1).equals("Chr6:167433729") && variants.get(variantId2).equals("Chr6:167433729")) {
+							for (int q = 0; q < d1.size(); q++) {
+								System.out.println(q + "\t" + d1.get(q) + "\t" + d2.get(q));
+							}
+
+							System.out.println(c);
+						}
+
+
 					} else {
-						c = 0;
+						correlations[variantId1][variantId2] = Double.NaN;
+						correlations[variantId2][variantId1] = correlations[variantId1][variantId2];
 					}
 				}
-
-				correlations[i][j] = c;
-				correlations[j][i] = correlations[i][j];
-
+			} else {
+				for (int variantId2 = 0; variantId2 < variants.size(); variantId2++) {
+					correlations[variantId1][variantId2] = Double.NaN;
+					correlations[variantId2][variantId1] = correlations[variantId1][variantId2];
+				}
 			}
+
 		}
 
 
 		writeCorrelationMatrix(correlations, variants, s);
+		writeCorrelationMatrix(n, variants, s + "-n.txt");
 
-		return correlations;
+		return new Pair<double[][], double[][]>(correlations, n);
 	}
 
 	private void writeCorrelationMatrix(double[][] correlations, ArrayList<String> labels, String s) throws IOException {
@@ -379,15 +925,14 @@ public class VCFTools {
 	}
 
 
-
-	private ArrayList<String> parseFam(String famfile) throws IOException {
-		ArrayList<String> famSamples = new ArrayList<String>();
+	private ArrayList<Pair<String, String>> parseFam(String famfile) throws IOException {
+		ArrayList<Pair<String, String>> famSamples = new ArrayList<Pair<String, String>>();
 		TextFile tf = new TextFile(famfile, TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
 		while (elems != null) {
 
 			String sample = elems[1];
-			famSamples.add(sample);
+			famSamples.add(new Pair<String, String>(elems[0], sample));
 			elems = tf.readLineElems(Strings.whitespace);
 		}
 		tf.close();
@@ -482,10 +1027,12 @@ public class VCFTools {
 					// determine MAF
 					Integer pos = Integer.parseInt(elems[1]);
 					Feature f = new Feature();
-					f.setChromosome(chr);
-					f.setStart(pos);
-					f.setStop(pos);
-					output.add(f);
+					if (!chr.equals(Chromosome.X)) {
+						f.setChromosome(chr);
+						f.setStart(pos);
+						f.setStop(pos);
+						output.add(f);
+					}
 				}
 
 			}
@@ -718,7 +1265,9 @@ public class VCFTools {
 		return new Pair<byte[][], String[]>(genotypes, alleles);
 	}
 
-	private Pair<byte[][], String[]> loadVCFGenotypes(String vcf, HashMap<String, Integer> sampleMap, HashMap<Feature, Integer> variantMap) throws IOException {
+	private Pair<byte[][], String[]> loadVCFGenotypes(String vcf,
+													  HashMap<String, Integer> sampleMap,
+													  HashMap<Feature, Integer> variantMap) throws IOException {
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -730,6 +1279,7 @@ public class VCFTools {
 		byte[][] genotypes = new byte[sampleMap.size()][variantMap.size()];
 		String[] alleles = new String[variantMap.size()];
 
+		int nrSamplesFound = 0;
 		while (elems != null) {
 
 			Chromosome chr = Chromosome.NA;
@@ -763,13 +1313,16 @@ public class VCFTools {
 
 
 					Integer id = sampleMap.get(sample);
+					// System.out.println(sample + "\t" + id);
 					if (id == null) {
 						colToNewSample[i] = -1;
 					} else {
 						colToNewSample[i] = id;
+						nrSamplesFound++;
 					}
 				}
 			} else {
+
 				// line
 				String ref = elems[3];
 				String alt = elems[4];
@@ -787,6 +1340,7 @@ public class VCFTools {
 					Integer newVariantId = variantMap.get(f);
 					if (newVariantId == null) {
 						// don't do anything just yet
+
 					} else {
 						nrVariantsFound++;
 
@@ -857,7 +1411,7 @@ public class VCFTools {
 			elems = tf.readLineElems(TextFile.tab);
 		}
 
-		System.out.println("genotypes loaded for " + nrVariantsFound + " variants using VCF");
+		System.out.println("genotypes loaded for " + nrVariantsFound + " variants using VCF for " + nrSamplesFound + " samples");
 		tf.close();
 		return new Pair<byte[][], String[]>(genotypes, alleles);
 	}
@@ -923,7 +1477,6 @@ public class VCFTools {
 
 		outputFileWriter.writeln(header);
 		while (elems != null) {
-
 			Chromosome chr = Chromosome.NA;
 			if (elems[0].startsWith("##")) {
 				// superheader
@@ -1039,7 +1592,7 @@ public class VCFTools {
 							if (allele1.equals(".")) {
 								// missing
 								sampleAlleles[samplePos][0] = -1;
-								System.out.println("allele 1 mising");
+								// System.out.println("allele 1 mising");
 							} else {
 								nrCalled++;
 								allele1b = Byte.parseByte(allele1);
@@ -1048,7 +1601,7 @@ public class VCFTools {
 							if (allele2.equals(".")) {
 								// missing
 								sampleAlleles[samplePos][1] = -1;
-								System.out.println("allele 2 mising");
+								// System.out.println("allele 2 mising");
 							} else {
 								nrCalled++;
 								allele2b = Byte.parseByte(allele2);
@@ -1080,30 +1633,33 @@ public class VCFTools {
 
 						}
 
-						if (adCol != -1) {
-							// Allelic depths for the ref and alt alleles in the order listed
-							String ad = sampleElems[adCol];
-							String[] adElems = ad.split(",");
-
-						}
-
-						if (dpCol != -1) {
-							// Approximate read depth (reads with MQ=255 or with bad mates are filtered)
-							String dp = sampleElems[dpCol];
-							String[] dpElems = dp.split(",");
-						}
-
-						if (gqCol != -1) {
+//						if (adCol != -1) {
+//							// Allelic depths for the ref and alt alleles in the order listed
+//							String ad = sampleElems[adCol];
+//							String[] adElems = ad.split(",");
+//
+//						}
+//
+//						if (dpCol != -1&& dpCol < sampleElems.length) {
+//							// Approximate read depth (reads with MQ=255 or with bad mates are filtered)
+//							String dp = sampleElems[dpCol];
+//							String[] dpElems = dp.split(",");
+//						}
+//
+						if (gqCol != -1 && gqCol < sampleElems.length) {
 							// Genotype Quality
-							String gq = sampleElems[gqCol];
-							String[] gqElems = gq.split(",");
+//							String gq = sampleElems[gqCol];
+//							String[] gqElems = gq.split(",");
+							if (gqCol >= sampleElems.length) {
+								System.err.println("ERROR: GQCol>length: " + gqCol + "\t" + Strings.concat(sampleElems, Strings.comma));
+							}
 						}
-
-						if (plCol != -1) {
-							// Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
-							String pl = sampleElems[plCol];
-							String[] plElems = pl.split(",");
-						}
+//
+//						if (plCol != -1) {
+//							// Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
+//							String pl = sampleElems[plCol];
+//							String[] plElems = pl.split(",");
+//						}
 
 
 					}
@@ -1166,7 +1722,7 @@ public class VCFTools {
 
 		outputFileWriter.close();
 
-		//
+		// determine call rates per sample
 
 	}
 }

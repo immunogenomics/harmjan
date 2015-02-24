@@ -51,6 +51,7 @@ public class Resequencing {
 
 	private CLI cli;
 
+
 	private Resequencing(String[] args) {
 
 
@@ -93,7 +94,7 @@ public class Resequencing {
 				String[] filesIn = tf.readAsArray();
 				tf.close();
 
-				TextFile listOut = new TextFile(outdir+"SamplesRecoded.list", TextFile.W);
+				TextFile listOut = new TextFile(outdir + "SamplesRecoded.list", TextFile.W);
 
 				for (String s : filesIn) {
 
@@ -165,6 +166,11 @@ public class Resequencing {
 //				Logger.getLogger(Resequencing.class.getName()).log(Level.SEVERE, null, ex);
 //			}
 		}
+	}
+
+
+	public void overlapFamWithSequencingIDs(String sampleList, String famFile) throws IOException {
+
 	}
 
 //	private void combine(String[] args) {

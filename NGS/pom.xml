@@ -56,6 +56,16 @@
             <version>3.3</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>com.xeiam.xchart</groupId>
+            <artifactId>xchart</artifactId>
+            <version>2.4.3</version>
+        </dependency>
+        <dependency>
+            <groupId>de.erichseifert.vectorgraphics2d</groupId>
+            <artifactId>VectorGraphics2D</artifactId>
+            <version>0.9.1</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -67,7 +77,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>nl.harmjanwestra.ngs.Coverage</mainClass>
+                            <mainClass>nl.harmjanwestra.ngs.GenotypeTools</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
