@@ -13,6 +13,7 @@
         <module>MiscScripts</module>
         <module>NGS</module>
         <module>GoSCializer</module>
+        <module>GoShifter</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

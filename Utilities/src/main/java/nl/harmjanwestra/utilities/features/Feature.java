@@ -182,7 +182,7 @@ public class Feature {
 
     @Override
     public String toString() {
-        return "Feature{" + "chromosome=" + chromosome + ", name=" + name + ", strand=" + strand + ", start=" + start + ", stop=" + stop + ", nrAT=" + nrAT + ", nrGC=" + nrGC + ", nrN=" + nrN + '}';
+        return getChromosome().getName() + ":" + getStart() + "-" + getStop();
     }
 
 }

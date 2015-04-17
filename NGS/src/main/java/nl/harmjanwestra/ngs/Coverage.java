@@ -1,24 +1,36 @@
 package nl.harmjanwestra.ngs;
 
 import com.xeiam.xchart.*;
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.filter.AggregateFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.graphics.ColorGenerator;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.broadinstitute.gatk.engine.filters.*;
 import org.broadinstitute.gatk.tools.walkers.haplotypecaller.HCMappingQualityFilter;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.math.matrix.DoubleMatrixDataset;
+import umcg.genetica.math.stats.Descriptives;
+import umcg.genetica.text.Strings;
+import umcg.genetica.util.Primitives;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by hwestra on 1/29/15.
@@ -27,113 +39,271 @@ public class Coverage {
 
 	public static void main(String[] args) {
 
+//		Coverage c = new Coverage();
+//		try {
+////			// c.bamToBed(bamfile, outdir);
+////
+//			String coveragefile = "/Data/Projects/2014-FR-Reseq/2015-01-31-HaplotypeCallerVariants-762Samples/LowQualBamFiles/region-coverage.txt";
+//			String sampefile = "/Data/Projects/2014-FR-Reseq/2015-02-CoverageMetrics/runsAndSampleNames.txt";
+//			String outdir = "/Data/Projects/2014-FR-Reseq/2015-01-31-HaplotypeCallerVariants-762Samples/LowQualBamFiles/plots/";
+//			c.createCoveragePlots(coveragefile, sampefile, outdir);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 //
-//		if (args.length < 3) {
+		Coverage c = new Coverage();
+
+//		try {
 //
-//			System.out.println("Usage: jar listFile out target");
-//		} else {
-//			try {
-//
-//				TextFile fileList = new TextFile(args[0], TextFile.R);
-//				String[] files = fileList.readAsArray();
-//				fileList.close();
-//
-//				String outdir = args[1];
-//
-//				String targetregions = args[2];
-//				Coverage c = new Coverage();
-//
-////				// c.bamToBed(bamfile, outdir);
-////				for (String file : files) {
-////					String[] fileElems = file.split("/");
-////					String fileName = fileElems[fileElems.length - 1];
-////					String[] sampleNameElems = fileName.split("\\.");
-////					String sampleName = sampleNameElems[0];
-////					String sampleOutDir = outdir + sampleName + "/";
-////					Gpio.createDir(outdir);
-////					c.bamToBedWithinRegions(file, sampleOutDir, targetregions);
-////				}
-//
-//				// concatenate everything
-//				HashMap<String, Integer> regionOrder = null;
-//				TextFile out = new TextFile(outdir + "region-coverage.txt", TextFile.W);
-//				TextFile out2 = new TextFile(outdir + "region-summary.txt", TextFile.W);
-//
-//				boolean headerWritten = false;
-//
-//				for (String file : files) {
-//					String[] fileElems = file.split("/");
-//					String fileName = fileElems[fileElems.length - 1];
-//					String[] sampleNameElems = fileName.split("\\.");
-//					String sampleName = sampleNameElems[0];
-//					String regionCoverage = outdir + sampleName + "/region-coverage.txt.gz";
-//					TextFile tf = new TextFile(regionCoverage, TextFile.R);
-//					String[] header = tf.readLineElems(TextFile.tab);
-//					if (regionOrder == null) {
-//						regionOrder = new HashMap<String, Integer>();
-//						out.writeln(Strings.concat(header, Strings.tab));
-//						for (int i = 0; i < header.length; i++) {
-//							regionOrder.put(header[i], i);
-//						}
-//					}
-//					String[] elems = tf.readLineElems(TextFile.tab);
-//					while (elems != null) {
-//						String[] lineOut = new String[header.length];
-//						lineOut[0] = elems[0];
-//						for (int i = 1; i < header.length; i++) {
-//							Integer newPos = regionOrder.get(header[i]);
-//							lineOut[newPos] = elems[i];
-//						}
-//						out.writeln(Strings.concat(lineOut, Strings.tab));
-//						elems = tf.readLineElems(TextFile.tab);
-//					}
-//					tf.close();
-//
-//					String regionSummary = outdir + sampleName + "/summary.txt.gz";
-//
-//
-//					TextFile q = new TextFile(regionSummary, TextFile.R);
-//					elems = q.readLineElems(TextFile.tab);
-//					int lnctr = 0;
-//					while (elems != null) {
-//
-//						if (!headerWritten) {
-//							out2.writeln(Strings.concat(elems, Strings.tab));
-//							headerWritten = true;
-//						} else if (lnctr > 0) {
-//							out2.writeln(Strings.concat(elems, Strings.tab));
-//						}
-//
-//						System.out.println(lnctr);
-//						lnctr++;
-//						elems = q.readLineElems(TextFile.tab);
-//					}
-//
-//					q.close();
-//
-//
-//				}
-//				out.close();
-//
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
+//			String regions = args[0];
+//			String inputdir = args[1];
+//			String outputdir = args[2];
+//			c.correlateCoverageWithinRegionFiles(regions, inputdir, outputdir);
+//		} catch (IOException e) {
+//			e.printStackTrace();
 //		}
 
-		Coverage c = new Coverage();
 		try {
-//			// c.bamToBed(bamfile, outdir);
-//
-			String coveragefile = "/Data/Projects/2014-FR-Reseq/2015-01-31-HaplotypeCallerVariants-762Samples/LowQualBamFiles/region-coverage.txt";
-			String sampefile = "/Data/Projects/2014-FR-Reseq/2015-02-CoverageMetrics/runsAndSampleNames.txt";
-			String outdir = "/Data/Projects/2014-FR-Reseq/2015-01-31-HaplotypeCallerVariants-762Samples/LowQualBamFiles/plots/";
-			c.createCoveragePlots(coveragefile, sampefile, outdir);
+			if (args.length < 5) {
+				System.out.println("Usage: bamfilelist outdir regionfile makebedgraphfiles threads");
+			} else {
+				c.bamToBedWithinRegionsForList(args[0], args[1], args[2], Boolean.parseBoolean(args[3]), Integer.parseInt(args[4]));
+////					c.bamToBedWithinRegions(file, sampleOutDir, targetregions);
+				//String bamfile, String outdir, String regionFile, boolean outputcoverageperregion
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-//
 
 	}
+
+
+	public void bamToBedWithinRegionsForList(String listFile, String outdir, String targetregions, boolean outputcoverageperregion, int threads) throws IOException {
+		TextFile lf = new TextFile(listFile, TextFile.R);
+		ArrayList<String> samples = new ArrayList<String>();
+		ArrayList<String> files = new ArrayList<String>();
+
+		String[] lfelems = lf.readLineElems(TextFile.tab);
+		while (lfelems != null) {
+
+			samples.add(lfelems[0]);
+			files.add(lfelems[1]);
+
+			lfelems = lf.readLineElems(TextFile.tab);
+		}
+
+		lf.close();
+
+
+		int filectr = 0;
+
+		if (threads <= 0) {
+			threads = 1;
+		}
+
+		System.out.println("Opening threadpool for " + threads + " threads.");
+		ExecutorService threadPool = Executors.newFixedThreadPool(threads);
+		CompletionService<Boolean> pool = new ExecutorCompletionService<Boolean>(threadPool);
+
+		for (int i = 0; i < samples.size(); i++) {
+
+			String sample = samples.get(i);
+			String file = files.get(i);
+
+
+			String sampleOutDir = outdir + "samples/" + sample + "/";
+			Gpio.createDir(outdir);
+			Gpio.createDir(sampleOutDir);
+
+
+			CoverageTask t = new CoverageTask(file, sampleOutDir, targetregions, outputcoverageperregion);
+			pool.submit(t);
+
+
+			// bamToBedWithinRegions(file, sampleOutDir, targetregions, outputcoverageperregion);
+			filectr++;
+		}
+
+
+		int returned = 0;
+		while (returned < files.size()) {
+
+			try {
+				Boolean result = pool.take().get();
+				if (result) {
+					returned++;
+				}
+
+				System.out.println(returned + " / " + files.size() + " returned");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		threadPool.shutdown();
+
+		// concatenate everything
+		HashMap<String, Integer> regionOrder = null;
+		TextFile out = new TextFile(outdir + "region-coverage.txt", TextFile.W);
+		TextFile out2 = new TextFile(outdir + "region-summary.txt", TextFile.W);
+
+		boolean headerWritten = false;
+
+
+		for (int i = 0; i < samples.size(); i++) {
+
+			String sample = samples.get(i);
+			String file = files.get(i);
+
+
+			String sampleOutDir = outdir + "samples/" + sample + "/";
+			String regionCoverage = sampleOutDir + "/region-coverage.txt.gz";
+			TextFile tf = new TextFile(regionCoverage, TextFile.R);
+			String[] header = tf.readLineElems(TextFile.tab);
+			if (regionOrder == null) {
+				regionOrder = new HashMap<String, Integer>();
+				out.writeln(Strings.concat(header, Strings.tab));
+				for (int j = 0; j < header.length; j++) {
+					regionOrder.put(header[j], j);
+				}
+			}
+			String[] elems = tf.readLineElems(TextFile.tab);
+			while (elems != null) {
+				String[] lineOut = new String[header.length];
+				lineOut[0] = elems[0];
+				for (int j = 1; j < header.length; j++) {
+					Integer newPos = regionOrder.get(header[j]);
+					lineOut[newPos] = elems[j];
+				}
+				out.writeln(Strings.concat(lineOut, Strings.tab));
+				elems = tf.readLineElems(TextFile.tab);
+			}
+			tf.close();
+
+			String regionSummary = sampleOutDir + "/summary.txt.gz";
+
+
+			TextFile q = new TextFile(regionSummary, TextFile.R);
+			elems = q.readLineElems(TextFile.tab);
+			int lnctr = 0;
+			while (elems != null) {
+
+				if (!headerWritten) {
+					out2.writeln(Strings.concat(elems, Strings.tab));
+					headerWritten = true;
+				} else if (lnctr > 0) {
+					out2.writeln(Strings.concat(elems, Strings.tab));
+				}
+
+				lnctr++;
+				elems = q.readLineElems(TextFile.tab);
+			}
+
+			q.close();
+		}
+		out.close();
+		out2.close();
+
+		if (outputcoverageperregion) {
+			// concatenate region files...
+
+			//
+			ArrayList<Feature> features = loadRegions(targetregions);
+			HashMap<String, Integer> featureMap = new HashMap<String, Integer>();
+			ArrayList<String> featureStr = new ArrayList<String>();
+			for (int i = 0; i < features.size(); i++) {
+
+				featureMap.put(features.get(i).toString(), i);
+				featureStr.add(features.get(i).toString());
+			}
+
+			double[][] output1 = new double[features.size()][files.size()];
+			double[][] output2 = new double[500][files.size()];
+
+			ArrayList<String> rowNames2 = new ArrayList<String>();
+			for (int i = 0; i < output2.length; i++) {
+				rowNames2.add("" + i);
+			}
+
+			int fctr = 0;
+			ArrayList<String> sampleNames = new ArrayList<String>();
+			for (int i = 0; i < samples.size(); i++) {
+
+				String sample = samples.get(i);
+				String file = files.get(i);
+
+				String sampleOutDir = outdir + "samples/" + sample + "/";
+
+				DoubleMatrixDataset<String, String> ds1 = new DoubleMatrixDataset<String, String>(sampleOutDir + "region-percreadsgt20.txt.gz");
+				DoubleMatrixDataset<String, String> ds2 = new DoubleMatrixDataset<String, String>(sampleOutDir + "histogramCumulative.txt.gz");
+
+
+				for (int col = 0; col < ds1.nrCols; col++) {
+					String feat = ds1.colObjects.get(col);
+					Integer id = featureMap.get(feat);
+					if (id != null) {
+						output1[id][fctr] = ds1.rawData[0][col];
+					}
+				}
+
+				sampleNames.add(ds2.colObjects.get(0));
+				for (int j = 0; j < ds2.nrRows; j++) {
+					output2[j][fctr] = ds2.rawData[j][0];
+				}
+				fctr++;
+			}
+
+			DoubleMatrixDataset<String, String> dsout = new DoubleMatrixDataset<String, String>();
+			dsout.rawData = output1;
+			dsout.colObjects = sampleNames;
+			dsout.rowObjects = featureStr;
+			dsout.recalculateHashMaps();
+
+			dsout.save(outdir + "regionBasesCoveredGt20xPerRegion.txt");
+
+			dsout = new DoubleMatrixDataset<String, String>();
+			dsout.rawData = output2;
+			dsout.colObjects = sampleNames;
+			dsout.rowObjects = rowNames2;
+			dsout.recalculateHashMaps();
+			dsout.save(outdir + "sampleCoverageHistogramsMerged.txt");
+
+
+//
+//			String regionSummaryOutput = outdir + "regionOutput/";
+//
+//			Gpio.createDir(regionSummaryOutput);
+//
+//			for (Feature f : features) {
+//				String filename = returnFileNameForRegion(f);
+//				TextFile regionout = new TextFile(regionSummaryOutput + filename, TextFile.W);
+//
+//					String regionOutdir = sampleOutDir + "regions/";
+//					String specificRegionFile = regionOutdir + filename;
+//					// does this thing have a header
+////					TextFile tf = new TextFile(specificRegionFile, TextFile.R);
+////					String ln = tf.readLine();
+////					while (ln != null) {
+////						regionout.writeln(ln);
+////						ln = tf.readLine();
+////					}
+////					tf.close();
+//				}
+//				regionout.close();
+//			}
+
+
+		}
+	}
+
+	private String returnFileNameForRegion(Feature f) {
+		Chromosome c = f.getChromosome();
+		int start = f.getStart();
+		int stop = f.getStop();
+		return c.getName() + "-" + start + "-" + stop + ".txt";
+	}
+
 
 	public void bamToBed(String bamfile, String outdir) throws IOException {
 
@@ -339,382 +509,74 @@ public class Coverage {
 
 	}
 
+	public void correlateCoverageWithinRegionFiles(String regionFile, String inputdir, String output) throws IOException {
+		ArrayList<Feature> regions = loadRegions(regionFile);
 
-	public void bamToBedWithinRegions(String bamfile, String outdir, String regionFile) throws IOException {
+		TextFile outputF = new TextFile(output + "averageCorrelationPerRegion.txt", TextFile.W);
 
+		for (Feature f : regions) {
+			String filename = returnFileNameForRegion(f);
+			TextFile tf = new TextFile(inputdir + filename, TextFile.R);
+
+			ArrayList<double[]> cts = new ArrayList<double[]>();
+			String[] elems = tf.readLineElems(TextFile.tab);
+			while (elems != null) {
+
+				double[] counts = new double[elems.length - 1];
+				for (int i = 1; i < counts.length; i++) {
+					counts[i - 1] = Double.parseDouble(elems[i]);
+				}
+				cts.add(counts);
+				elems = tf.readLineElems(TextFile.tab);
+			}
+
+			tf.close();
+
+			ArrayList<Double> correlations = new ArrayList<Double>();
+			PearsonsCorrelation corr = new PearsonsCorrelation();
+			for (int i = 0; i < cts.size(); i++) {
+				double[] vals1 = cts.get(i);
+				for (int j = i + 1; j < cts.size(); j++) {
+					double[] vals2 = cts.get(j);
+					double pearson = corr.correlation(vals1, vals2);
+					correlations.add(pearson);
+				}
+			}
+
+			double[] correlationsArr = Primitives.toPrimitiveArr(correlations.toArray(new Double[0]));
+			double mean = Descriptives.mean(correlationsArr);
+			double sd = Math.sqrt(Descriptives.variance(correlationsArr));
+			outputF.writeln(f.getChromosome().getName() + "-" + f.getStart() + "-" + f.getStop() + "\t" + mean + "\t" + sd);
+		}
+		outputF.close();
+	}
+
+	private ArrayList<Feature> loadRegions(String regionfile) throws IOException {
 		ArrayList<Feature> regions = new ArrayList<Feature>();
 
-		TextFile featurefile = new TextFile(regionFile, TextFile.R);
+		TextFile featurefile = new TextFile(regionfile, TextFile.R);
 		String[] felems = featurefile.readLineElems(TextFile.tab);
 		while (felems != null) {
 
-			Feature f = new Feature();
-			Chromosome c = Chromosome.parseChr(felems[0]);
-			f.setChromosome(c);
-			f.setStart(Integer.parseInt(felems[1]));
-			f.setStop(Integer.parseInt(felems[2]));
-
-			System.out.println("found region: " + f.toString() + " w/ chr: " + c.getName());
-
-			regions.add(f);
+			if (felems.length >= 3) {
+				Feature f = new Feature();
+				Chromosome c = Chromosome.parseChr(felems[0]);
+				f.setChromosome(c);
+				f.setStart(Integer.parseInt(felems[1]));
+				f.setStop(Integer.parseInt(felems[2]));
+				regions.add(f);
+			}
 
 			felems = featurefile.readLineElems(TextFile.tab);
 		}
 		featurefile.close();
 
-		BamFileReader reader = new BamFileReader(new File(bamfile));
-		List<SAMReadGroupRecord> readGroups = reader.getReadGroups();
-		HashMap<SAMReadGroupRecord, Integer> readgroupMap = new HashMap<SAMReadGroupRecord, Integer>();
-		String[] samples = null;
-		TextFile[] outfiles = null;
 
-
-		Gpio.createDir(outdir);
-		String sampleOutDir = outdir + "sampleOut/";
-		String regionOutDir = outdir + "regionOut/";
-		Gpio.createDir(sampleOutDir);
-		Gpio.createDir(regionOutDir);
-
-		if (readGroups.size() > 0) {
-			samples = new String[readGroups.size()];
-			outfiles = new TextFile[readGroups.size()];
-			int rgctr = 0;
-			for (SAMReadGroupRecord r : readGroups) {
-				readgroupMap.put(r, rgctr);
-				String sample = r.getSample();
-				sample = sample.replaceAll("/", "-");
-				samples[rgctr] = sample;
-				outfiles[rgctr] = new TextFile(sampleOutDir + sample + ".txt.gz", TextFile.W);
-				rgctr++;
-			}
-		} else {
-			System.err.println("WARNING: no readgroups found");
-			samples = new String[1];
-			samples[0] = bamfile;
-
-		}
-
-		ArrayList<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
-		AggregateFilter filter = new AggregateFilter(filters);
-
-		filters.add(new NotPrimaryAlignmentFilter());
-		filters.add(new FailsVendorQualityCheckFilter());
-		filters.add(new DuplicateReadFilter());
-		filters.add(new UnmappedReadFilter());
-		filters.add(new MappingQualityUnavailableFilter());
-		filters.add(new HCMappingQualityFilter());
-		// ilters.add(new MalformedReadFilter());
-
-		int[][] data = new int[samples.length][15];
-		int[][] mapqDist = new int[samples.length][200];
-
-		double[][] avgcoverage = new double[samples.length][regions.size()];
-		double[][] avgmapq = new double[samples.length][regions.size()];
-		double[][] readsperregion = new double[samples.length][regions.size()];
-
-		int ln = 0;
-		int ln2 = 0;
-
-		int fct = 0;
-
-		for (Feature f : regions) {
-			Chromosome c = f.getChromosome();
-			int start = f.getStart();
-			int stop = f.getStop();
-
-			SAMRecordIterator it = reader.query(c.getName().replaceAll("Chr", ""), start - 1000, stop + 1000, true);
-
-			int windowSize = stop - start;
-			int[][] tmpCoverage = new int[samples.length][stop - start];
-
-			if (it.hasNext()) {
-				SAMRecord record = it.next();
-
-				System.out.println(fct + "\t" + f.toString());
-				while (it.hasNext()) {
-
-					if (!filter.filterOut(record)) {
-						SAMReadGroupRecord rg = record.getReadGroup();
-						Integer sampleId = readgroupMap.get(rg);
-						if ((record.getAlignmentStart() >= start && record.getAlignmentEnd() <= stop) ||
-								(record.getAlignmentStart() <= start && record.getAlignmentEnd() >= start) ||
-								(record.getAlignmentStart() >= start && record.getAlignmentStart() <= stop)) {
-							readsperregion[sampleId][fct]++;
-							avgmapq[sampleId][fct] += record.getMappingQuality();
-							if (record.getDuplicateReadFlag()) {
-// 1
-								data[sampleId][0]++;
-							}
-							if (record.getFirstOfPairFlag()) {
-// 2
-								data[sampleId][1]++;
-							}
-
-							if (record.getMateNegativeStrandFlag()) {
-// 3
-								data[sampleId][2]++;
-							}
-
-							if (record.getMateUnmappedFlag()) {
-// 4
-								data[sampleId][3]++;
-							}
-
-							if (record.getNotPrimaryAlignmentFlag()) {
-// 5
-								data[sampleId][4]++;
-							}
-
-							if (record.getProperPairFlag()) {
-// 6
-								data[sampleId][5]++;
-							}
-
-							if (record.getReadFailsVendorQualityCheckFlag()) {
-// 7
-								data[sampleId][6]++;
-							}
-
-							if (record.getReadNegativeStrandFlag()) {
-// 8
-								data[sampleId][7]++;
-							}
-
-							if (record.getReadPairedFlag()) {
-// 9
-								data[sampleId][8]++;
-							}
-
-							if (record.getReadUnmappedFlag()) {
-// 10
-								data[sampleId][9]++;
-							}
-
-							if (record.getSecondOfPairFlag()) {
-// 11
-								data[sampleId][11]++;
-							}
-
-							if (filter.filterOut(record)) {
-// 12
-								data[sampleId][12]++; // nr of reads filtered out by HC filter
-							}
-
-							data[sampleId][13]++; // total nr of reads
-							int mapq = record.getMappingQuality();
-
-
-							if (mapq > mapqDist[0].length) {
-								mapq = mapqDist[0].length - 1;
-							}
-							mapqDist[sampleId][mapq]++;
-
-							String refname = record.getReferenceName();
-							int len = record.getReadLength();
-							int sta = record.getAlignmentStart();
-							int sto = record.getAlignmentEnd();
-							int insert = record.getInferredInsertSize();
-
-
-							int mapPos = record.getAlignmentStart();
-							int windowRelativePosition = mapPos - start;
-
-
-							int readPosition = 0;
-
-							byte[] baseQual = record.getBaseQualities();
-							byte[] bases = record.getReadBases();
-
-							Cigar cigar = record.getCigar();
-							List<CigarElement> cigarElements = cigar.getCigarElements();
-
-							if (bases.length == 0) {
-								System.err.println("No bases for read: " + record.getReadUnmappedFlag() + "\t" + record.toString());
-							} else {
-								for (CigarElement e : cigarElements) {
-									int cigarElementLength = e.getLength();
-
-									switch (e.getOperator()) {
-										case H:
-											break;
-										case P:
-											break;
-										case S: // soft clip
-											readPosition += cigarElementLength;
-											break;
-										case N: // ref skip
-											windowRelativePosition += cigarElementLength;
-											break;
-										case D: // deletion
-											windowRelativePosition += cigarElementLength;
-											break;
-										case I: // insertion
-											windowRelativePosition += cigarElementLength;
-											break;
-										case M:
-										case EQ:
-										case X:
-											int endPosition = readPosition + cigarElementLength;
-											for (int pos = readPosition; pos < endPosition; pos++) {
-												boolean properbase = false;
-												byte base = bases[pos];
-
-												if (windowRelativePosition >= 0 && windowRelativePosition < windowSize) { // the read could overlap the leftmost edge of this window
-													if (base == 78 || base == 110) {
-														// N
-
-													} else if (readPosition < baseQual.length && baseQual[readPosition] > 0) { //    -- for each base pos: check whether basequal > 50
-														//    -- determine number of A/T/C/G/N bases
-														if (base == 65 || base == 97) {
-
-															properbase = true;
-														} else if (base == 67 || base == 99) {
-
-															properbase = true;
-														} else if (base == 71 || base == 103) {
-
-															properbase = true;
-														} else if (base == 84 || base == 116) { // extend to capture U?
-
-															properbase = true;
-														}
-													} else {
-														System.err.println("Unknown base found! " + base);
-													}
-												}
-
-												if (properbase) {
-													tmpCoverage[sampleId][windowRelativePosition]++;
-												}
-												windowRelativePosition++;
-											} // if pos < readposition
-											readPosition += cigarElementLength;
-											break;
-										default:
-											System.err.println("Unknown CIGAR operator found: " + e.getOperator().toString());
-											System.err.println("In read: " + record.toString());
-											break;
-									} // switch operator
-								} // for each cigar element
-							}
-							String outputStr = refname + "\t" + sta + "\t" + sto + "\t" + record.getFlags() + "\t" + mapq + "\t" + insert + "\t" + len;
-							outfiles[sampleId].writeln(outputStr);
-						}
-					}
-					record = it.next();
-				}
-			}
-
-
-			TextFile regionOut = new TextFile(regionOutDir + f.getChromosome().getName() + "-" + f.getStart() + "-" + f.getStop() + ".txt.gz", TextFile.W);
-			String header = "-";
-			for (int q = 0; q < windowSize; q++) {
-				header += "\t" + (q + 1);
-			}
-			regionOut.writeln(header);
-
-			for (int i = 0; i < samples.length; i++) {
-				avgmapq[i][fct] /= readsperregion[i][fct];
-				double sum = 0;
-				String ctOut = samples[i];
-				for (int q = 0; q < windowSize; q++) {
-					sum += tmpCoverage[i][q];
-					ctOut += "\t" + tmpCoverage[i][q];
-				}
-				regionOut.writeln(ctOut);
-				sum /= windowSize;
-				avgcoverage[i][fct] = sum;
-			}
-			regionOut.close();
-
-			fct++;
-			it.close();
-		}
-
-
-		// chr sta sto dup passf
-		for (int i = 0; i < outfiles.length; i++) {
-			outfiles[i].close();
-		}
-
-		TextFile summary = new TextFile(outdir + "summary.txt.gz", TextFile.W);
-
-		String header = "-\tgetDuplicateReadFlag" +
-				"\tgetFirstOfPairFlag" +
-				"\tgetMateNegativeStrandFlag" +
-				"\tgetMateUnmappedFlag" +
-				"\tgetNotPrimaryAlignmentFlag" +
-				"\tgetProperPairFlag" +
-				"\tgetReadFailsVendorQualityCheckFlag" +
-				"\tgetReadPairedFlag" +
-				"\tgetReadUnmappedFlag" +
-				"\tgetSecondOfPairFlag" +
-				"\tHCfilterOut" +
-				"\tTotalReads" +
-				"\tpairsNoDupPrimaryProperPairPairedBothMapped";
-		summary.writeln(header);
-		for (int s = 0; s < data.length; s++) {
-			String outputStr = samples[s];
-			for (int d = 0; d < data[s].length; d++) {
-				outputStr += "\t" + data[s][d];
-			}
-			summary.writeln(outputStr);
-		}
-		summary.close();
-
-		TextFile summarymapq = new TextFile(outdir + "mapq.txt.gz", TextFile.W);
-		header = "mapq";
-		for (int s = 0; s < data.length; s++) {
-			header += "\t" + samples[s];
-		}
-		summarymapq.writeln(header);
-		for (int d = 0; d < mapqDist[0].length; d++) {
-			String outln = d + "";
-			for (int s = 0; s < data.length; s++) {
-				outln += "\t" + mapqDist[s][d];
-			}
-			summarymapq.writeln(outln);
-		}
-
-		summarymapq.close();
-
-
-		fct = 0;
-
-
-		TextFile outf1 = new TextFile(outdir + "region-coverage.txt.gz", TextFile.W);
-		TextFile outf2 = new TextFile(outdir + "region-mapq.txt.gz", TextFile.W);
-		TextFile outf3 = new TextFile(outdir + "region-reads.txt.gz", TextFile.W);
-
-		header = "-";
-		for (Feature f : regions) {
-			header += "\t" + f.getChromosome().getName() + ":" + f.getStart() + "-" + f.getStop();
-		}
-		outf1.writeln(header);
-		outf2.writeln(header);
-		outf3.writeln(header);
-
-		for (int s = 0; s < samples.length; s++) {
-			String outln1 = samples[s];
-			String outln2 = samples[s];
-			String outln3 = samples[s];
-			for (int r = 0; r < regions.size(); r++) {
-				outln1 += "\t" + avgcoverage[s][r];
-				outln2 += "\t" + avgmapq[s][r];
-				outln3 += "\t" + readsperregion[s][r];
-			}
-
-			outf1.writeln(outln1);
-			outf2.writeln(outln2);
-			outf3.writeln(outln3);
-
-		}
-
-		outf1.close();
-		outf2.close();
-		outf3.close();
-
+		// now sort them
+		Collections.sort(regions, new FeatureComparator(false));
+		return regions;
 	}
+
 
 	public void createCoveragePlots(String coverageFile, String sampleFile, String outdir) throws IOException {
 
