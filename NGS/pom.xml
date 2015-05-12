@@ -66,6 +66,26 @@
             <artifactId>VectorGraphics2D</artifactId>
             <version>0.9.1</version>
         </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>20040616</version>
+        </dependency>
+        <dependency>
+            <groupId>com.goldmansachs</groupId>
+            <artifactId>gs-collections</artifactId>
+            <version>6.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>hms.hwestra</groupId>
+            <artifactId>NGS</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>hms.hwestra</groupId>
+            <artifactId>NGS</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

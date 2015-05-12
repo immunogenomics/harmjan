@@ -1,10 +1,14 @@
 package nl.harmjanwestra.ngs.GenotypeFormats;
 
+import com.gs.collections.api.list.ListIterable;
+import com.gs.collections.impl.multimap.list.FastListMultimap;
+import nl.harmjanwestra.ngs.GenotypeTools;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFVariantType;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.io.trityper.util.BaseAnnot;
 import umcg.genetica.math.stats.HWE;
 import umcg.genetica.text.Strings;
 
@@ -187,6 +191,9 @@ public class VCFFunctions {
 						if (gtCol != -1) {
 							String gt = sampleElems[gtCol];
 							String[] gtElems = gt.split("/");
+							if (gtElems.length == 1) {
+								gtElems = gt.split("\\|");
+							}
 							String allele1 = gtElems[0];
 							String allele2 = gtElems[1];
 							byte allele1b = -1;
@@ -467,6 +474,92 @@ public class VCFFunctions {
 
 		}
 		merged.close();
+
+	}
+
+	public void rewriteVariantsAtSamePositionAsMultiAllelic(String vcfIn, String vcfOut) throws IOException {
+
+		TextFile tf = new TextFile(vcfIn, TextFile.R);
+		String[] elems = tf.readLineElems(TextFile.tab);
+
+		HashSet<Feature> visitedPositions = new HashSet<Feature>();
+		HashSet<Feature> nonUniqueFeatures = new HashSet<Feature>();
+		HashMap<Feature, String> posToName = new HashMap<Feature, String>();
+		HashMap<Feature, Pair<String, HashSet<String>>> posToAlleles = new HashMap<Feature, Pair<String, HashSet<String>>>();
+
+		while (elems != null) {
+
+			Chromosome chr = Chromosome.NA;
+			if (elems[0].startsWith("##")) {
+				// superheader
+
+			} else if (elems[0].startsWith("#CHROM")) {
+
+			} else {
+
+				String ref = new String(elems[3]).intern();
+				String alt = elems[4];
+				String[] alleles = alt.split(",");
+
+				ArrayList<String> allelesList = new ArrayList<String>();
+				for (String al : alleles) {
+					allelesList.add(new String(al).intern());
+				}
+
+				String name = elems[2];
+				Integer pos = Integer.parseInt(elems[1]);
+				chr = Chromosome.parseChr(elems[0]);
+
+				Feature f = new Feature();
+				f.setChromosome(chr);
+				f.setStart(pos);
+				f.setStop(pos);
+
+				if (visitedPositions.contains(f)) {
+					nonUniqueFeatures.add(f);
+					String name2 = posToName.get(f);
+					if (!name.equals(name2)) {
+						System.out.println("different rs id for same pos: " + name2);
+					}
+
+					// get alleles
+					Pair<String, HashSet<String>> alleles2 = posToAlleles.get(f);
+					String ref2 = alleles2.getLeft();
+					if (!ref.equals(ref2)) {
+						System.out.println("reference alleles different at same base pos: " + ref + "\t" + ref2 + "\t" + elems[0] + ":" + pos);
+					}
+
+					for (String s : alleles) {
+						alleles2.getRight().add(new String(s).intern());
+					}
+
+
+				} else {
+					HashSet<String> alleleHash = new HashSet<String>();
+					Pair<String, HashSet<String>> allelePair = new Pair<String, HashSet<String>>(ref, alleleHash);
+
+					for (String s : alleles) {
+						alleleHash.add(new String(s).intern());
+					}
+
+					posToAlleles.put(f, allelePair);
+				}
+
+
+				visitedPositions.add(f);
+				posToName.put(f, name);
+
+
+			}
+
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
+		tf.close();
+
+
+		System.out.println(nonUniqueFeatures.size() + " multi-allelic variants");
+
 
 	}
 
@@ -760,38 +853,57 @@ public class VCFFunctions {
 	}
 
 
-	public void filterLowFrequencyVariants(String sequencingVCF, String outputdir, boolean filterGT) throws IOException {
+	public void filterLowFrequencyVariants(String sequencingVCF,
+										   String outputdir,
+										   boolean filterGT,
+										   int minimalReadDepth,
+										   int minimalGenotypeQual,
+										   double callratethreshold,
+										   int minObservationsPerAllele) throws IOException {
 
 		TextFile in = new TextFile(sequencingVCF, TextFile.R);
 		String ln = in.readLine();
 		int nrHeaderElems = 9;
 
-		int minimalReadDepth = 10;
-		int minimalGenotypeQual = 30;
+		double mafthreshold = 1;
 		int minimalGenotypePHRED = 10;
+
 		if (!filterGT) {
 			minimalReadDepth = 0;
 			minimalGenotypeQual = 0;
 			minimalGenotypePHRED = Integer.MAX_VALUE;
 		}
 
-		double callratethreshold = 0.95;
-		double mafthreshold = 0.01;
-
-
-		int[] allelesCalledPerSample = new int[0];
 		ArrayList<String> sampleNames = new ArrayList<String>();
 
 		int[] readDepthDist = new int[500];
 		int[] genotypeQualDist = new int[101];
 		int[] genotypePHREDQualDist = new int[1000];
-		double minAlleleFrequency = 0.01;
-		double minObservationsPerAllele = 5d;
 
+
+		int[] allelesCalledPerSample = null;
 		int nrVariants = 0;
 		TextFile variantQC = new TextFile(outputdir + "variantqc.txt", TextFile.W);
-		String head = "Pos\tRs\tFilterOut\tReason\tBiallelic\tRef\tAlt\tMinorAllele\tMinorAlleleFreq\tNrCalled\tCallRate\tEachAlleleObservedFreq>" + minAlleleFrequency + "\tNumberOfTimesEachAlleleIsObserved\tAlleleFrequencies\tQual\tFilter\tInfo";
+		String head = "Chr\t" +
+				"Pos\t" +
+				"Rs\t" +
+				"FilterOut\t" +
+				"Reason\t" +
+				"Biallelic\t" +
+				"Multiallelic\t" +
+				"Ref\t" +
+				"Alt\t" +
+				"MinorAllele\t" +
+				"MinorAlleleFreq\t" +
+				"NrCalled\t" +
+				"CallRate\t" +
+				"NumberOfTimesEachAlleleIsObserved\t" +
+				"AlleleFrequencies\t" +
+				"Qual\t" +
+				"Filter\t" +
+				"Info";
 		variantQC.writeln(head);
+
 
 		TextFile filteredVCF = new TextFile(outputdir + "filtered.vcf", TextFile.W);
 
@@ -807,267 +919,172 @@ public class VCFFunctions {
 				for (int i = nrHeaderElems; i < elems.length; i++) {
 					sampleNames.add(elems[i]);
 				}
-				minObservationsPerAllele = (int) Math.ceil(minAlleleFrequency * sampleNames.size());
-				mafthreshold = minObservationsPerAllele / sampleNames.size();
-				System.out.println(minObservationsPerAllele);
+
+				mafthreshold = (double) minObservationsPerAllele / sampleNames.size();
+				System.out.println("maf threshold: " + mafthreshold + " min obs: " + minObservationsPerAllele);
 			} else {
 				nrVariants++;
-				String[] elems = ln.split("\t");
-				String variant = elems[0] + "_" + elems[1];
-				String rs = elems[2];
-				// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
-				String ref = elems[3];
-				String alt = elems[4];
-				String[] alternateAlleles = alt.split(",");
-				String qual = elems[5];
-				String filter = elems[6];
-				String info = elems[7];
 
-				String[] format = elems[8].split(":");
-				int gtCol = -1; // genotype
-				int adCol = -1; // Allelic depths for the ref and alt alleles in the order listed
-				int dpCol = -1; // Approximate read depth (reads with MQ=255 or with bad mates are filtered)
-				int gqCol = -1; // Genotype Quality
-				int plCol = -1; // Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
-				int pidCol = -1; // ?
-				int pgtCol = -1; // ?
-				for (int c = 0; c < format.length; c++) {
-					if (format[c].equals("GT")) {
-						gtCol = c;
-					} else if (format[c].equals("AD")) {
-						adCol = c;
-					} else if (format[c].equals("DP")) {
-						dpCol = c;
-					} else if (format[c].equals("GQ")) {
-						gqCol = c;
-					} else if (format[c].equals("PL")) {
-						plCol = c;
-					} else if (format[c].equals("PGT")) {
-						pgtCol = c;
-					} else if (format[c].equals("PID")) {
-						pidCol = c;
-					}
+				VCFVariant variant = new VCFVariant(ln, minimalReadDepth, minimalGenotypeQual, false);
 
-					// GT:AD:DP:GQ:PGT:PID:PL
+				int[] depths = variant.getAllelicDepths();
 
-				}
-
-				int nrCalled = 0;
-
-				// count nr possible alleles
-				int[] nrAllelesObserved = new int[alternateAlleles.length + 1];
-
-				// count number of alleles with certain read depth
-				for (int i = nrHeaderElems; i < elems.length; i++) {
-					String sampleColumn = elems[i];
-					if (sampleColumn.equals("./.")) {
-						// not called
+				for (int depth : depths) {
+					if (depth > readDepthDist.length - 1) {
+						readDepthDist[readDepthDist.length - 1]++;
 					} else {
-						String[] sampleElems = sampleColumn.split(":");
-						if (gtCol != -1) {
-							String gt = sampleElems[gtCol];
-							String[] gtElems = gt.split("/");
+						readDepthDist[depth]++;
+					}
+				}
 
-							int depth = 0;
-							int gq = 0;
-
-
-							if (gtElems[0].equals(".") || gtElems[1].equals(".")) {
-								// not called
-							} else {
-								try {
-									if (gqCol != -1) {
-
-										gq = Integer.parseInt(sampleElems[gqCol]);
-
-
-									}
-								} catch (NumberFormatException e) {
-								}
-
-								if (gq > genotypeQualDist.length - 1) {
-									genotypeQualDist[genotypeQualDist.length - 1]++;
-								} else {
-									genotypeQualDist[gq]++;
-								}
-
-								try {
-									if (dpCol != -1) {
-										if (sampleElems.length < dpCol + 1) {
-											System.out.println(sampleColumn);
-											System.exit(-1);
-										}
-										depth = Integer.parseInt(sampleElems[dpCol]);
-									}
-								} catch (NumberFormatException e) {
-								}
-
-								if (depth > readDepthDist.length - 1) {
-									readDepthDist[readDepthDist.length - 1]++;
-								} else {
-									readDepthDist[depth]++;
-								}
-
-								int gt1 = 0;
-								int gt2 = 0;
-								try {
-									gt1 = Integer.parseInt(gtElems[0]);
-									gt2 = Integer.parseInt(gtElems[1]);
-								} catch (NumberFormatException e) {
-								}
-
-								// called
-								// check coverage
-								if (depth < minimalReadDepth) {
-									// not called
-								} else {
-									// called
-									// check the genotype quality
-									if (gq < minimalGenotypeQual) {
-										// not called
-									} else {
-										// called
-										int gtqual0 = 0;
-										String[] plElems = sampleElems[plCol].split(",");
-										try {
-
-											int genotype = gt1 + gt2;
-											// 0,99,1238 AA AB BB
-											if (gt1 != gt2) {
-												// heterozygote
-											}
-											gtqual0 = Integer.parseInt(plElems[genotype]);
-
-										} catch (NumberFormatException e) {
-										}
-										if (gtqual0 > genotypePHREDQualDist.length - 1) {
-											genotypePHREDQualDist[genotypePHREDQualDist.length - 1]++;
-										} else {
-											genotypePHREDQualDist[gtqual0]++;
-										}
-										if (gtqual0 > minimalGenotypePHRED) {
-											// not called
-										} else {
-											// called.. this is the final genotype
-											allelesCalledPerSample[i - nrHeaderElems]++;
-											nrCalled++;
-											nrAllelesObserved[gt1]++;
-											nrAllelesObserved[gt2]++;
-											if (variant.equals("X_153330275")) {
-												System.out.println(gt1 + "\t" + gt2);
-											}
-										}
-									}
-								}
-							}
-						}
+				int[] gqs = variant.getGenotypeQuals();
+				for (int gq : gqs) {
+					if (gq > genotypeQualDist.length - 1) {
+						genotypeQualDist[genotypeQualDist.length - 1]++;
+					} else {
+						genotypeQualDist[gq]++;
 					}
 				}
 
 
-				double cr = (double) nrCalled / (elems.length - nrHeaderElems);
+//				if (gtqual0 > genotypePHREDQualDist.length - 1) {
+//					genotypePHREDQualDist[genotypePHREDQualDist.length - 1]++;
+//				} else {
+//					genotypePHREDQualDist[gtqual0]++;
+//				}
 
 				String reason = "";
 				boolean filterout = false;
-				if (cr < callratethreshold) {
+				String alt = "";
+				if (variant.getCallrate() < callratethreshold) {
 					filterout = true;
 					reason += "lowCallRate";
 				}
-
-				boolean allAllelesObservedFrequently = true;
-				int totalAllelesObs = nrCalled * 2;
-				String[] allelefreqOut = new String[nrAllelesObserved.length];
-				String[] allelefreqOut2 = new String[nrAllelesObserved.length];
-
-				int nrAllelesAboveFreq = 0;
-				int nrAllelesThatHaveAlleleFrequency = 0;
-				double minAlleleFreq = 1;
-				String minorAllele = "";
-				for (int i = 0; i < nrAllelesObserved.length; i++) {
-					double alleleFreq = (double) nrAllelesObserved[i] / totalAllelesObs;
-					allelefreqOut[i] = "" + alleleFreq;
-					allelefreqOut2[i] = "" + nrAllelesObserved[i];
-					if (nrAllelesObserved[i] > 0) {
-						nrAllelesThatHaveAlleleFrequency++;
-						if (alleleFreq < minAlleleFreq) {
-							if (i == 0) {
-								minorAllele = ref;
-							} else {
-								minorAllele = alternateAlleles[i - 1];
-							}
-							minAlleleFreq = alleleFreq;
-						}
-					}
-					if (alleleFreq > minAlleleFrequency) {
-						nrAllelesAboveFreq++;
-					}
-				}
-				boolean isBiAllelic = false;
-				if (nrAllelesThatHaveAlleleFrequency == 1) {
+				if (variant.isMonomorphic()) {
 					filterout = true; // monomorphic variants
 					reason += ";monomorphic";
+					alt = "null";
+				} else if (variant.isBiallelic()) {
+					double maf = variant.getMAF();
+					if (maf < mafthreshold) {
+						filterout = true;
+						reason += ";mafbelowthreshold";
+					}
+
+					alt = Strings.concat(variant.getAlleles(), Strings.comma, 1, variant.getAlleles().length);
+
 				} else {
-					if (nrAllelesThatHaveAlleleFrequency == 2) {
-						isBiAllelic = true;
-						if (minAlleleFreq < mafthreshold) {
-							filterout = true;
-							reason += ";mafbelowthreshold";
-						}
+
+					double maf = variant.getMAF();
+					if (maf < mafthreshold) {
+						filterout = true;
+						reason += ";mafbelowthreshold";
+					}
+					alt = Strings.concat(variant.getAlleles(), Strings.comma, 1, variant.getAlleles().length);
+
+				}
+
+				double maf = variant.getMAF();
+				double[] alleleFrequencies = variant.getAllelefrequencies();
+				byte[][] genotypes = variant.getGenotypeAlleles();
+				int[] variantAllelesObserved = variant.getNrAllelesObserved();
+				int nrCalled = 0;
+				for (int i = 0; i < genotypes.length; i++) {
+					if (genotypes[i][0] != -1) {
+						nrCalled++;
+						allelesCalledPerSample[i]++;
+					}
+					if (genotypes[i][0] != -1) {
+						nrCalled++;
+						allelesCalledPerSample[i]++;
 					}
 				}
-//
-// else if (nrAllelesThatHaveAlleleFrequency == 2) {
-//					if (nrAllelesAboveFreq == 2) {
-//						allAllelesObservedFrequently = true; // biallelic variants
-//						if (minAlleleFreq < mafthreshold) {
-//							filterout = true;
-//							reason += ";biallelic-belowmafthreshold";
-//						}
-//					}
-//					isBiAllelic = true;
-//
-//				} else if (nrAllelesObserved.length > 2 && nrAllelesAboveFreq >= 2) {
-//					if (nrAllelesAboveFreq == 2) {
-//						// this is actually a biallelic
-//						isBiAllelic = true;
-//						if (minAlleleFreq < mafthreshold) {
-//							filterout = true;
-//							reason += ";multi-biallelic-belowmafthreshold";
-//						}
-//					} else {
-//						if (nrAllelesAboveFreq > 2) {
-//							allAllelesObservedFrequently = true; // multi-allelic variants that
-//						} else {
-//							filterout = true;
-//							reason += ";multi-biallelic-belowobservedallelesthreshold";
-//						}
-//					}
-//
-//				}
 
-				String variantOut = variant
-						+ "\t" + rs
+				String variantOut = variant.getChr()
+						+ "\t" + variant.getPos()
+						+ "\t" + variant.getId()
 						+ "\t" + filterout
 						+ "\t" + reason
-						+ "\t" + isBiAllelic
-						+ "\t" + ref
+						+ "\t" + variant.isBiallelic()
+						+ "\t" + variant.isMultiallelic()
+						+ "\t" + variant.getAlleles()[0]
 						+ "\t" + alt
-						+ "\t" + minorAllele
-						+ "\t" + minAlleleFreq
+						+ "\t" + variant.getMinorAllele()
+						+ "\t" + maf
 						+ "\t" + nrCalled
-						+ "\t" + cr
-						+ "\t" + allAllelesObservedFrequently
-						+ "\t" + Strings.concat(allelefreqOut2, Strings.semicolon)
-						+ "\t" + Strings.concat(allelefreqOut, Strings.semicolon);
+						+ "\t" + variant.getCallrate()
+						+ "\t" + Strings.concat(variantAllelesObserved, Strings.semicolon)
+						+ "\t" + Strings.concat(alleleFrequencies, Strings.semicolon)
+						+ "\t" + variant.getQual()
+						+ "\t" + variant.getFilter()
+						+ "\t" + variant.getInfo();
 
-				variantQC.writeln(variantOut + "\t" + qual + "\t" + filter + "\t" + info);
-				if (!filterout) {
-					filteredVCF.writeln(ln);
+
+				variantQC.writeln(variantOut);
+				if (!filterout && filterGT) {
+					// rewrite alt allele if there are only two alleles observed, while VCF defines > 2 alt alleles
+					if (variant.isBiallelic() && variantAllelesObserved.length > 2) {
+						ArrayList<String> alleles = new ArrayList<String>();
+						int[] gtToGt = new int[variantAllelesObserved.length];
+						for (int i = 0; i < variantAllelesObserved.length; i++) {
+							if (variantAllelesObserved[i] > 0) {
+								gtToGt[i] = alleles.size();
+								alleles.add(variant.getAlleles()[i]);
+							} else {
+								gtToGt[i] = -1;
+							}
+						}
+
+						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+						String[] lnElems = ln.split("\t");
+						lnElems[3] = alleles.get(0);
+						lnElems[4] = alleles.get(1);
+						String[] format = lnElems[8].split(":");
+						int gtCol = -1; // genotype
+
+						for (int c = 0; c < format.length; c++) {
+							if (format[c].equals("GT")) {
+								gtCol = c;
+							}
+						}
+
+						for (int i = nrHeaderElems; i < lnElems.length; i++) {
+							String[] sampleElems = lnElems[i].split(":");
+							if (gtCol != -1) {
+								String gt = sampleElems[gtCol];
+								String[] gtElems = gt.split("/");
+								if (gtElems.length == 1) { // phased genotypes
+									gtElems = gt.split("\\|");
+								}
+
+								if (gtElems[0].equals(".") || gtElems[1].equals(".")) {
+									lnElems[i] = "./.";
+								} else {
+									byte gt1 = 0;
+									byte gt2 = 0;
+									try {
+										gt1 = Byte.parseByte(gtElems[0]);
+										gt2 = Byte.parseByte(gtElems[1]);
+
+										lnElems[i] = gtToGt[gt1] + "/" + gtToGt[gt2];
+
+									} catch (NumberFormatException e) {
+										lnElems[i] = "./.";
+									}
+								}
+							}
+						}
+
+						filteredVCF.writeln(Strings.concat(lnElems, Strings.tab));
+					} else {
+						filteredVCF.writeln(ln);
+					}
 				}
 			}
 
 			ln = in.readLine();
 		}
+
 		variantQC.close();
 		in.close();
 		filteredVCF.close();
@@ -1077,30 +1094,34 @@ public class VCFFunctions {
 			double cr = (double) allelesCalledPerSample[i] / nrVariants;
 			outf1.writeln(sampleNames.get(i) + "\t" + allelesCalledPerSample[i] + "\t" + cr);
 		}
+
 		outf1.close();
 
 		TextFile outf3 = new TextFile(outputdir + "gq.txt", TextFile.W);
 		for (int i = 0; i < genotypeQualDist.length; i++) {
 			outf3.writeln(i + "\t" + genotypeQualDist[i]);
 		}
+
 		outf3.close();
 
 		TextFile outf4 = new TextFile(outputdir + "gqphred.txt", TextFile.W);
 		for (int i = 0; i < genotypePHREDQualDist.length; i++) {
 			outf4.writeln(i + "\t" + genotypePHREDQualDist[i]);
 		}
+
 		outf4.close();
 
 		TextFile outf5 = new TextFile(outputdir + "readdepth.txt", TextFile.W);
 		for (int i = 0; i < readDepthDist.length; i++) {
 			outf5.writeln(i + "\t" + readDepthDist[i]);
 		}
+
 		outf5.close();
 
 
 	}
 
-	public void filterVCF(String vcfIn, String vcfVariantsToFilter, String vcfOut) throws IOException {
+	public void filterVCFVariants(String vcfIn, String vcfVariantsToFilter, String vcfOut) throws IOException {
 
 
 		TextFile in = new TextFile(vcfVariantsToFilter, TextFile.R);
@@ -1124,7 +1145,7 @@ public class VCFFunctions {
 		in.close();
 
 
-		TextFile in2 = new TextFile(vcfVariantsToFilter, TextFile.R);
+		TextFile in2 = new TextFile(vcfIn, TextFile.R);
 		ln = in2.readLine();
 		TextFile filteredVCF = new TextFile(vcfOut, TextFile.W);
 		while (ln != null) {
@@ -1306,6 +1327,7 @@ public class VCFFunctions {
 		TextFile vcfout = new TextFile(vcf, TextFile.W);
 		vcfout.writeln("##fileformat=VCFv4.1");
 		vcfout.writeln("##source=HJ");
+		vcfout.writeln("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">");
 		String vcfheader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
 
 
@@ -1389,15 +1411,15 @@ public class VCFFunctions {
 		vcfout.close();
 	}
 
-	public void filterBeagleReference(String vcfIn, String referenceOut, String regionFile) throws IOException {
+	public void filterVCFForBedRegions(String vcfIn, String referenceOut, String regionFile) throws IOException {
 
 		PedAndMapFunctions fun = new PedAndMapFunctions();
 		ArrayList<Feature> set = fun.readRegionFile(regionFile);
 
+		TextFile vcfoutf = new TextFile(referenceOut, TextFile.W);
 		TextFile vcftf = new TextFile(vcfIn, TextFile.R);
 		int nrHeaderElems = 9;
 		String ln = vcftf.readLine();
-		TextFile vcfoutf = new TextFile(referenceOut, TextFile.W);
 		while (ln != null) {
 			if (ln.startsWith("##")) {
 				vcfoutf.writeln(ln);
@@ -1426,5 +1448,608 @@ public class VCFFunctions {
 		}
 		vcfoutf.close();
 		vcftf.close();
+	}
+
+	public void compareAndCorrectVCFVariants(String vcf1,
+											 String vcf1out,
+											 String vcf2,
+											 String vcf2out,
+											 String log,
+											 boolean keepNonIntersectingVariants,
+											 boolean keepMonomorphic) throws IOException {
+		ArrayList<Feature> vcf1variants = getVariantsFromVCF(vcf1);
+		ArrayList<Feature> vcf2variants = getVariantsFromVCF(vcf2);
+		GenotypeTools tools = new GenotypeTools();
+		HashSet<Feature> intersectVariants = tools.intersectVariants(vcf1variants, vcf2variants);
+
+		System.out.println("checking " + vcf1 + " vs " + vcf2);
+		System.out.println(intersectVariants.size() + " variants intersect");
+
+		ArrayList<Feature> variantsToExclude = new ArrayList<Feature>();
+
+		TextFile logfile = new TextFile(log, TextFile.W);
+		logfile.writeln(intersectVariants.size() + " variants shared");
+
+		logfile.writeln("chr\tpos\trs\talleles2\tminor2\tmaf2\tallleles-ref\tminor-ref\tmaf-ref\treason\tinfo2");
+		if (intersectVariants.size() > 0) {
+			// get genotypes for intersected variants..
+			FastListMultimap<Feature, VCFVariant> variantsvcf1 = getVCFVariants(vcf1, intersectVariants);
+
+			TextFile outvcf = new TextFile(vcf2out, TextFile.W);
+
+			TextFile vcfIn = new TextFile(vcf2, TextFile.R);
+
+			String ln = vcfIn.readLine();
+			while (ln != null) {
+
+				if (ln.startsWith("#")) {
+					outvcf.writeln(ln);
+				} else {
+					VCFVariant variant2 = new VCFVariant(ln);
+					Feature f = new Feature();
+					f.setChromosome(Chromosome.parseChr(variant2.getChr()));
+					f.setStart(variant2.getPos());
+					f.setStop(variant2.getPos());
+
+
+					if (intersectVariants.contains(f)) {
+						String[] alleles2 = variant2.getAlleles();
+						String minorAllele2 = variant2.getMinorAllele();
+
+						ListIterable<VCFVariant> refVariants = variantsvcf1.get(f); // get all variants at this position..
+						// compare
+
+						boolean variantHasMatch = false;
+						if (refVariants.size() > 1) {
+							System.out.println(variant2.getId() + " has " + refVariants.size() + " counterparts in ref.");
+						}
+						for (VCFVariant refVariant : refVariants) {
+							// check the alleles
+							String[] alleles1 = refVariant.getAlleles();
+
+							String minorAllele1 = refVariant.getMinorAllele();
+
+							String logstr = variant2.getChr()
+									+ "\t" + variant2.getPos()
+									+ "\t" + variant2.getId()
+
+									+ "\t" + Strings.concat(alleles2, Strings.comma)
+									+ "\t" + minorAllele1
+									+ "\t" + variant2.getMAF()
+									+ "\t" + Strings.concat(alleles1, Strings.comma)
+									+ "\t" + minorAllele1
+									+ "\t" + refVariant.getMAF()
+									+ "\t" + variant2.getInfo();
+
+
+							int nridenticalalleles = 0;
+
+							for (int i = 0; i < alleles1.length; i++) {
+								String allele1 = alleles1[i];
+								for (int j = 0; j < alleles2.length; j++) {
+									if (alleles2[j].equals(allele1)) {
+										nridenticalalleles++;
+									}
+								}
+							}
+
+							if (refVariant.isBiallelic() && variant2.isBiallelic() ||
+									(keepMonomorphic && (refVariant.isMultiallelic() || variant2.isMonomorphic()))) {
+								String allele11 = alleles1[0];
+								String allele12 = alleles1[1];
+								String allele21 = alleles2[0];
+								String allele22 = alleles2[1];
+
+								// this is true if variants have identical alleles
+								// and is always true for A/T and C/G variants
+								if (nridenticalalleles == 2) {
+
+									// check A/T G/C variants
+									if (allele11.equals(BaseAnnot.getComplement(allele12)) && !minorAllele1.equals(minorAllele2)) {
+										// both variants ar AT or GC snps
+										logstr += "\tAT or CG with DiffMinor";
+										// System.out.println("AT/CG: minor alleles different: " + allele11 + "/" + allele12 + "-" + minorAllele1 + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
+									} else {
+										// alleles are identical. check the direction of the alleles
+										if (minorAllele1.equals(minorAllele2)) {
+											if (allele11.equals(allele21)) {
+												// reference alleles are identical
+
+												variantHasMatch = true;
+												logstr += "\tOK";
+											} else {
+												// flip the genotypes
+												ln = flipReferenceAllele(ln);
+												variantHasMatch = true;
+												logstr += "\tFLIPOK";
+											}
+										} else {
+											// System.out.println("minor alleles different: " + allele11 + "/" + allele12 + "-" + minorAllele1 + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
+											logstr += "\tDiffMinor";
+										}
+									}
+								} else {
+									// try complement
+									String[] complementAlleles2 = convertToComplement(alleles2);
+									String complementMinorAllele2 = getComplement(minorAllele2);
+									allele21 = complementAlleles2[0];
+									allele22 = complementAlleles2[1];
+									nridenticalalleles = 0;
+
+									for (int i = 0; i < alleles1.length; i++) {
+										String allele1 = alleles1[i];
+										for (int j = 0; j < alleles2.length; j++) {
+											if (complementAlleles2[j].equals(allele1)) {
+												nridenticalalleles++;
+											}
+										}
+									}
+
+									if (nridenticalalleles == 2) {
+										if (minorAllele1.equals(complementMinorAllele2)) {
+											if (allele11.equals(allele21)) {
+												// reference alleles are identical
+												// rewrite allele codes to reflect complement
+												// #CHROM  POS     ID REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1   SAMPLE2
+												String[] elems = ln.split("\t");
+												elems[3] = allele21;
+												elems[4] = allele22;
+												ln = Strings.concat(elems, Strings.tab);
+												variantHasMatch = true;
+												logstr += "\tOK-Complement";
+											} else {
+												// flip the genotypes
+												ln = flipReferenceAllele(ln);
+												String[] elems = ln.split("\t");
+												elems[4] = allele21;
+												elems[3] = allele22;
+												ln = Strings.concat(elems, Strings.tab);
+												variantHasMatch = true;
+												logstr += "\tFLIPOK-Complement";
+											}
+										} else {
+											// System.out.println("minor alleles different: " + allele11 + "/" + allele12 + "-" + minorAllele1 + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
+											logstr += "\tDiffMinor-Complement";
+										}
+									} else {
+										//System.out.println("incompatible alleles: " + allele11 + "/" + allele12 + "-" + minorAllele1 + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
+										logstr += "\tIncompatibleAlleles";
+									}
+								}
+
+							} else if (refVariant.isMonomorphic() || variant2.isMonomorphic()) {
+								// exclude variant from both datasets
+
+//							System.out.println("monomorphic: " + Strings.concat(alleles1, Strings.comma) + "-" + minorAllele1
+//									+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
+								logstr += "\tMonomorph";
+							} else if (refVariant.isMultiallelic() && variant2.isMultiallelic()) {
+								// check whether the alleles are the same and their allele frequencies compare as well.
+
+								if (nridenticalalleles == refVariant.getAlleles().length && nridenticalalleles == variant2.getAlleles().length) {
+									logstr += "\tOK-MultiAllelic";
+								} else {
+//								System.out.println("multi-allelic: " + Strings.concat(alleles1, Strings.comma) + "-" + minorAllele1
+//										+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
+									logstr += "\tIncompatibleAlleles-MultiAllelic";
+								}
+							} else {
+
+//							System.out.println("inconclusive: " + Strings.concat(alleles1, Strings.comma) + "-" + minorAllele1
+//									+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
+								logstr += "\tInconclusive";
+							}
+
+							if (!variantHasMatch) {
+								variantsToExclude.add(f);
+							} else {
+								outvcf.writeln(ln);
+							}
+
+
+							logfile.writeln(logstr + "\t" + variantHasMatch);
+						}
+
+
+					} else if (keepNonIntersectingVariants) {
+						outvcf.writeln(ln);
+
+					}
+				}
+
+				ln = vcfIn.readLine();
+			}
+
+			vcfIn.close();
+			outvcf.close();
+
+		}
+		logfile.close();
+
+		System.out.println("About to exclude: " + variantsToExclude.size() + " variants from reference dataset...");
+
+		TextFile vcfoutref = new TextFile(vcf1out, TextFile.W);
+		TextFile vcfinref = new TextFile(vcf1, TextFile.R);
+		String ln = vcfinref.readLine();
+		while (ln != null) {
+
+			if (ln.startsWith("#")) {
+				vcfoutref.writeln(ln);
+			} else {
+				VCFVariant variant = new VCFVariant(ln);
+				Feature f = new Feature();
+				f.setChromosome(Chromosome.parseChr(variant.getChr()));
+				f.setStart(variant.getPos());
+				f.setStop(variant.getPos());
+				if (!variantsToExclude.contains(f)) {
+					if (keepNonIntersectingVariants) {
+						vcfoutref.writeln(ln);
+					} else if (intersectVariants.contains(f)) {
+						vcfoutref.writeln(ln);
+					}
+				}
+			}
+			ln = vcfinref.readLine();
+		}
+		vcfoutref.close();
+		vcfinref.close();
+
+	}
+
+	private String[] convertToComplement(String[] alleles2) {
+		String[] complement = new String[alleles2.length];
+		for (int i = 0; i < complement.length; i++) {
+			String allele = alleles2[i];
+			complement[i] = getComplement(allele);
+
+		}
+		return complement;
+	}
+
+	private String getComplement(String allele) {
+		String out = "";
+		for (int j = 0; j < allele.length(); j++) {
+			char c = allele.charAt(j);
+			if (c == 'A') {
+				out += "T";
+			} else if (c == 'T') {
+				out += "A";
+			} else if (c == 'G') {
+				out += "C";
+			} else if (c == 'C') {
+				out += "G";
+			} else {
+				out += "N";
+			}
+		}
+		return out;
+	}
+
+	public String flipReferenceAllele(String ln) {
+
+		// #CHROM  POS     ID REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1   SAMPLE2
+
+		String[] elems = ln.split("\t");
+		String ref = elems[3];
+		String alt = elems[4];
+
+		elems[3] = alt;
+		elems[4] = ref;
+
+		String[] format = elems[8].split(":");
+		int gtCol = -1; // genotype
+		int adCol = -1; // Allelic depths for the ref and alt alleles in the order listed
+		int dpCol = -1; // Approximate read depth (reads with MQ=255 or with bad mates are filtered)
+		int gqCol = -1; // Genotype Quality
+		int plCol = -1; // Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
+		for (int c = 0; c < format.length; c++) {
+			if (format[c].equals("GT")) {
+				gtCol = c;
+			} else if (format[c].equals("AD")) {
+				adCol = c;
+			} else if (format[c].equals("DP")) {
+				dpCol = c;
+			} else if (format[c].equals("GQ")) {
+				gqCol = c;
+			} else if (format[c].equals("PL")) {
+				plCol = c;
+			}
+		}
+
+
+		for (int i = 9; i < elems.length; i++) {
+			String sample = elems[i];
+			String[] sampleElems = sample.split(":");
+			String gt = sampleElems[gtCol];
+			String[] gtElems = gt.split("/");
+			String sep = "/";
+			if (gtElems.length == 1) {
+				gtElems = gt.split("\\|");
+				sep = "|";
+			}
+
+			if (gtElems[0].equals("0")) {
+				gtElems[0] = "1";
+			} else {
+				gtElems[0] = "0";
+			}
+			if (gtElems[1].equals("0")) {
+				gtElems[1] = "1";
+			} else {
+				gtElems[1] = "0";
+			}
+
+			sampleElems[gtCol] = gtElems[0] + sep + gtElems[1];
+			elems[i] = Strings.concat(sampleElems, Strings.colon);
+		}
+
+		return Strings.concat(elems, Strings.tab);
+
+	}
+
+	public FastListMultimap<Feature, VCFVariant> getVCFVariants(String vcf, HashSet<Feature> map) throws IOException {
+		TextFile vcftf = new TextFile(vcf, TextFile.R);
+
+		String ln = vcftf.readLine();
+
+		FastListMultimap<Feature, VCFVariant> output = new FastListMultimap<Feature, VCFVariant>();
+
+		while (ln != null) {
+			if (!ln.startsWith("##") && !ln.startsWith("#CHROM")) {
+				VCFVariant variant = new VCFVariant(ln);
+
+				Feature f = new Feature();
+				f.setChromosome(Chromosome.parseChr(variant.getChr()));
+				f.setStart(variant.getPos());
+				f.setStop(variant.getPos());
+				if (map == null || map.contains(f)) {
+					if (output.containsKey(f)) {
+						System.err.println("Duplicate variant: " + f.toString() + " in " + vcf);
+					}
+					output.put(f, variant);
+				}
+
+			}
+			ln = vcftf.readLine();
+		}
+		vcftf.close();
+		return output;
+	}
+
+
+	public void replaceHeader(String vcfin, String ref, String vcfout) throws IOException {
+
+		TextFile tf = new TextFile(ref, TextFile.R);
+		String header = "";
+		String ln = tf.readLine();
+		while (ln != null) {
+			if (ln.startsWith("##")) {
+				if (header.length() == 0) {
+					header += ln;
+				} else {
+					header += "\n" + ln;
+
+				}
+
+
+			}
+			ln = tf.readLine();
+		}
+		tf.close();
+
+		TextFile tfin = new TextFile(vcfin, TextFile.R);
+		TextFile tfout = new TextFile(vcfout, TextFile.W);
+		ln = tfin.readLine();
+		while (ln != null) {
+			if (ln.startsWith("##")) {
+
+			} else if (ln.startsWith("#")) {
+
+				tfout.writeln(header);
+				tfout.writeln(ln);
+			} else {
+				tfout.writeln(ln);
+			}
+			ln = tfin.readLine();
+		}
+		tfin.close();
+		tfout.close();
+	}
+
+	public void mergeVCFSamples(String vcf1, String vcf2, String vcfout) throws IOException {
+
+		TextFile tf = new TextFile(vcf1, TextFile.R);
+		String header = "";
+		String ln = tf.readLine();
+		while (ln != null) {
+			if (ln.startsWith("##")) {
+				if (header.length() == 0) {
+					header += ln;
+				} else {
+					header += "\n" + ln;
+				}
+			}
+			ln = tf.readLine();
+		}
+		tf.close();
+
+		ArrayList<String> samples1 = getVCFSamples(vcf1);
+		ArrayList<String> samples2 = getVCFSamples(vcf2);
+
+		ArrayList<Feature> variants1 = getVariantsFromVCF(vcf1);
+		ArrayList<Feature> variants2 = getVariantsFromVCF(vcf2);
+
+		GenotypeTools t = new GenotypeTools();
+		HashSet<Feature> intersectVariants = t.intersectVariants(variants1, variants2);
+
+		System.out.println(intersectVariants.size() + " variants intersect");
+
+		HashMap<Feature, Integer> featureMap = new HashMap<Feature, Integer>();
+
+		int ctr = 0;
+		for (Feature f : intersectVariants) {
+			featureMap.put(f, ctr);
+			ctr++;
+		}
+		HashMap<String, Integer> sampleToInt = new HashMap<String, Integer>();
+		ctr = 0;
+		for (String s : samples1) {
+			sampleToInt.put(s, ctr);
+			ctr++;
+		}
+		for (String s : samples2) {
+			sampleToInt.put(s, ctr);
+			ctr++;
+		}
+
+
+		ArrayList<VCFVariant> genotypes1 = new ArrayList<VCFVariant>();
+		ArrayList<VCFVariant> genotypes2 = new ArrayList<VCFVariant>();
+
+		HashMap<Feature, VCFVariant> variantMap = new HashMap<Feature, VCFVariant>();
+		TextFile vcftf1 = new TextFile(vcf1, TextFile.R);
+		ln = vcftf1.readLine();
+		while (ln != null) {
+			if (!ln.startsWith("#")) {
+				VCFVariant var = new VCFVariant(ln);
+				Feature f = new Feature();
+				f.setChromosome(Chromosome.parseChr(var.getChr()));
+				f.setStart(var.getPos());
+				f.setStop(var.getPos());
+				variantMap.put(f, var);
+			}
+			ln = vcftf1.readLine();
+		}
+		vcftf1.close();
+
+
+		TextFile vcftf2 = new TextFile(vcf1, TextFile.R);
+		ln = vcftf1.readLine();
+		TextFile out = new TextFile(vcfout, TextFile.W);
+		out.writeln(header);
+		String vcfheader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
+		for (String s : samples1) {
+			vcfheader += "\t" + s;
+		}
+		for (String s : samples2) {
+			vcfheader += "\t" + s;
+		}
+		out.writeln(vcfheader);
+		while (ln != null) {
+			if (!ln.startsWith("#")) {
+				VCFVariant var = new VCFVariant(ln);
+				Feature f = new Feature();
+				f.setChromosome(Chromosome.parseChr(var.getChr()));
+				f.setStart(var.getPos());
+				f.setStop(var.getPos());
+
+				VCFVariant var2 = variantMap.get(f);
+
+				String[] alleles1 = var.getAlleles();
+				String[] alleles2 = var2.getAlleles();
+
+				boolean allelesIdentical = true;
+
+				for (int i = 0; i < alleles1.length; i++) {
+					String allele1 = alleles1[i];
+					String allele2 = alleles2[i];
+					if (!allele1.equals(allele2)) {
+						allelesIdentical = false;
+					}
+				}
+
+				if (allelesIdentical && alleles1.length == alleles2.length) {
+					// merge...
+					// #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
+					String lnout = var.getChr()
+							+ "\t" + var.getPos()
+							+ "\t" + var.getId()
+							+ "\t" + alleles1[0]
+							+ "\t" + Strings.concat(alleles1, Strings.comma, 1, alleles1.length)
+							+ "\t.\t.\t.\tGT";
+					byte[][] gt1 = var.getGenotypeAlleles();
+					byte[][] gt2 = var.getGenotypeAlleles();
+					for (int i = 0; i < gt2.length; i++) {
+						lnout += "\t" + gt2[i][0] + "|" + gt2[i][1];
+					}
+					for (int i = 0; i < gt1.length; i++) {
+						lnout += "\t" + gt1[i][0] + "|" + gt1[i][1];
+					}
+					out.writeln(lnout);
+				}
+
+
+			}
+			ln = vcftf2.readLine();
+		}
+		vcftf2.close();
+		out.close();
+
+
+	}
+
+	public void splitMultipleAllelicVariants(String vcfIn, String vcfOut) throws IOException {
+
+		TextFile tfIn = new TextFile(vcfIn, TextFile.R);
+		TextFile tfOut = new TextFile(vcfOut, TextFile.W);
+
+		String ln = tfIn.readLine();
+		while (ln != null) {
+			if (ln.startsWith("#")) {
+				tfOut.writeln(ln);
+			} else {
+				VCFVariant var = new VCFVariant(ln);
+				String[] alleles = var.getAlleles();
+				if (alleles.length <= 2) {
+					tfOut.writeln(ln);
+				} else {
+
+					// nrVariants = alleles.length-1
+					byte[][] genotypeAlleles = var.getGenotypeAlleles(); // [ind][0]/[ind][1]
+
+
+					int nrLinesWritten = 0;
+					for (byte i = 1; i < alleles.length; i++) {
+
+						String ref = alleles[0];
+						String alt = alleles[i];
+						String lnout = var.getChr()
+								+ "\t" + var.getPos()
+								+ "\t" + var.getId()
+								+ "\t" + ref
+								+ "\t" + alt
+								+ "\t.\t.\t.\tGT";
+
+
+						for (int ind = 0; ind < genotypeAlleles.length; ind++) {
+							byte gt1 = genotypeAlleles[ind][0];
+							byte gt2 = genotypeAlleles[ind][1];
+
+
+							if (gt1 == i) {
+								gt1 = 1;
+							} else {
+								gt1 = 0;
+							}
+
+							if (gt2 == i) {
+								gt2 = 1;
+							} else {
+								gt2 = 0;
+							}
+
+							lnout += "\t" + gt1 + "/" + gt2;
+						}
+						tfOut.writeln(lnout);
+						nrLinesWritten++;
+					}
+
+					System.out.println(alleles.length + " alleles detected for variant: " + var.getId() + "/" + var.getChr() + ":" + var.getPos() + " \tnrlines: " + nrLinesWritten);
+				}
+			}
+			ln = tfIn.readLine();
+		}
+		tfIn.close();
+		tfOut.close();
 	}
 }

@@ -38,26 +38,31 @@ public class GATKBashScriptWriter {
 //			 reGenotypeJobs(list, output, dir);
 //			reGenotypeGVCFJobs(list, dir, output);
 
-			list = "/Data/Projects/2014-FR-Reseq/2015-finalRun/IndelRealign/2015-03-30-AllSelectedBAMFiles.txt";
+			list = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Jobs/IndelRealign/2015-03-30-AllSelectedBAMFiles.txt";
 			outputdir = "/broad/hptmp/hwestra/variantcalling/2015-03-30/IndelRealigner/";
-			jobdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/IndelRealign/jobs/";
+			jobdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Jobs/IndelRealign/jobs/";
 //			indelrealign(list, jobdir, outputdir);
 
-//bqsr(list,bqsrtabledir,jobdir);
+			jobdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Jobs/BQSR/jobsDetermineBQSR/";
+			bqsr(list, bqsrtabledir, jobdir);
+
+			jobdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Jobs/BQSR/jobsDetermineBQSRRecal/";
+			Gpio.createDir(jobdir);
+			bqsrRecal(list, bqsrtabledir, jobdir);
 //			Gpio.createDir(jobdir);
 //			bqsrApply(list, bqsrtabledir, outputdir, jobdir);
 
 
-			list = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Regenotyping/BQSRBamFiles.txt";
-			outputdir = "/broad/hptmp/hwestra/variantcalling/2015-03-30/Regenotyping/";
-			jobdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Regenotyping/jobs/";
-			Gpio.createDir(jobdir);
-			reGenotypeJobs(list, jobdir, outputdir);
-
-			list = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Regenotyping/gvcfFiles.txt";
-			jobdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Regenotyping/jobsgvcf/";
-			outputdir = "/broad/hptmp/hwestra/variantcalling/2015-03-30/MergedGenotypes/";
-			reGenotypeGVCFJobs(list, outputdir, jobdir);
+//			list = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Regenotyping/BQSRBamFiles.txt";
+//			outputdir = "/broad/hptmp/hwestra/variantcalling/2015-03-30/Regenotyping/";
+//			jobdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Regenotyping/jobs/";
+//			Gpio.createDir(jobdir);
+//			reGenotypeJobs(list, jobdir, outputdir);
+//
+//			list = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Regenotyping/gvcfFiles.txt";
+//			jobdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/Regenotyping/jobsgvcf/";
+//			outputdir = "/broad/hptmp/hwestra/variantcalling/2015-03-30/MergedGenotypes/";
+//			reGenotypeGVCFJobs(list, outputdir, jobdir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -116,6 +121,61 @@ public class GATKBashScriptWriter {
 					"\n";
 			out.writeln(outStr);
 			out.close();
+		}
+
+
+	}
+
+
+	public static void bqsrRecal(String fileList, String outputdir, String jobdir) throws IOException {
+		TextFile tf = new TextFile(fileList, TextFile.R);
+		String[] files = tf.readAsArray();
+		tf.close();
+
+
+		for (String file : files) {
+
+			String[] fileelems = file.split("/");
+			String[] sampleNameElems = fileelems[fileelems.length - 1].split("\\.");
+			String sampleName = sampleNameElems[0];
+
+			TextFile out = new TextFile(jobdir + sampleName + ".sh", TextFile.W);
+			String outStr = "nice -n 20 java -Xmx4g -jar /broad/hptmp/hwestra/variantcalling/GATK3.3/GenomeAnalysisTK.jar \\\n" +
+					"   -T BaseRecalibrator \\\n" +
+					"   -R /humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta \\\n" +
+					"   -I " + file + "\\\n" +
+					"   -knownSites /humgen/gsa-hpprojects/GATK/bundle/current/b37/dbsnp_138.b37.vcf \\\n" +
+					"   -knownSites /humgen/gsa-hpprojects/GATK/bundle/current/b37/1000G_phase1.indels.b37.vcf \\\n" +
+					"   -knownSites /humgen/gsa-hpprojects/GATK/bundle/current/b37/Mills_and_1000G_gold_standard.indels.b37.vcf \\\n" +
+					"   -L /medpop/srlab/hwestra/fr-reseq/2015-03-30-FinalRun/2015-03-30-allRegionsWith50PercentOfSamplesAbove20x.bed \\\n" +
+					"   -BQSR " + outputdir + sampleName + ".bqsrTable \\\n" +
+					"   -o " + outputdir + sampleName + "-after.bqsrTable \\\n" +
+					"   \n" +
+					"\n";
+			outStr += "nice -n 20 java -Xmx4g -jar /broad/hptmp/hwestra/variantcalling/GATK3.3/GenomeAnalysisTK.jar \\\n" +
+					"   -T AnalyzeCovariates \\\n" +
+					"   -R /humgen/gsa-hpprojects/GATK/bundle/current/b37/human_g1k_v37.fasta \\\n" +
+					"   -before " + outputdir + sampleName + ".bqsrTable \\\n" +
+					"   -after " + outputdir + sampleName + "-after.bqsrTable \\\n" +
+					"   -plots " + outputdir + sampleName + "-cal.pdf \\\n" +
+					"   \n" +
+					"\n";
+			out.writeln(outStr);
+			out.close();
+
+
+			/*
+			java	–jar	GenomeAnalysisTK.jar	–T	AnalyzeCovariates	\
+
+–R	human.fasta	\
+
+–before	recal.table	\
+
+–aSer	aSer_recal.table	\
+
+–plots	recal_plots.pdf
+			 */
+
 		}
 
 
