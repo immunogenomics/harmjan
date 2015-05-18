@@ -28,14 +28,14 @@ public class PlayGround {
 //		g.cd28April21PlinkFiles();
 		//	g.compare();
 
-		VCFFunctions v = new VCFFunctions();
-		String vcfIn = "/Data/Ref/BeagleRef/1kg.phase3.v5-filtered.merged.vcf.gz";
-		String vcfOut = "";
-		try {
-			v.rewriteVariantsAtSamePositionAsMultiAllelic(vcfIn, vcfOut);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		VCFFunctions v = new VCFFunctions();
+//		String vcfIn = "/Data/Ref/BeagleRef/1kg.phase3.v5-filtered.merged.vcf.gz";
+//		String vcfOut = "";
+//		try {
+//			v.rewriteVariantsAtSamePositionAsMultiAllelic(vcfIn, vcfOut);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 
 	}
 
@@ -63,29 +63,29 @@ public class PlayGround {
 		}
 	}
 
-	public void compare() {
-		try {
-			String vcf1 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/5-1KG-SequencedRegions/filtered.vcf";
-			String vcf1out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/1kg.vcf";
-			String vcf2 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/4-ICAndSeqVariantMerged/merged.vcf";
-			String vcf2out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/seq.vcf";
-			String log = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/log.txt";
-			VCFFunctions v = new VCFFunctions();
-			v.compareAndCorrectVCFVariants(
-					vcf1, vcf1out, vcf2, vcf2out, log, false, true);
-
-			vcf2 = vcf2out;
-			vcf2out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/seq2.vcf";
-			log = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/log2.txt";
-
-			v.compareAndCorrectVCFVariants(
-					vcf1, vcf1out, vcf2, vcf2out, log, false, true);
-
-
-		} catch (Exception e) {
-
-		}
-	}
+//	public void compare() {
+//		try {
+//			String vcf1 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/5-1KG-SequencedRegions/filtered.vcf";
+//			String vcf1out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/1kg.vcf";
+//			String vcf2 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/4-ICAndSeqVariantMerged/merged.vcf";
+//			String vcf2out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/seq.vcf";
+//			String log = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/log.txt";
+//			VCFFunctions v = new VCFFunctions();
+//			v.compareAndCorrectVCFVariants(
+//					vcf1, vcf1out, vcf2, vcf2out, log, false, true);
+//
+//			vcf2 = vcf2out;
+//			vcf2out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/seq2.vcf";
+//			log = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/test/log2.txt";
+//
+//			v.compareAndCorrectVCFVariants(
+//					vcf1, vcf1out, vcf2, vcf2out, log, false, true);
+//
+//
+//		} catch (Exception e) {
+//
+//		}
+//	}
 
 	public void cd28April21() {
 
@@ -93,11 +93,11 @@ public class PlayGround {
 		VCFFunctions v = new VCFFunctions();
 		PedAndMapFunctions p = new PedAndMapFunctions();
 
-		String outputPath = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/";
+		String outputPath = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-05-18-AllRegions/";
 
 		// refilter the reference VCF.
 		String startVCF = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-11-MixupsFixed/merged-ICIds-MixupsFixed.vcf";
-		String regionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-21-CD28/cd28region.bed";
+		String regionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/allLoci.bed";
 		String mergedhg19immunochipPed = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19/merge";
 		String mergedhg19immunochipMap = mergedhg19immunochipPed + ".map";
 		String mergedhg19immunochipFAM = mergedhg19immunochipPed + ".fam";
@@ -105,15 +105,17 @@ public class PlayGround {
 		String beagle = "/Data/Tools/beagle/beagle.r1399.jar";
 		String merged1kg = "/Data/Ref/BeagleRef/1kg.phase3.v5-filtered.merged.vcf.gz";
 		String bcftools = "/Data/Tools/bcftools/bcftools-1.2/bcftools";
-		boolean skipimpute = true;
+		boolean skipimpute = false;
 
 		try {
 			// filter bad variants
 			String filteredVCFOut = outputPath + "1-SeqVariantFilter/";
 			Gpio.createDir(filteredVCFOut);
 			v.filterLowFrequencyVariants(startVCF, filteredVCFOut, true, 10, 30, 0.90, 5);
-			String seqvcfwithmultiallelicvariantssplit = filteredVCFOut +"filtered-splitmultiallelic.vcf";
-			v.splitMultipleAllelicVariants(filteredVCFOut + "filtered.vcf", seqvcfwithmultiallelicvariantssplit);
+			String seqvcfwithmultiallelicvariantssplit = filteredVCFOut + "filtered-splitmultiallelic.vcf";
+
+			seqvcfwithmultiallelicvariantssplit = filteredVCFOut + "filtered.vcf";
+			//v.splitMultipleAllelicVariants(filteredVCFOut + "filtered.vcf", seqvcfwithmultiallelicvariantssplit);
 
 			// compare against IC genotypes
 			//t.compareVCFGenotypesToPedAndMap(outputPath + "1-SeqVariantFilter/filtered.vcf", mergedhg19immunochipPed, filteredVCFOut, true);
@@ -153,66 +155,51 @@ public class PlayGround {
 			// filter 1000 genomes for sequenced regions
 			String kgSeqRegions = outputPath + "5-1KG-SequencedRegions/";
 			Gpio.createDir(kgSeqRegions);
-			// v.filterVCFForBedRegions(merged1kg, kgSeqRegions + "filtered.vcf", regionFile);
+			v.filterVCFForBedRegions(merged1kg, kgSeqRegions + "filtered.vcf", regionFile);
 			v.summarizeVCF(kgSeqRegions + "filtered.vcf", kgSeqRegions + "filtered-summary.txt");
 
 			// compare reference and 1kg
 			String matchedPanelsOut = outputPath + "6-PanelsMatched/";
 			Gpio.createDir(matchedPanelsOut);
-			v.compareAndCorrectVCFVariants(
-					kgSeqRegions + "filtered.vcf",
-					matchedPanelsOut + "1kg.vcf",
-					ICAndSeqVariantMerged + "merged.vcf",
-					matchedPanelsOut + "seqpanel.vcf",
-					matchedPanelsOut + "seqpanelto1kgcomparisonlog.txt",
-					true,
-					false);
 
-			// check the converted panel against itself.
-			v.compareAndCorrectVCFVariants(
-					ICAndSeqVariantMerged + "merged.vcf",
-					ICAndSeqVariantMerged + "merged-recheck.vcf",
-					matchedPanelsOut + "seqpanel.vcf",
-					matchedPanelsOut + "seqpanel-recheck.vcf",
-					matchedPanelsOut + "seqpaneltoseqpanel-recheck-comparisonlog.txt",
-					true,
-					false);
-
-			v.compareAndCorrectVCFVariants(
+			v.mergeAndIntersectVCFVariants(
 					kgSeqRegions + "filtered.vcf",
-					matchedPanelsOut + "1kg-recheck.vcf",
-					matchedPanelsOut + "seqpanel.vcf",
-					matchedPanelsOut + "seqpanel-recheck1kg.vcf",
-					matchedPanelsOut + "seqpaneltoseqpanel-recheck-1kg-comparisonlog.txt",
-					true,
-					false);
+					ICAndSeqVariantMerged + "merged.vcf",
+					matchedPanelsOut + "1kg-matched.vcf",
+					matchedPanelsOut + "seq-matched.vcf",
+					matchedPanelsOut + "1kg-seq-merged.vcf",
+					"/",
+					matchedPanelsOut + "mergelog.txt",
+					true);
+
+// debug
+//			v.mergeAndIntersectVCFVariants(
+//					matchedPanelsOut + "1kg-matched.vcf",
+//					matchedPanelsOut + "seq-matched.vcf",
+//					matchedPanelsOut + "1kg-matched-codecheck.vcf",
+//					matchedPanelsOut + "seq-matched-codecheck.vcf",
+//					matchedPanelsOut + "1kg-seq-merged-codecheck.vcf",
+//					"/",
+//					matchedPanelsOut + "mergelog-codecheck.txt",
+//					true);
 
 			// sort vcfs
-			t.sortVCF(matchedPanelsOut + "seqpanel.vcf", matchedPanelsOut + "seqpanel-sorted.vcf", matchedPanelsOut + "sort.sh");
-			t.sortVCF(matchedPanelsOut + "1kg.vcf", matchedPanelsOut + "1kg-sorted.vcf", matchedPanelsOut + "sort.sh");
+			t.sortVCF(matchedPanelsOut + "1kg-matched.vcf", matchedPanelsOut + "1kg-matched-sorted.vcf", matchedPanelsOut + "sort.sh");
+			t.sortVCF(matchedPanelsOut + "seq-matched.vcf", matchedPanelsOut + "seq-matched-sorted.vcf", matchedPanelsOut + "sort.sh");
 
 			// phase sequencing data
 			if (!skipimpute) {
 				pb = new ProcessBuilder("java",
 						"-jar", beagle,
 						"ped=/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19variantsinsequencedregions/merge.fam",
-						"gt=" + matchedPanelsOut + "seqpanel-sorted.vcf",
-						"out=" + matchedPanelsOut + "seqpanel-phased"
+						"gt=" + matchedPanelsOut + "seq-matched-sorted.vcf",
+						"out=" + matchedPanelsOut + "seqpanel-matched-sorted-phased"
 				);
 
 				t.run(pb);
-				t.sortVCF(matchedPanelsOut + "seqpanel-phased.vcf.gz", matchedPanelsOut + "seqpanel-phased-sorted.vcf", matchedPanelsOut + "sort.sh");
+				t.sortVCF(matchedPanelsOut + "seqpanel-matched-sorted-phased.vcf.gz",
+						matchedPanelsOut + "seqpanel-matched-sorted-phased-sorted.vcf", matchedPanelsOut + "sort.sh");
 			}
-
-			v.compareAndCorrectVCFVariants(
-					kgSeqRegions + "filtered.vcf",
-					matchedPanelsOut + "1kg-recheck-tophased.vcf",
-					matchedPanelsOut + "seqpanel-phased-sorted.vcf",
-					matchedPanelsOut + "seqpanel-phased-sorted-1kgchecked.vcf",
-					matchedPanelsOut + "seqpanel-phased-sorted-1kgchecked-log.txt",
-					true,
-					false);
-
 
 			// impute 1kg into reference panel
 			String imputedPanelsOut = outputPath + "7-PanelsImputed/";
@@ -221,67 +208,50 @@ public class PlayGround {
 
 				pb = new ProcessBuilder("java",
 						"-jar", beagle,
-						"ref=" + matchedPanelsOut + "1kg-sorted.vcf",
+						"ref=" + matchedPanelsOut + "1kg-matched-sorted.vcf",
 						"ped=/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19variantsinsequencedregions/merge.fam",
-						"gt=" + matchedPanelsOut + "seqpanel-phased-sorted.vcf",
+						"gt=" + matchedPanelsOut + "seqpanel-matched-sorted-phased-sorted.vcf",
 						"out=" + imputedPanelsOut + "seqpanel-1kgimputed"
 				);
 				t.run(pb);
 
-				v.compareAndCorrectVCFVariants(
-						kgSeqRegions + "filtered.vcf",
-						imputedPanelsOut + "1kg-recheck-tophased.vcf",
-						imputedPanelsOut + "seqpanel-1kgimputed.vcf.gz",
-						imputedPanelsOut + "seqpanel-1kgimputed-compared1kg.vcf",
-						imputedPanelsOut + "seqpanel-1kgimputed-compared1kg.txt",
-						true,
-						false);
-
 				pb = new ProcessBuilder("java",
 						"-jar", beagle,
-						"ref=" + matchedPanelsOut + "1kg-sorted.vcf",
+						"ref=" + matchedPanelsOut + "1kg-matched-sorted.vcf",
 						"ped=/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19variantsinsequencedregions/merge.fam",
-						"gt=" + matchedPanelsOut + "seqpanel-sorted.vcf",
+						"gt=" + matchedPanelsOut + "seq-matched-sorted.vcf",
 						"out=" + imputedPanelsOut + "seqpanel-unphased-1kgimputed"
 				);
 				t.run(pb);
 
-				v.compareAndCorrectVCFVariants(
-						kgSeqRegions + "filtered.vcf",
-						imputedPanelsOut + "1kg-recheck-tophased.vcf",
-						imputedPanelsOut + "seqpanel-unphased-1kgimputed.vcf.gz",
-						imputedPanelsOut + "seqpanel-unphased-1kgimputed-compared1kg.vcf",
-						imputedPanelsOut + "seqpanel-unphased-1kgimputed-compared1kg.txt",
-						true,
-						false);
-
-
-				t.sortVCF(imputedPanelsOut + "seqpanel-1kgimputed.vcf.gz", imputedPanelsOut + "seqpanel-1kgimputed-sorted.vcf", imputedPanelsOut + "sort.sh");
+				t.sortVCF(imputedPanelsOut + "seqpanel-1kgimputed.vcf.gz",
+						imputedPanelsOut + "seqpanel-1kgimputed-sorted.vcf", imputedPanelsOut + "sort.sh");
 
 
 				// impute reference panel into 1kg
 				pb = new ProcessBuilder("java",
 						"-jar", beagle,
-						"ref=" + matchedPanelsOut + "seqpanel-phased-sorted.vcf",
+						"ref=" + matchedPanelsOut + "seqpanel-matched-sorted-phased-sorted.vcf",
 						"ped=/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19variantsinsequencedregions/merge.fam",
-						"gt=" + matchedPanelsOut + "1kg-sorted.vcf",
+						"gt=" + matchedPanelsOut + "1kg-matched-sorted.vcf",
 						"out=" + imputedPanelsOut + "1kg-seqpanelimputed"
 				);
 				t.run(pb);
-				t.sortVCF(imputedPanelsOut + "1kg-seqpanelimputed.vcf.gz", imputedPanelsOut + "1kg-seqpanelimputed-sorted.vcf", imputedPanelsOut + "sort.sh");
+				t.sortVCF(imputedPanelsOut + "1kg-seqpanelimputed.vcf.gz",
+						imputedPanelsOut + "1kg-seqpanelimputed-sorted.vcf", imputedPanelsOut + "sort.sh");
 			}
 
 			// merge with original phased datasets..
 			String imputedPanelsMergedOut = outputPath + "8-PanelsImputedMerged/";
 			Gpio.createDir(imputedPanelsMergedOut);
-			String unimputed1kg = matchedPanelsOut + "1kg-sorted.vcf";
+			String unimputed1kg = matchedPanelsOut + "1kg-matched-sorted.vcf";
 			String imputed1kg = imputedPanelsOut + "1kg-seqpanelimputed-sorted.vcf";
 			String unimputed1kgout = imputedPanelsMergedOut + "1kg-imputedVariantsFiltered.vcf";
 			v.filterVCFVariants(unimputed1kg, imputed1kg, unimputed1kgout); // remove imputed variants from the original vcf if there is any overlap
 
 			String files = unimputed1kgout + " " + imputed1kg;
-			String mergedout = imputedPanelsMergedOut + "1kg-seqpanelimputed-merged.vcf";
-			String mergedoutsorted = imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted.vcf";
+			String mergedout = imputedPanelsMergedOut + "1kg-seqpanelimputed-mergedWithUnimputed.vcf";
+			String mergedoutsorted = imputedPanelsMergedOut + "1kg-seqpanelimputed-seqpanelimputed-mergedWithUnimputed-sorted.vcf";
 			String bashfilename = imputedPanelsMergedOut + "sortmerge.sh";
 			System.out.println("concat 1");
 			System.out.println(files);
@@ -289,90 +259,46 @@ public class PlayGround {
 			System.out.println(mergedoutsorted);
 			t.concatVCF(files, mergedout, mergedoutsorted, bashfilename); // concatenate vcf files
 
-
 			// repeat on the sequenced data..
-			String unimputedseq = matchedPanelsOut + "seqpanel-phased-sorted.vcf";
-			String imputedseq = imputedPanelsOut + "seqpanel-1kgimputed-sorted.vcf";
+			String unimputedseq = matchedPanelsOut + "seqpanel-matched-sorted-phased-sorted.vcf";
+			String imputedseq = imputedPanelsOut + "seqpanel-1kgimputed.vcf.gz";
 			String unimputedseqout = imputedPanelsMergedOut + "seqpanel-imputedVariantsFiltered.vcf";
-			v.filterVCFVariants(unimputedseq, imputedseq, unimputedseqout);
+			v.filterVCFVariants(unimputedseq, imputedseq, unimputedseqout); // remove imputed variants from original vcf if there is any overlap
 
 			files = unimputedseqout + " " + imputedseq;
-			mergedout = imputedPanelsMergedOut + "seqpanel-1kgimputed-merged.vcf";
-			mergedoutsorted = imputedPanelsMergedOut + "seqpanel-1kgimputed-merged-sorted.vcf";
+			mergedout = imputedPanelsMergedOut + "seqpanel-1kgimputed-mergedWithUnimputed.vcf";
+			mergedoutsorted = imputedPanelsMergedOut + "seqpanel-1kgimputed-1kgimputed-mergedWithUnimputed-sorted.vcf";
 			bashfilename = imputedPanelsMergedOut + "sortmerge.sh";
 			System.out.println("concat 2");
 			System.out.println(files);
 			System.out.println(mergedout);
 			System.out.println(mergedoutsorted);
-			t.concatVCF(files, mergedout, mergedoutsorted, bashfilename);
+			t.concatVCF(files, mergedout, mergedoutsorted, bashfilename); // concatenate
 
-			// remove variants that don't intersect
-			// TODO: Beagle falsely flips alleles?
-			v.compareAndCorrectVCFVariants(
-					imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted.vcf",
-					imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted-matched.vcf",
-					imputedPanelsMergedOut + "seqpanel-1kgimputed-merged-sorted.vcf",
-					imputedPanelsMergedOut + "seqpanel-1kgimputed-merged-sorted-matched.vcf",
-					imputedPanelsMergedOut + "match-log.txt", false, true);
 
-			// also compare with imputed
-			v.compareAndCorrectVCFVariants(
-					imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted.vcf",
-					imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted-matched.vcf",
-					unimputedseq,
-					imputedPanelsMergedOut + "seqpanel-unimputed-comparedto-1kgseqpanelimputed.vcf",
-					imputedPanelsMergedOut + "match-log-1gseqpanelimputedvsunimputedseq.txt", false, true);
-
-			// bgzip and merge
+			// bgzip and index
 			System.out.println("bgzip and index");
-			v.replaceHeader(imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted-matched.vcf", imputed1kg, imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted-matched-header.vcf");
-			t.bgzipAndIndex(imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted-matched-header.vcf", imputedPanelsMergedOut + "bgzipindex.sh");
-			t.bgzipAndIndex(imputedPanelsMergedOut + "seqpanel-1kgimputed-merged-sorted-matched.vcf", imputedPanelsMergedOut + "bgzipindex.sh");
+			v.replaceHeader(imputedPanelsMergedOut + "seqpanel-1kgimputed-1kgimputed-mergedWithUnimputed-sorted.vcf",
+					imputed1kg,
+					imputedPanelsMergedOut + "seqpanel-1kgimputed-1kgimputed-mergedWithUnimputed-sorted-header.vcf");
 
 			// merge
 			System.out.println("merge");
-			String imputedPanelsMergedMergedOut = outputPath + "9-PanelsMerged/";
-			Gpio.createDir(imputedPanelsMergedMergedOut);
-			files = imputedPanelsMergedOut + "1kg-seqpanelimputed-merged-sorted-matched-header.vcf.gz " + imputedPanelsMergedOut + "seqpanel-1kgimputed-merged-sorted-matched.vcf.gz";
-			System.out.println(files);
-			t.mergeVCF(files, imputedPanelsMergedMergedOut + "merged.vcf", imputedPanelsMergedMergedOut + "merge.sh");
+			String finalImputationPanelsOut = outputPath + "9-ImputationPanels/";
+			Gpio.createDir(finalImputationPanelsOut);
 
-			// compare to original imputed files
-			v.compareAndCorrectVCFVariants(
-					kgSeqRegions + "filtered.vcf",
-					imputedPanelsMergedMergedOut + "1kg-matched.vcf",
-					imputedPanelsMergedMergedOut + "merged.vcf",
-					imputedPanelsMergedMergedOut + "merged-comparedTo1KgUnimputed.vcf",
-					imputedPanelsMergedMergedOut + "merged-comparedTo1KgUnimputed.txt", false, true);
+			v.mergeAndIntersectVCFVariants(
+					imputedPanelsMergedOut + "seqpanel-1kgimputed-1kgimputed-mergedWithUnimputed-sorted-header.vcf",
+					imputedPanelsMergedOut + "seqpanel-1kgimputed-1kgimputed-mergedWithUnimputed-sorted.vcf",
+					finalImputationPanelsOut + "1kg.vcf",
+					finalImputationPanelsOut + "seq.vcf",
+					finalImputationPanelsOut + "1kg-seq-merged.vcf",
+					"|",
+					finalImputationPanelsOut + "mergelog.txt",
+					true);
 
-			v.compareAndCorrectVCFVariants(
-					matchedPanelsOut + "seqpanel.vcf",
-					imputedPanelsMergedMergedOut + "seqpanel-matched.vcf",
-					imputedPanelsMergedMergedOut + "merged.vcf",
-					imputedPanelsMergedMergedOut + "merged-comparedToSeqUnimputed.vcf",
-					imputedPanelsMergedMergedOut + "merged-comparedToSeqUnimputed.txt", false, true);
 
-			v.summarizeVCF(imputedPanelsMergedMergedOut + "merged.vcf", imputedPanelsMergedMergedOut + "merged-summarystats.txt");
-
-			// sort vcfs
-//			t.sortVCF(imputedPanelsOut + "seqpanel-1kgimputed.vcf.gz", imputedPanelsOut + "seqpanel-1kgimputed-sorted.vcf", imputedPanelsOut + "sort.sh");
-//			t.sortVCF(imputedPanelsOut + "1kg-seqpanelimputed.vcf.gz", imputedPanelsOut + "1kg-seqpanelimputed-sorted.vcf", imputedPanelsOut + "sort.sh");
-
-			// merge vcfs
-//			String imputedPanelsMergedOut = outputPath + "8-PanelsImputedMerged/";
-//			Gpio.createDir(imputedPanelsMergedOut);
-//			// v.megeVCFSamples(imputedPanelsOut + "1kg-seqpanelimputed.vcf", imputedPanelsOut + "seqpanel-1kgimputed.vcf", imputedPanelsMergedOut+"merged.vcf");
-//			pb = new ProcessBuilder(bcftools,
-//					"merge",
-//					"-m", "all",
-//					"-o", imputedPanelsMergedOut + "merged.vcf",
-//					"-O", "v",
-//					imputedPanelsOut + "seqpanel-1kgimputed-sorted.vcf",
-//					imputedPanelsOut + "1kg-seqpanelimputed-sorted.vcf"
-//			);
-			//t.run(pb);
-
-			// prepare immunochip samples
+			v.summarizeVCF(finalImputationPanelsOut + "1kg-seq-merged.vcf", finalImputationPanelsOut + "1kg-seq-merged-summarystats.txt");
 
 
 		} catch (Exception e) {
@@ -853,10 +779,10 @@ public class PlayGround {
 	}
 
 	public String preparePlinkDataset(String origmap, String removeFile, String outdir, String referenceVCF, String regionFile) throws IOException {
-		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
-		VCFFunctions vcfFunctions = new VCFFunctions();
-		ProcessBuilder pb = null;
-		GenotypeTools t = new GenotypeTools();
+//		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
+//		VCFFunctions vcfFunctions = new VCFFunctions();
+//		ProcessBuilder pb = null;
+//		GenotypeTools t = new GenotypeTools();
 //		// String referenceVCF = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MergedWithIC/merged-lowfreqvariantsremoved-sorted-phased-sorted.vcf";
 ////
 //		String map = origmap + ".map";
@@ -934,12 +860,12 @@ public class PlayGround {
 //
 //		// next up: beagle compare
 //
-		vcfFunctions.compareAndCorrectVCFVariants(referenceVCF,
-				outdir + "refadj.vcf",
-				sortedvcf,
-				outdir + "vcf-sorted-matched.vcf",
-				outdir + "matchlog.txt", false, false);
-		return outdir + "vcf-sorted-matched.vcf";
+//		vcfFunctions.compareAndCorrectVCFVariants(referenceVCF,
+//				outdir + "refadj.vcf",
+//				sortedvcf,
+//				outdir + "vcf-sorted-matched.vcf",
+//				outdir + "matchlog.txt", false, false);
+//		return outdir + "vcf-sorted-matched.vcf";
 		// impute filtered
 //		pb = new ProcessBuilder("java",
 //				"-jar",
@@ -960,6 +886,6 @@ public class PlayGround {
 //				"out=" + sortedvcfphased,
 //				"nthreads=4");
 //		run(pb);
-
+		return null;
 	}
 }

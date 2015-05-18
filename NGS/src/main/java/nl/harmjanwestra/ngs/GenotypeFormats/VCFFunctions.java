@@ -1,10 +1,12 @@
 package nl.harmjanwestra.ngs.GenotypeFormats;
 
-import com.gs.collections.api.list.ListIterable;
+import com.gs.collections.api.RichIterable;
+import com.gs.collections.api.list.MutableList;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
 import nl.harmjanwestra.ngs.GenotypeTools;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.vcf.VCFVariantType;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
@@ -13,10 +15,7 @@ import umcg.genetica.math.stats.HWE;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by hwestra on 4/8/15.
@@ -1450,251 +1449,262 @@ public class VCFFunctions {
 		vcftf.close();
 	}
 
-	public void compareAndCorrectVCFVariants(String vcf1,
-											 String vcf1out,
-											 String vcf2,
-											 String vcf2out,
-											 String log,
-											 boolean keepNonIntersectingVariants,
-											 boolean keepMonomorphic) throws IOException {
-		ArrayList<Feature> vcf1variants = getVariantsFromVCF(vcf1);
-		ArrayList<Feature> vcf2variants = getVariantsFromVCF(vcf2);
-		GenotypeTools tools = new GenotypeTools();
-		HashSet<Feature> intersectVariants = tools.intersectVariants(vcf1variants, vcf2variants);
-
-		System.out.println("checking " + vcf1 + " vs " + vcf2);
-		System.out.println(intersectVariants.size() + " variants intersect");
-
-		ArrayList<Feature> variantsToExclude = new ArrayList<Feature>();
-
-		TextFile logfile = new TextFile(log, TextFile.W);
-		logfile.writeln(intersectVariants.size() + " variants shared");
-
-		logfile.writeln("chr\tpos\trs\talleles2\tminor2\tmaf2\tallleles-ref\tminor-ref\tmaf-ref\treason\tinfo2");
-		if (intersectVariants.size() > 0) {
-			// get genotypes for intersected variants..
-			FastListMultimap<Feature, VCFVariant> variantsvcf1 = getVCFVariants(vcf1, intersectVariants);
-
-			TextFile outvcf = new TextFile(vcf2out, TextFile.W);
-
-			TextFile vcfIn = new TextFile(vcf2, TextFile.R);
-
-			String ln = vcfIn.readLine();
-			while (ln != null) {
-
-				if (ln.startsWith("#")) {
-					outvcf.writeln(ln);
-				} else {
-					VCFVariant variant2 = new VCFVariant(ln);
-					Feature f = new Feature();
-					f.setChromosome(Chromosome.parseChr(variant2.getChr()));
-					f.setStart(variant2.getPos());
-					f.setStop(variant2.getPos());
-
-
-					if (intersectVariants.contains(f)) {
-						String[] alleles2 = variant2.getAlleles();
-						String minorAllele2 = variant2.getMinorAllele();
-
-						ListIterable<VCFVariant> refVariants = variantsvcf1.get(f); // get all variants at this position..
-						// compare
-
-						boolean variantHasMatch = false;
-						if (refVariants.size() > 1) {
-							System.out.println(variant2.getId() + " has " + refVariants.size() + " counterparts in ref.");
-						}
-						for (VCFVariant refVariant : refVariants) {
-							// check the alleles
-							String[] alleles1 = refVariant.getAlleles();
-
-							String minorAllele1 = refVariant.getMinorAllele();
-
-							String logstr = variant2.getChr()
-									+ "\t" + variant2.getPos()
-									+ "\t" + variant2.getId()
-
-									+ "\t" + Strings.concat(alleles2, Strings.comma)
-									+ "\t" + minorAllele1
-									+ "\t" + variant2.getMAF()
-									+ "\t" + Strings.concat(alleles1, Strings.comma)
-									+ "\t" + minorAllele1
-									+ "\t" + refVariant.getMAF()
-									+ "\t" + variant2.getInfo();
-
-
-							int nridenticalalleles = 0;
-
-							for (int i = 0; i < alleles1.length; i++) {
-								String allele1 = alleles1[i];
-								for (int j = 0; j < alleles2.length; j++) {
-									if (alleles2[j].equals(allele1)) {
-										nridenticalalleles++;
-									}
-								}
-							}
-
-							if (refVariant.isBiallelic() && variant2.isBiallelic() ||
-									(keepMonomorphic && (refVariant.isMultiallelic() || variant2.isMonomorphic()))) {
-								String allele11 = alleles1[0];
-								String allele12 = alleles1[1];
-								String allele21 = alleles2[0];
-								String allele22 = alleles2[1];
-
-								// this is true if variants have identical alleles
-								// and is always true for A/T and C/G variants
-								if (nridenticalalleles == 2) {
-
-									// check A/T G/C variants
-									if (allele11.equals(BaseAnnot.getComplement(allele12)) && !minorAllele1.equals(minorAllele2)) {
-										// both variants ar AT or GC snps
-										logstr += "\tAT or CG with DiffMinor";
-										// System.out.println("AT/CG: minor alleles different: " + allele11 + "/" + allele12 + "-" + minorAllele1 + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
-									} else {
-										// alleles are identical. check the direction of the alleles
-										if (minorAllele1.equals(minorAllele2)) {
-											if (allele11.equals(allele21)) {
-												// reference alleles are identical
-
-												variantHasMatch = true;
-												logstr += "\tOK";
-											} else {
-												// flip the genotypes
-												ln = flipReferenceAllele(ln);
-												variantHasMatch = true;
-												logstr += "\tFLIPOK";
-											}
-										} else {
-											// System.out.println("minor alleles different: " + allele11 + "/" + allele12 + "-" + minorAllele1 + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
-											logstr += "\tDiffMinor";
-										}
-									}
-								} else {
-									// try complement
-									String[] complementAlleles2 = convertToComplement(alleles2);
-									String complementMinorAllele2 = getComplement(minorAllele2);
-									allele21 = complementAlleles2[0];
-									allele22 = complementAlleles2[1];
-									nridenticalalleles = 0;
-
-									for (int i = 0; i < alleles1.length; i++) {
-										String allele1 = alleles1[i];
-										for (int j = 0; j < alleles2.length; j++) {
-											if (complementAlleles2[j].equals(allele1)) {
-												nridenticalalleles++;
-											}
-										}
-									}
-
-									if (nridenticalalleles == 2) {
-										if (minorAllele1.equals(complementMinorAllele2)) {
-											if (allele11.equals(allele21)) {
-												// reference alleles are identical
-												// rewrite allele codes to reflect complement
-												// #CHROM  POS     ID REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1   SAMPLE2
-												String[] elems = ln.split("\t");
-												elems[3] = allele21;
-												elems[4] = allele22;
-												ln = Strings.concat(elems, Strings.tab);
-												variantHasMatch = true;
-												logstr += "\tOK-Complement";
-											} else {
-												// flip the genotypes
-												ln = flipReferenceAllele(ln);
-												String[] elems = ln.split("\t");
-												elems[4] = allele21;
-												elems[3] = allele22;
-												ln = Strings.concat(elems, Strings.tab);
-												variantHasMatch = true;
-												logstr += "\tFLIPOK-Complement";
-											}
-										} else {
-											// System.out.println("minor alleles different: " + allele11 + "/" + allele12 + "-" + minorAllele1 + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
-											logstr += "\tDiffMinor-Complement";
-										}
-									} else {
-										//System.out.println("incompatible alleles: " + allele11 + "/" + allele12 + "-" + minorAllele1 + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
-										logstr += "\tIncompatibleAlleles";
-									}
-								}
-
-							} else if (refVariant.isMonomorphic() || variant2.isMonomorphic()) {
-								// exclude variant from both datasets
-
-//							System.out.println("monomorphic: " + Strings.concat(alleles1, Strings.comma) + "-" + minorAllele1
-//									+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
-								logstr += "\tMonomorph";
-							} else if (refVariant.isMultiallelic() && variant2.isMultiallelic()) {
-								// check whether the alleles are the same and their allele frequencies compare as well.
-
-								if (nridenticalalleles == refVariant.getAlleles().length && nridenticalalleles == variant2.getAlleles().length) {
-									logstr += "\tOK-MultiAllelic";
-								} else {
-//								System.out.println("multi-allelic: " + Strings.concat(alleles1, Strings.comma) + "-" + minorAllele1
-//										+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
-									logstr += "\tIncompatibleAlleles-MultiAllelic";
-								}
-							} else {
-
-//							System.out.println("inconclusive: " + Strings.concat(alleles1, Strings.comma) + "-" + minorAllele1
-//									+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
-								logstr += "\tInconclusive";
-							}
-
-							if (!variantHasMatch) {
-								variantsToExclude.add(f);
-							} else {
-								outvcf.writeln(ln);
-							}
-
-
-							logfile.writeln(logstr + "\t" + variantHasMatch);
-						}
-
-
-					} else if (keepNonIntersectingVariants) {
-						outvcf.writeln(ln);
-
-					}
-				}
-
-				ln = vcfIn.readLine();
-			}
-
-			vcfIn.close();
-			outvcf.close();
-
-		}
-		logfile.close();
-
-		System.out.println("About to exclude: " + variantsToExclude.size() + " variants from reference dataset...");
-
-		TextFile vcfoutref = new TextFile(vcf1out, TextFile.W);
-		TextFile vcfinref = new TextFile(vcf1, TextFile.R);
-		String ln = vcfinref.readLine();
-		while (ln != null) {
-
-			if (ln.startsWith("#")) {
-				vcfoutref.writeln(ln);
-			} else {
-				VCFVariant variant = new VCFVariant(ln);
-				Feature f = new Feature();
-				f.setChromosome(Chromosome.parseChr(variant.getChr()));
-				f.setStart(variant.getPos());
-				f.setStop(variant.getPos());
-				if (!variantsToExclude.contains(f)) {
-					if (keepNonIntersectingVariants) {
-						vcfoutref.writeln(ln);
-					} else if (intersectVariants.contains(f)) {
-						vcfoutref.writeln(ln);
-					}
-				}
-			}
-			ln = vcfinref.readLine();
-		}
-		vcfoutref.close();
-		vcfinref.close();
-
-	}
+//	public void compareAndCorrectVCFVariants(String vcf1,
+//											 String vcf1out,
+//											 String vcf2,
+//											 String vcf2out,
+//											 String log,
+//											 boolean keepNonIntersectingVariants,
+//											 boolean keepMonomorphic) throws IOException {
+//
+//		ArrayList<Feature> vcf1variants = getVariantsFromVCF(vcf1);
+//		ArrayList<Feature> vcf2variants = getVariantsFromVCF(vcf2);
+//		GenotypeTools tools = new GenotypeTools();
+//		HashSet<Feature> intersectVariants = tools.intersectVariants(vcf1variants, vcf2variants);
+//
+//
+//		System.out.println("checking " + vcf1 + " vs " + vcf2);
+//		System.out.println(intersectVariants.size() + " variants intersect");
+//
+//		ArrayList<Feature> variantsToExclude = new ArrayList<Feature>();
+//
+//		TextFile logfile = new TextFile(log, TextFile.W);
+//		logfile.writeln(intersectVariants.size() + " variants shared");
+//
+//		logfile.writeln("chr\tpos\trs\talleles2\tminor2\tmaf2\tallleles-ref\tminor-ref\tmaf-ref\treason\tinfo2");
+//		if (intersectVariants.size() > 0) {
+//			// get genotypes for intersected variants..
+//			FastListMultimap<Feature, VCFVariant> variantsvcf1 = getVCFVariants(vcf1, intersectVariants, false);
+//
+//			TextFile outvcf = new TextFile(vcf2out, TextFile.W);
+//
+//			TextFile vcfIn = new TextFile(vcf2, TextFile.R);
+//
+//			String ln = vcfIn.readLine();
+//			while (ln != null) {
+//
+//				if (ln.startsWith("#")) {
+//					outvcf.writeln(ln);
+//				} else {
+//					VCFVariant variant2 = new VCFVariant(ln);
+//					Feature f = new Feature();
+//					f.setChromosome(Chromosome.parseChr(variant2.getChr()));
+//					f.setStart(variant2.getPos());
+//					f.setStop(variant2.getPos());
+//
+//
+//					if (intersectVariants.contains(f)) {
+//						String[] alleles2 = variant2.getAlleles();
+//						String minorAllele2 = variant2.getMinorAllele();
+//
+//						ListIterable<VCFVariant> refVariants = variantsvcf1.get(f); // get all variants at this position..
+//						// compare
+//
+//						boolean variantHasMatch = false;
+//						int nrMatches = 0;
+//						for (VCFVariant refVariant : refVariants) {
+//							// check the alleles
+//							String[] refAlleles = refVariant.getAlleles();
+//
+//							String refMinorAllele = refVariant.getMinorAllele();
+//
+//							String logstr = variant2.getChr()
+//									+ "\t" + variant2.getPos()
+//									+ "\t" + variant2.getId()
+//
+//									+ "\t" + Strings.concat(alleles2, Strings.comma)
+//									+ "\t" + minorAllele2
+//									+ "\t" + variant2.getMAF()
+//									+ "\t" + Strings.concat(refAlleles, Strings.comma)
+//									+ "\t" + refMinorAllele
+//									+ "\t" + refVariant.getMAF()
+//									+ "\t" + variant2.getInfo();
+//
+//
+//							int nridenticalalleles = 0;
+//
+//							for (int i = 0; i < refAlleles.length; i++) {
+//								String allele1 = refAlleles[i];
+//								for (int j = 0; j < alleles2.length; j++) {
+//									if (alleles2[j].equals(allele1)) {
+//										nridenticalalleles++;
+//									}
+//								}
+//							}
+//
+//							if (refVariant.isBiallelic() && variant2.isBiallelic() ||
+//									(keepMonomorphic && (refVariant.isMultiallelic() || variant2.isMonomorphic()))) {
+//								String allele11 = refAlleles[0];
+//								String allele12 = refAlleles[1];
+//								String allele21 = alleles2[0];
+//								String allele22 = alleles2[1];
+//
+//								// this is true if variants have identical alleles
+//								// and is always true for A/T and C/G variants
+//								if (nridenticalalleles == 2) {
+//
+//									// check A/T G/C variants
+//									if (allele11.equals(BaseAnnot.getComplement(allele12)) && !refMinorAllele.equals(minorAllele2)) {
+//										// both variants ar AT or GC snps
+//										logstr += "\tAT or CG with DiffMinor";
+//										// System.out.println("AT/CG: minor alleles different: " + allele11 + "/" + allele12 + "-" + refMinorAllele + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
+//									} else {
+//										// alleles are identical. check the direction of the alleles
+//										if (refMinorAllele.equals(minorAllele2)) {
+//											if (allele11.equals(allele21)) {
+//												// reference alleles are identical
+//
+//												variantHasMatch = true;
+//												nrMatches++;
+//												logstr += "\tOK";
+//											} else {
+//												// flip the genotypes
+//												ln = flipReferenceAllele(ln);
+//												variantHasMatch = true;
+//												nrMatches++;
+//												logstr += "\tFLIPOK";
+//											}
+//										} else {
+//											// System.out.println("minor alleles different: " + allele11 + "/" + allele12 + "-" + refMinorAllele + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
+//											logstr += "\tDiffMinor";
+//										}
+//									}
+//								} else {
+//									// try complement
+//									String[] complementAlleles2 = convertToComplement(alleles2);
+//									String complementMinorAllele2 = getComplement(minorAllele2);
+//									allele21 = complementAlleles2[0];
+//									allele22 = complementAlleles2[1];
+//									nridenticalalleles = 0;
+//
+//									for (int i = 0; i < refAlleles.length; i++) {
+//										String allele1 = refAlleles[i];
+//										for (int j = 0; j < alleles2.length; j++) {
+//											if (complementAlleles2[j].equals(allele1)) {
+//												nridenticalalleles++;
+//											}
+//										}
+//									}
+//
+//									if (nridenticalalleles == 2) {
+//										if (refMinorAllele.equals(complementMinorAllele2)) {
+//											if (allele11.equals(allele21)) {
+//												// reference alleles are identical
+//												// rewrite allele codes to reflect complement
+//												// #CHROM  POS     ID REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1   SAMPLE2
+//												String[] elems = ln.split("\t");
+//												elems[3] = allele21;
+//												elems[4] = allele22;
+//												ln = Strings.concat(elems, Strings.tab);
+//												variantHasMatch = true;
+//												nrMatches++;
+//												logstr += "\tOK-Complement";
+//											} else {
+//												// flip the genotypes
+//												ln = flipReferenceAllele(ln);
+//												String[] elems = ln.split("\t");
+//												elems[4] = allele21;
+//												elems[3] = allele22;
+//												ln = Strings.concat(elems, Strings.tab);
+//												variantHasMatch = true;
+//												nrMatches++;
+//												logstr += "\tFLIPOK-Complement";
+//											}
+//										} else {
+//											// System.out.println("minor alleles different: " + allele11 + "/" + allele12 + "-" + refMinorAllele + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
+//											logstr += "\tDiffMinor-Complement";
+//										}
+//									} else {
+//										//System.out.println("incompatible alleles: " + allele11 + "/" + allele12 + "-" + refMinorAllele + "\t" + allele21 + "/" + allele22 + "-" + minorAllele2);
+//										logstr += "\tIncompatibleAlleles";
+//									}
+//								}
+//
+//							} else if (refVariant.isMonomorphic() || variant2.isMonomorphic()) {
+//								// exclude variant from both datasets
+//
+////							System.out.println("monomorphic: " + Strings.concat(refAlleles, Strings.comma) + "-" + refMinorAllele
+////									+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
+//								logstr += "\tMonomorph";
+//							} else if (refVariant.isMultiallelic() && variant2.isMultiallelic()) {
+//								// check whether the alleles are the same and their allele frequencies compare as well.
+//
+//								if (nridenticalalleles == refVariant.getAlleles().length && nridenticalalleles == variant2.getAlleles().length) {
+//									logstr += "\tOK-MultiAllelic";
+//								} else {
+////								System.out.println("multi-allelic: " + Strings.concat(refAlleles, Strings.comma) + "-" + refMinorAllele
+////										+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
+//									logstr += "\tIncompatibleAlleles-MultiAllelic";
+//								}
+//							} else {
+//
+////							System.out.println("inconclusive: " + Strings.concat(refAlleles, Strings.comma) + "-" + refMinorAllele
+////									+ Strings.concat(alleles2, Strings.comma) + "-" + minorAllele2);
+//								logstr += "\tInconclusive";
+//							}
+//
+//
+//							logfile.writeln(logstr + "\t" + variantHasMatch);
+//						}
+//
+//						if (!variantHasMatch) {
+//							variantsToExclude.add(f);
+//						} else {
+//							outvcf.writeln(ln);
+//						}
+//
+//						if (refVariants.size() > 1) {
+//							if (nrMatches == 0) {
+//								System.err.println(variant2.getId() + " has " + refVariants.size() + " counterparts in ref. " + nrMatches + " of which match alleles");
+//							}
+////								System.out.println();
+//						}
+//
+//
+//					} else if (keepNonIntersectingVariants) {
+//						outvcf.writeln(ln);
+//
+//					}
+//				}
+//
+//				ln = vcfIn.readLine();
+//			}
+//
+//			vcfIn.close();
+//			outvcf.close();
+//
+//		}
+//		logfile.close();
+//
+//		System.out.println("About to exclude: " + variantsToExclude.size() + " variants from reference dataset...");
+//
+//		TextFile vcfoutref = new TextFile(vcf1out, TextFile.W);
+//		TextFile vcfinref = new TextFile(vcf1, TextFile.R);
+//		String ln = vcfinref.readLine();
+//		while (ln != null) {
+//
+//			if (ln.startsWith("#")) {
+//				vcfoutref.writeln(ln);
+//			} else {
+//				VCFVariant variant = new VCFVariant(ln);
+//				Feature f = new Feature();
+//				f.setChromosome(Chromosome.parseChr(variant.getChr()));
+//				f.setStart(variant.getPos());
+//				f.setStop(variant.getPos());
+//				if (!variantsToExclude.contains(f)) {
+//					if (keepNonIntersectingVariants) {
+//						vcfoutref.writeln(ln);
+//					} else if (intersectVariants.contains(f)) {
+//						vcfoutref.writeln(ln);
+//					}
+//				}
+//			}
+//			ln = vcfinref.readLine();
+//		}
+//		vcfoutref.close();
+//		vcfinref.close();
+//
+//	}
 
 	private String[] convertToComplement(String[] alleles2) {
 		String[] complement = new String[alleles2.length];
@@ -1787,7 +1797,7 @@ public class VCFFunctions {
 
 	}
 
-	public FastListMultimap<Feature, VCFVariant> getVCFVariants(String vcf, HashSet<Feature> map) throws IOException {
+	public FastListMultimap<Feature, VCFVariant> getVCFVariants(String vcf, HashSet<Feature> map, boolean loadGenotypes) throws IOException {
 		TextFile vcftf = new TextFile(vcf, TextFile.R);
 
 		String ln = vcftf.readLine();
@@ -1803,9 +1813,6 @@ public class VCFFunctions {
 				f.setStart(variant.getPos());
 				f.setStop(variant.getPos());
 				if (map == null || map.contains(f)) {
-					if (output.containsKey(f)) {
-						System.err.println("Duplicate variant: " + f.toString() + " in " + vcf);
-					}
 					output.put(f, variant);
 				}
 
@@ -1856,9 +1863,25 @@ public class VCFFunctions {
 		tfout.close();
 	}
 
-	public void mergeVCFSamples(String vcf1, String vcf2, String vcfout) throws IOException {
+	public void mergeAndIntersectVCFVariants(String refVCF,
+											 String testVCF,
+											 String vcf1out,
+											 String vcf2out,
+											 String vcfmergedout,
+											 String separatorInMergedFile,
+											 String logoutfile,
+											 boolean keepNonOverlapping) throws IOException {
 
-		TextFile tf = new TextFile(vcf1, TextFile.R);
+		System.out.println("Merging: ");
+		System.out.println("ref: " + refVCF);
+		System.out.println("test: " + testVCF);
+		System.out.println("out: " + vcfmergedout);
+
+
+		TextFile tf = new TextFile(refVCF, TextFile.R);
+		TextFile mergedOut = new TextFile(vcfmergedout, TextFile.W);
+		TextFile vcf1OutTf = new TextFile(vcf1out, TextFile.W);
+
 		String header = "";
 		String ln = tf.readLine();
 		while (ln != null) {
@@ -1868,128 +1891,353 @@ public class VCFFunctions {
 				} else {
 					header += "\n" + ln;
 				}
+				mergedOut.writeln(ln);
+				vcf1OutTf.writeln(ln);
+			} else if (ln.startsWith("#")) {
+				vcf1OutTf.writeln(ln);
+			} else {
+				break;
 			}
+
 			ln = tf.readLine();
 		}
 		tf.close();
 
-		ArrayList<String> samples1 = getVCFSamples(vcf1);
-		ArrayList<String> samples2 = getVCFSamples(vcf2);
+		TextFile tf2 = new TextFile(testVCF, TextFile.R);
+		TextFile vcf2OutTf = new TextFile(vcf2out, TextFile.W);
+		ln = tf2.readLine();
+		while (ln != null) {
+			if (ln.startsWith("##")) {
+				if (header.length() == 0) {
+					header += ln;
+				} else {
+					header += "\n" + ln;
+				}
+				vcf2OutTf.writeln(ln);
+			} else if (ln.startsWith("#")) {
+				vcf2OutTf.writeln(ln);
+			} else {
+				break;
+			}
 
-		ArrayList<Feature> variants1 = getVariantsFromVCF(vcf1);
-		ArrayList<Feature> variants2 = getVariantsFromVCF(vcf2);
+			ln = tf2.readLine();
+		}
+		tf2.close();
+
+		ArrayList<String> samples1 = getVCFSamples(refVCF);
+		ArrayList<String> samples2 = getVCFSamples(testVCF);
+
+		// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1   SAMPLE2
+		String sampleheaderLn = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
+		for (String s : samples1) {
+			sampleheaderLn += "\t" + s;
+		}
+		for (String s : samples2) {
+			sampleheaderLn += "\t" + s;
+		}
+
+		mergedOut.writeln(header + "\t" + sampleheaderLn);
 
 		GenotypeTools t = new GenotypeTools();
-		HashSet<Feature> intersectVariants = t.intersectVariants(variants1, variants2);
 
-		System.out.println(intersectVariants.size() + " variants intersect");
+		// reload the variants, get the positions with multiple variants at that position
+		FastListMultimap<Feature, VCFVariant> refVariantMap = getVCFVariants(refVCF, null, false);
+		FastListMultimap<Feature, VCFVariant> testVariantMap = getVCFVariants(testVCF, null, false);
 
-		HashMap<Feature, Integer> featureMap = new HashMap<Feature, Integer>();
+		RichIterable<Feature> iterator = refVariantMap.keysView();
+		RichIterable<Feature> iterator2 = testVariantMap.keysView();
 
-		int ctr = 0;
-		for (Feature f : intersectVariants) {
-			featureMap.put(f, ctr);
-			ctr++;
-		}
-		HashMap<String, Integer> sampleToInt = new HashMap<String, Integer>();
-		ctr = 0;
-		for (String s : samples1) {
-			sampleToInt.put(s, ctr);
-			ctr++;
-		}
-		for (String s : samples2) {
-			sampleToInt.put(s, ctr);
-			ctr++;
+		HashSet<Chromosome> chromosomes = new HashSet<Chromosome>();
+
+		HashSet<Feature> allFeatures = new HashSet<Feature>();
+
+		for (Feature f : iterator) {
+			chromosomes.add(f.getChromosome());
+			allFeatures.add(f);
 		}
 
+		for (Feature f : iterator2) {
+			chromosomes.add(f.getChromosome());
+			allFeatures.add(f);
+		}
 
-		ArrayList<VCFVariant> genotypes1 = new ArrayList<VCFVariant>();
-		ArrayList<VCFVariant> genotypes2 = new ArrayList<VCFVariant>();
+		ArrayList<Feature> allFeatureArr = new ArrayList<Feature>();
+		allFeatureArr.addAll(allFeatures);
+		Collections.sort(allFeatureArr, new FeatureComparator(false));
 
-		HashMap<Feature, VCFVariant> variantMap = new HashMap<Feature, VCFVariant>();
-		TextFile vcftf1 = new TextFile(vcf1, TextFile.R);
-		ln = vcftf1.readLine();
-		while (ln != null) {
-			if (!ln.startsWith("#")) {
-				VCFVariant var = new VCFVariant(ln);
-				Feature f = new Feature();
-				f.setChromosome(Chromosome.parseChr(var.getChr()));
-				f.setStart(var.getPos());
-				f.setStop(var.getPos());
-				variantMap.put(f, var);
+		TextFile logOut = new TextFile(logoutfile, TextFile.W);
+		logOut.writeln("chr\t" +
+				"pos\t" +
+				"refVariant#atPos\t" +
+				"refVariantId\t" +
+				"refVariantRefAllele\t" +
+				"refVariantAltAlleles\t" +
+				"refVariantMinorAllele\t" +
+				"refVariantMAF\t" +
+				"restVariant#atPos\t" +
+				"testVariantId\t" +
+				"testVariantRefAllele\t" +
+				"testVariantAltAlleles\t" +
+				"testVariantMinorAllele\t" +
+				"testVariantMAF\t" +
+				"testVariantRefAlleleAM\t" +
+				"testVariantAltAllelesAM\t" +
+				"testVariantMinorAlleleAM\t" +
+				"Reason");
+
+		TextFile uniqueRef = new TextFile(vcf1out+"-uniqueVars.txt", TextFile.W);
+		TextFile uniqueTest = new TextFile(vcf2out+"-uniqueVars.txt", TextFile.W);
+		for (Chromosome chr : chromosomes) {
+			ArrayList<Feature> chrFeatures = new ArrayList<Feature>();
+			HashSet<Feature> chrFeatureSet = new HashSet<Feature>();
+			for (Feature f : allFeatureArr) {
+				if (f.getChromosome().equals(chr)) {
+					chrFeatures.add(f);
+					chrFeatureSet.add(f);
+				}
 			}
-			ln = vcftf1.readLine();
-		}
-		vcftf1.close();
+
+			// load the genotypes..
+			refVariantMap = getVCFVariants(refVCF, chrFeatureSet, true);
+			testVariantMap = getVCFVariants(testVCF, chrFeatureSet, true);
 
 
-		TextFile vcftf2 = new TextFile(vcf1, TextFile.R);
-		ln = vcftf1.readLine();
-		TextFile out = new TextFile(vcfout, TextFile.W);
-		out.writeln(header);
-		String vcfheader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
-		for (String s : samples1) {
-			vcfheader += "\t" + s;
-		}
-		for (String s : samples2) {
-			vcfheader += "\t" + s;
-		}
-		out.writeln(vcfheader);
-		while (ln != null) {
-			if (!ln.startsWith("#")) {
-				VCFVariant var = new VCFVariant(ln);
-				Feature f = new Feature();
-				f.setChromosome(Chromosome.parseChr(var.getChr()));
-				f.setStart(var.getPos());
-				f.setStop(var.getPos());
+			for (Feature f : chrFeatures) {
 
-				VCFVariant var2 = variantMap.get(f);
+				MutableList<VCFVariant> refVariants = refVariantMap.get(f);
+				MutableList<VCFVariant> testVariants = testVariantMap.get(f);
 
-				String[] alleles1 = var.getAlleles();
-				String[] alleles2 = var2.getAlleles();
 
-				boolean allelesIdentical = true;
+				if (!(refVariantMap.get(f).size() > 0 && testVariantMap.get(f).size() > 0)) {
+					// variant unique to one
 
-				for (int i = 0; i < alleles1.length; i++) {
-					String allele1 = alleles1[i];
-					String allele2 = alleles2[i];
-					if (!allele1.equals(allele2)) {
-						allelesIdentical = false;
+					if (keepNonOverlapping) {
+						if (refVariantMap.containsKey(f)) {
+							for (int x = 0; x < refVariants.size(); x++) {
+								VCFVariant var1 = refVariants.get(x);
+								vcf1OutTf.writeln(var1.toVCFString());
+								uniqueRef.writeln(var1.getChr() + "\t" + var1.getPos() + "\t" + var1.getId());
+							}
+
+						} else if (testVariantMap.containsKey(f)) {
+							for (int x = 0; x < testVariants.size(); x++) {
+								VCFVariant var2 = testVariants.get(x);
+								vcf2OutTf.writeln(var2.toVCFString());
+								uniqueTest.writeln(var2.getChr() + "\t" + var2.getPos() + "\t" + var2.getId());
+							}
+						}
+					}
+				} else {
+
+					for (int x = 0; x < refVariants.size(); x++) {
+						VCFVariant refVariant = refVariants.get(x);
+						String logln = refVariant.getChr()
+								+ "\t" + refVariant.getPos()
+								+ "\t" + x
+								+ "\t" + refVariant.getId()
+								+ "\t" + refVariant.getAlleles()[0]
+								+ "\t" + Strings.concat(refVariant.getAlleles(), Strings.comma, 1, refVariant.getAlleles().length)
+								+ "\t" + refVariant.getMinorAllele()
+								+ "\t" + refVariant.getMAF();
+
+
+						String logoutputln = logln;
+						boolean[] writtenln = new boolean[testVariants.size()];
+						for (int y = 0; y < testVariants.size(); y++) {
+							if (writtenln[y]) {
+
+								// don't write again //
+							} else {
+								VCFVariant testVariant = testVariants.get(y);
+
+
+								logoutputln += "\t" + y
+										+ "\t" + testVariant.getId()
+										+ "\t" + testVariant.getAlleles()[0]
+										+ "\t" + Strings.concat(testVariant.getAlleles(), Strings.comma, 1, testVariant.getAlleles().length)
+										+ "\t" + testVariant.getMinorAllele()
+										+ "\t" + testVariant.getMAF();
+
+
+								if (!refVariant.getId().equals(testVariant.getId())) {
+									// check whether the name is equal (this may matter for positions with multiple variants).
+									logoutputln += "\t-\t-\tDifferentNames";
+								} else {
+									int nridenticalalleles = 0;
+
+									String[] refAlleles = refVariant.getAlleles();
+									String refMinorAllele = refVariant.getMinorAllele();
+									String[] testVariantAlleles = testVariant.getAlleles();
+									String testVariantMinorAllele = testVariant.getMinorAllele();
+
+									for (int i = 0; i < refAlleles.length; i++) {
+										String allele1 = refAlleles[i];
+										for (int j = 0; j < testVariantAlleles.length; j++) {
+											if (testVariantAlleles[j].equals(allele1)) {
+												nridenticalalleles++;
+											}
+										}
+									}
+
+									boolean complement = false;
+									if (nridenticalalleles == 0) {
+										// try complement
+										complement = true;
+										String[] complementAlleles2 = convertToComplement(testVariantAlleles);
+										testVariantMinorAllele = getComplement(testVariantMinorAllele);
+										nridenticalalleles = 0;
+
+										for (int i = 0; i < refAlleles.length; i++) {
+											String allele1 = refAlleles[i];
+											for (int j = 0; j < testVariantAlleles.length; j++) {
+												if (complementAlleles2[j].equals(allele1)) {
+													nridenticalalleles++;
+												}
+											}
+										}
+									}
+
+									boolean flipped = false;
+									if (refVariant.getAlleles().length == 2 && testVariant.getAlleles().length == 2) {
+										// simple case: both are biallelic..
+										// check if the minor alleles are equal. else, skip the variant.
+										if (nridenticalalleles == 2) {
+											if (refAlleles[0].equals(BaseAnnot.getComplement(refAlleles[1]))
+													&& !refMinorAllele.equals(testVariantMinorAllele)) {
+												// both variants ar AT or GC snps
+												logoutputln += "\t-\t-\tAT or CG with DiffMinor";
+											} else if (testVariantMinorAllele.equals(refMinorAllele) || (testVariant.getMAF() > 0.45 && refVariant.getMAF() > 0.45)) {
+												// check whether the reference allele is equal
+												String[] tmpAlleles = testVariantAlleles;
+												if (complement) {
+													testVariant.convertAllelesToComplement();
+													tmpAlleles = testVariant.getAlleles();
+												}
+
+												if (!refAlleles[0].equals(tmpAlleles[0])) {
+													testVariant.flipReferenceAlelele();
+													flipped = true;
+												}
+
+												logoutputln += "\t" + testVariant.getAlleles()[0] + "\t" + Strings.concat(testVariant.getAlleles(), Strings.comma, 1, testVariant.getAlleles().length);
+
+
+												// merge
+												vcf1OutTf.writeln(refVariant.toVCFString());
+												vcf2OutTf.writeln(testVariant.toVCFString());
+												String mergeStr = mergeVariants(refVariant, testVariant, separatorInMergedFile);
+												mergedOut.writeln(mergeStr);
+												writtenln[y] = true;
+												if (complement) {
+													logoutputln += "\tOK-Complement";
+												} else {
+													logoutputln += "\tOK";
+												}
+												if (flipped) {
+													logoutputln += "-flippedAlleles";
+												}
+
+											} else {
+												// write to log?
+												logoutputln += "\t-\t-\tNotOK-DiffMinor";
+											}
+										} else {
+											// write to log?
+											logoutputln += "\t-\t-\tNotOK-IncompatibleAlleles";
+										}
+
+									} else if (nridenticalalleles > 1) {
+
+										// recode the genotypes towards the joint set of alleles
+										// get a list of all alleles at this locus...
+										HashSet<String> uniqueAlleles = new HashSet<String>();
+										uniqueAlleles.addAll(Arrays.asList(refAlleles));
+										uniqueAlleles.addAll(Arrays.asList(testVariantAlleles));
+
+										HashMap<String, Integer> alleleMap = new HashMap<String, Integer>();
+										ArrayList<String> newAlleles = new ArrayList<String>();
+										for (int i = 0; i < refAlleles.length; i++) {
+											alleleMap.put(refAlleles[i], i);
+											newAlleles.add(refAlleles[i]);
+										}
+
+										for (int i = 0; i < testVariantAlleles.length; i++) {
+											String alleleStr = testVariantAlleles[i];
+											if (!alleleMap.containsKey(alleleStr)) {
+												alleleMap.put(alleleStr, alleleMap.size());
+												newAlleles.add(alleleStr);
+											}
+										}
+
+
+										// recode testVariant
+										testVariant.recodeAlleles(alleleMap, newAlleles.toArray(new String[0]));
+
+										logoutputln += "\t" + testVariant.getAlleles()[0] + "\t" + Strings.concat(testVariant.getAlleles(), Strings.comma, 1, testVariant.getAlleles().length);
+
+										vcf1OutTf.writeln(refVariant.toVCFString());
+										vcf2OutTf.writeln(testVariant.toVCFString());
+
+										// merge
+										String mergeStr = mergeVariants(refVariant, testVariant, separatorInMergedFile);
+										mergedOut.writeln(mergeStr);
+										writtenln[y] = true;
+
+										logoutputln += "\tOK-MultiAllelic-AllelesRecoded";
+
+									} else {
+										// variant we can't fix
+										logoutputln += "\t-\t-\tNotOK-CantFix";
+									}
+								}
+							}
+						}
+						logOut.writeln(logoutputln);
 					}
 				}
 
-				if (allelesIdentical && alleles1.length == alleles2.length) {
-					// merge...
-					// #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
-					String lnout = var.getChr()
-							+ "\t" + var.getPos()
-							+ "\t" + var.getId()
-							+ "\t" + alleles1[0]
-							+ "\t" + Strings.concat(alleles1, Strings.comma, 1, alleles1.length)
-							+ "\t.\t.\t.\tGT";
-					byte[][] gt1 = var.getGenotypeAlleles();
-					byte[][] gt2 = var.getGenotypeAlleles();
-					for (int i = 0; i < gt2.length; i++) {
-						lnout += "\t" + gt2[i][0] + "|" + gt2[i][1];
-					}
-					for (int i = 0; i < gt1.length; i++) {
-						lnout += "\t" + gt1[i][0] + "|" + gt1[i][1];
-					}
-					out.writeln(lnout);
-				}
-
-
 			}
-			ln = vcftf2.readLine();
+
 		}
-		vcftf2.close();
-		out.close();
+		uniqueRef.close();
+		uniqueTest.close();
+
+		logOut.close();
+		vcf1OutTf.close();
+		vcf2OutTf.close();
+		mergedOut.close();
 
 
 	}
 
-	public void splitMultipleAllelicVariants(String vcfIn, String vcfOut) throws IOException {
+	private String mergeVariants(VCFVariant var1, VCFVariant var2, String separator) {
+		String output = var1.getChr()
+				+ "\t" + var1.getPos()
+				+ "\t" + var1.getId()
+				+ "\t" + var1.getAlleles()[0]
+				+ "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length)
+				+ "\t.\t.\t.\tGT";
 
+		byte[][] genotypeAlleles1 = var1.getGenotypeAlleles();
+		byte[][] genotypeAlleles2 = var2.getGenotypeAlleles();
+		if (separator == null) {
+			separator = "/";
+		}
+
+		for (int i = 0; i < genotypeAlleles1.length; i++) {
+			output += "\t" + genotypeAlleles1[i][0] + separator + genotypeAlleles1[i][1];
+		}
+
+		for (int i = 0; i < genotypeAlleles2.length; i++) {
+			output += "\t" + genotypeAlleles2[i][0] + separator + genotypeAlleles2[i][1];
+		}
+
+		return output;
+	}
+
+	public void splitMultipleAllelicVariants(String vcfIn, String vcfOut) throws IOException {
+		System.out.println("Splitting alleles in: " + vcfIn);
+		System.out.println("Writing to: " + vcfOut);
 		TextFile tfIn = new TextFile(vcfIn, TextFile.R);
 		TextFile tfOut = new TextFile(vcfOut, TextFile.W);
 

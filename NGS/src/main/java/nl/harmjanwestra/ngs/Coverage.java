@@ -10,6 +10,7 @@ import nl.harmjanwestra.utilities.bamfile.BamFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
+import nl.harmjanwestra.utilities.features.FeatureMerger;
 import nl.harmjanwestra.utilities.graphics.ColorGenerator;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.broadinstitute.gatk.engine.filters.*;
@@ -101,6 +102,15 @@ public class Coverage {
 			threads = 1;
 		}
 
+		System.out.println("Loading regions from: " + targetregions);
+		ArrayList<Feature> features = loadRegions(targetregions);
+		System.out.println(features.size() + " target regions loaded");
+		if (outputcoverageperregion) {
+			System.out.println("Merging overlapping regions for .bedGraph output");
+			features = FeatureMerger.merge(features);
+			System.out.println(features.size() + " regions remain after mergin overlapping regions");
+		}
+
 		System.out.println("Opening threadpool for " + threads + " threads.");
 		ExecutorService threadPool = Executors.newFixedThreadPool(threads);
 		CompletionService<Boolean> pool = new ExecutorCompletionService<Boolean>(threadPool);
@@ -116,11 +126,9 @@ public class Coverage {
 			Gpio.createDir(sampleOutDir);
 
 
-			CoverageTask t = new CoverageTask(file, sampleOutDir, targetregions, outputcoverageperregion);
+			CoverageTask t = new CoverageTask(file, sampleOutDir, features, outputcoverageperregion);
 			pool.submit(t);
 
-
-			// bamToBedWithinRegions(file, sampleOutDir, targetregions, outputcoverageperregion);
 			filectr++;
 		}
 
@@ -209,7 +217,7 @@ public class Coverage {
 			// concatenate region files...
 
 			//
-			ArrayList<Feature> features = loadRegions(targetregions);
+
 			HashMap<String, Integer> featureMap = new HashMap<String, Integer>();
 			ArrayList<String> featureStr = new ArrayList<String>();
 			for (int i = 0; i < features.size(); i++) {

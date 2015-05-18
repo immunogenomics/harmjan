@@ -38,7 +38,7 @@ public class Resequencing {
 		Resequencing s = new Resequencing();
 
 //		s.indexBAM(in);
-//		s.indexDedupSortIndex(file,tmpdir);
+
 //		s.mergeBamFiles(sample,files,outfile);
 //		s.determineReadsAndDuplicationsPerChr(bamfile,outputfile);
 //		s.overlapFamWithSequencingIDs(samplelist,famfile);
@@ -51,13 +51,14 @@ public class Resequencing {
 //			e.printStackTrace();
 //		}
 
-		try {
+//		try {
 			String filein = args[0];
 			String tmp = args[1];
-			s.rewritePlatform(filein, tmp);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+			s.indexDedupSortIndex(filein,tmp);
+//			s.rewritePlatform(filein, tmp);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 
 //		s.indexDedupSortIndex(args[0],args[1]);
 	}
@@ -690,6 +691,10 @@ public class Resequencing {
 				indexBAM(dedupped);
 
 			}
+
+			sortout.delete();
+			File sortoutindex = new File(f2.substring(0, f2.length() - 4) + "-sort.bam.bai");
+			sortoutindex.delete();
 		}
 //
 //                }

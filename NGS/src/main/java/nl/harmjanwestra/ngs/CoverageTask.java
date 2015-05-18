@@ -6,7 +6,6 @@ import htsjdk.samtools.filter.SamRecordFilter;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.features.FeatureComparator;
 import org.broadinstitute.gatk.engine.filters.*;
 import org.broadinstitute.gatk.tools.walkers.haplotypecaller.HCMappingQualityFilter;
 import umcg.genetica.io.Gpio;
@@ -15,7 +14,6 @@ import umcg.genetica.io.text.TextFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -28,46 +26,17 @@ public class CoverageTask implements Callable<Boolean> {
 
 	private final String bamfile;
 	private final String outdir;
-	private final String regionfile;
+	private final ArrayList<Feature> regions;
 	private final boolean outputcoverageperregion;
 
-	private ArrayList<Feature> loadRegions(String regionfile) throws IOException {
-		ArrayList<Feature> regions = new ArrayList<Feature>();
-
-		TextFile featurefile = new TextFile(regionfile, TextFile.R);
-		String[] felems = featurefile.readLineElems(TextFile.tab);
-		while (felems != null) {
-
-			if (felems.length >= 3) {
-				Feature f = new Feature();
-				Chromosome c = Chromosome.parseChr(felems[0]);
-				f.setChromosome(c);
-				f.setStart(Integer.parseInt(felems[1]));
-				f.setStop(Integer.parseInt(felems[2]));
-				regions.add(f);
-			}
-
-			felems = featurefile.readLineElems(TextFile.tab);
-		}
-		featurefile.close();
-
-
-		// now sort them
-		Collections.sort(regions, new FeatureComparator(false));
-		return regions;
-	}
-
-	public CoverageTask(String bamfile, String outdir, String regionfile, boolean outputcoverageperregion) {
+	public CoverageTask(String bamfile, String outdir, ArrayList<Feature> regions, boolean outputcoverageperregion) {
 		this.bamfile = bamfile;
 		this.outdir = outdir;
-		this.regionfile = regionfile;
+		this.regions = regions;
 		this.outputcoverageperregion = outputcoverageperregion;
 	}
 
-	public void bamToBedWithinRegions(String bamfile, String outdir, String regionFile, boolean outputcoverageperregion) throws IOException {
-
-
-		ArrayList<Feature> regions = loadRegions(regionFile);
+	public void bamToBedWithinRegions(String bamfile, String outdir, boolean outputcoverageperregion) throws IOException {
 
 		BamFileReader reader = new BamFileReader(new File(bamfile));
 		List<SAMReadGroupRecord> readGroups = reader.getReadGroups();
@@ -572,7 +541,7 @@ public class CoverageTask implements Callable<Boolean> {
 
 	@Override
 	public Boolean call() throws Exception {
-		bamToBedWithinRegions(bamfile, outdir, regionfile, outputcoverageperregion);
+		bamToBedWithinRegions(bamfile, outdir, outputcoverageperregion);
 		return true;
 	}
 }
