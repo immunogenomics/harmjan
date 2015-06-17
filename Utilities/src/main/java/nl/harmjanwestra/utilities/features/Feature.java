@@ -182,7 +182,7 @@ public class Feature {
 
     @Override
     public String toString() {
-        return getChromosome().getName() + ":" + getStart() + "-" + getStop();
+        return getChromosome().getName() + "_" + getStart() + "-" + getStop();
     }
 
 }

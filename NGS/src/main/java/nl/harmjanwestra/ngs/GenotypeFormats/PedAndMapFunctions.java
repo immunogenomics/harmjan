@@ -62,6 +62,9 @@ public class PedAndMapFunctions {
 
 
 	public void deduplicateMAP(String map1, String map2) throws IOException {
+
+		System.out.println("Dedupping: " + map1 + " to " + map2);
+
 		TextFile tf1 = new TextFile(map1, TextFile.R);
 
 		TextFile out = new TextFile(map2, TextFile.W);
@@ -213,18 +216,6 @@ public class PedAndMapFunctions {
 		Set<String> refRS = tf.readAsSet(1, TextFile.tab);
 		tf.close();
 
-		TextFile tf2 = new TextFile(inMap, TextFile.R);
-		Set<String> inRS = tf2.readAsSet(1, TextFile.tab);
-		tf2.close();
-
-		int counter = 0;
-		for (String s : inRS) {
-			if (!refRS.contains(s)) {
-				System.out.println(s + " not found");
-				counter++;
-			}
-		}
-		System.out.println(counter);
 
 		tf.open();
 		HashMap<String, String> rsToChr = new HashMap<String, String>();
@@ -239,20 +230,53 @@ public class PedAndMapFunctions {
 		tf.close();
 
 		TextFile outf = new TextFile(outMap, TextFile.W);
+
+		System.out.println("Replacing chromosome names");
+		System.out.println("Loaded " + rsToChr.size() + " snps from " + refMap);
+
+		TextFile tf2 = new TextFile(inMap, TextFile.R);
+		Set<String> inRS = tf2.readAsSet(1, TextFile.tab);
+		tf2.close();
+
+		int counter = 0;
+		for (String s : inRS) {
+			if (!refRS.contains(s)) {
+				// System.out.println(s + " not found");
+				counter++;
+			}
+		}
+
+		System.out.println(inRS.size() + " SNPs in " + inMap + "\n" + counter + " not in ref");
 		tf2.open();
 		elems = tf2.readLineElems(TextFile.tab);
+
+		int counternotupdated = 0;
+		int counterupdated = 0;
+
+		int diffpos = 0;
+
 		while (elems != null) {
 			String snp = elems[1];
 			String chr = rsToChr.get(snp);
-			String pos = rsToChrPos.get(snp);
+			if (chr == null) {
+				counternotupdated++;
+			} else {
+				counterupdated++;
+				String pos = rsToChrPos.get(snp);
+				elems[0] = chr;
 
-			elems[0] = chr;
-			elems[3] = pos;
+				if (!pos.equals(elems[3])) {
+					diffpos++;
+				}
+				elems[3] = pos;
+			}
 
 			outf.writeln(Strings.concat(elems, Strings.tab));
 
 			elems = tf2.readLineElems(TextFile.tab);
 		}
+		System.out.println(counterupdated + " updated / " + counternotupdated + " not updated");
+		System.out.println(diffpos + " had actual different position");
 
 		tf2.close();
 		outf.close();
@@ -261,6 +285,7 @@ public class PedAndMapFunctions {
 	}
 
 	public void updateRSNames(String dbsnpvcf, String mapin, String mapout) throws IOException {
+		System.out.println("Updating RS names: " + mapin + " to " + mapout);
 		HashMap<String, String> map = new HashMap<String, String>();
 		TextFile tf = new TextFile(mapin, TextFile.R);
 
@@ -274,6 +299,7 @@ public class PedAndMapFunctions {
 
 		TextFile vcf = new TextFile(dbsnpvcf, TextFile.R);
 
+		System.out.println("parsing DBSNP VCF: " + dbsnpvcf);
 		String[] lineElems = vcf.readLineElems(TextFile.tab);
 		int ln = 0;
 		while (lineElems != null) {
@@ -289,12 +315,14 @@ public class PedAndMapFunctions {
 			}
 
 			ln++;
-			if (ln % 1000000 == 0) {
+
+			if (ln % 2500000 == 0) {
 				System.out.println(ln + " positions parsed...");
 			}
 			lineElems = vcf.readLineElems(TextFile.tab);
 		}
 		vcf.close();
+		System.out.println(map.size() + " variant annotations read");
 
 		TextFile out = new TextFile(mapout, TextFile.W);
 		tf.open();
@@ -304,7 +332,7 @@ public class PedAndMapFunctions {
 			String query = elems[0] + "_" + elems[3];
 			String rs = map.get(query);
 			if (!rs.equals(elems[1])) {
-				System.out.println("Replacing " + elems[1] + " with rs: " + rs);
+				// System.out.println("Replacing " + elems[1] + " with rs: " + rs);
 				nrReplaced++;
 			}
 			elems[1] = rs;
@@ -562,8 +590,7 @@ public class PedAndMapFunctions {
 
 			Chromosome chr = Chromosome.parseChr(elems[0]);
 
-			Feature f = new Feature();
-			f.setChromosome(chr);
+
 			Integer position = -1;
 			try {
 				position = Integer.parseInt(elems[3]);
@@ -572,6 +599,9 @@ public class PedAndMapFunctions {
 			}
 
 
+			Feature f = new Feature();
+			f.setChromosome(chr);
+//			f.setName(elems[1]);
 			f.setStart(position);
 			f.setStop(position);
 			output.add(f);
@@ -584,26 +614,28 @@ public class PedAndMapFunctions {
 
 	public Pair<byte[][], String[]> loadPedGenotypes(String ped,
 													 String map,
-													 HashMap<String, Integer> sampleMap,
-													 HashMap<Feature, Integer> variantMap) throws IOException {
+													 HashMap<String, Integer> sampleSelectionMap,
+													 HashMap<Feature, Integer> variantSelectionMap) throws IOException {
+
 
 		// load list of variants to include
 		ArrayList<Feature> mapVariants = getVariantsFromMapFile(map);
-
+		System.out.println("Loaded " + mapVariants.size() + " variants from map file: " + map);
 
 		int[] variantToNewVariant = new int[mapVariants.size()];
 		for (int v = 0; v < mapVariants.size(); v++) {
-			Integer newVariantId = variantMap.get(mapVariants.get(v));
-			if (newVariantId != null) {
+			Integer newVariantId = variantSelectionMap.get(mapVariants.get(v));
+			if (newVariantId != null && newVariantId != -1) {
 				variantToNewVariant[v] = newVariantId;
 			} else {
 				variantToNewVariant[v] = -1;
 			}
 		}
 
-		byte[][] genotypes = new byte[sampleMap.size()][variantMap.size()];
-		String[] alleles1 = new String[variantMap.size()];
-		String[] alleles2 = new String[variantMap.size()];
+		byte[][] genotypes = new byte[sampleSelectionMap.size()][variantSelectionMap.size()];
+		System.out.println("Genotype matrix: " + sampleSelectionMap.size() + " x " + variantSelectionMap.size());
+		String[] alleles1 = new String[variantSelectionMap.size()];
+		String[] alleles2 = new String[variantSelectionMap.size()];
 
 		// iterate ped file
 		/*
@@ -615,12 +647,13 @@ public class PedAndMapFunctions {
      Phenotype
 		 */
 
+		System.out.println("Parsing PED file: " + ped);
 		TextFile tf = new TextFile(ped, TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
 		int nrSamplesLoaded = 0;
 		while (elems != null) {
 			String sample = elems[1];
-			Integer newSampleId = sampleMap.get(sample);
+			Integer newSampleId = sampleSelectionMap.get(sample);
 
 			// check length of the line
 			if ((elems.length - 6) / 2 != mapVariants.size()) {
@@ -633,6 +666,9 @@ public class PedAndMapFunctions {
 
 						int newVariantId = variantToNewVariant[(i - 6) / 2];
 
+//						if (newVariantId >= alleles1.length) {
+//							System.out.println("Cannot accomodate variant... " + ((i - 6) / 2) + " - " + newVariantId);
+//						} else
 						if (newVariantId != -1) {
 							String allele1 = elems[i];
 							String allele2 = elems[i + 1];
@@ -696,7 +732,7 @@ public class PedAndMapFunctions {
 		nrSamplesLoaded = 0;
 		while (elems != null) {
 			String sample = elems[1];
-			Integer newSampleId = sampleMap.get(sample);
+			Integer newSampleId = sampleSelectionMap.get(sample);
 
 			// check length of the line
 			if ((elems.length - 6) / 2 != mapVariants.size()) {
@@ -761,6 +797,7 @@ public class PedAndMapFunctions {
 	public void rewriteMapToBed(String mapIn, String bedOut) throws IOException {
 		TextFile tf = new TextFile(mapIn, TextFile.R);
 		TextFile out = new TextFile(bedOut, TextFile.W);
+		System.out.println("converting " + mapIn + " to " + bedOut);
 		String[] elems = tf.readLineElems(Strings.whitespace);
 		while (elems != null) {
 
@@ -828,9 +865,9 @@ public class PedAndMapFunctions {
 
 	public void updateMapFileRsIdsUsingMapFile(String refMap, String inMap, String outMap) throws IOException {
 
-		TextFile tf = new TextFile(refMap, TextFile.R);
-		Set<String> refRS = tf.readAsSet(1, TextFile.tab);
-		tf.close();
+		TextFile referenceMapFile = new TextFile(refMap, TextFile.R);
+		Set<String> refRS = referenceMapFile.readAsSet(1, TextFile.tab);
+		referenceMapFile.close();
 
 		TextFile tf2 = new TextFile(inMap, TextFile.R);
 		Set<String> inRS = tf2.readAsSet(1, TextFile.tab);
@@ -845,11 +882,11 @@ public class PedAndMapFunctions {
 		}
 		System.out.println(counter + " variants not found using RS id");
 
-		tf.open();
+		referenceMapFile.open();
 		HashMap<String, HashSet<String>> chrToRS = new HashMap<String, HashSet<String>>();
 
 
-		String[] elems = tf.readLineElems(TextFile.tab);
+		String[] elems = referenceMapFile.readLineElems(TextFile.tab);
 		while (elems != null) {
 			String query = elems[0] + "_" + elems[3];
 			HashSet<String> rsssssss = chrToRS.get(query);
@@ -859,9 +896,9 @@ public class PedAndMapFunctions {
 			rsssssss.add(elems[1]);
 
 			chrToRS.put(query, rsssssss);
-			elems = tf.readLineElems(TextFile.tab);
+			elems = referenceMapFile.readLineElems(TextFile.tab);
 		}
-		tf.close();
+		referenceMapFile.close();
 
 
 		Set<String> dups = chrToRS.keySet();
@@ -928,6 +965,7 @@ public class PedAndMapFunctions {
 	}
 
 	public void identifyDuplicatesInMap(String liftedmergedMapfile, String liftedmergedMapFileDedupped) throws IOException {
+		System.out.println("Dedupping: " + liftedmergedMapfile + " to " + liftedmergedMapFileDedupped);
 		TextFile tf = new TextFile(liftedmergedMapfile, TextFile.R);
 
 		HashSet<String> set1 = new HashSet<String>();
@@ -953,8 +991,8 @@ public class PedAndMapFunctions {
 		}
 		tf.close();
 
-		System.out.println(set1.size());
-		System.out.println(set2.size());
+		System.out.println(set1.size() + " duplicate snp ids");
+		System.out.println(set2.size() + " duplicate snp positions");
 
 	}
 

@@ -244,7 +244,7 @@ public class GenotypeTools {
 			// gunzip and sort the resulting file
 			bashfilename = tmpout + "gunzip.sh";
 			String sortedvcf2 = tmpout + "chr" + i + "-sorted.vcf";
-			bashCommand = "gzcat " + tmpout + "chr" + i + ".vcf | /Data/Tools/vcftools/bin/vcf-sort > " + sortedvcf2;
+			bashCommand = "zcat " + tmpout + "chr" + i + ".vcf | /Data/Tools/vcftools/bin/vcf-sort > " + sortedvcf2;
 			tf = new TextFile(bashfilename, TextFile.W);
 			tf.writeln("#!/bin/bash\n" + bashCommand);
 			tf.close();
@@ -293,15 +293,33 @@ public class GenotypeTools {
 
 	}
 
-	public void sortVCF(String vcf, String sortedvcf, String bashfilename) throws IOException {
+	public void sortVCF(boolean linux, String vcfsort, String vcf, String sortedvcf, String bashfilename) throws IOException {
 
 
 		String cat = "cat";
 		if (vcf.endsWith(".gz")) {
 			cat = "gzcat";
+			if (linux) {
+				cat = "zcat";
+			}
 		}
-		String bashCommand = cat + " " + vcf + " | /Data/Tools/vcftools/bin/vcf-sort > " + sortedvcf;
 
+		boolean gzipoutput = false;
+		if (sortedvcf.endsWith(".gz")) {
+			gzipoutput = true;
+			sortedvcf = sortedvcf.replaceAll(".gz", "");
+		}
+		String bashCommand = cat + " " + vcf + " | " + vcfsort + " > " + sortedvcf;
+
+		if (gzipoutput) {
+			if (Gpio.exists(sortedvcf + ".gz")) {
+				File f = new File(sortedvcf + ".gz");
+				f.delete();
+			}
+			bashCommand += "\n";
+			bashCommand += "gzip " + sortedvcf + "\n";
+
+		}
 
 		TextFile tf = new TextFile(bashfilename, TextFile.W);
 		tf.writeln("#!/bin/bash\n" + bashCommand);
@@ -310,9 +328,25 @@ public class GenotypeTools {
 		run(pb);
 	}
 
-	public void concatVCF(String files, String merged, String mergedsorted, String bashfilename) throws IOException {
-		String bashCommand = "/Data/Tools/vcftools/bin/vcf-concat " + files + " > " + merged + "\n" +
-				"cat " + merged + " | /Data/Tools/vcftools/bin/vcf-sort > " + mergedsorted;
+	public void concatVCF(String vcfConcat, String vcfSort, String files, String merged, String mergedsorted, String bashfilename) throws IOException {
+
+
+		boolean gzipoutput = false;
+		if (mergedsorted.endsWith(".gz")) {
+			gzipoutput = true;
+			mergedsorted = mergedsorted.replaceAll(".gz", "");
+		}
+		String bashCommand = vcfConcat + " " + files + " > " + merged + "\n" +
+				"cat " + merged + " | " + vcfSort + " > " + mergedsorted + "\n" +
+				"rm " + merged + "\n";
+
+		if (gzipoutput) {
+			if (Gpio.exists(mergedsorted + ".gz")) {
+				File f = new File(mergedsorted + ".gz");
+				f.delete();
+			}
+			bashCommand += "gzip " + mergedsorted + "\n";
+		}
 
 		TextFile tf = new TextFile(bashfilename, TextFile.W);
 		tf.writeln("#!/bin/bash\n" + bashCommand);
@@ -326,8 +360,8 @@ public class GenotypeTools {
 		String bashCommand = "/Data/Tools/tabix/tabix-0.2.6/bgzip " + vcf + "\n" +
 				"/Data/Tools/tabix/tabix-0.2.6/tabix -p vcf " + vcf + ".gz";
 
-		if (Gpio.exists( vcf + ".gz")) {
-			new File( vcf + ".gz").delete();
+		if (Gpio.exists(vcf + ".gz")) {
+			new File(vcf + ".gz").delete();
 		}
 
 		TextFile tf = new TextFile(bashfilename, TextFile.W);
@@ -338,7 +372,7 @@ public class GenotypeTools {
 		run(pb);
 	}
 
-	public void mergeVCF(String files, String mergedout, String bashfilename) throws IOException {
+	public void mergeVCF(boolean linux, String vcfsort, String files, String mergedout, String bashfilename) throws IOException {
 		String bashCommand = "/Data/Tools/bcftools/bcftools-1.2/bcftools merge -m all -O v -o  " + mergedout + " " + files + "\n";
 
 		TextFile tf = new TextFile(bashfilename, TextFile.W);
@@ -348,7 +382,7 @@ public class GenotypeTools {
 		ProcessBuilder pb = new ProcessBuilder("bash", bashfilename);
 		run(pb);
 
-		sortVCF(mergedout, mergedout + "sorted.vcf", bashfilename + "-sort.sh");
+		sortVCF(linux, vcfsort, mergedout, mergedout + "sorted.vcf", bashfilename + "-sort.sh");
 	}
 
 
@@ -784,39 +818,46 @@ public class GenotypeTools {
 	}
 
 
-	public void compareVCFGenotypesToPedAndMap(String vcf, String plinkfile, String out, boolean onlySharedSamples) throws IOException {
+	public void compareVCFGenotypesToPedAndMap(String reference, String test, String out, boolean onlySharedSamples) throws IOException {
 
 		// get samples from plink data
 		VCFFunctions vcfFunctions = new VCFFunctions();
 		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
 
-		ArrayList<Pair<String, String>> famSamples = pedAndMapFunctions.parseFam(plinkfile + ".fam");
-		System.out.println(famSamples.size() + " samples loaded from PED/MAP");
 		// get samples from VCF
-		ArrayList<String> vcfSamples = vcfFunctions.getVCFSamples(vcf);
-		System.out.println(vcfSamples.size() + " samples loaded from VCF");
+		ArrayList<String> referenceSamples = vcfFunctions.getVCFSamples(reference);
+		System.out.println(referenceSamples.size() + " samples loaded from VCF");
+
+		ArrayList<Feature> variantsOnVCF = vcfFunctions.getVariantsFromVCF(reference);
+		System.out.println(variantsOnVCF.size() + " variants on VCF");
+
+		HashSet<String> intersectedSamples = null;
+		ArrayList<Feature> testVariants = null;
+		ArrayList<String> testSamples = null;
+		if (test.endsWith(".vcf") || test.endsWith(".vcf.gz")) {
+			testSamples = vcfFunctions.getVCFSamples(test);
+			testVariants = vcfFunctions.getVariantsFromVCF(test);
+		} else {
+
+			ArrayList<Pair<String, String>> testSamplePairs = pedAndMapFunctions.parseFam(test + ".fam");
+			System.out.println(testSamplePairs.size() + " samples loaded from PED/MAP");
+
+			testSamples = new ArrayList<String>();
+			for (Pair<String, String> p : testSamplePairs) {
+				testSamples.add(p.getRight());
+			}
+			testVariants = pedAndMapFunctions.getVariantsFromMapFile(test + ".map");
+			System.out.println(testVariants.size() + " variants on MAP");
+		}
+
 
 		// intersect samples
-		ArrayList<String> samplesInFam = new ArrayList<String>();
-		for (Pair<String, String> p : famSamples) {
-			samplesInFam.add(p.getRight());
-		}
-		HashSet<String> intersectedSamples = intersectSamples(samplesInFam, vcfSamples);
-
+		intersectedSamples = intersectSamples(testSamples, referenceSamples);
 		System.out.println(intersectedSamples.size() + " samples shared");
 		writeHash(intersectedSamples, out + "sharedSamples.txt");
 
-		// get variants from VCF
-
-		ArrayList<Feature> variantsOnVCF = vcfFunctions.getVariantsFromVCF(vcf);
-		System.out.println(variantsOnVCF.size() + " variants on VCF");
-
-		// get variants from PLINK file that have same position
-		ArrayList<Feature> variantsOnMap = pedAndMapFunctions.getVariantsFromMapFile(plinkfile + ".map");
-		System.out.println(variantsOnMap.size() + " variants on MAP");
-
 		// intersect variants
-		HashSet<Feature> intersectedVariants = intersectVariants(variantsOnMap, variantsOnVCF);
+		HashSet<Feature> intersectedVariants = intersectVariants(testVariants, variantsOnVCF);
 		System.out.println(intersectedVariants.size() + " shared variants");
 		writeFeatureHash(intersectedVariants, out + "sharedVariants.txt");
 
@@ -824,36 +865,36 @@ public class GenotypeTools {
 		sharedSamples.addAll(intersectedSamples);
 		Collections.sort(sharedSamples);
 
-		HashMap<String, Integer> sampleMapPED = new HashMap<String, Integer>();
-		HashMap<String, Integer> sampleMapVCF = new HashMap<String, Integer>();
+		HashMap<String, Integer> sampleMapTest = new HashMap<String, Integer>();
+		HashMap<String, Integer> sampleMapRef = new HashMap<String, Integer>();
 		int s = 0;
 
-		ArrayList<String> newSampleOrderPed = new ArrayList<String>();
-		ArrayList<String> newSampleOrderVCF = new ArrayList<String>();
+		ArrayList<String> newSampleOrderTest = new ArrayList<String>();
+		ArrayList<String> newSampleOrderRef = new ArrayList<String>();
 		for (String sample : sharedSamples) {
-			sampleMapPED.put(sample, s);
-			sampleMapVCF.put(sample, s);
-			newSampleOrderPed.add(sample);
-			newSampleOrderVCF.add(sample);
+			sampleMapTest.put(sample, s);
+			sampleMapRef.put(sample, s);
+			newSampleOrderTest.add(sample);
+			newSampleOrderRef.add(sample);
 			s++;
 		}
 
 		if (!onlySharedSamples) {
-			int s2 = sampleMapPED.size();
+			int s2 = sampleMapTest.size();
 
-			for (String sample : samplesInFam) {
-				if (!sampleMapPED.containsKey(sample)) {
-					sampleMapPED.put(sample, s2);
-					newSampleOrderPed.add(sample);
+			for (String sample : testSamples) {
+				if (!sampleMapTest.containsKey(sample)) {
+					sampleMapTest.put(sample, s2);
+					newSampleOrderTest.add(sample);
 					s2++;
 				}
 			}
 
-			s2 = sampleMapVCF.size();
-			for (String sample : vcfSamples) {
-				if (!sampleMapVCF.containsKey(sample)) {
-					sampleMapVCF.put(sample, s2);
-					newSampleOrderVCF.add(sample);
+			s2 = sampleMapRef.size();
+			for (String sample : referenceSamples) {
+				if (!sampleMapRef.containsKey(sample)) {
+					sampleMapRef.put(sample, s2);
+					newSampleOrderRef.add(sample);
 					s2++;
 				}
 			}
@@ -881,28 +922,32 @@ public class GenotypeTools {
 		// format: byte[sample][genotype] String[nrVariants];
 
 
-		Pair<byte[][], String[]> vcfGenotypesPair = vcfFunctions.loadVCFGenotypes(vcf, sampleMapVCF, variantMap);
-		writeGenotypes(vcfGenotypesPair, newSampleOrderVCF, variants, out + "vcfGenotypes.txt");
+		Pair<byte[][], String[]> refGenotypePair = vcfFunctions.loadVCFGenotypes(reference, sampleMapRef, variantMap);
+		writeGenotypes(refGenotypePair, newSampleOrderRef, variants, out + "vcfGenotypes.txt");
 
 
 		// load genotypes for PLINK
+		Pair<byte[][], String[]> testGenotypePair = null;
+		if (test.endsWith(".vcf") || test.endsWith(".vcf.gz")) {
+			testGenotypePair = vcfFunctions.loadVCFGenotypes(test, sampleMapTest, variantMap);
+		} else {
+			testGenotypePair = pedAndMapFunctions.loadPedGenotypes(test + ".ped", test + ".map", sampleMapTest, variantMap);
+		}
 
-		Pair<byte[][], String[]> pedGenotypesPair = pedAndMapFunctions.loadPedGenotypes(plinkfile + ".ped", plinkfile + ".map", sampleMapPED, variantMap);
-		writeGenotypes(pedGenotypesPair, newSampleOrderPed, variants, out + "pedGenotypes.txt");
-
+		writeGenotypes(testGenotypePair, newSampleOrderTest, variants, out + "pedGenotypes.txt");
 		// compare alleles
-		String[] allelesVCF = vcfGenotypesPair.getRight();
-		String[] allelesPED = pedGenotypesPair.getRight();
+		String[] allelesVCF = refGenotypePair.getRight();
+		String[] allelesPED = testGenotypePair.getRight();
 
 
-//		System.out.println("vcf vcf correlations");
-//		correlateSamples(vcfGenotypesPair, vcfGenotypesPair, samples, out + "vcfSampleCorrelations.txt", excludeVariant, flipGenotypes);
+//		System.out.println("reference reference correlations");
+//		correlateSamples(refGenotypePair, refGenotypePair, samples, out + "vcfSampleCorrelations.txt", excludeVariant, flipGenotypes);
 //		System.out.println("ped ped correlations");
 //		correlateSamples(pedGenotypesPair, pedGenotypesPair, samples, out + "pedSampleCorrelations.txt", excludeVariant, flipGenotypes);
 
 
-		Triple<Pair<double[], String[]>, double[], double[]> vcfParams = getGenotypeParams(vcfGenotypesPair);
-		Triple<Pair<double[], String[]>, double[], double[]> pedParams = getGenotypeParams(pedGenotypesPair);
+		Triple<Pair<double[], String[]>, double[], double[]> vcfParams = getGenotypeParams(refGenotypePair);
+		Triple<Pair<double[], String[]>, double[], double[]> pedParams = getGenotypeParams(testGenotypePair);
 		double mafThreshold = 0.01;
 		double crThreshold = 0.05;
 		Pair<boolean[], boolean[]> flipvariants = determineAlleleFlipsAndExcludeVariants(allelesPED, pedParams.getLeft(), allelesVCF, vcfParams.getLeft(), variants, out + "vcfpedAlleleFlips.txt",
@@ -911,23 +956,23 @@ public class GenotypeTools {
 		boolean[] flipGenotypes = flipvariants.getRight();
 
 		// correlate samples
-		System.out.println("vcf ped sample correlations");
+		System.out.println("reference ped sample correlations");
 
 
-		Pair<double[][], double[][]> correlationOutputSamples = correlateSamples(vcfGenotypesPair, pedGenotypesPair, newSampleOrderVCF, newSampleOrderPed, out + "vcfpedSampleCorrelations.txt", excludeVariant, flipGenotypes);
+		Pair<double[][], double[][]> correlationOutputSamples = correlateSamples(refGenotypePair, testGenotypePair, newSampleOrderRef, newSampleOrderTest, out + "vcfpedSampleCorrelations.txt", excludeVariant, flipGenotypes);
 
 
-		boolean[] sampleSwapped = writeBestCorrelations(correlationOutputSamples, newSampleOrderVCF, newSampleOrderPed, out + "vcfpedBestSampleCorrelations.txt");
+		boolean[] sampleSwapped = writeBestCorrelations(correlationOutputSamples, newSampleOrderRef, newSampleOrderTest, out + "vcfpedBestSampleCorrelations.txt");
 
 		// correlate variants
-		System.out.println("vcf ped genotype correlations");
+		System.out.println("reference ped genotype correlations");
 
 
-		Pair<double[][], double[][]> correlationOutputVariants = correlateVariants(vcfGenotypesPair, pedGenotypesPair, variants, out + "vcfpedGenotypeCorrelations.txt", excludeVariant, flipGenotypes, sampleSwapped);
+		Pair<double[][], double[][]> correlationOutputVariants = correlateVariants(refGenotypePair, testGenotypePair, variants, out + "vcfpedGenotypeCorrelations.txt", excludeVariant, flipGenotypes, sampleSwapped);
 		writeBestCorrelations(correlationOutputVariants, variants, variants, out + "vcfpedBestGenotypeCorrelations.txt");
 
 		// write discordantGenotypes
-		writeDiscordantGenotypes(vcfGenotypesPair, pedGenotypesPair, variants, out + "discordantGenotypes.txt", excludeVariant, flipGenotypes, sampleSwapped, sharedSamples);
+		writeDiscordantGenotypes(refGenotypePair, testGenotypePair, variants, out + "discordantGenotypes.txt", excludeVariant, flipGenotypes, sampleSwapped, sharedSamples);
 
 
 	}

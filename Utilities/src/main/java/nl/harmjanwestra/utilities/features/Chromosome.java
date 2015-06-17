@@ -128,6 +128,9 @@ public enum Chromosome {
         if (chrStr.equals("chr22") || chrStr.equals("22")) {
             return Chromosome.TWENTYTWO;
         }
+        if (chrStr.equals("chr23") || chrStr.equals("23")) {
+            return Chromosome.X;
+        }
         if (chrStr.equals("chry") || chrStr.equals("y")) {
             return Chromosome.Y;
         }

@@ -142,7 +142,7 @@ public class LocusCoveragePlot extends DefaultGraphics {
 			int y0 = pageMargin + (row * betweenPlotMargin) + (row * plotIndividualHeight) + genesheight;
 
 
-			// plot a grey line halfway (if strandedness)
+			// plotVariantsUniqueIneachDataset a grey line halfway (if strandedness)
 			if (coverageMapNegStr != null) {
 				int halfway = y0 + (plotIndividualHeight / 2);
 				g2d.setColor(Color.gray);
@@ -157,7 +157,7 @@ public class LocusCoveragePlot extends DefaultGraphics {
 			g2d.drawLine(x0, y0, x0, y0 + plotIndividualHeight);
 			g2d.drawLine(x0 + plotIndividualWidth, y0, x0 + plotIndividualWidth, y0 + plotIndividualHeight);
 
-			// plot the bins for this sample
+			// plotVariantsUniqueIneachDataset the bins for this sample
 			int[] negStr = null;
 			if (coverageMapNegStr != null) {
 				negStr = coverageMapNegStr[row];
@@ -188,7 +188,7 @@ public class LocusCoveragePlot extends DefaultGraphics {
 				int binX0 = x0 + (int) Math.floor(binPerc * plotIndividualWidth);
 
 				if (coverageMapNegStr != null) {
-					// plot both str
+					// plotVariantsUniqueIneachDataset both str
 					int maxPlotPixels = plotIndividualHeight / 2;
 
 					double percentOfMaxPos = (double) posStr[bin] / maxCoverage;
@@ -211,7 +211,7 @@ public class LocusCoveragePlot extends DefaultGraphics {
 					g2d.fillOval(binX0 - 1, halfway + pixelsNeg - 1, 2, 2);
 
 				} else {
-					// only plot positive str
+					// only plotVariantsUniqueIneachDataset positive str
 					int maxPlotPixels = plotIndividualHeight;
 					double percentOfMaxPos = (double) posStr[bin] / maxCoverage;
 					int pixelsPos = (int) Math.floor(percentOfMaxPos * maxPlotPixels);

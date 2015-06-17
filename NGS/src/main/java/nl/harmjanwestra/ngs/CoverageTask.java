@@ -36,6 +36,13 @@ public class CoverageTask implements Callable<Boolean> {
 		this.outputcoverageperregion = outputcoverageperregion;
 	}
 
+	public CoverageTask() {
+		bamfile = null;
+		outdir = null;
+		regions = null;
+		outputcoverageperregion = false;
+	}
+
 	public void bamToBedWithinRegions(String bamfile, String outdir, boolean outputcoverageperregion) throws IOException {
 
 		BamFileReader reader = new BamFileReader(new File(bamfile));
@@ -92,55 +99,9 @@ public class CoverageTask implements Callable<Boolean> {
 		int fct = 0;
 
 
-		HashMap<String, String> chromosomeToSequence = new HashMap<String, String>();
-
-		// hash the chromosome names (because of stupid non-conventional chromosome names)
-		for (Feature f : regions) {
-			String name = f.getChromosome().getName();
-			if (!chromosomeToSequence.containsKey(name)) {
-				boolean match = false;
-				int format = 0;
-				while (!match) {
-					SAMSequenceRecord record = null;
-					String newname = null;
-					switch (format) {
-						case 0:
-
-							record = reader.getHeader().getSequence(name);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, name);
-							}
-							break;
-						case 1:
-							newname = name.toLowerCase();
-							record = reader.getHeader().getSequence(newname);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, newname);
-							}
-							break;
-						case 2:
-							newname = name.replaceAll("chr", "");
-							newname = newname.replaceAll("Chr", "");
-							record = reader.getHeader().getSequence(newname);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, newname);
-							}
-							break;
-						case 3:
-							chromosomeToSequence.put(name, null);
-							System.out.println("Could not find chr in bamfile: " + name);
-							match = true;
-							break;
-					}
+		HashMap<String, String> chromosomeToSequence = matchChromosomeNames(reader);
 
 
-					format++;
-				}
-			}
-		}
 
 
 		TextFile[] bedout = new TextFile[samples.length];
@@ -537,6 +498,59 @@ public class CoverageTask implements Callable<Boolean> {
 		outf3.close();
 		outf4.close();
 		reader.close();
+	}
+
+	public HashMap<String,String> matchChromosomeNames(BamFileReader reader) {
+		HashMap<String, String> chromosomeToSequence = new HashMap<String, String>();
+
+		// hash the chromosome names (because of stupid non-conventional chromosome names)
+		for (Feature f : regions) {
+			String name = f.getChromosome().getName();
+			if (!chromosomeToSequence.containsKey(name)) {
+				boolean match = false;
+				int format = 0;
+				while (!match) {
+					SAMSequenceRecord record = null;
+					String newname = null;
+					switch (format) {
+						case 0:
+
+							record = reader.getHeader().getSequence(name);
+							if (record != null) {
+								match = true;
+								chromosomeToSequence.put(name, name);
+							}
+							break;
+						case 1:
+							newname = name.toLowerCase();
+							record = reader.getHeader().getSequence(newname);
+							if (record != null) {
+								match = true;
+								chromosomeToSequence.put(name, newname);
+							}
+							break;
+						case 2:
+							newname = name.replaceAll("chr", "");
+							newname = newname.replaceAll("Chr", "");
+							record = reader.getHeader().getSequence(newname);
+							if (record != null) {
+								match = true;
+								chromosomeToSequence.put(name, newname);
+							}
+							break;
+						case 3:
+							chromosomeToSequence.put(name, null);
+							System.out.println("Could not find chr in bamfile: " + name);
+							match = true;
+							break;
+					}
+
+
+					format++;
+				}
+			}
+		}
+		return chromosomeToSequence;
 	}
 
 	@Override

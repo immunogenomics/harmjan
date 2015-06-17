@@ -674,7 +674,7 @@ public class Resequencing {
 			System.out.println("");
 			System.out.println("");
 			File infile = new File(f2);
-			File sortout = new File(f2.substring(0, f2.length() - 4) + "-sort.bam");
+			File sortout = new File(f2.substring(0, f2.length() - 4) + "-sorted.bam");
 
 			if (!sortout.exists()) {
 				SortBAM sb = new SortBAM(infile, sortout, new File(tmpdir));
@@ -683,8 +683,8 @@ public class Resequencing {
 
 			// sort
 			// dedup
-			File dedupped = new File(f2.substring(0, f2.length() - 4) + "-sort-dedup.bam");
-			File deduppedmetrics = new File(f2.substring(0, f2.length() - 4) + "-sort-dedupmetrics.txt");
+			File dedupped = new File(f2.substring(0, f2.length() - 4) + "-sorted-dedup.bam");
+			File deduppedmetrics = new File(f2.substring(0, f2.length() - 4) + "-sorted-dedupmetrics.txt");
 
 			if (!dedupped.exists()) {
 				MarkDups dupMark = new MarkDups(sortout, dedupped, deduppedmetrics, new File(tmpdir));
@@ -693,7 +693,7 @@ public class Resequencing {
 			}
 
 			sortout.delete();
-			File sortoutindex = new File(f2.substring(0, f2.length() - 4) + "-sort.bam.bai");
+			File sortoutindex = new File(f2.substring(0, f2.length() - 4) + "-sorted.bam.bai");
 			sortoutindex.delete();
 		}
 //

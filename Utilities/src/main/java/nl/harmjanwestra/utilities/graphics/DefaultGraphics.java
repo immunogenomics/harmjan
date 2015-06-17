@@ -30,7 +30,7 @@ public class DefaultGraphics {
 	protected PdfWriter writer;
 	protected int figureWidth;
 	protected int figureHeight;
-	private String outputFileName;
+	protected String outputFileName;
 	private Locale defaultLocale;
 
 

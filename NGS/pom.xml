@@ -86,6 +86,16 @@
             <artifactId>NGS</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>net.rforge</groupId>
+            <artifactId>REngine</artifactId>
+            <version>0.6-8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>net.rforge</groupId>
+            <artifactId>Rserve</artifactId>
+            <version>0.6-8.1</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -97,7 +107,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>nl.harmjanwestra.ngs.PlayGround</mainClass>
+                            <mainClass>nl.harmjanwestra.ngs.Coverage</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>

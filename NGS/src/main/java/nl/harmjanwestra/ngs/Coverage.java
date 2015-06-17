@@ -79,6 +79,8 @@ public class Coverage {
 	}
 
 
+
+
 	public void bamToBedWithinRegionsForList(String listFile, String outdir, String targetregions, boolean outputcoverageperregion, int threads) throws IOException {
 		TextFile lf = new TextFile(listFile, TextFile.R);
 		ArrayList<String> samples = new ArrayList<String>();
@@ -559,7 +561,7 @@ public class Coverage {
 		outputF.close();
 	}
 
-	private ArrayList<Feature> loadRegions(String regionfile) throws IOException {
+	public ArrayList<Feature> loadRegions(String regionfile) throws IOException {
 		ArrayList<Feature> regions = new ArrayList<Feature>();
 
 		TextFile featurefile = new TextFile(regionfile, TextFile.R);
@@ -660,7 +662,7 @@ public class Coverage {
 		}
 
 
-		// plot
+		// plotVariantsUniqueIneachDataset
 		makeCoveragePlot(samples, null, x, bins, runIds, outdir + "coveragePerSampleCumulative-", 100);
 
 		int nrBins = (int) Math.ceil(maxBinCoverage / increment);

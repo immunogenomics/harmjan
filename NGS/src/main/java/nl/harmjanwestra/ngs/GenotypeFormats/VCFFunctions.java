@@ -1,18 +1,21 @@
 package nl.harmjanwestra.ngs.GenotypeFormats;
 
-import com.gs.collections.api.RichIterable;
 import com.gs.collections.api.list.MutableList;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
+import nl.harmjanwestra.ngs.GenotypeFormats.VCF.VCFGenotypeData;
 import nl.harmjanwestra.ngs.GenotypeTools;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.vcf.VCFVariantType;
 import umcg.genetica.containers.Pair;
+import umcg.genetica.containers.Triple;
+import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.io.trityper.util.BaseAnnot;
 import umcg.genetica.math.stats.HWE;
 import umcg.genetica.text.Strings;
+import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
 import java.util.*;
@@ -683,6 +686,9 @@ public class VCFFunctions {
 									if (gtCol != -1) {
 										String gt = sampleElems[gtCol];
 										String[] gtElems = gt.split("/");
+										if (gtElems.length == 1) {
+											gtElems = gt.split("\\|");
+										}
 
 										if (gtElems[0].equals(".") || gtElems[1].equals(".")) {
 											genotypes[newSampleId][newVariantId] = -1;
@@ -731,6 +737,9 @@ public class VCFFunctions {
 				String ref = elems[3];
 				String alt = elems[4];
 				chr = Chromosome.parseChr(elems[0]);
+				if (chr.equals(Chromosome.NA)) {
+					System.out.println("Could not parse chr: " + elems[0] + " for variant: " + elems[2]);
+				}
 				String[] alternates = alt.split(",");
 				String[] alleles = new String[1 + alternates.length];
 				alleles[0] = ref.intern();
@@ -747,6 +756,7 @@ public class VCFFunctions {
 					Feature f = new Feature();
 					if (!chr.equals(Chromosome.X)) {
 						f.setChromosome(chr);
+
 						f.setStart(pos);
 						f.setStop(pos);
 						output.add(f);
@@ -859,7 +869,7 @@ public class VCFFunctions {
 										   int minimalGenotypeQual,
 										   double callratethreshold,
 										   int minObservationsPerAllele) throws IOException {
-
+		System.out.println("Filtering for low freq variants: " + sequencingVCF);
 		TextFile in = new TextFile(sequencingVCF, TextFile.R);
 		String ln = in.readLine();
 		int nrHeaderElems = 9;
@@ -904,7 +914,7 @@ public class VCFFunctions {
 		variantQC.writeln(head);
 
 
-		TextFile filteredVCF = new TextFile(outputdir + "filtered.vcf", TextFile.W);
+		TextFile filteredVCF = new TextFile(outputdir + "filtered.vcf.gz", TextFile.W);
 
 		while (ln != null) {
 			if (ln.startsWith("##")) {
@@ -924,7 +934,7 @@ public class VCFFunctions {
 			} else {
 				nrVariants++;
 
-				VCFVariant variant = new VCFVariant(ln, minimalReadDepth, minimalGenotypeQual, false);
+				VCFVariant variant = new VCFVariant(ln, minimalReadDepth, minimalGenotypeQual, false, false);
 
 				int[] depths = variant.getAllelicDepths();
 
@@ -1024,59 +1034,64 @@ public class VCFFunctions {
 					// rewrite alt allele if there are only two alleles observed, while VCF defines > 2 alt alleles
 					if (variant.isBiallelic() && variantAllelesObserved.length > 2) {
 						ArrayList<String> alleles = new ArrayList<String>();
-						int[] gtToGt = new int[variantAllelesObserved.length];
+
+						HashMap<String, Integer> alleleMap = new HashMap<String, Integer>();
+						int ctr = 0;
 						for (int i = 0; i < variantAllelesObserved.length; i++) {
 							if (variantAllelesObserved[i] > 0) {
-								gtToGt[i] = alleles.size();
 								alleles.add(variant.getAlleles()[i]);
-							} else {
-								gtToGt[i] = -1;
+								alleleMap.put(variant.getAlleles()[i], ctr);
+								ctr++;
 							}
 						}
 
 						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
-						String[] lnElems = ln.split("\t");
-						lnElems[3] = alleles.get(0);
-						lnElems[4] = alleles.get(1);
-						String[] format = lnElems[8].split(":");
-						int gtCol = -1; // genotype
+//						String[] lnElems = ln.split("\t");
+//						lnElems[3] = alleles.get(0);
+//						lnElems[4] = alleles.get(1);
+//						String[] format = lnElems[8].split(":");
+//						int gtCol = -1; // genotype
+//
+//						for (int c = 0; c < format.length; c++) {
+//							if (format[c].equals("GT")) {
+//								gtCol = c;
+//							}
+//						}
 
-						for (int c = 0; c < format.length; c++) {
-							if (format[c].equals("GT")) {
-								gtCol = c;
-							}
-						}
+//						for (int i = nrHeaderElems; i < lnElems.length; i++) {
+//							String[] sampleElems = lnElems[i].split(":");
+//							if (gtCol != -1) {
+//								String gt = sampleElems[gtCol];
+//								String[] gtElems = gt.split("/");
+//								if (gtElems.length == 1) { // phased genotypes
+//									gtElems = gt.split("\\|");
+//								}
+//
+//								if (gtElems[0].equals(".") || gtElems[1].equals(".")) {
+//									lnElems[i] = "./.";
+//								} else {
+//									byte gt1 = 0;
+//									byte gt2 = 0;
+//									try {
+//										gt1 = Byte.parseByte(gtElems[0]);
+//										gt2 = Byte.parseByte(gtElems[1]);
+//
+//										lnElems[i] = gtToGt[gt1] + "/" + gtToGt[gt2];
+//
+//									} catch (NumberFormatException e) {
+//										lnElems[i] = "./.";
+//									}
+//								}
+//							}
+//						}
 
-						for (int i = nrHeaderElems; i < lnElems.length; i++) {
-							String[] sampleElems = lnElems[i].split(":");
-							if (gtCol != -1) {
-								String gt = sampleElems[gtCol];
-								String[] gtElems = gt.split("/");
-								if (gtElems.length == 1) { // phased genotypes
-									gtElems = gt.split("\\|");
-								}
+						String[] newAlleles = alleles.toArray(new String[0]);
+						variant.recodeAlleles(alleleMap, newAlleles);
+						// filteredVCF.writeln(Strings.concat(lnElems, Strings.tab));
+						filteredVCF.writeln(variant.toVCFString());
 
-								if (gtElems[0].equals(".") || gtElems[1].equals(".")) {
-									lnElems[i] = "./.";
-								} else {
-									byte gt1 = 0;
-									byte gt2 = 0;
-									try {
-										gt1 = Byte.parseByte(gtElems[0]);
-										gt2 = Byte.parseByte(gtElems[1]);
-
-										lnElems[i] = gtToGt[gt1] + "/" + gtToGt[gt2];
-
-									} catch (NumberFormatException e) {
-										lnElems[i] = "./.";
-									}
-								}
-							}
-						}
-
-						filteredVCF.writeln(Strings.concat(lnElems, Strings.tab));
 					} else {
-						filteredVCF.writeln(ln);
+						filteredVCF.writeln(variant.toVCFString());
 					}
 				}
 			}
@@ -1118,6 +1133,251 @@ public class VCFFunctions {
 		outf5.close();
 
 
+	}
+
+	public void filterMendelianErrors(String vcfIn, String famIn, String vcfOut, String outdir) throws IOException {
+		HashMap<String, Pair<String, String>> trios = new HashMap<String, Pair<String, String>>();
+		TextFile fam = new TextFile(famIn, TextFile.R);
+		String[] elems = fam.readLineElems(TextFile.tab);
+		System.out.println("Filtering mendel errors:");
+		System.out.println("in: " + vcfIn);
+		System.out.println("out: " + vcfOut);
+		System.out.println("fam: " + famIn);
+
+		while (elems != null) {
+
+			String sample = elems[1];
+			String p1 = elems[2];
+			String p2 = elems[3];
+			if (!p1.equals("0") && !p2.equals("0")) {
+				if (sample.equals("40203302")) {
+					System.out.println(sample + "\t" + p1 + "\t" + p2);
+				}
+				Pair p = new Pair<String, String>(p1, p2);
+				trios.put(sample, p);
+			}
+			elems = fam.readLineElems(TextFile.tab);
+		}
+		fam.close();
+
+		System.out.println(trios.size() + " family relationships/trios");
+
+		String[] samples = new String[]{};
+		boolean[] hasParents = new boolean[]{};
+		int[][] sampleToParentId = new int[][]{};
+
+		TextFile vcf = new TextFile(vcfIn, TextFile.R);
+
+		TextFile out = new TextFile(vcfOut, TextFile.W);
+		TextFile log = new TextFile(outdir + "mendelianerrorlog.txt", TextFile.W);
+		TextFile logmendel = new TextFile(outdir + "mendelianerrors.txt", TextFile.W);
+
+
+		String ln = vcf.readLine();
+		while (ln != null) {
+			if (ln.startsWith("#")) {
+
+				if (ln.startsWith("#CHROM")) {
+					HashMap<String, Integer> sampleIndex = new HashMap<String, Integer>();
+					int sampleCtr = 0;
+					String[] vcfElemes = ln.split("\t");
+					samples = new String[vcfElemes.length - 9];
+					hasParents = new boolean[vcfElemes.length - 9];
+					sampleToParentId = new int[vcfElemes.length - 9][2];
+					int nrSamplesWithParents = 0;
+					System.out.println(vcfElemes.length + " columns on the VCF");
+					System.out.println(hasParents.length + " spaces for parents.");
+					for (int i = 9; i < vcfElemes.length; i++) {
+						String sample = vcfElemes[i];
+						sampleIndex.put(sample, sampleCtr);
+						samples[sampleCtr] = sample;
+						Pair<String, String> parents = trios.get(sample);
+						if (parents != null) {
+							hasParents[sampleCtr] = true;
+							nrSamplesWithParents++;
+						}
+						sampleCtr++;
+					}
+					System.out.println(nrSamplesWithParents + " samples with parents in dataset");
+
+					for (int i = 0; i < samples.length; i++) {
+						Pair<String, String> parents = trios.get(samples[i]);
+						if (parents != null) {
+							hasParents[i] = true;
+							String p1 = parents.getLeft();
+							String p2 = parents.getRight();
+
+							Integer i1 = sampleIndex.get(p1);
+							Integer i2 = sampleIndex.get(p2);
+							if (i1 == null) {
+								i1 = -1;
+							}
+							if (i2 == null) {
+								i2 = -1;
+							}
+							sampleToParentId[i][0] = i1;
+							sampleToParentId[i][1] = i2;
+						} else {
+							sampleToParentId[i][0] = -1;
+							sampleToParentId[i][1] = -1;
+						}
+					}
+				}
+				out.writeln(ln);
+			} else {
+				VCFVariant var = new VCFVariant(ln);
+				if (!var.isBiallelic()) {
+					// multi allelic variants complicate things..... let's just output these
+					out.writeln(var.toVCFString());
+				} else {
+					byte[][] alleles = var.getGenotypeAlleles();
+					String[] allelesStr = var.getAlleles();
+					int nrErrors = 0;
+					int nrTested = 0;
+					for (int s = 0; s < samples.length; s++) {
+						if (hasParents[s]) {
+
+							byte s1allele = alleles[s][0];
+							byte s2allele = alleles[s][1];
+							if (s1allele != -1) {
+								int p1 = sampleToParentId[s][0];
+								int p2 = sampleToParentId[s][1];
+
+
+								HashSet<Integer> allowedAlleles = new HashSet<Integer>();
+								boolean p1hasgenotype = false;
+								if (p1 != -1) {
+									byte allele1p1 = alleles[p1][0];
+									if (allele1p1 == -1) {
+										p1hasgenotype = false;
+									} else {
+										p1hasgenotype = true;
+									}
+								}
+
+								boolean p2hasgenotype = false;
+								if (p2 != -1) {
+									byte allele1p2 = alleles[p2][0];
+									if (allele1p2 == -1) {
+										p2hasgenotype = false;
+									} else {
+										p2hasgenotype = true;
+									}
+								}
+
+
+								if (p1hasgenotype || p2hasgenotype) {
+									int ctr = 0;
+									nrTested++;
+									if (p1hasgenotype && p2hasgenotype) {
+										for (int a = 0; a < 2; a++) {
+											for (int b = 0; b < 2; b++) {
+												allowedAlleles.add(alleles[p1][a] + alleles[p2][b]); // 0+0 0+1 1+0 1+1
+												ctr++;
+											}
+
+										}
+									} else if (p1hasgenotype) { // other parent missing?
+										int sum = alleles[p1][0] + alleles[p1][1];
+										if (sum == 0 || sum == 2) {
+											allowedAlleles.add(sum); // allow homozygous parent allele
+											allowedAlleles.add(1); // allow hets if homozygous
+
+										} else {
+											// all combinations possible
+											allowedAlleles.add(0); // allow homozygous parent allele
+											allowedAlleles.add(1); // allow hets if homozygous
+											allowedAlleles.add(2); // allow homozygous other allele
+										}
+
+									} else if (p2hasgenotype) {
+										int sum = alleles[p2][0] + alleles[p2][1];
+										if (sum == 0 || sum == 2) {
+											allowedAlleles.add(sum); // allow homozygous parent allele
+											allowedAlleles.add(1); // allow hets if homozygous
+										} else {
+											// all combinations possible
+											allowedAlleles.add(0); // allow homozygous parent allele
+											allowedAlleles.add(1); // allow hets if homozygous
+											allowedAlleles.add(2); // allow homozygous other allele
+										}
+									}
+
+									int sampleSum = s1allele + s2allele;
+
+
+									Integer[] allowedCodes = allowedAlleles.toArray(new Integer[allowedAlleles.size()]);
+									String allowedStr = Strings.concat(allowedCodes, Strings.comma);
+
+									String p1Str = "Unknown";
+									if (p1 != -1) {
+										p1Str = samples[p1];
+									}
+									String p2Str = "Unknown";
+									if (p2 != -1) {
+										p2Str = samples[p2];
+									}
+									String p1GenotypeStr = "./.";
+									int sum1 = -1;
+									if (p1hasgenotype) {
+										sum1 = alleles[p1][0] + alleles[p1][1];
+										p1GenotypeStr = allelesStr[alleles[p1][0]] + "/" + allelesStr[alleles[p1][1]];
+									}
+									String p2GenotypeStr = "./.";
+									if (p2hasgenotype) {
+										p2GenotypeStr = allelesStr[alleles[p2][0]] + "/" + allelesStr[alleles[p2][1]];
+									}
+									String sampleStr = allelesStr[s1allele] + "/" + allelesStr[s2allele];
+
+
+									if (!allowedAlleles.contains(sampleSum)) {
+// errorrrrr
+										var.getGenotypeAlleles()[s][0] = -1;
+										var.getGenotypeAlleles()[s][1] = -1;
+										nrErrors++;
+										logmendel.writeln(var.getChr() + "\t" + var.getPos() + "\t" + var.getId() + "\t" + Strings.concat(allelesStr, Strings.comma)
+												+ "\t" + samples[s] + "\t" + sampleStr + "\t" + s1allele + "\t" + s2allele
+												+ "\t" + p1Str + "\t" + p1GenotypeStr + "\t"
+												+ p2Str + "\t" + p2GenotypeStr + "\t" + false);
+									} else {
+//										logmendel.writeln(var.getChr() + "\t" + var.getPos() + "\t" + var.getId() + "\t" + Strings.concat(allelesStr, Strings.comma)
+//												+ "\t" + samples[s] + "\t" + sampleStr + "\t" + s1allele + "\t" + s2allele
+//												+ "\t" + p1Str + "\t" + p1GenotypeStr + "\t"
+//												+ p2Str + "\t" + p2GenotypeStr + "\t" + true);
+									}
+
+
+								}
+							}
+						}
+					}
+
+					double perc = ((double) nrErrors / nrTested);
+
+
+					var.recalculateMAFAndCallRate();
+
+					boolean includedAfterFilter = false;
+
+					if (perc < 0.1 && var.getMAF() > 0.005 && var.getCallrate() > 0.90) {
+						out.writeln(var.toVCFString());
+						includedAfterFilter = true;
+					}
+
+					log.writeln(var.getChr() + "\t" + var.getPos() + "\t" + var.getId() + "\t" + nrErrors + "\t" + nrTested + "\t" + perc + "\t" + includedAfterFilter);
+
+				}
+
+
+			}
+			ln = vcf.readLine();
+
+		}
+
+		logmendel.close();
+		log.close();
+		out.close();
+		vcf.close();
 	}
 
 	public void filterVCFVariants(String vcfIn, String vcfVariantsToFilter, String vcfOut) throws IOException {
@@ -1185,9 +1445,12 @@ public class VCFFunctions {
 			f.setChromosome(Chromosome.parseChr(elems[0]));
 			f.setStart(Integer.parseInt(elems[3]));
 			f.setStop(Integer.parseInt(elems[3]));
+			// f.setName(elems[1]);
 			if (variantMap.containsKey(f)) {
-				System.out.println(elems[1]);
+				System.out.println("Duplicate SNP!: " + elems[1] + " replacing chromosome with chr NA");
+				f.setChromosome(Chromosome.NA);
 			}
+
 			variantMap.put(f, ctr);
 			ctr++;
 			elems = tf.readLineElems(TextFile.tab);
@@ -1296,30 +1559,57 @@ public class VCFFunctions {
 
 	public void convertPEDToVCF(String ped, String vcf) throws IOException {
 
+		System.out.println("converting " + ped + " to " + vcf);
 		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
 
-		TextFile tf = new TextFile(ped + ".map", TextFile.R);
 
-		String[] elems = tf.readLineElems(TextFile.tab);
 		ArrayList<String> rsNames = new ArrayList<String>();
 		ArrayList<String> pos = new ArrayList<String>();
 		HashMap<Feature, Integer> variantMap = new HashMap<Feature, Integer>();
-		int ctr = 0;
+
+		HashSet<Feature> nonUniqueFeatures = new HashSet<Feature>();
+		HashSet<Feature> allFeatures = new HashSet<Feature>();
+		TextFile tf = new TextFile(ped + ".map", TextFile.R);
+
+		// get a list of duplicated features?
+		String[] elems = tf.readLineElems(TextFile.tab);
 		while (elems != null) {
-			rsNames.add(elems[1]);
-			pos.add(elems[0] + "_" + elems[3]);
 			Feature f = new Feature();
 			f.setChromosome(Chromosome.parseChr(elems[0]));
 			f.setStart(Integer.parseInt(elems[3]));
 			f.setStop(Integer.parseInt(elems[3]));
-			if (variantMap.containsKey(f)) {
-				System.out.println(elems[1]);
+
+			if (allFeatures.contains(f)) {
+				nonUniqueFeatures.add(f);
 			}
-			variantMap.put(f, ctr);
-			ctr++;
+			allFeatures.add(f);
+
 			elems = tf.readLineElems(TextFile.tab);
 		}
-		System.out.println(variantMap.size() + "\t" + rsNames.size());
+
+		tf.close();
+		tf.open();
+		elems = tf.readLineElems(TextFile.tab);
+		int ctr = 0;
+		// index the unique features.
+		while (elems != null) {
+
+			Feature f = new Feature();
+			f.setChromosome(Chromosome.parseChr(elems[0]));
+			f.setStart(Integer.parseInt(elems[3]));
+			f.setStop(Integer.parseInt(elems[3]));
+
+			if (!nonUniqueFeatures.contains(f)) {
+				rsNames.add(elems[1]);
+				pos.add(elems[0] + "_" + elems[3]);
+				variantMap.put(f, ctr);
+				ctr++;
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
+
+		System.out.println(variantMap.size() + " variant positions \t" + rsNames.size() + " rs names");
 
 
 		// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
@@ -1806,7 +2096,7 @@ public class VCFFunctions {
 
 		while (ln != null) {
 			if (!ln.startsWith("##") && !ln.startsWith("#CHROM")) {
-				VCFVariant variant = new VCFVariant(ln);
+				VCFVariant variant = new VCFVariant(ln, !loadGenotypes);
 
 				Feature f = new Feature();
 				f.setChromosome(Chromosome.parseChr(variant.getChr()));
@@ -1884,15 +2174,20 @@ public class VCFFunctions {
 
 		String header = "";
 		String ln = tf.readLine();
+		HashSet<String> headerLines = new HashSet<String>();
 		while (ln != null) {
 			if (ln.startsWith("##")) {
-				if (header.length() == 0) {
-					header += ln;
-				} else {
-					header += "\n" + ln;
+
+
+				if (!headerLines.contains(ln)) {
+					if (header.length() == 0) {
+						header += ln;
+					} else {
+						header += "\n" + ln;
+					}
+					vcf1OutTf.writeln(ln);
+					headerLines.add(ln);
 				}
-				mergedOut.writeln(ln);
-				vcf1OutTf.writeln(ln);
 			} else if (ln.startsWith("#")) {
 				vcf1OutTf.writeln(ln);
 			} else {
@@ -1908,12 +2203,17 @@ public class VCFFunctions {
 		ln = tf2.readLine();
 		while (ln != null) {
 			if (ln.startsWith("##")) {
-				if (header.length() == 0) {
-					header += ln;
-				} else {
-					header += "\n" + ln;
+
+				if (!headerLines.contains(ln)) {
+					if (header.length() == 0) {
+						header += ln;
+					} else {
+						header += "\n" + ln;
+					}
+					vcf2OutTf.writeln(ln);
+					headerLines.add(ln);
 				}
-				vcf2OutTf.writeln(ln);
+
 			} else if (ln.startsWith("#")) {
 				vcf2OutTf.writeln(ln);
 			} else {
@@ -1936,30 +2236,46 @@ public class VCFFunctions {
 			sampleheaderLn += "\t" + s;
 		}
 
-		mergedOut.writeln(header + "\t" + sampleheaderLn);
+		mergedOut.writeln(header + "\n" + sampleheaderLn);
 
 		GenotypeTools t = new GenotypeTools();
 
 		// reload the variants, get the positions with multiple variants at that position
-		FastListMultimap<Feature, VCFVariant> refVariantMap = getVCFVariants(refVCF, null, false);
-		FastListMultimap<Feature, VCFVariant> testVariantMap = getVCFVariants(testVCF, null, false);
 
-		RichIterable<Feature> iterator = refVariantMap.keysView();
-		RichIterable<Feature> iterator2 = testVariantMap.keysView();
+
+		VCFGenotypeData iterator = new VCFGenotypeData(refVCF);
+		VCFGenotypeData iterator2 = new VCFGenotypeData(testVCF);
 
 		HashSet<Chromosome> chromosomes = new HashSet<Chromosome>();
 
 		HashSet<Feature> allFeatures = new HashSet<Feature>();
-
-		for (Feature f : iterator) {
-			chromosomes.add(f.getChromosome());
-			allFeatures.add(f);
+		System.out.println("Inventorizing variants in: " + refVCF);
+		while (iterator.hasNext()) {
+			VCFVariant f = iterator.next();
+			Feature feat = new Feature();
+			feat.setChromosome(Chromosome.parseChr(f.getChr()));
+			feat.setStart(f.getPos());
+			feat.setStop(f.getPos());
+			chromosomes.add(feat.getChromosome());
+			allFeatures.add(feat);
 		}
 
-		for (Feature f : iterator2) {
-			chromosomes.add(f.getChromosome());
-			allFeatures.add(f);
+		System.out.println(allFeatures.size() + " features after loading ref vcf");
+		iterator.close();
+
+		System.out.println("Inventorizing variants in: " + testVCF);
+
+		while (iterator2.hasNext()) {
+			VCFVariant f = iterator2.next();
+			Feature feat = new Feature();
+			feat.setChromosome(Chromosome.parseChr(f.getChr()));
+			feat.setStart(f.getPos());
+			feat.setStop(f.getPos());
+			chromosomes.add(feat.getChromosome());
+			allFeatures.add(feat);
 		}
+		iterator2.close();
+		System.out.println(allFeatures.size() + " features after loading test vcf");
 
 		ArrayList<Feature> allFeatureArr = new ArrayList<Feature>();
 		allFeatureArr.addAll(allFeatures);
@@ -1985,8 +2301,8 @@ public class VCFFunctions {
 				"testVariantMinorAlleleAM\t" +
 				"Reason");
 
-		TextFile uniqueRef = new TextFile(vcf1out+"-uniqueVars.txt", TextFile.W);
-		TextFile uniqueTest = new TextFile(vcf2out+"-uniqueVars.txt", TextFile.W);
+		TextFile uniqueRef = new TextFile(vcf1out + "-uniqueVars.txt", TextFile.W);
+		TextFile uniqueTest = new TextFile(vcf2out + "-uniqueVars.txt", TextFile.W);
 		for (Chromosome chr : chromosomes) {
 			ArrayList<Feature> chrFeatures = new ArrayList<Feature>();
 			HashSet<Feature> chrFeatureSet = new HashSet<Feature>();
@@ -1997,14 +2313,20 @@ public class VCFFunctions {
 				}
 			}
 
-			// load the genotypes..
-			refVariantMap = getVCFVariants(refVCF, chrFeatureSet, true);
-			testVariantMap = getVCFVariants(testVCF, chrFeatureSet, true);
 
+			// load the genotypes..
+			System.out.println("loading variants from: " + refVCF);
+			FastListMultimap<Feature, VCFVariant> refVariantMap = getVCFVariants(refVCF, chrFeatureSet, true);
+			System.out.println("loading variants from: " + testVCF);
+			FastListMultimap<Feature, VCFVariant> testVariantMap = getVCFVariants(testVCF, chrFeatureSet, true);
+
+			System.out.println(chr.getName() + "\t" + chrFeatures.size() + " features " + refVariantMap.size() + " in ref and " + testVariantMap.size() + " in test");
 
 			for (Feature f : chrFeatures) {
 
+
 				MutableList<VCFVariant> refVariants = refVariantMap.get(f);
+
 				MutableList<VCFVariant> testVariants = testVariantMap.get(f);
 
 
@@ -2028,9 +2350,17 @@ public class VCFFunctions {
 						}
 					}
 				} else {
+					boolean[] testVariantAlreadyWritten = new boolean[testVariants.size()];
+
 
 					for (int x = 0; x < refVariants.size(); x++) {
 						VCFVariant refVariant = refVariants.get(x);
+
+						boolean refVariantAlreadyMerged = false;
+						if (refVariant.getPos() == 2985620) {
+							System.out.println(x + " - ref: " + Strings.concat(refVariant.getAlleles(), Strings.comma, 0, refVariant.getAlleles().length));
+						}
+
 						String logln = refVariant.getChr()
 								+ "\t" + refVariant.getPos()
 								+ "\t" + x
@@ -2040,15 +2370,24 @@ public class VCFFunctions {
 								+ "\t" + refVariant.getMinorAllele()
 								+ "\t" + refVariant.getMAF();
 
-
-						String logoutputln = logln;
-						boolean[] writtenln = new boolean[testVariants.size()];
 						for (int y = 0; y < testVariants.size(); y++) {
-							if (writtenln[y]) {
 
+							String logoutputln = logln;
+
+
+							VCFVariant testVariant = testVariants.get(y);
+							if (testVariant.getPos() == 2985620) {
+								System.out.println(y + " " + testVariantAlreadyWritten[y] + " test: " + Strings.concat(testVariant.getAlleles(), Strings.comma, 0, testVariant.getAlleles().length));
+							}
+							if (testVariantAlreadyWritten[y] || refVariantAlreadyMerged) {
+								logoutputln += "\t" + y
+										+ "\t" + testVariant.getId()
+										+ "\t" + testVariant.getAlleles()[0]
+										+ "\t" + Strings.concat(testVariant.getAlleles(), Strings.comma, 1, testVariant.getAlleles().length)
+										+ "\t" + testVariant.getMinorAllele()
+										+ "\t" + testVariant.getMAF() + "\t-\t-\tRefVariantAlreadyMerged";
 								// don't write again //
 							} else {
-								VCFVariant testVariant = testVariants.get(y);
 
 
 								logoutputln += "\t" + y
@@ -2127,7 +2466,8 @@ public class VCFFunctions {
 												vcf2OutTf.writeln(testVariant.toVCFString());
 												String mergeStr = mergeVariants(refVariant, testVariant, separatorInMergedFile);
 												mergedOut.writeln(mergeStr);
-												writtenln[y] = true;
+												testVariantAlreadyWritten[y] = true;
+												refVariantAlreadyMerged = true;
 												if (complement) {
 													logoutputln += "\tOK-Complement";
 												} else {
@@ -2181,8 +2521,8 @@ public class VCFFunctions {
 										// merge
 										String mergeStr = mergeVariants(refVariant, testVariant, separatorInMergedFile);
 										mergedOut.writeln(mergeStr);
-										writtenln[y] = true;
-
+										testVariantAlreadyWritten[y] = true;
+										refVariantAlreadyMerged = true;
 										logoutputln += "\tOK-MultiAllelic-AllelesRecoded";
 
 									} else {
@@ -2191,8 +2531,17 @@ public class VCFFunctions {
 									}
 								}
 							}
+							logOut.writeln(logoutputln);
+
+
 						}
-						logOut.writeln(logoutputln);
+
+						if (refVariant.getPos() == 2985620) {
+							for (int y = 0; y < testVariants.size(); y++) {
+								System.out.println(testVariantAlreadyWritten[y] + " -- " + refVariantAlreadyMerged);
+							}
+						}
+
 					}
 				}
 
@@ -2211,12 +2560,17 @@ public class VCFFunctions {
 	}
 
 	private String mergeVariants(VCFVariant var1, VCFVariant var2, String separator) {
-		String output = var1.getChr()
-				+ "\t" + var1.getPos()
-				+ "\t" + var1.getId()
-				+ "\t" + var1.getAlleles()[0]
-				+ "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length)
-				+ "\t.\t.\t.\tGT";
+		StringBuilder output = new StringBuilder();
+		output.append(var1.getChr());
+		output.append("\t");
+		output.append(var1.getPos());
+		output.append("\t");
+		output.append(var1.getId());
+		output.append("\t");
+		output.append(var1.getAlleles()[0]);
+		output.append("\t");
+		output.append(Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length));
+		output.append("\t.\t.\t.\tGT");
 
 		byte[][] genotypeAlleles1 = var1.getGenotypeAlleles();
 		byte[][] genotypeAlleles2 = var2.getGenotypeAlleles();
@@ -2225,14 +2579,35 @@ public class VCFFunctions {
 		}
 
 		for (int i = 0; i < genotypeAlleles1.length; i++) {
-			output += "\t" + genotypeAlleles1[i][0] + separator + genotypeAlleles1[i][1];
+
+			String allele1 = "" + genotypeAlleles1[i][0];
+			String allele2 = "" + genotypeAlleles1[i][1];
+
+			if (genotypeAlleles1[i][0] == -1) {
+				allele1 = ".";
+			}
+			if (genotypeAlleles1[i][1] == -1) {
+				allele2 = ".";
+			}
+
+			output.append("\t").append(allele1).append(separator).append(allele2);
 		}
 
 		for (int i = 0; i < genotypeAlleles2.length; i++) {
-			output += "\t" + genotypeAlleles2[i][0] + separator + genotypeAlleles2[i][1];
+			String allele1 = "" + genotypeAlleles2[i][0];
+			String allele2 = "" + genotypeAlleles2[i][1];
+
+			if (genotypeAlleles2[i][0] == -1) {
+				allele1 = ".";
+			}
+			if (genotypeAlleles2[i][1] == -1) {
+				allele2 = ".";
+			}
+
+			output.append("\t").append(allele1).append(separator).append(allele2);
 		}
 
-		return output;
+		return output.toString();
 	}
 
 	public void splitMultipleAllelicVariants(String vcfIn, String vcfOut) throws IOException {
@@ -2300,4 +2675,538 @@ public class VCFFunctions {
 		tfIn.close();
 		tfOut.close();
 	}
+
+	public void splitPerChromosome(String vcfIn, String outdirprefix) throws IOException {
+		System.out.println("Splitting: " + vcfIn + " to " + outdirprefix);
+		ArrayList<Feature> allVariants = getVariantsFromVCF(vcfIn);
+		HashMap<Chromosome, TextFile> textFiles = new HashMap<Chromosome, TextFile>();
+
+		for (Feature f : allVariants) {
+			if (f.getChromosome().equals(Chromosome.NA)) {
+				System.out.println("unknown chromosome found..?");
+			} else {
+				if (!textFiles.containsKey(f.getChromosome())) {
+					textFiles.put(f.getChromosome(), new TextFile(outdirprefix + "-" + f.getChromosome().getName() + ".vcf.gz", TextFile.W));
+				}
+			}
+
+		}
+		Set<Chromosome> chromosomes = textFiles.keySet();
+
+		for (Chromosome chr : chromosomes) {
+			System.out.println(chr.getName() + " found");
+
+
+		}
+
+		System.out.println(allVariants.size() + " over " + textFiles.size() + " chromosomes");
+		TextFile tf = new TextFile(vcfIn, TextFile.R);
+
+		String ln = tf.readLine();
+		while (ln != null) {
+
+			if (ln.startsWith("#")) {
+				for (Chromosome chr : chromosomes) {
+					textFiles.get(chr).writeln(ln);
+				}
+			} else {
+				VCFVariant var = new VCFVariant(ln, true);
+				Chromosome chr = Chromosome.parseChr(var.getChr());
+				TextFile tf2 = textFiles.get(chr);
+				if (tf2 != null) {
+					tf2.writeln(ln);
+				} else {
+					System.err.println("ERRORRRRR: chr: " + chr.getName() + " not found? for variant: " + var.getChr() + "-" + var.getPos() + "/" + var.getId());
+				}
+
+			}
+			ln = tf.readLine();
+		}
+
+		tf.close();
+
+
+		for (Chromosome chr : chromosomes) {
+			textFiles.get(chr).close();
+		}
+
+	}
+
+	public void filterSamples(String vcfIn, String vcfOut, String sampleList) throws IOException {
+
+		TextFile sampleFile = new TextFile(sampleList, TextFile.R);
+		HashSet<String> allowedSamples = (HashSet<String>) sampleFile.readAsSet(0, TextFile.tab);
+		sampleFile.close();
+
+		TextFile out = new TextFile(vcfOut, TextFile.W);
+		TextFile tfIn = new TextFile(vcfIn, TextFile.R);
+		String ln = tfIn.readLine();
+		boolean[] includeCol = new boolean[0];
+		while (ln != null) {
+			if (ln.startsWith("##")) {
+				out.writeln(ln);
+			} else if (ln.startsWith("#CHROM")) {
+				// populate index
+				String[] elems = ln.split("\t");
+				String outHeader = Strings.concat(elems, Strings.tab, 0, 9);
+				includeCol = new boolean[elems.length];
+				for (int i = 9; i < elems.length; i++) {
+					String sample = elems[i];
+					if (allowedSamples.contains(sample)) {
+						outHeader += "\t" + sample;
+						includeCol[i] = true;
+					}
+				}
+				out.writeln(outHeader);
+			} else {
+				String[] elems = ln.split("\t");
+				StringBuilder builder = new StringBuilder();
+				builder.append(Strings.concat(elems, Strings.tab, 0, 9));
+				for (int i = 9; i < elems.length; i++) {
+					if (includeCol[i]) {
+						builder.append("\t").append(elems[i]);
+					}
+				}
+				out.writeln(builder.toString());
+			}
+			ln = tfIn.readLine();
+		}
+
+		out.close();
+		tfIn.close();
+
+
+	}
+
+	public void splitVCFOverRandomBatches(String vcfIn, String ped, String outprefix, int nrSamplesPerBatch) throws IOException {
+
+		System.out.println("splitting: " + vcfIn);
+		System.out.println("ped: " + ped);
+		System.out.println("out: " + outprefix);
+		System.out.println("spb: " + nrSamplesPerBatch);
+		HashMap<String, Triple<String, String, String>> trios = new HashMap<String, Triple<String, String, String>>();
+
+		if (ped != null) {
+			TextFile tf = new TextFile(ped, TextFile.R);
+			String[] elems = tf.readLineElems(Strings.whitespace);
+			while (elems != null) {
+
+				String sample = elems[1];
+				String f1 = elems[2];
+				String f2 = elems[3];
+
+				boolean father = false;
+				if (!f1.equals("0")) {
+					father = true;
+				}
+				boolean mother = false;
+				if (!f2.equals("0")) {
+					mother = true;
+				}
+
+				if (father || mother) {
+					Triple<String, String, String> trio = new Triple<String, String, String>(sample, f1, f2);
+					trios.put(sample, trio);
+				}
+
+				elems = tf.readLineElems(Strings.whitespace);
+			}
+
+			tf.close();
+
+			System.out.println(trios.size() + " possible trios from ped: " + ped);
+		}
+
+		TextFile tf = new TextFile(vcfIn, TextFile.R);
+		String[] elems = tf.readLineElems(TextFile.tab);
+
+		ArrayList<String> samples = new ArrayList<String>();
+		HashMap<String, Integer> sampleIndex = new HashMap<String, Integer>();
+		while (elems != null) {
+			if (elems[0].startsWith("##")) {
+
+			} else if (elems[0].startsWith("#CHROM")) {
+
+				for (int i = 9; i < elems.length; i++) {
+					samples.add(elems[i]);
+					sampleIndex.put(elems[i], i - 9);
+				}
+
+			} else {
+				break;
+			}
+			elems = tf.readLineElems(TextFile.tab);
+
+		}
+		tf.close();
+
+		// reassign samples
+		int remainder = samples.size() % nrSamplesPerBatch; // don't give the last batch less samples
+		int nrBatches = (int) Math.ceil((double) (samples.size() - remainder) / nrSamplesPerBatch);
+
+		int remainderDistributed = (int) Math.ceil((double) remainder / nrBatches);
+		nrSamplesPerBatch += remainderDistributed; // update nr samples per batch to accomodate remainder
+
+		System.out.println("nrBatches: " + nrBatches);
+
+		// determine samples that are in trios first, if any
+		HashMap<String, Integer> sampleToBatch = new HashMap<String, Integer>();
+
+		HashSet<String> visitedSamples = new HashSet<String>();
+		int batchctr = 0;
+		TextFile batchIndexOut = new TextFile(outprefix + "-batches.txt", TextFile.W);
+		System.out.println("batches will be written to: " + outprefix + "-batches.txt");
+		for (String sample : samples) {
+			if (!visitedSamples.contains(sample) && sampleIndex.containsKey(sample)) {
+				Triple<String, String, String> trio = trios.get(sample);
+
+				if (trio != null) {
+
+					String father = trio.getMiddle();
+					String mother = trio.getRight();
+
+					boolean fatherpresent = false;
+					boolean motherpresent = false;
+					if (!father.equals("0")) {
+
+						if (sampleIndex.containsKey(father)) {
+
+							fatherpresent = true;
+						}
+					}
+					if (!mother.equals("0")) {
+						if (sampleIndex.containsKey(mother)) {
+
+							motherpresent = true;
+						}
+
+					}
+
+					if (fatherpresent || motherpresent) {
+						// assign to batch
+
+						int batch = batchctr % nrBatches;
+						if (motherpresent) {
+							sampleToBatch.put(mother, batch);
+							visitedSamples.add(mother);
+							batchIndexOut.writeln(mother + "\t" + batch);
+						}
+						if (fatherpresent) {
+							sampleToBatch.put(father, batch);
+							visitedSamples.add(father);
+							batchIndexOut.writeln(father + "\t" + batch);
+						}
+						sampleToBatch.put(sample, batch);
+						batchIndexOut.writeln(sample + "\t" + batch);
+						visitedSamples.add(sample);
+						batchctr++;
+					}
+				}
+			}
+		}
+
+		// get a list of remaining samples
+		ArrayList<String> remainingSamples = new ArrayList<String>();
+		for (String sample : samples) {
+			if (!visitedSamples.contains(sample)) {
+				remainingSamples.add(sample);
+			}
+		}
+
+		batchctr = 0;
+		Random r = new Random();
+		// randomly assign unrelated samples to a batch number...
+		while (!remainingSamples.isEmpty()) {
+			String sample = remainingSamples.remove((int) (r.nextDouble() * remainingSamples.size()));
+			int batch = batchctr % nrBatches;
+			sampleToBatch.put(sample, batch);
+			batchIndexOut.writeln(sample + "\t" + batch);
+			batchctr++;
+		}
+		batchIndexOut.close();
+
+		// determine final number of samples per batch and also index the samples
+		int[] sampleToBatchIndex = new int[samples.size()];
+		int[] sampleToNewPosition = new int[samples.size()];
+
+		int[] batchSampleCounters = new int[nrBatches];
+		for (String sample : samples) {
+			Integer batch = sampleToBatch.get(sample);
+			if (batch == null) {
+				System.err.println("Unassigned sample: " + sample);
+			} else {
+				int nrSamplesInBatch = batchSampleCounters[batch];
+
+				int previousIndex = sampleIndex.get(sample);
+				sampleToBatchIndex[previousIndex] = batch;
+				sampleToNewPosition[previousIndex] = nrSamplesInBatch;
+
+				batchSampleCounters[batch]++;
+			}
+		}
+
+		System.out.println("Nr samples per batch: ");
+		TextFile[] batchout = new TextFile[nrBatches];
+		for (int batch = 0; batch < nrBatches; batch++) {
+			System.out.println(batch + "\t" + batchSampleCounters[batch]);
+			batchout[batch] = new TextFile(outprefix + "-batch-" + batch + ".vcf.gz", TextFile.W);
+		}
+
+
+		// iterate the VCF file
+		tf.open();
+		elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+			if (elems[0].startsWith("##")) {
+				for (int batch = 0; batch < nrBatches; batch++) {
+					batchout[batch].writeln(Strings.concat(elems, Strings.tab));
+				}
+			} else {
+
+				StringBuilder[] builders = new StringBuilder[nrBatches];
+				String[][] batchElems = new String[nrBatches][0];
+				for (int batch = 0; batch < nrBatches; batch++) {
+					if (builders[batch] == null) {
+						builders[batch] = new StringBuilder(100000);
+					}
+					builders[batch].append(Strings.concat(elems, Strings.tab, 0, 9));
+					batchElems[batch] = new String[batchSampleCounters[batch]];
+				}
+
+				for (int i = 9; i < elems.length; i++) {
+					int batchIndex = sampleToBatchIndex[i - 9];
+					int batchSamplePos = sampleToNewPosition[i - 9];
+					batchElems[batchIndex][batchSamplePos] = elems[i];
+				}
+
+				for (int batch = 0; batch < nrBatches; batch++) {
+					builders[batch].append("\t").append(Strings.concat(batchElems[batch], Strings.tab));
+					batchout[batch].writeln(builders[batch].toString());
+				}
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
+
+		tf.close();
+
+		for (int batch = 0; batch < nrBatches; batch++) {
+
+			batchout[batch].close();
+		}
+
+	}
+
+	public void mergeImputationBatches(String dirInPrefix, String outfilename, int nrBatches, int chromosome) throws IOException {
+
+		// make a list of variants to include
+		ArrayList<String> files = new ArrayList<String>();
+		HashMap<String, ArrayList<Double>> allVariants = new HashMap<String, ArrayList<Double>>();
+
+
+		System.out.println("Looking for " + nrBatches + " batches near " + dirInPrefix);
+		System.out.println("Out: " + outfilename);
+
+		for (int batch = 0; batch < nrBatches; batch++) {
+			String batchvcfName = dirInPrefix + "-batch-" + batch + "-Chr" + chromosome + ".vcf.gz";
+			if (Gpio.exists(batchvcfName)) {
+				files.add(batchvcfName);
+				TextFile tf = new TextFile(batchvcfName, TextFile.R);
+				String[] elems = tf.readLineElems(TextFile.tab);
+				System.out.println("reading: " + batchvcfName);
+				while (elems != null) {
+					if (elems[0].startsWith("##")) {
+
+					} else if (elems[0].startsWith("#CHROM")) {
+
+					} else {
+						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+						String infoStr = elems[7];
+						ArrayList<Double> rsquareds = allVariants.get(variant);
+						if (rsquareds == null) {
+							rsquareds = new ArrayList<Double>();
+						}
+						String[] infoElems = elems[7].split(";");
+						for (String s : infoElems) {
+							if (s.startsWith("AR2")) {
+								String[] rsquaredElems = s.split("=");
+								Double d = Double.parseDouble(rsquaredElems[1]);
+								rsquareds.add(d);
+							}
+						}
+						allVariants.put(variant, rsquareds);
+					}
+					elems = tf.readLineElems(TextFile.tab);
+				}
+				tf.close();
+			} else {
+				System.out.println("Could not find: " + batchvcfName);
+			}
+		}
+
+		if (files.size() != nrBatches) {
+			System.err.println("Batches missing for " + dirInPrefix);
+		} else {
+			System.out.println("great. all files are here :)");
+			// remap variants
+			Set<String> variants = allVariants.keySet();
+
+			HashMap<String, Integer> variantToInt = new HashMap<String, Integer>();
+			int ctr = 0;
+			HashMap<String, Double> variantToAR2 = new HashMap<String, Double>();
+			for (String s : variants) {
+				ArrayList<Double> d = allVariants.get(s);
+				if (d.size() == nrBatches) {
+					variantToInt.put(s, ctr);
+					double[] doubleArr = Primitives.toPrimitiveArr(d.toArray(new Double[0]));
+					double medianar2 = JSci.maths.ArrayMath.median(doubleArr);
+					variantToAR2.put(s, medianar2);
+					ctr++;
+				} else {
+					System.out.println(s + " may have duplicates?");
+				}
+
+
+			}
+
+			System.out.println(variantToInt.size() + " variants in total");
+
+			StringBuilder[] variantoutput = new StringBuilder[variantToInt.size()];
+			StringBuilder[] variantoutputHeaders = new StringBuilder[variantToInt.size()];
+
+			StringBuilder header = new StringBuilder();
+			header.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
+
+			for (int batch = 0; batch < nrBatches; batch++) {
+				String batchvcfName = dirInPrefix + "-batch-" + batch + "-Chr" + chromosome + ".vcf.gz";
+				TextFile tf = new TextFile(batchvcfName, TextFile.R);
+				String[] elems = tf.readLineElems(TextFile.tab);
+				System.out.println("reading: " + batchvcfName);
+				while (elems != null) {
+					if (elems[0].startsWith("##")) {
+
+					} else if (elems[0].startsWith("#CHROM")) {
+
+						for (int i = 9; i < elems.length; i++) {
+							header.append("\t").append(elems[i]);
+						}
+
+					} else {
+						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+						Integer id = variantToInt.get(variant);
+						if (id != null) {
+							StringBuilder builder = variantoutput[id];
+							if (builder == null) {
+								variantoutputHeaders[id] = new StringBuilder();
+								variantoutputHeaders[id].append(Strings.concat(elems, Strings.tab, 0, 7));
+								variantoutputHeaders[id].append("\t").append("AR2=").append(variantToAR2.get(variant))
+										.append("\t").append(elems[8]);
+								builder = new StringBuilder(100000);
+								variantoutput[id] = builder;
+							}
+							for (int i = 9; i < elems.length; i++) {
+								builder.append("\t").append(elems[i]);
+							}
+						}
+					}
+					elems = tf.readLineElems(TextFile.tab);
+				}
+				tf.close();
+			}
+
+			System.out.println("done reading. writing to: " + outfilename);
+			TextFile vcfout = new TextFile(outfilename, TextFile.W);
+
+			vcfout.writeln("##fileformat=VCFv4.1");
+			vcfout.writeln(header.toString());
+			for (int i = 0; i < variantoutput.length; i++) {
+				vcfout.writeln(variantoutputHeaders[i].toString() + variantoutput[i].toString());
+			}
+			vcfout.close();
+
+
+			TextFile tfin = new TextFile(outfilename, TextFile.R);
+			String[] elems = tfin.readLineElems(TextFile.tab);
+			int nr = -1;
+			int ln = 0;
+			while (elems != null) {
+				if (elems[0].startsWith("##")) {
+
+				} else if (elems[0].startsWith("#")) {
+					System.out.println(elems.length + " header elems");
+				} else {
+					if (nr == -1) {
+						System.out.println(elems.length + " sample elems: " + (elems.length - 9) + " samples");
+						nr = elems.length;
+					} else {
+						if (nr != elems.length) {
+							System.err.println("error detected in output on line " + ln + " " + elems.length + " found " + nr + " expected ");
+						}
+					}
+				}
+				ln++;
+				elems = tfin.readLineElems(TextFile.tab);
+			}
+			tfin.close();
+
+		}
+
+	}
+
+	public void isolateGT(String vcfIn, String vcfOut) throws IOException {
+		TextFile tf = new TextFile(vcfIn, TextFile.R);
+		TextFile tfout = new TextFile(vcfOut, TextFile.W);
+		String[] elems = tf.readLineElems(TextFile.tab);
+
+		while (elems != null) {
+			if (elems[0].startsWith("#")) {
+
+				tfout.writeln(Strings.concat(elems, Strings.tab));
+			} else {
+
+				boolean include = true;
+
+				// // #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1   SAMPLE2
+				String[] infoElems = elems[7].split(";");
+				for (int i = 0; i < infoElems.length; i++) {
+					String info = infoElems[i];
+					if (info.startsWith("AR2")) {
+						String[] infoStr = info.split("=");
+						if (Double.parseDouble(infoStr[1]) < 0.8) {
+							include = false;
+						}
+						break;
+					}
+				}
+
+				if (include) {
+					String[] formatElems = elems[8].split(":");
+					int gtCol = -1;
+					for (int f = 0; f < formatElems.length; f++) {
+						if (formatElems[f].equals("GT")) {
+							gtCol = f;
+							break;
+						}
+					}
+
+					StringBuilder output = new StringBuilder();
+					output.append(Strings.concat(elems, Strings.tab, 0, 8)).append("\t").append("GT");
+					for (int e = 9; e < elems.length; e++) {
+						String[] sampleElems = elems[e].split(":");
+						output.append("\t").append(sampleElems[gtCol]);
+					}
+					tfout.writeln(output.toString());
+				}
+
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
+		tfout.close();
+
+	}
+
+
 }
