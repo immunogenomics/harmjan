@@ -45,6 +45,9 @@ public class CoverageTask implements Callable<Boolean> {
 
 	public void bamToBedWithinRegions(String bamfile, String outdir, boolean outputcoverageperregion) throws IOException {
 
+		System.out.println("reading: " + bamfile);
+		System.out.println("output: " + outdir);
+		System.out.println();
 		BamFileReader reader = new BamFileReader(new File(bamfile));
 		List<SAMReadGroupRecord> readGroups = reader.getReadGroups();
 		HashMap<SAMReadGroupRecord, Integer> readgroupMap = new HashMap<SAMReadGroupRecord, Integer>();
@@ -83,7 +86,7 @@ public class CoverageTask implements Callable<Boolean> {
 		filters.add(new HCMappingQualityFilter());
 		// ilters.add(new MalformedReadFilter());
 
-		int[][] data = new int[samples.length][15];
+		int[][] data = new int[samples.length][14];
 		int[][] mapqDist = new int[samples.length][200];
 
 		double[][] avgcoverage = new double[samples.length][regions.size()];
@@ -99,9 +102,7 @@ public class CoverageTask implements Callable<Boolean> {
 		int fct = 0;
 
 
-		HashMap<String, String> chromosomeToSequence = matchChromosomeNames(reader);
-
-
+		HashMap<String, String> chromosomeToSequence = reader.matchChromosomeNames(regions);
 
 
 		TextFile[] bedout = new TextFile[samples.length];
@@ -117,9 +118,9 @@ public class CoverageTask implements Callable<Boolean> {
 			Chromosome c = f.getChromosome();
 			int start = f.getStart();
 			int stop = f.getStop();
-
-
+			int nrReads = 0;
 			String chrName = chromosomeToSequence.get(c.getName());
+
 			if (chrName != null) {
 				SAMRecordIterator it = reader.query(chrName, start - 1000, stop + 1000, true);
 
@@ -127,11 +128,10 @@ public class CoverageTask implements Callable<Boolean> {
 				int[][] tmpCoverage = new int[samples.length][stop - start];
 
 				if (it.hasNext()) {
-					SAMRecord record = it.next();
-
+//					SAMRecord record = it.next();
 
 					while (it.hasNext()) {
-
+						SAMRecord record = it.next();
 						if (!filter.filterOut(record)) {
 							SAMReadGroupRecord rg = record.getReadGroup();
 							Integer sampleId = readgroupMap.get(rg);
@@ -192,6 +192,12 @@ public class CoverageTask implements Callable<Boolean> {
 // 10
 									data[sampleId][9]++;
 								}
+
+								if (record.getSupplementaryAlignmentFlag()) {
+// 11
+									data[sampleId][10]++;
+								}
+
 
 								if (record.getReadPairedFlag() && record.getSecondOfPairFlag()) {
 // 11
@@ -290,7 +296,7 @@ public class CoverageTask implements Callable<Boolean> {
 														tmpCoverage[sampleId][windowRelativePosition]++;
 													}
 													windowRelativePosition++;
-												} // if pos < readposition
+												} // if pos < readpositio4n
 												readPosition += cigarElementLength;
 												break;
 											default:
@@ -302,9 +308,12 @@ public class CoverageTask implements Callable<Boolean> {
 								}
 							}
 						}
-						record = it.next();
+
+						nrReads++;
 					}
 				}
+
+				System.out.println("Region: " + f.getChromosome().getName() + ":" + f.getStart() + "-" + f.getStop() + " - nr reads: " + nrReads);
 
 				for (int i = 0; i < samples.length; i++) {
 					avgmapq[i][fct] /= readsperregion[i][fct];
@@ -424,12 +433,13 @@ public class CoverageTask implements Callable<Boolean> {
 				"\tgetNotPrimaryAlignmentFlag" +
 				"\tgetProperPairFlag" +
 				"\tgetReadFailsVendorQualityCheckFlag" +
+				"\tgetReadNegativeStrandFlag" +
 				"\tgetReadPairedFlag" +
 				"\tgetReadUnmappedFlag" +
+				"\tgetSupplementaryAlignmentFlag" +
 				"\tgetSecondOfPairFlag" +
-				"\tHCfilterOut" +
-				"\tTotalReads" +
-				"\tpairsNoDupPrimaryProperPairPairedBothMapped";
+				"\treadsRemovedByFilter" +
+				"\ttotalReads";
 		summary.writeln(header);
 		for (int s = 0; s < data.length; s++) {
 			String outputStr = samples[s];
@@ -467,7 +477,7 @@ public class CoverageTask implements Callable<Boolean> {
 
 		header = "-";
 		for (Feature f : regions) {
-			header += "\t" + f.getChromosome().getName() + ":" + f.getStart() + "-" + f.getStop();
+			header += "\t" + f.getChromosome().getName() + "_" + f.getStart() + "-" + f.getStop();
 		}
 		outf1.writeln(header);
 		outf2.writeln(header);
@@ -500,58 +510,7 @@ public class CoverageTask implements Callable<Boolean> {
 		reader.close();
 	}
 
-	public HashMap<String,String> matchChromosomeNames(BamFileReader reader) {
-		HashMap<String, String> chromosomeToSequence = new HashMap<String, String>();
 
-		// hash the chromosome names (because of stupid non-conventional chromosome names)
-		for (Feature f : regions) {
-			String name = f.getChromosome().getName();
-			if (!chromosomeToSequence.containsKey(name)) {
-				boolean match = false;
-				int format = 0;
-				while (!match) {
-					SAMSequenceRecord record = null;
-					String newname = null;
-					switch (format) {
-						case 0:
-
-							record = reader.getHeader().getSequence(name);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, name);
-							}
-							break;
-						case 1:
-							newname = name.toLowerCase();
-							record = reader.getHeader().getSequence(newname);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, newname);
-							}
-							break;
-						case 2:
-							newname = name.replaceAll("chr", "");
-							newname = newname.replaceAll("Chr", "");
-							record = reader.getHeader().getSequence(newname);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, newname);
-							}
-							break;
-						case 3:
-							chromosomeToSequence.put(name, null);
-							System.out.println("Could not find chr in bamfile: " + name);
-							match = true;
-							break;
-					}
-
-
-					format++;
-				}
-			}
-		}
-		return chromosomeToSequence;
-	}
 
 	@Override
 	public Boolean call() throws Exception {

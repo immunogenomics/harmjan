@@ -995,15 +995,15 @@ public class VCFFunctions {
 
 				double maf = variant.getMAF();
 				double[] alleleFrequencies = variant.getAllelefrequencies();
-				byte[][] genotypes = variant.getGenotypeAlleles();
+				byte[][] genotypes = variant.getGenotypeAllelesNew();
 				int[] variantAllelesObserved = variant.getNrAllelesObserved();
 				int nrCalled = 0;
-				for (int i = 0; i < genotypes.length; i++) {
-					if (genotypes[i][0] != -1) {
+				for (int i = 0; i < genotypes[0].length; i++) {
+					if (genotypes[0][i] != -1) {
 						nrCalled++;
 						allelesCalledPerSample[i]++;
 					}
-					if (genotypes[i][0] != -1) {
+					if (genotypes[0][i] != -1) {
 						nrCalled++;
 						allelesCalledPerSample[i]++;
 					}
@@ -1230,15 +1230,15 @@ public class VCFFunctions {
 					// multi allelic variants complicate things..... let's just output these
 					out.writeln(var.toVCFString());
 				} else {
-					byte[][] alleles = var.getGenotypeAlleles();
+					byte[][] alleles = var.getGenotypeAllelesNew();
 					String[] allelesStr = var.getAlleles();
 					int nrErrors = 0;
 					int nrTested = 0;
 					for (int s = 0; s < samples.length; s++) {
 						if (hasParents[s]) {
 
-							byte s1allele = alleles[s][0];
-							byte s2allele = alleles[s][1];
+							byte s1allele = alleles[0][s];
+							byte s2allele = alleles[1][s];
 							if (s1allele != -1) {
 								int p1 = sampleToParentId[s][0];
 								int p2 = sampleToParentId[s][1];
@@ -1247,7 +1247,7 @@ public class VCFFunctions {
 								HashSet<Integer> allowedAlleles = new HashSet<Integer>();
 								boolean p1hasgenotype = false;
 								if (p1 != -1) {
-									byte allele1p1 = alleles[p1][0];
+									byte allele1p1 = alleles[0][p1];
 									if (allele1p1 == -1) {
 										p1hasgenotype = false;
 									} else {
@@ -1257,7 +1257,7 @@ public class VCFFunctions {
 
 								boolean p2hasgenotype = false;
 								if (p2 != -1) {
-									byte allele1p2 = alleles[p2][0];
+									byte allele1p2 = alleles[0][p2];
 									if (allele1p2 == -1) {
 										p2hasgenotype = false;
 									} else {
@@ -1272,13 +1272,13 @@ public class VCFFunctions {
 									if (p1hasgenotype && p2hasgenotype) {
 										for (int a = 0; a < 2; a++) {
 											for (int b = 0; b < 2; b++) {
-												allowedAlleles.add(alleles[p1][a] + alleles[p2][b]); // 0+0 0+1 1+0 1+1
+												allowedAlleles.add(alleles[a][p1] + alleles[b][p2]); // 0+0 0+1 1+0 1+1
 												ctr++;
 											}
 
 										}
 									} else if (p1hasgenotype) { // other parent missing?
-										int sum = alleles[p1][0] + alleles[p1][1];
+										int sum = alleles[0][p1] + alleles[1][p1];
 										if (sum == 0 || sum == 2) {
 											allowedAlleles.add(sum); // allow homozygous parent allele
 											allowedAlleles.add(1); // allow hets if homozygous
@@ -1291,7 +1291,7 @@ public class VCFFunctions {
 										}
 
 									} else if (p2hasgenotype) {
-										int sum = alleles[p2][0] + alleles[p2][1];
+										int sum = alleles[0][p2] + alleles[1][p2];
 										if (sum == 0 || sum == 2) {
 											allowedAlleles.add(sum); // allow homozygous parent allele
 											allowedAlleles.add(1); // allow hets if homozygous
@@ -1320,20 +1320,20 @@ public class VCFFunctions {
 									String p1GenotypeStr = "./.";
 									int sum1 = -1;
 									if (p1hasgenotype) {
-										sum1 = alleles[p1][0] + alleles[p1][1];
-										p1GenotypeStr = allelesStr[alleles[p1][0]] + "/" + allelesStr[alleles[p1][1]];
+										sum1 = alleles[0][p1] + alleles[1][p1];
+										p1GenotypeStr = allelesStr[alleles[0][p1]] + "/" + allelesStr[alleles[1][p1]];
 									}
 									String p2GenotypeStr = "./.";
 									if (p2hasgenotype) {
-										p2GenotypeStr = allelesStr[alleles[p2][0]] + "/" + allelesStr[alleles[p2][1]];
+										p2GenotypeStr = allelesStr[alleles[0][p2]] + "/" + allelesStr[alleles[1][p2]];
 									}
 									String sampleStr = allelesStr[s1allele] + "/" + allelesStr[s2allele];
 
 
 									if (!allowedAlleles.contains(sampleSum)) {
 // errorrrrr
-										var.getGenotypeAlleles()[s][0] = -1;
-										var.getGenotypeAlleles()[s][1] = -1;
+										var.getGenotypeAllelesNew()[0][s] = -1;
+										var.getGenotypeAllelesNew()[1][s] = -1;
 										nrErrors++;
 										logmendel.writeln(var.getChr() + "\t" + var.getPos() + "\t" + var.getId() + "\t" + Strings.concat(allelesStr, Strings.comma)
 												+ "\t" + samples[s] + "\t" + sampleStr + "\t" + s1allele + "\t" + s2allele
@@ -2572,35 +2572,35 @@ public class VCFFunctions {
 		output.append(Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length));
 		output.append("\t.\t.\t.\tGT");
 
-		byte[][] genotypeAlleles1 = var1.getGenotypeAlleles();
-		byte[][] genotypeAlleles2 = var2.getGenotypeAlleles();
+		byte[][] genotypeAlleles1 = var1.getGenotypeAllelesNew();
+		byte[][] genotypeAlleles2 = var2.getGenotypeAllelesNew();
 		if (separator == null) {
 			separator = "/";
 		}
 
-		for (int i = 0; i < genotypeAlleles1.length; i++) {
+		for (int i = 0; i < genotypeAlleles1[0].length; i++) {
 
-			String allele1 = "" + genotypeAlleles1[i][0];
-			String allele2 = "" + genotypeAlleles1[i][1];
+			String allele1 = "" + genotypeAlleles1[0][i];
+			String allele2 = "" + genotypeAlleles1[1][i];
 
-			if (genotypeAlleles1[i][0] == -1) {
+			if (genotypeAlleles1[0][i] == -1) {
 				allele1 = ".";
 			}
-			if (genotypeAlleles1[i][1] == -1) {
+			if (genotypeAlleles1[1][i] == -1) {
 				allele2 = ".";
 			}
 
 			output.append("\t").append(allele1).append(separator).append(allele2);
 		}
 
-		for (int i = 0; i < genotypeAlleles2.length; i++) {
-			String allele1 = "" + genotypeAlleles2[i][0];
-			String allele2 = "" + genotypeAlleles2[i][1];
+		for (int i = 0; i < genotypeAlleles2[0].length; i++) {
+			String allele1 = "" + genotypeAlleles2[0][i];
+			String allele2 = "" + genotypeAlleles2[1][i];
 
-			if (genotypeAlleles2[i][0] == -1) {
+			if (genotypeAlleles2[0][i] == -1) {
 				allele1 = ".";
 			}
-			if (genotypeAlleles2[i][1] == -1) {
+			if (genotypeAlleles2[1][i] == -1) {
 				allele2 = ".";
 			}
 
@@ -2628,7 +2628,7 @@ public class VCFFunctions {
 				} else {
 
 					// nrVariants = alleles.length-1
-					byte[][] genotypeAlleles = var.getGenotypeAlleles(); // [ind][0]/[ind][1]
+					byte[][] genotypeAlleles = var.getGenotypeAllelesNew(); // [ind][0]/[ind][1]
 
 
 					int nrLinesWritten = 0;
@@ -2644,9 +2644,9 @@ public class VCFFunctions {
 								+ "\t.\t.\t.\tGT";
 
 
-						for (int ind = 0; ind < genotypeAlleles.length; ind++) {
-							byte gt1 = genotypeAlleles[ind][0];
-							byte gt2 = genotypeAlleles[ind][1];
+						for (int ind = 0; ind < genotypeAlleles[0].length; ind++) {
+							byte gt1 = genotypeAlleles[0][ind];
+							byte gt2 = genotypeAlleles[1][ind];
 
 
 							if (gt1 == i) {

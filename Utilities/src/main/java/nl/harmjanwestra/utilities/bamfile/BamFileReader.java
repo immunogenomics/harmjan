@@ -6,11 +6,14 @@
 package nl.harmjanwestra.utilities.bamfile;
 
 import htsjdk.samtools.*;
+import nl.harmjanwestra.utilities.features.Feature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -137,4 +140,57 @@ public class BamFileReader {
 		return reader.getFileHeader().getReadGroups();
 	}
 
+
+	public HashMap<String, String> matchChromosomeNames(ArrayList<Feature> regions) {
+		HashMap<String, String> chromosomeToSequence = new HashMap<String, String>();
+
+		// hash the chromosome names (because of stupid non-conventional chromosome names)
+		for (Feature f : regions) {
+			String name = f.getChromosome().getName();
+			if (!chromosomeToSequence.containsKey(name)) {
+				boolean match = false;
+				int format = 0;
+				while (!match) {
+					SAMSequenceRecord record = null;
+					String newname = null;
+					switch (format) {
+						case 0:
+
+							record = getHeader().getSequence(name);
+							if (record != null) {
+								match = true;
+								chromosomeToSequence.put(name, name);
+							}
+							break;
+						case 1:
+							newname = name.toLowerCase();
+							record = getHeader().getSequence(newname);
+							if (record != null) {
+								match = true;
+								chromosomeToSequence.put(name, newname);
+							}
+							break;
+						case 2:
+							newname = name.replaceAll("chr", "");
+							newname = newname.replaceAll("Chr", "");
+							record = getHeader().getSequence(newname);
+							if (record != null) {
+								match = true;
+								chromosomeToSequence.put(name, newname);
+							}
+							break;
+						case 3:
+							chromosomeToSequence.put(name, null);
+							System.out.println("Could not find chr in bamfile: " + name);
+							match = true;
+							break;
+					}
+
+
+					format++;
+				}
+			}
+		}
+		return chromosomeToSequence;
+	}
 }

@@ -51,14 +51,23 @@ public class Resequencing {
 //			e.printStackTrace();
 //		}
 
-//		try {
-			String filein = args[0];
-			String tmp = args[1];
-			s.indexDedupSortIndex(filein,tmp);
+		try {
+//			String filein = args[0];
+//			String tmp = args[1];
+//			s.indexDedupSortIndex(filein,tmp);
+			if(args.length <4){
+				System.out.println("Usage: bamin bamout tmpdir readgroup");
+			} else {
+				String bamin = args[0];
+				String bamout = args[1];
+				String tmpdir = args[2];
+				String rg = args[3];
+				s.replaceReadGroupDedupAndSort(bamin, bamout, tmpdir, rg);
+			}
 //			s.rewritePlatform(filein, tmp);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 //		s.indexDedupSortIndex(args[0],args[1]);
 	}
@@ -517,7 +526,6 @@ public class Resequencing {
 
 		SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, true);
 		MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, false);
-
 
 		SAMFileHeader header = headerMerger.getMergedHeader();
 		header.setSortOrder(SAMFileHeader.SortOrder.coordinate);

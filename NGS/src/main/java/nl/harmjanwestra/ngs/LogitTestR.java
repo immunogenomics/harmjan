@@ -31,20 +31,23 @@ public class LogitTestR implements Callable<Boolean> {
 	private final String samplesToExclude;
 	private final boolean imputationqualityfilter;
 	private final double imputationqualitythreshold;
-	private final double mafthreshold;
+	private final int minNObservedAllele;
 	private final int threadnum;
 	private final String famfile;
+	private final HashSet<String> snpLimit;
 
 	public LogitTestR(String vcf,
 					  String outputdir,
 					  String diseaseStatusFile,
 					  String covariateFile,
 					  HashSet<String> covariatesToInclude,
+					  HashSet<String> snpLimit,
 					  String samplesToExclude,
 					  String famfile,
 					  boolean imputationqualityfilter,
 					  double imputationqualitythreshold,
-					  double mafthreshold, int threadnum) {
+					  int minNObservedAllele,
+					  int threadnum) {
 		this.vcf = vcf;
 		this.outputdir = outputdir;
 		this.diseaseStatusFile = diseaseStatusFile;
@@ -53,9 +56,10 @@ public class LogitTestR implements Callable<Boolean> {
 		this.samplesToExclude = samplesToExclude;
 		this.imputationqualityfilter = imputationqualityfilter;
 		this.imputationqualitythreshold = imputationqualitythreshold;
-		this.mafthreshold = mafthreshold;
+		this.minNObservedAllele = minNObservedAllele;
 		this.threadnum = threadnum;
 		this.famfile = famfile;
+		this.snpLimit = snpLimit;
 	}
 
 	@Override
@@ -337,10 +341,11 @@ public class LogitTestR implements Callable<Boolean> {
 //				rConnection.voidEval("print(head(covariates))");
 
 				rConnection.assign("status", finalDiseaseStatus);
+				System.out.println("Loaded disease status");
 //				rConnection.voidEval("print(head(status))");
 
-				rConnection.voidEval("print('" + threadnum + " thread environment set')");
-
+//				rConnection.voidEval("print('" + threadnum + " thread environment set')");
+				System.out.println("Set thread environment.. " + threadnum);
 
 //				System.exit(-1);
 
@@ -368,7 +373,11 @@ public class LogitTestR implements Callable<Boolean> {
 					//
 					//
 					VCFVariant variant = data.next();
-					lastVariant = variant; // debugging purposes :(
+
+					String name = variant.getId();
+					if (snpLimit == null || snpLimit.contains(name)) {
+
+						lastVariant = variant; // debugging purposes :(
 
 //					double[][] probs = variant.getGenotypeProbs();
 //					double[] dosage = variant.getGenotypeDosages();
@@ -378,110 +387,110 @@ public class LogitTestR implements Callable<Boolean> {
 //
 //					String[] availableAlleles = variant.getAlleles();
 
-					Double imputationqualityscore = variant.getInfo().get("AR2");
-					boolean testvariant = false;
-					if (imputationqualityfilter) {
-						if (imputationqualityscore != null && imputationqualityscore >= imputationqualitythreshold) {
+						Double imputationqualityscore = variant.getInfo().get("AR2");
+						boolean testvariant = false;
+						if (imputationqualityfilter) {
+							if (imputationqualityscore != null && imputationqualityscore >= imputationqualitythreshold) {
+								testvariant = true;
+							} else if (imputationqualityscore == null) {
+								System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
+								System.err.println("In file: " + vcf);
+								logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
+							}
+						} else {
 							testvariant = true;
-						} else if (imputationqualityscore == null) {
-							System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
-							System.err.println("In file: " + vcf);
 						}
-					} else {
-						testvariant = true;
-					}
 
-					if (testvariant) {
+						if (testvariant) {
 
-						// recode the genotypes to the same ordering as the covariate table
-						Triple<double[][], Double, Integer> recodedGenotypes = recodeGenotypes(
-								variant.getChr() + "-" + variant.getPos() + "-" + variant.getId(),
-								includeGenotype,
-								variant.getGenotypeAlleles(),
-								variant.getAlleles().length,
+							// recode the genotypes to the same ordering as the covariate table
+							// generate pseudocontrol genotypes
+							Triple<double[][], Double, Integer> recodedGenotypes = recodeGenotypes(
+									variant.getChr() + "-" + variant.getPos() + "-" + variant.getId(),
+									includeGenotype,
+									variant.getGenotypeAllelesNew(),
+									variant.getAlleles().length,
+									kidsInTrios,
+									sampleParents,
+									finalCovariates.length);
 
-								kidsInTrios,
-								nrTrios,
-								sampleIsParent,
-								sampleParents,
 
-								finalCovariates.length,
-
-								true);
-
-						double maf = recodedGenotypes.getMiddle();
-						if (maf >= mafthreshold) {
 							Integer sampleswithgenotypes = recodedGenotypes.getRight();
-							double[][] genotypes = recodedGenotypes.getLeft();
+							double maf = recodedGenotypes.getMiddle();
 
-							assignAsRMatrix(rConnection, genotypes, "genotypes", true);
+							double mafthresholdD = minNObservedAllele / (sampleswithgenotypes * 2);
+							if (maf >= mafthresholdD) {
+
+								double[][] genotypes = recodedGenotypes.getLeft();
+
+								assignAsRMatrix(rConnection, genotypes, "genotypes", true);
 
 
-							// avoid running the null model very often...
-							if (!sampleswithgenotypes.equals(genotypes[0].length)) {
-								rConnection.voidEval("notnagenotypes<-apply(!is.na(genotypes),1,any)");
-								rConnection.voidEval("glm_null <- glm(status[notnagenotypes] ~ covariates[notnagenotypes,], family=binomial(logit))");
-								rConnection.voidEval("nullSummary<-summary(glm_null)");
-								rConnection.voidEval("deviance_null <- summary(glm_null)$deviance");
-								rConnection.voidEval("nulldf <- summary(glm_null)$df[1]");
-								previousVariantHasMissingGenotyes = true;
-							} else {
-								if (previousVariantHasMissingGenotyes || firstvariant) {
+								// avoid running the null model very often...
+								if (!sampleswithgenotypes.equals(genotypes[0].length)) {
 									rConnection.voidEval("notnagenotypes<-apply(!is.na(genotypes),1,any)");
 									rConnection.voidEval("glm_null <- glm(status[notnagenotypes] ~ covariates[notnagenotypes,], family=binomial(logit))");
 									rConnection.voidEval("nullSummary<-summary(glm_null)");
 									rConnection.voidEval("deviance_null <- summary(glm_null)$deviance");
 									rConnection.voidEval("nulldf <- summary(glm_null)$df[1]");
-									firstvariant = false;
+									previousVariantHasMissingGenotyes = true;
+								} else {
+									if (previousVariantHasMissingGenotyes || firstvariant) {
+										rConnection.voidEval("notnagenotypes<-apply(!is.na(genotypes),1,any)");
+										rConnection.voidEval("glm_null <- glm(status[notnagenotypes] ~ covariates[notnagenotypes,], family=binomial(logit))");
+										rConnection.voidEval("nullSummary<-summary(glm_null)");
+										rConnection.voidEval("deviance_null <- summary(glm_null)$deviance");
+										rConnection.voidEval("nulldf <- summary(glm_null)$df[1]");
+										firstvariant = false;
+									}
+									previousVariantHasMissingGenotyes = false;
 								}
-								previousVariantHasMissingGenotyes = false;
-							}
 
 
 //							rConnection.voidEval("print(notnagenotypes)");
 //
-							// write out the null model summary
-							double devianceNull = rConnection.eval("deviance_null").asDouble();
+								// write out the null model summary
+								double devianceNull = rConnection.eval("deviance_null").asDouble();
 
 
-							rConnection.voidEval("glm_geno <- glm(status[notnagenotypes] ~ genotypes[notnagenotypes,] + covariates[notnagenotypes,], family=binomial(logit))");
+								rConnection.voidEval("glm_geno <- glm(status[notnagenotypes] ~ genotypes[notnagenotypes,] + covariates[notnagenotypes,], family=binomial(logit))");
 
-							rConnection.voidEval("glm_summary <- summary(glm_geno)");
-							// rConnection.voidEval("print(glm_summary)");
+								rConnection.voidEval("glm_summary <- summary(glm_geno)");
+								// rConnection.voidEval("print(glm_summary)");
 
-							// this depends on the number of alleles (!!)
+								// this depends on the number of alleles (!!)
 
-							boolean aliased = false;
-							if (genotypes.length == 1) {
-								REXP rexp = rConnection.eval("glm_summary$aliased[\"genotypes[notnagenotypes, ]\"]");
-								if (rexp.isLogical()) {
-									boolean[] bools = ((REXPLogical) rexp).isTRUE();
-									if (bools[0]) {
-										aliased = true;
-									}
-								}
-							} else {
-								rConnection.voidEval("print(glm_summary$aliased)");
-								boolean[] aliasPerAllele = new boolean[genotypes.length];
-								for (int i = 1; i < genotypes.length + 1; i++) {
-									REXP rexp = rConnection.eval("glm_summary$aliased[\"genotypes[notnagenotypes, ]" + i + "\"]");
+								boolean aliased = false;
+								if (genotypes.length == 1) {
+									REXP rexp = rConnection.eval("glm_summary$aliased[\"genotypes[notnagenotypes, ]\"]");
 									if (rexp.isLogical()) {
 										boolean[] bools = ((REXPLogical) rexp).isTRUE();
 										if (bools[0]) {
-											aliasPerAllele[i - 1] = true;
+											aliased = true;
 										}
-									} else {
-										System.out.println("not logical");
+									}
+								} else {
+									rConnection.voidEval("print(glm_summary$aliased)");
+									boolean[] aliasPerAllele = new boolean[genotypes.length];
+									for (int i = 1; i < genotypes.length + 1; i++) {
+										REXP rexp = rConnection.eval("glm_summary$aliased[\"genotypes[notnagenotypes, ]" + i + "\"]");
+										if (rexp.isLogical()) {
+											boolean[] bools = ((REXPLogical) rexp).isTRUE();
+											if (bools[0]) {
+												aliasPerAllele[i - 1] = true;
+											}
+										} else {
+											System.out.println("not logical");
+										}
+									}
+									aliased = true;
+									for (int i = 0; i < aliasPerAllele.length; i++) {
+										if (!aliasPerAllele[i]) {
+											aliased = false;
+										}
+										System.out.println(i + "\t" + aliasPerAllele[i]);
 									}
 								}
-								aliased = true;
-								for (int i = 0; i < aliasPerAllele.length; i++) {
-									if (!aliasPerAllele[i]) {
-										aliased = false;
-									}
-									System.out.println(i + "\t" + aliasPerAllele[i]);
-								}
-							}
 
 
 //							REXP rexp = rConnection.eval("glm_summary$aliased[\"genotypes1\"] || glm_summary$aliased[\"genotypes2\"]");
@@ -499,46 +508,46 @@ public class LogitTestR implements Callable<Boolean> {
 //							Double orHigh = rConnection.eval("exp(beta + 1.96 * betase)").asDouble();
 
 
-							if (!aliased) { // at least one genotype vector should remain...
-								rConnection.voidEval("deviance_geno <- glm_summary$deviance");
-								Double deviance_geno = rConnection.eval("deviance_geno").asDouble();
+								if (!aliased) { // at least one genotype vector should remain...
+									rConnection.voidEval("deviance_geno <- glm_summary$deviance");
+									Double deviance_geno = rConnection.eval("deviance_geno").asDouble();
 
-								rConnection.voidEval("deltaDeviance <- deviance_null - deviance_geno");
-								rConnection.voidEval("altdf <- glm_summary$df[1]");
-								double altdf = rConnection.eval("altdf").asDouble();
-								double nulldf = rConnection.eval("nulldf").asDouble();
-								rConnection.voidEval("dfdiff <- altdf - nulldf");
+									rConnection.voidEval("deltaDeviance <- deviance_null - deviance_geno");
+									rConnection.voidEval("altdf <- glm_summary$df[1]");
+									double altdf = rConnection.eval("altdf").asDouble();
+									double nulldf = rConnection.eval("nulldf").asDouble();
+									rConnection.voidEval("dfdiff <- altdf - nulldf");
 
-								//rConnection.voidEval("print(dfdiff)");
+									//rConnection.voidEval("print(dfdiff)");
 
-								Double pval = rConnection.eval("pchisq(deltaDeviance, df = dfdiff, lower.tail = FALSE, log.p = FALSE)").asDouble();
+									Double pval = rConnection.eval("pchisq(deltaDeviance, df = dfdiff, lower.tail = FALSE, log.p = FALSE)").asDouble();
 //							Double pval = rConnection.eval("pchisq(deltaDeviance, df = 1, lower.tail = FALSE, log.p = TRUE) / log(10)").asDouble();
 
 //									Double caseFreq = rConnection.eval("mean(genotypes[status == 1]) / 2").asDouble();
 //									Double controlFreq = rConnection.eval("mean(vdose[status == 0]) / 2").asDouble();
 
-								String outstr = variant.getId()
-										+ "\t" + variant.getChr()
-										+ "\t" + variant.getPos()
-										+ "\t" + maf
-										+ "\t" + sampleswithgenotypes
-										+ "\t" + devianceNull
-										+ "\t" + nulldf
-										+ "\t" + deviance_geno
-										+ "\t" + altdf
-										+ "\t" + pval
-										+ "\t" + (-Math.log10(pval));
+									String outstr = variant.getId()
+											+ "\t" + variant.getChr()
+											+ "\t" + variant.getPos()
+											+ "\t" + maf
+											+ "\t" + sampleswithgenotypes
+											+ "\t" + devianceNull
+											+ "\t" + nulldf
+											+ "\t" + deviance_geno
+											+ "\t" + altdf
+											+ "\t" + pval
+											+ "\t" + (-Math.log10(pval));
 //								System.out.println(outstr);
-								pvalout.writeln(outstr);
-							} else {
-								logout.writeln("variant genotypes aliased: " + imputationqualityscore + " below threshold " +
-												variant.getId()
-												+ "\t" + variant.getChr()
-												+ "\t" + variant.getPos()
-												+ "\t" + variant.getMAF()
+									pvalout.writeln(outstr);
+								} else {
+									logout.writeln("variant genotypes aliased: " + imputationqualityscore + " below threshold " + mafthresholdD
+													+ "\t" + variant.getId()
+													+ "\t" + variant.getChr()
+													+ "\t" + variant.getPos()
+													+ "\t" + variant.getMAF()
 
-								);
-							}
+									);
+								}
 
 //								}
 //							if (variant.getId().equals("rs7919913")) {
@@ -553,23 +562,25 @@ public class LogitTestR implements Callable<Boolean> {
 //							}
 //							}
 
+							} else {
+								logout.writeln("variant skipped maf: " + maf + " below threshold " +
+												variant.getId()
+												+ "\t" + variant.getChr()
+												+ "\t" + variant.getPos()
+												+ "\t" + variant.getMAF()
+
+								);
+							}
 						} else {
-							logout.writeln("variant skipped maf: " + maf + " below threshold " +
+							logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
 											variant.getId()
 											+ "\t" + variant.getChr()
 											+ "\t" + variant.getPos()
 											+ "\t" + variant.getMAF()
 
 							);
-						}
-					} else {
-						logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
-										variant.getId()
-										+ "\t" + variant.getChr()
-										+ "\t" + variant.getPos()
-										+ "\t" + variant.getMAF()
 
-						);
+						}
 
 					}
 
@@ -584,9 +595,13 @@ public class LogitTestR implements Callable<Boolean> {
                      }
                      */
 					varctr++;
-					if (varctr % 500 == 0) {
+					if (varctr % 10 == 0) {
+						if (varctr % 100 == 0) {
+							System.out.print(varctr + "\n");
+						} else {
+							System.out.print(".");
+						}
 
-						System.out.println(threadnum + "\t" + varctr + " variants processed.");
 
 					}
 				}
@@ -695,23 +710,22 @@ public class LogitTestR implements Callable<Boolean> {
 			byte[][] genotypeAlleles,
 			int nrAlleles,
 			ArrayList<Integer> kidsInTrios,
-			int nrTrios,
-			boolean[] sampleIsParent,
+
 			Integer[][] sampleParents,
-			int nrsamples,
-			boolean debug) {
+			int nrsamples
+	) {
 
 
 		double[][] outputGenotypes = new double[nrAlleles - 1][nrsamples];
 
 
-		int ctr = 0;
+		int pseudoControlCounter = 0;
 
 
-		for (int i = 0; i < genotypeAlleles.length; i++) {
+		for (int i = 0; i < genotypeAlleles[0].length; i++) {
 			if (includeGenotype[i]) {
-				byte b1 = genotypeAlleles[i][0];
-				byte b2 = genotypeAlleles[i][1];
+				byte b1 = genotypeAlleles[0][i];
+				byte b2 = genotypeAlleles[1][i];
 				if (b1 != -1) {
 					if (b1 == b2) {
 						// homozygote
@@ -720,7 +734,7 @@ public class LogitTestR implements Callable<Boolean> {
 						} else {
 							int allele = b1 - 1;
 							if (allele >= 0) {
-								outputGenotypes[allele][ctr] = 2;
+								outputGenotypes[allele][pseudoControlCounter] = 2;
 							}
 						}
 
@@ -729,22 +743,22 @@ public class LogitTestR implements Callable<Boolean> {
 						int allele1 = b1 - 1;
 						int allele2 = b2 - 1;
 						if (allele1 >= 0) {
-							outputGenotypes[allele1][ctr] = 1;
+							outputGenotypes[allele1][pseudoControlCounter] = 1;
 						}
 
 						if (allele2 >= 0) {
-							outputGenotypes[allele2][ctr] = 1;
+							outputGenotypes[allele2][pseudoControlCounter] = 1;
 						}
 
 					}
 
 				} else {
 					for (int q = 0; q < outputGenotypes.length; q++) {
-						outputGenotypes[q][ctr] = Double.NaN;
+						outputGenotypes[q][pseudoControlCounter] = Double.NaN;
 					}
 
 				}
-				ctr++;
+				pseudoControlCounter++;
 
 
 			}
@@ -778,7 +792,7 @@ public class LogitTestR implements Callable<Boolean> {
 					// parents can stay
 					// set the genotypes of the pseudocontrol missing
 					for (int j = 0; j < nrAlleles - 1; j++) {
-						outputGenotypes[j][ctr] = Double.NaN;
+						outputGenotypes[j][pseudoControlCounter] = Double.NaN;
 					}
 
 
@@ -793,9 +807,9 @@ public class LogitTestR implements Callable<Boolean> {
 
 					if (!Double.isNaN(momGt[0]) && !Double.isNaN(dadGt[0])) {
 						// mendelian error check
-						int[] allelesInDad = recode(dadGt, nrAlleles);
-						int[] allelesInMom = recode(momGt, nrAlleles);
-						int[] allelesInKid = recode(kidGt, nrAlleles);
+						int[] allelesInDad = recode(dadId, genotypeAlleles);
+						int[] allelesInMom = recode(momId, genotypeAlleles);
+						int[] allelesInKid = recode(kidId, genotypeAlleles);
 
 //						System.out.println("recoded kid: " + Strings.concat(allelesInKid, Strings.forwardslash));
 //						System.out.println("recoded mom: " + Strings.concat(allelesInMom, Strings.forwardslash));
@@ -806,6 +820,7 @@ public class LogitTestR implements Callable<Boolean> {
 						ArrayList<Integer> dadAlleles = new ArrayList<Integer>();
 						ArrayList<Integer> momAlleles = new ArrayList<Integer>();
 						HashMap<Integer, Integer> uniqueAlleles = new HashMap<Integer, Integer>();
+						// count the occurrence of each allele
 						for (int a = 0; a < allelesInDad.length; a++) {
 							dadAlleles.add(allelesInDad[a]);
 							Integer nr = uniqueAlleles.get(allelesInDad[a]);
@@ -824,6 +839,7 @@ public class LogitTestR implements Callable<Boolean> {
 							}
 							uniqueAlleles.put(allelesInMom[a], nr);
 
+							// cross with mom: generate all possible alleles
 							for (int b = 0; b < allelesInMom.length; b++) {
 								allowedGenotypes.add(new Pair<Integer, Integer>(allelesInDad[a], allelesInMom[b]));
 								allowedGenotypes.add(new Pair<Integer, Integer>(allelesInMom[b], allelesInDad[a]));
@@ -836,7 +852,7 @@ public class LogitTestR implements Callable<Boolean> {
 //								outputGenotypes[j][ctr] = Double.NaN;
 //								outputGenotypes[j][kidId] = Double.NaN;
 //							}
-							idsToNa.add(ctr);
+							idsToNa.add(pseudoControlCounter);
 							idsToNa.add(kidId);
 //							System.out.println("Mendelian error for kid: ");
 //							System.out.println("recoded kid: " + Strings.concat(allelesInKid, Strings.forwardslash) + "\t" + outputGenotypes[0][kidId]);
@@ -852,20 +868,7 @@ public class LogitTestR implements Callable<Boolean> {
 							//System.exit(-1);
 						} else {
 							// remove the kids alleles from the list of available alleles
-//						HashSet<Integer> dadAlleleHash = new HashSet<Integer>();
-//						dadAlleleHash.addAll(dadAlleles);
-//						HashSet<Integer> momAlleleHash = new HashSet<Integer>();
-//						momAlleleHash.addAll(momAlleles);
-
-//							boolean kidHet = isHet(allelesInKid);
-//							int[] pseudoAlleles = new int[2];
 							Set<Integer> keys = uniqueAlleles.keySet();
-//							for (Integer k : keys) { // key to an allele
-//								int nr = uniqueAlleles.get(k);
-//								System.out.println(k + " - " + nr + " available alleles");
-//							}
-
-
 							for (int a = 0; a < allelesInKid.length; a++) {
 								int nr = uniqueAlleles.get(allelesInKid[a]); // get count for each allele
 //								System.out.println("kid is taking one allele " + allelesInKid[a] + " - " + nr);
@@ -873,7 +876,7 @@ public class LogitTestR implements Callable<Boolean> {
 								uniqueAlleles.put(allelesInKid[a], nr); // put it back
 							}
 
-							// get all unique alleles
+							// make pseudo from remaining alleles
 							String pseudo = "";
 							for (Integer k : keys) { // key to an allele
 								int nr = uniqueAlleles.get(k); // the number of this type of allele that is left
@@ -883,7 +886,7 @@ public class LogitTestR implements Callable<Boolean> {
 //										pseudo = k + "/" + k;
 //										System.out.println("pseudo hom: " + pseudo);
 									} else {
-										outputGenotypes[k - 1][ctr] = 2; //
+										outputGenotypes[k - 1][pseudoControlCounter] = 2; //
 //										pseudo = k + "/" + k;
 //										System.out.println("pseudo hom: " + pseudo);
 										break;
@@ -894,7 +897,7 @@ public class LogitTestR implements Callable<Boolean> {
 //										System.out.println();
 //										System.out.println("pseudo allele: " + 0);
 									} else {
-										outputGenotypes[k - 1][ctr] = 1; // only one allele of this type left. PseudoCC must be het
+										outputGenotypes[k - 1][pseudoControlCounter] = 1; // only one allele of this type left. PseudoCC must be het
 //										System.out.println("pseudo allele: " + k);
 									}
 								}
@@ -905,10 +908,14 @@ public class LogitTestR implements Callable<Boolean> {
 
 					} else {
 						// broken trio due to missing genotypes.. remove the pseudocontrol
-						for (int j = 0; j < nrAlleles - 1; j++) {
+						// and the parents
+//						for (int j = 0; j < nrAlleles - 1; j++) {
 //							outputGenotypes[j][ctr] = Double.NaN;
-							idsToNa.add(ctr);
-						}
+						idsToNa.add(pseudoControlCounter);
+						idsToNa.add(momId);
+						idsToNa.add(dadId);
+
+//						}
 					}
 				}
 
@@ -916,7 +923,7 @@ public class LogitTestR implements Callable<Boolean> {
 			}
 
 
-			ctr++;
+			pseudoControlCounter++;
 
 
 		}
@@ -925,6 +932,7 @@ public class LogitTestR implements Callable<Boolean> {
 			System.out.println(variant + " has mendelian errors: " + nrMendelianErrors);
 		}
 
+		// remove the samples that were selected for removal
 		for (Integer id : idsToNa) {
 			for (int j = 0; j < nrAlleles - 1; j++) {
 				outputGenotypes[j][id] = Double.NaN;
@@ -934,26 +942,22 @@ public class LogitTestR implements Callable<Boolean> {
 		int[] nrAllelesPresent = new int[nrAlleles];
 		int called = 0;
 
-		for (int g = 0; g < nrsamples; g++) {
-
-
-			if (!Double.isNaN(outputGenotypes[0][g])) {
+		// reassess allele frequency
+		for (int sample = 0; sample < nrsamples; sample++) {
+			if (!Double.isNaN(outputGenotypes[0][sample])) {
 				called += 2;
 				int nrAllelesLeft = 2;
 				for (int j = 0; j < nrAlleles - 1; j++) {
-					if (outputGenotypes[j][g] == 2) {
+					if (outputGenotypes[j][sample] == 2d) {
 						nrAllelesPresent[j + 1] += 2;
 						nrAllelesLeft -= 2;
-						break;
-					} else if (outputGenotypes[j][g] == 1) {
+					} else if (outputGenotypes[j][sample] == 1d) {
 						nrAllelesPresent[j + 1] += 1;
-						nrAllelesLeft -= 2;
+						nrAllelesLeft -= 1;
 					}
 				}
 				nrAllelesPresent[0] += nrAllelesLeft;
 			}
-
-
 		}
 
 		// recalculate maf
@@ -965,24 +969,16 @@ public class LogitTestR implements Callable<Boolean> {
 			}
 		}
 
+
 		return new Triple<double[][], Double, Integer>(outputGenotypes, maf, called / 2);
 	}
 
-	int[] recode(double[] gt, int nrAlleles) {
+	int[] recode(int id, byte[][] gt) {
 		int[] alleles = new int[2];
-		int allelectr = 0;
 
-		for (int j = 0; j < nrAlleles - 1; j++) {
-			if (gt[j] == 1) {
-				alleles[allelectr] = j + 1;
-				allelectr++;
-			} else if (gt[j] == 2) {
-				alleles[allelectr] = j + 1;
-				allelectr++;
-				alleles[allelectr] = j + 1;
-				allelectr++;
-			}
-		}
+
+		alleles[0] = gt[0][id];
+		alleles[1] = gt[1][id];
 		return alleles;
 	}
 

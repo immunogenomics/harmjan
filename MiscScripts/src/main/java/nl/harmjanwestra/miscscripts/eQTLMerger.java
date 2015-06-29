@@ -30,10 +30,15 @@ public class eQTLMerger {
 				for (int run = 1; run < 11; run++) {
 
 
-
 					String tfName = "/broad/hptmp/hwestra/eqtlmeta/output/snpset-x0" + run + "/PermutedEQTLsPermutationRound" + perm + ".txt.gz";
-					if(perm == 0){
+					if (perm == 0) {
 						tfName = "/broad/hptmp/hwestra/eqtlmeta/output/snpset-x0" + run + "/eQTLs.txt.gz";
+					}
+					if (run == 10) {
+						tfName = "/broad/hptmp/hwestra/eqtlmeta/output/snpset-x" + run + "/PermutedEQTLsPermutationRound" + perm + ".txt.gz";
+						if (perm == 0) {
+							tfName = "/broad/hptmp/hwestra/eqtlmeta/output/snpset-x" + run + "/eQTLs.txt.gz";
+						}
 					}
 
 					TextFile tfin = new TextFile(tfName, TextFile.R);

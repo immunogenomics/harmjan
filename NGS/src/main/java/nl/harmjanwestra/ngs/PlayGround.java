@@ -8,6 +8,7 @@ import nl.harmjanwestra.ngs.GenotypeFormats.VCFVariant;
 import nl.harmjanwestra.ngs.graphics.VariantPlot;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
@@ -100,15 +101,15 @@ public class PlayGround {
 //			VCFFunctions v = new VCFFunctions();
 //			System.out.println(v.getVCFSamples("/Data/ImmunoChip/T1D/merged/merged-Chr1.vcf.gz").size());
 
-//			if(args.length<4){
-//				System.out.println("usage: d r theads pseudo");
-//				System.out.println("d0 = T1D");
-//				System.out.println("d1 = RA");
-//				System.out.println("before kg seq kgseq seqvaronly");
-//			} else {
-//				g.testVCF(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]), Boolean.parseBoolean(args[3]));
-//			//"before", "kg", "seq", "kgseq", "seqvaronly"
-//			}
+			if (args.length < 4) {
+				System.out.println("usage: d r theads pseudo");
+				System.out.println("d0 = T1D");
+				System.out.println("d1 = RA");
+				System.out.println("before kg seq kgseq seqvaronly");
+			} else {
+				g.testVCF(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]), Boolean.parseBoolean(args[3]));
+				//"before", "kg", "seq", "kgseq", "seqvaronly"
+			}
 
 //			VCFFunctions v = new VCFFunctions();
 //			v.isolateGT(args[0], args[1]);
@@ -198,14 +199,40 @@ public class PlayGround {
 //			g.immunoChipAssociationPlots();
 
 
-			String assocdir1 = "/Sync/Dropbox/PlotsWoICStudy/AssociationResults/T1D/seqvaronly/";
-			String assocdir2 = "/Sync/Dropbox/PlotsWoICStudy/AssociationResults/T1D/kg-pseudo/";
-			g.matchAssoc(assocdir1, assocdir2);
+//			String assocdir1 = "/Sync/Dropbox/PlotsWoICStudy/AssociationResults/T1D/seqvaronly/";
+//			String assocdir2 = "/Sync/Dropbox/PlotsWoICStudy/AssociationResults/T1D/kg-pseudo/";
+//			g.matchAssoc(assocdir1, assocdir2);
+//
+//			String rsqdir1 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationQuals/T1D/seqvaronly/";
+//			String rsqdir2 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationQuals/T1D/kg/";
+//			String out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationQuals/T1D/rsqcompare.txt";
+//			g.matchRSq(rsqdir1, rsqdir2, out);
 
-			String rsqdir1 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationQuals/T1D/seqvaronly/";
-			String rsqdir2 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationQuals/T1D/kg/";
-			String out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationQuals/T1D/rsqcompare.txt";
-			g.matchRSq(rsqdir1, rsqdir2, out);
+
+//			for (int chr = 1; chr < 23; chr++) {
+//				String[] files = new String[]{"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/Assoc/RA/before/Chr" + chr + "-assoc.txt",
+//						"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/Assoc/RA/kg/Chr" + chr + "-assoc.txt",
+//						"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/Assoc/RA/seqvaronly/Chr" + chr + "-assoc.txt"};
+//				String[] names = new String[]{"before", "kg", "seqvaronly"};
+//				String[] impquals = new String[]{null, "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationQuals/RA/kg/merged-variantinfo-Chr" + chr + ".txt",
+//						"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationQuals/RA/seqvaronly/merged-variantinfo-Chr" + chr + ".txt"};
+//				String out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationAndQualsMerged/RA-merged-Chr" + chr + ".txt";
+//
+//				g.mergeAssociationResults(names, files, impquals, out);
+//			}
+
+
+//			String vcf = "/Data/tmp/kg/merged-Chr1.vcf.gz";
+//			String outdir = "/Data/tmp/kg/";
+//			String diseasestatus = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergeddisease.txt";
+//			String covar = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergedCovariates.txt";
+//			String fam = "/Data/ImmunoChip/RA/binary/RA.fam";
+//
+//			HashSet<String> snplimit = null; //new HashSet<String>();
+////			snplimit.add("rs1028182");
+//
+//			LogitTestR test = new LogitTestR(vcf, outdir, diseasestatus, covar, null, snplimit, null, fam, false, 0.0, 0.0, 1);
+//			test.call();
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -237,6 +264,55 @@ public class PlayGround {
 //		} catch (IOException e) {
 //			e.printStackTrace();
 //		}
+	}
+
+	private void matchFreq(String freq, String assoc, String log) throws IOException {
+		TextFile tf = new TextFile(freq, TextFile.R);
+
+		String ln = tf.readLine();
+		HashMap<String, Double> plink = new HashMap<String, Double>();
+		while (ln != null) {
+			//    1   rs1028182    T    C       0.2116    54430
+
+			while (ln.contains("  ")) {
+				ln = ln.replaceAll("  ", " ");
+			}
+			String[] elems = Strings.whitespace.split(ln);
+
+			String snp = elems[1];
+			Double d = Double.parseDouble(elems[4]);
+			plink.put(snp, d);
+
+			ln = tf.readLine();
+		}
+		tf.close();
+
+		TextFile tf2 = new TextFile(assoc, TextFile.R);
+
+		String[] elems = tf2.readLineElems(TextFile.tab);
+		while (elems != null) {
+			String snp = elems[0];
+			Double d = Double.parseDouble(elems[3]);
+			Double otherD = plink.get(snp);
+			if (otherD != null) {
+				System.out.println(snp + "\t" + d + "\t" + otherD + "\t" + (d - otherD));
+			}
+			elems = tf2.readLineElems(TextFile.tab);
+		}
+
+		tf2.close();
+
+
+		// variant genotypes aliased: 0.0 below threshold rs181610198      1       2153588 0.5
+		TextFile tf3 = new TextFile(log, TextFile.R);
+		elems = tf3.readLineElems(Strings.whitespace);
+		while (elems != null) {
+
+
+			elems = tf3.readLineElems(Strings.whitespace);
+		}
+//
+		tf3.close();
 	}
 
 
@@ -750,12 +826,13 @@ public class PlayGround {
 		String samplestoexclude = null;
 		boolean filterimputationquality = false;
 		double imputationqualitythreshold = 0.8;
-		double mafthreshold = 0.005;
+		int mafthreshold = 5;
 
 		System.out.println("Opening threadpool for " + nrThreads + " threads.");
 		ExecutorService threadPool = Executors.newFixedThreadPool(nrThreads);
 		CompletionService<Boolean> pool = new ExecutorCompletionService<Boolean>(threadPool);
 
+		HashSet<String> snpLimit = null;
 
 		int submit = 0;
 		int start = 1;
@@ -812,6 +889,7 @@ public class PlayGround {
 										diseasestatus,
 										covariatefile,
 										covariatestoinclude,
+										snpLimit,
 										samplestoexclude,
 										null,
 										filterimputationquality,
@@ -825,6 +903,7 @@ public class PlayGround {
 										diseasestatus,
 										covariatefile,
 										covariatestoinclude,
+										snpLimit,
 										samplestoexclude,
 										famfile,
 										filterimputationquality,
@@ -839,6 +918,7 @@ public class PlayGround {
 										diseasestatus,
 										covariatefile,
 										covariatestoinclude,
+										snpLimit,
 										samplestoexclude,
 										famfile,
 										filterimputationquality,
@@ -903,14 +983,14 @@ public class PlayGround {
 //"/Data/ImmunoChip/T1D/binary/plinkvcf/plink.vcf";
 
 		String covariatefile = "";
-		String outputdir = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/Assoc/";
+		String outputdir = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/2015-06-22-Assoc/";
 		String diseasestatus = "";
 
 		HashSet<String> covariatestoinclude = null;
 		String samplestoexclude = null;
 		boolean filterimputationquality = true;
 		double imputationqualitythreshold = 0.8;
-		double mafthreshold = 0.005;
+		int mafthreshold = 5;
 
 		System.out.println("Opening threadpool for " + nrThreads + " threads.");
 		ExecutorService threadPool = Executors.newFixedThreadPool(nrThreads);
@@ -929,70 +1009,72 @@ public class PlayGround {
 		}
 //		for (int d = 0; d < endD; d++) {
 
-		if (d == 0) {
-			start = 1;
-			stop = 23;
-		} else {
-			start = 1;
-			stop = 23;
-		}
-
-		for (int chr = start; chr < stop; chr++) {
-			String vcf = "";
-			String out = "";
-			//for (int reference = 0; reference < refs.length; reference++) {
-			String ref = refs[reference];
-
-			if (ref.equals("before")) {
-				filterimputationquality = false;
-			} else {
-				filterimputationquality = true;
-			}
-
 			if (d == 0) {
-				covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergedCovariates.txt";
-				vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/T1D/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
-				if (ref.equals("before")) {
-					vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/T1D/merged/merged-Chr" + chr + ".vcf.gz";
-				}
-				diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergeddisease.txt";
-				if (pseudo) {
-					famfile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D.fam";
-					out = outputdir + "T1D/" + ref + "-pseudo/";
-				} else {
-					out = outputdir + "T1D/" + ref + "/";
-				}
-
+				start = 1;
+				stop = 23;
 			} else {
-				covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergedCovariates.txt";
-				vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/RA/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
-				diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergeddisease.txt";
+				start = 1;
+				stop = 23;
+			}
+
+			for (int chr = start; chr < stop; chr++) {
+				String vcf = "";
+				String out = "";
+				//for (int reference = 0; reference < refs.length; reference++) {
+				String ref = refs[reference];
+
 				if (ref.equals("before")) {
-					vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/RA/merged/merged-Chr" + chr + ".vcf.gz";
+					filterimputationquality = false;
+				} else {
+					filterimputationquality = true;
 				}
-				out = outputdir + "RA/" + ref + "/";
-			}
-			Gpio.createDir(out);
-			out += "Chr" + chr + "-";
 
+				if (d == 0) {
+					covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergedCovariates.txt";
+					vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/T1D/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
+					if (ref.equals("before")) {
+						vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/T1D/merged/merged-Chr" + chr + ".vcf.gz";
+					}
+					diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergeddisease.txt";
+					if (pseudo) {
+						famfile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D.fam";
+						out = outputdir + "T1D/" + ref + "-pseudo/";
+					} else {
+						out = outputdir + "T1D/" + ref + "/";
+					}
 
-			if (chr != 8 && chr != 3) {
-				if (Gpio.exists(vcf)) {
-					LogitTestR testObj = new LogitTestR(vcf,
-							out,
-							diseasestatus,
-							covariatefile,
-							covariatestoinclude,
-							samplestoexclude,
-							famfile,
-							filterimputationquality,
-							imputationqualitythreshold,
-							mafthreshold, submit);
-					pool.submit(testObj);
-					submit++;
+				} else {
+					covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergedCovariates.txt";
+					vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/RA/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
+					diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergeddisease.txt";
+					if (ref.equals("before")) {
+						vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/RA/merged/merged-Chr" + chr + ".vcf.gz";
+					}
+					out = outputdir + "RA/" + ref + "/";
 				}
-			}
-			//}
+				Gpio.createDir(out);
+				out += "Chr" + chr + "-";
+
+				HashSet<String> snpLimit = null;
+
+				if (chr != 8 && chr != 3) {
+					if (Gpio.exists(vcf)) {
+						LogitTestR testObj = new LogitTestR(vcf,
+								out,
+								diseasestatus,
+								covariatefile,
+								covariatestoinclude,
+								snpLimit,
+								samplestoexclude,
+								famfile,
+								filterimputationquality,
+								imputationqualitythreshold,
+								mafthreshold, submit);
+						pool.submit(testObj);
+						submit++;
+					}
+				}
+//			}
 
 		}
 
@@ -2264,432 +2346,6 @@ public class PlayGround {
 		}
 	}
 
-
-//	public void prepare(String[] refSets, String[] refNames, String[] datasets, String[] datasetOutput, String regionFile, String mergedOut, String removeTheseIndividuals) throws IOException {
-//		VCFFunctions f = new VCFFunctions();
-//		GenotypeTools t = new GenotypeTools();
-//		VCFFunctions v = new VCFFunctions();
-//
-//		// iterate reference datasets
-//		for (int j = 0; j < refSets.length; j++) {
-////
-//			for (int i = 0; i < datasets.length; i++) {
-//				String ds = datasets[i];
-//
-//				String out = datasetOutput[i] + refNames[j] + "/";
-//				Gpio.createDir(out);
-//				preparePlinkDataset(ds, removeTheseIndividuals, out, refSets[j], regionFile);
-//
-//				// returns outdir + "gt-filtered-sorted-" + chr.getName() + "-matched.vcf",
-//			}
-//
-//			Chromosome[] chromosomes = Chromosome.values();
-//			for (Chromosome chr : chromosomes) {
-//				ArrayList<String> files = new ArrayList<String>();
-//				// merge unimputed files
-//
-//				for (int i = 0; i < datasets.length; i++) {
-//					String out = datasetOutput[i] + refNames[j] + "/gt-filtered-sorted-" + chr.getName() + "-matched.vcf";
-//					if (Gpio.exists(out)) {
-//						files.add(out);
-//					}
-//				}
-//
-//				String file1 = files.get(0);
-//				String file2 = files.get(1);
-//				v.mergeAndIntersectVCFVariants(file1,
-//						file2,
-//						mergedOut + "tmp1.vcf.gz",
-//						mergedOut + "tmp2.vcf.gz",
-//						mergedOut + "mergedtmp.vcf.gz",
-//						"/",
-//						mergedOut + "mergelog-1.txt",
-//						false);
-//
-//				for (int i = 2; i < files.size(); i++) {
-//					file2 = files.get(i);
-//					v.mergeAndIntersectVCFVariants(mergedOut + "mergedtmp.vcf.gz",
-//							file2,
-//							mergedOut + "tmp1.vcf.gz",
-//							mergedOut + "tmp2.vcf.gz",
-//							mergedOut + "merged.vcf.gz",
-//							"/",
-//							mergedOut + "mergelog-" + i + ".txt",
-//							false);
-//					Gpio.moveFile(mergedOut + "merged.vcf.gz", mergedOut + "mergedtmp.vcf");
-//				}
-//
-//				Gpio.moveFile(mergedOut + "merged.vcf", mergedOut + "-" + refNames[j] + "-" + chr.getName() + ".vcf.gz");
-//
-//			}
-//
-////
-//
-//
-//			Chromosome[] chromosomes = Chromosome.values();
-//			for (Chromosome chr : chromosomes) {
-//				ArrayList<String> files = new ArrayList<String>();
-//				// merge unimputed files
-//
-//				for (int i = 0; i < datasets.length; i++) {
-//					String out = datasetOutput[i] + refNames[j] + "/gt-filtered-sorted-" + chr.getName() + "-matched.vcf";
-//					if (Gpio.exists(out)) {
-//						files.add(out);
-//					}
-//				}
-//
-//				if (files.size() > 0) {
-//					if (files.size() != datasets.length) {
-//						System.err.println("Not all files present: " + chr.getName() + " - " + files.size());
-//						for (String s : files) {
-//							System.out.println(s);
-//						}
-//						System.exit(-1);
-//					} else {
-//
-//						boolean allmerged = false;
-//
-//
-//					}
-//
-//					// impute
-////					/Data/Tools/vcftools/bin/vcf-sort
-//				}
-//
-//
-//			}
-//
-//
-//		}
-//	}
-
-//	public void plotRegion(String[] vcfFiles, String[] vcfNames, String regionFile, String sequencedRegions, String output) throws IOException {
-//
-//
-//		try {
-//			VariantPlot plot = new VariantPlot(output, 1200, 500);
-//
-//			plot.setMargin(100);
-//			// String[] variantFiles, String[] variantFileNames, String sequencedRegionFile, String regionFile
-//
-//
-//			TextFile tf2 = new TextFile(regionFile, TextFile.R);
-//			String[] elems = tf2.readLineElems(TextFile.tab);
-//			Feature region = new Feature();
-//			region.setChromosome(Chromosome.parseChr(elems[0]));
-//			region.setStart(Integer.parseInt(elems[1]));
-//			region.setStop(Integer.parseInt(elems[2]));
-//			tf2.close();
-//
-//			plot.plotVariantsUniqueIneachDataset(vcfFiles, vcfNames, sequencedRegions, region);
-//
-//		} catch (DocumentException e) {
-//			e.printStackTrace();
-//		}
-//
-//
-//	}
-
-	public void old() {
-		//		try {
-//			GenotypeTools t = new GenotypeTools();
-
-
-////			t.rewriteMapToBed("/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC.map", "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-positions.bed");
-////			t.rewriteMapToBed("/Data/Projects/2014-FR-Reseq/ImmunoChip/EurT1D/eur.map", "/Data/Projects/2014-FR-Reseq/ImmunoChip/EurT1D/eur-positions.bed");
-//
-//			t.convertPostLiftOverMAP("/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC.map"
-//					, "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-hg19.map",
-//					"/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-positions-lifted.bed");
-//
-//			t.convertPostLiftOverMAP("/Data/Projects/2014-FR-Reseq/ImmunoChip/EurT1D/eur.map"
-//					, "/Data/Projects/2014-FR-Reseq/ImmunoChip/EurT1D/eur-hg19.map",
-//					"/Data/Projects/2014-FR-Reseq/ImmunoChip/EurT1D/eur-positions_lifted.bed");
-//
-//
-//			String dbsnpvcf = "/Data/Projects/2014-FR-Reseq/GATKResources/dbsnp_138.b37.vcf.gz";
-//			t.updateRSNames(dbsnpvcf, "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-hg19.map", "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-hg19-updRS.map");
-//			t.updateRSNames(dbsnpvcf, "/Data/Projects/2014-FR-Reseq/ImmunoChip/EurT1D/eur-hg19.map", "/Data/Projects/2014-FR-Reseq/ImmunoChip/EurT1D/eur-hg19-updRS.map");
-
-
-//
-//
-//
-////
-////			t.compareFamFileWithSampleList("/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC.fam",
-////					"/Data/Projects/2014-FR-Reseq/RASequencingSamples-ReWrite-seqIdToImmunoChip.txt");
-////
-////			String mapfile = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra.map";
-////			String mapfileout = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_liftover.map";
-////			String liftoverbed = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_liftover.bed";
-//////			t.convertPostLiftOverMAP(mapfile, mapfileout, liftoverbed);
-//
-//
-//			String rsMergeFile = "/Data/dbSNP/b142/RsMergeArch.bcp";
-////			String rsRemoveFile = "";
-////			String mapfileIn = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_liftover.map";
-////			String mapfileOut = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_liftover_newRSIds.map";
-////			t.rewriteRSNamesUsingDBSNP();
-//
-//			String mapin = "/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015.map";
-//			String bedout = "/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015.bed";
-//
-////			t.rewriteMapToBed(mapin, bedout);
-//
-//			String bedin = "/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/LiftOver/lifted.bed";
-//			String mapout = "/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015_lifted.map";
-//
-//			t.convertPostLiftOverMAP(mapin, mapout, bedin);
-//
-//			String dbsnpvcf = "/Data/Projects/2014-FR-Reseq/GATKResources/dbsnp_138.b37.vcf.gz";
-//			String mapoutrsupdate = "/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015_lifted_updatedRS.map";
-//			t.updateRSNames(dbsnpvcf, mapout, mapoutrsupdate);
-//
-//			String mapoutrsmerge = "/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015_lifted_updatedRS_dupsMerged.map";
-//			t.rewriteRSNamesUsingDBSNP(rsMergeFile, mapoutrsupdate, mapoutrsmerge);
-////			String vcf = args[0];
-////			String plink = args[1];
-////			String out = args[2];
-////			t.summarizeVCF(vcf, out + "Summary.txt");
-////			t.determineVCFSummaryStatistics(vcf, out + "SampleCallrate.txt");
-////			t.compareVCFGenotypesToPedAndMap(vcf, plink, out);
-//
-////			String seqIdToImmunoChip = "/Data/Projects/2014-FR-Reseq/RASequencingSamples-ReWrite-seqIdToImmunoChip.txt";
-////			String famfileIn = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra.ped";
-////			String famfileOut = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/filtered/ra_rewrite.ped";
-////			t.rewriteFamFileSampleNames(seqIdToImmunoChip, famfileIn, famfileOut);
-//
-//
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//
-//		}
-
-		// 2015-03-30 finalrun analysis
-		try {
-			GenotypeTools t = new GenotypeTools();
-			VCFFunctions vcfFunctions = new VCFFunctions();
-			PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
-
-//			String mapfile1 = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-RsIDsFromT1DStudy.map";
-//			String mapfile2 = "/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015-RACIChromosomeIds.map";
-//			String outmapfile = "/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015-RsIDsFromT1DStudy.map";
-
-////			pedAndMapFunctions.updateMapFileRsIdsUsingMapFile(mapfile1, mapfile2, outmapfile);
-//
-//
-
-//			String file1 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/narac/narac.map";
-//			String file2 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/narac/narac2.map";
-//			pedAndMapFunctions.deduplicateMAP(file1,file2);
-
-//			String freqFile1 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1d/plink.frq";
-//			String freqFile2 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/raci/plink.frq";
-//			String freqFile3 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/narac/plink.frq";
-//			String freqFile4 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1dandracimerged/plink.frq";
-//
-////			String out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurvsracifreq.txt";
-////			String out2 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurvsnaracfreq.txt";
-//			String out3 = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/mergedvsnarac.txt";
-////			pedAndMapFunctions.comparePlinkAlleleFrequencies(freqFile1, freqFile2, out);
-////			pedAndMapFunctions.comparePlinkAlleleFrequencies(freqFile1, freqFile3, out2);
-//			pedAndMapFunctions.comparePlinkAlleleFrequencies(freqFile4, freqFile3, out3);
-
-//			String[] pedFiles = new String[]{"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1d/eur.ped",
-//					"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/raci/racifiltered_filteredlowcallratesnps.ped"};
-//			String[] mapFiles = new String[]{"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1d/eur.map",
-//					"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/raci/racifiltered_filteredlowcallratesnps.map"};
-//			String includeTheseVariantsFilter = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/variantsToMergeT1DandRACI.txt";
-//			String outpedFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1dandracimerged/merge";
-//			t.mergeICPedFiles(pedFiles, mapFiles, includeTheseVariantsFilter, outpedFile);
-
-//			String sampleList = "/Data/Projects/2014-FR-Reseq/2015-finalRun/AllSequencedImmunoChipIDs.txt";
-//			String fam1 = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC.fam";
-//			String out = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/allSequencedSamplesRACI.txt";
-//			pedAndMapFunctions.filterFAM(sampleList, fam1, out);
-
-
-//			t.rewriteMapFileChromosomeNames("/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC.map",
-//					"/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015.map",
-//					"/Data/Projects/2014-FR-Reseq/ImmunoChip/NARAC_reseq_immuno_March_2015/PLINK_250315_0909/NARAC_reseq_immuno_March_2015-RACIChromosomeIds.map");
-
-//			String vcfStart = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-03-30-CalledGenotypes/merged.vcf";
-//			String seqIdToImmunoChipID = "/Data/Projects/2014-FR-Reseq/RASequencingSamples-ReWrite-seqIdToImmunoChip.txt";
-//			String vcfImmunoChipIDs = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/merged-ICIds.vcf";
-//
-//			// replace the header
-////			t.replaceHeaderWithImmunoChipIDs(vcfStart, seqIdToImmunoChipID, vcfImmunoChipIDs);
-
-
-//			t.mergeICPedFiles(immunoChipPEDFiles, immunoChipMAPFiles, vcfImmunoChipIDs, mergedImmunoChipOutput);
-
-//			String[] pedFiles = new String[]{"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1d/eur.ped",
-//					"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/raci/racifiltered_filteredlowcallratesnps.ped"};
-//			String[] mapFiles = new String[]{"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1d/eur.map",
-//					"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/raci/racifiltered_filteredlowcallratesnps.map"};
-//			String includeTheseVariantsFilter = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/variantsToMergeT1DandRACI.txt";
-//			String outpedFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1dandracimerged/merge";
-//			t.mergeICPedFiles(pedFiles, mapFiles, includeTheseVariantsFilter, outpedFile);
-//
-//			String[] pedFiles = new String[]{"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1dandracimerged/merge.ped",
-//					"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/narac/narac-overlapwithmerged-lowcallratevariantsremoved.ped"};
-//			String[] mapFiles = new String[]{"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/eurt1dandracimerged/merge.map",
-//					"/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/narac/narac-overlapwithmerged-lowcallratevariantsremoved.map"};
-//			String includeTheseVariantsFilter = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/variantsToMergeT1DandRACI.txt";
-//			String exclusionList = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/variantsToExcludeWhileMergingWithNARAC.txt";
-//			String newVariantList = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/variantsToMergeT1DandRACIAndNarac.txt";
-//			t.removeVariantsFromList(includeTheseVariantsFilter, exclusionList, newVariantList);
-//			String outpedFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmerged/merge";
-//			t.mergeICPedFiles(pedFiles, mapFiles, newVariantList, outpedFile);
-//
-
-
-//			String mergedMapfile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmerged/merge.hg18map";
-//			String mergedBedfile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmerged/merge.bed";
-//			pedAndMapFunctions.rewriteMapToBed(mergedMapfile, mergedBedfile);
-
-//			String liftedmergedBedfile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmerged/merge-lifted.bed";
-//			String liftedmergedMapfile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmerged/merge.map";
-
-//			pedAndMapFunctions.convertPostLiftOverMAP(mergedMapfile
-//					, liftedmergedMapfile,
-//					liftedmergedBedfile);
-
-//			String liftedmergedMapFileDedupped = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmerged/merge-hg19-dedup.map";
-//			pedAndMapFunctions.identifyDuplicatesInMap(liftedmergedMapfile, liftedmergedMapFileDedupped);
-//
-//			String dbsnpvcf = "/Data/Projects/2014-FR-Reseq/GATKResources/dbsnp_138.b37.vcf.gz";
-
-//			String liftedmergedMapfile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19/merge.map";
-//			String outmap = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19/merge-updRS.map";
-
-//			pedAndMapFunctions.updateRSNames(dbsnpvcf,
-//					liftedmergedMapfile,
-//					outmap);
-//			pedAndMapFunctions.identifyDuplicatesInMap(outmap, outmap+"dups");
-
-			// compare VCF to genotyped individuals
-//			String sequencingVCF = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/merged-ICIds.vcf";
-//			VCFFunctions vcfFunctions = new VCFFunctions();
-//			String sequencingVCFSummary = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/merged-ICIds-summary.txt";
-//			String VCFPedSampleComparison = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/merged-ICIds-summary.txt";
-			//vcfFunctions.summarizeVCF(sequencingVCF, sequencingVCFSummary);
-////
-//			String pedfile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19/merge";
-//			boolean onlySharedSamples = true;
-			//t.compareVCFGenotypesToPedAndMap(sequencingVCF, pedfile, VCFPedSampleComparison, onlySharedSamples);
-
-//			String vcfGenotypes = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/merged-ICIds-summary.txtvcfGenotypes.txt";
-//			t.performPCAOnVCFSampleCorrelationMatrix(vcfGenotypes);
-
-//			String sampletoSampleList = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/SampleMixupsCorrected.txt";
-
-//			VCFPedSampleComparison = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/merged-ICIds-MixupsFixed.txt";
-//			sequencingVCFSummary = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/merged-ICIds-MixupsFixed-summary.txt";
-//			t.replaceSampleNames(sequencingVCF, sampletoSampleList, vcfOut);
-//			t.compareVCFGenotypesToPedAndMap(vcfOut, pedfile, VCFPedSampleComparison, onlySharedSamples);
-//			vcfFunctions.summarizeVCF(vcfOut, sequencingVCFSummary);
-
-//			String vcfOut = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/merged-ICIds-MixupsFixed.vcf";
-//			String lowFreqVariantOut = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/stats/";
-//			vcfFunctions.filterLowFrequencyVariants(vcfOut, lowFreqVariantOut, true);
-//
-//
-//			String regionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/loci.txt";
-//			String mapFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19/merge.map";
-//			String variantsToKeep = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19/variantsOverlappingSequencedRegions.txt";
-//			pedAndMapFunctions.filterMap(mapFile, regionFile, variantsToKeep);
-//			String samplesToKeep = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/merged-ICIds-MixupsFixed.txtsharedSamples.txt";
-//			String famFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19/merge.fam";
-//			String out = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19/samplesToKeep.txt";
-//			pedAndMapFunctions.filterFAM(samplesToKeep, famFile, out);
-//
-//			String famFileIn = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19variantsinsequencedregions/merge.fam";
-//			String samplesToExclude = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/stats/incompleteTrios.txt";
-//			pedAndMapFunctions.filterOutIncompleteTrios(famFileIn, samplesToExclude);
-
-//			String vcfIn = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/stats/filtered.vcf";
-//			String vcfVariantsToFilter = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/stats/violations.vcf";
-//			String vcfOut = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/PoorVariantsFiltered/filtered.vcf";
-//			vcfFunctions.filterVCF(vcfIn, vcfVariantsToFilter, vcfOut);
-//			String outdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/PoorVariantsFiltered/filtered";
-//			vcfFunctions.summarizeVCF(vcfOut, outdir);
-
-//			String mapIn = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19variantsinsequencedregions/merge.map";
-//			String vcfIn = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/PoorVariantsFiltered/filtered.vcf";
-//			String listOfVariantsToExclude = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19variantsinsequencedregions/variantsToExclude.txt";
-//			pedAndMapFunctions.filterMapForVCFVariants(mapIn, vcfIn, listOfVariantsToExclude);
-
-
-//			String ped = "/Data/Projects/2014-FR-Reseq/2015-finalRun/ImmunoChipDataFiltered/allmergedhg19variantsinsequencedregions/merge-variantsUniqueToIC-dupsremoved";
-//			String vcfIn = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/PoorVariantsFiltered/filtered.vcf";
-//			String vcfOut = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MergedWithIC/merged-lowfreqvariantsRemoved.vcf";
-//
-//			vcfFunctions.mergeWithPed(ped, vcfIn, vcfOut);
-////
-//			for (int i = 22; i < 23; i++) {
-//				String reference = "/Data/Ref/BeagleRef/chr"+i+".1kg.phase3.v5.vcf.gz";
-//				String referenceOut = "/Data/Ref/BeagleRef/chr"+i+".1kg.phase3.v5.vcf-filtered.gz";
-//				String regionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/loci.txt";
-//				vcfFunctions.filterBeagleReference(reference, referenceOut, regionFile);
-//			}
-
-
-			// filter IC map
-//			String map = "/Data/ImmunoChip/US/raci_us.hg18map";
-//			String refmap = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC.original.map";
-//			String chrupdate = "/Data/ImmunoChip/US/raci_us-raciChrNames.map";
-//			pedAndMapFunctions.rewriteMapFileChromosomeNames(refmap, map, chrupdate);
-//
-//			String rsnameref = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-RsIDsFromT1DStudy.map";
-//			String rsupdate = "/Data/ImmunoChip/US/raci_us-raciChrNames.map";
-//			pedAndMapFunctions.updateMapFileRsIdsUsingMapFile(rsnameref, map, rsupdate);
-//			String rsupdatededup = "/Data/ImmunoChip/US/raci_us-raciChrNames-dedup.map";
-//			pedAndMapFunctions.deduplicateMAP(rsupdate, rsupdatededup);
-//			String bedout = "/Data/ImmunoChip/US/raci_us-raciChrNames-dedup.bed";
-//			pedAndMapFunctions.rewriteMapToBed(rsupdatededup, bedout);
-//			String hg19map = "/Data/ImmunoChip/US/raci_us-raciChrNames-hg19.map";
-//			String liftbed = "/Data/ImmunoChip/US/raci_us-raciChrNames-dedup-lifted.bed";
-//			pedAndMapFunctions.convertPostLiftOverMAP(rsupdatededup, hg19map, liftbed);
-//			String hg19mapdedup = "/Data/ImmunoChip/US/raci_us-raciChrNames-hg19-dedup.map";
-//			pedAndMapFunctions.identifyDuplicatesInMap(hg19map, hg19mapdedup);
-//
-//			String variantSelect = "/Data/ImmunoChip/US/raci_us-raciChrNames-hg19-dedup-selectVariants.txt";
-//			String regionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/loci.txt";
-//			pedAndMapFunctions.filterMap(hg19map, regionFile, variantSelect);
-//			String ped = "/Data/ImmunoChip/US/raci_us_filtered";
-//			String vcf = "/Data/ImmunoChip/US/raci_us_filtered.vcf";
-//			vcfFunctions.convertPEDToVCF(ped, vcf);
-
-//			String origmap = "/Data/ImmunoChip/US/raci_us";
-//			String removeFile = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/RAMatchingSample.txt";
-//			String outdir = "/Data/ImmunoChip/US/";
-//			t.preparePlinkDataset(origmap, removeFile, outdir);
-
-//			String famin = "/Data/ImmunoChip/US/imputationresult/unimputed_unfiltered.fam";
-//			String refFam = "/Data/ImmunoChip/iChip_RACI_PhaseII_US_QCgp.fam";
-//			String famout = "/Data/ImmunoChip/US/imputationresult/unimputed_unfiltered-wPheno.fam";
-////			pedAndMapFunctions.replaceFamPhenotypes(famin, refFam, famout);
-//
-//			String assoc = "/Data/ImmunoChip/US/imputationresult/plink.assoc";
-//			String assocout = "/Data/ImmunoChip/US/imputationresult/plink-formanhattan.assoc";
-//			t.rewritePlinkResults(assoc, assocout);
-////
-//			String vcf = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/merged-ICIds-MixupsFixed.vcf";
-//			String imputedOnly = "/Data/ImmunoChip/US/imputationresult/plink-formanhattan-imputedonly.assoc.txt";
-//			String filter = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/MixupsFixed/stats/variantsToKeep.txt";
-//			t.getAssocForImputedVariants(assocout, vcf, filter, imputedOnly);
-
-
-//			String vcfIn = "";
-//			String vcfOut = "";
-//		}
-		} catch (Exception e) {
-
-		}
-	}
-
-
 	public void liftOverAndFilterPlinkDataset(String plinkDataset, String removeFile, String outdir, String regionFile) throws IOException {
 
 		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
@@ -3063,6 +2719,187 @@ public class PlayGround {
 
 
 		}
+
+
+	}
+
+	public void mergeAssociationResults(String[] names, String[] files, String[] impQualFiles, String outputfilename) throws IOException {
+
+
+		ArrayList<HashMap<Feature, Pair<String, String>>> dataPVal = new ArrayList<HashMap<Feature, Pair<String, String>>>();
+		ArrayList<HashMap<Feature, Pair<String, String>>> dataQualVal = new ArrayList<HashMap<Feature, Pair<String, String>>>();
+
+		HashSet<Feature> uniqueFeats = new HashSet<Feature>();
+
+		// pvalfiles
+		for (int f = 0; f < files.length; f++) {
+
+			HashMap<Feature, Pair<String, String>> p = new HashMap<Feature, Pair<String, String>>();
+			String file = files[f];
+
+			if (Gpio.exists(file)) {
+				boolean isTab = false;
+				if (file.endsWith(".tab")) {
+					//
+					isTab = true;
+				}
+
+				TextFile tf = new TextFile(file, TextFile.R);
+				tf.readLine();
+
+
+				String[] elems = tf.readLineElems(Strings.whitespace);
+				int ln = 0;
+				while (elems != null) {
+
+					if (isTab) {
+
+						String maf = "NaN";
+						Double pvald = Double.parseDouble(elems[3]);
+						double log10p = -Math.log10(pvald);
+
+						Feature feat = new Feature();
+						feat.setChromosome(Chromosome.parseChr(elems[1]));
+						Integer pos = Integer.parseInt(elems[2]);
+						String name = elems[0];
+
+						feat.setName(name);
+						feat.setStart(pos);
+						feat.setStop(pos);
+
+						Pair<String, String> pair = new Pair<String, String>(maf, "" + log10p);
+						uniqueFeats.add(feat);
+						p.put(feat, pair);
+
+					} else {
+						String maf = elems[3];
+						String pval = elems[elems.length - 1];
+
+						Feature feat = new Feature();
+						feat.setChromosome(Chromosome.parseChr(elems[1]));
+						Integer pos = Integer.parseInt(elems[2]);
+						String name = elems[0];
+
+						feat.setName(name);
+						feat.setStart(pos);
+						feat.setStop(pos);
+
+						if (name.equals("rs1028182")) {
+							System.out.println(Strings.concat(elems, Strings.tab) + ": " + file);
+
+						}
+
+
+						Pair<String, String> pair = new Pair<String, String>(maf, pval);
+
+						p.put(feat, pair);
+						uniqueFeats.add(feat);
+					}
+
+					elems = tf.readLineElems(Strings.whitespace);
+					ln++;
+				}
+				tf.close();
+
+				System.out.println(ln + " lines and " + p.size() + " variants parsed.");
+			}
+
+
+			dataPVal.add(p);
+		}
+
+		System.out.println(uniqueFeats.size() + " unique variants tested for association...");
+
+
+		// qual files
+
+		for (int f = 0; f < impQualFiles.length; f++) {
+			String file = impQualFiles[f];
+			HashMap<Feature, Pair<String, String>> p = new HashMap<Feature, Pair<String, String>>();
+			if (file != null && Gpio.exists(file)) {
+				TextFile tf = new TextFile(file, TextFile.R);
+				String[] elems = tf.readLineElems(Strings.whitespace);
+				int ln = 0;
+				while (elems != null) {
+					if (!elems[0].startsWith("#")) {
+
+						String allele1 = elems[3];
+						String allele2 = elems[4];
+						String alleles = allele1 + "/" + allele2;
+
+						String arstr = elems[elems.length - 1];
+						String[] arstrelems = arstr.split("=");
+
+						if (arstrelems.length == 1) {
+							System.out.println("Could not split: " + arstrelems[0] + " for line: " + elems[2]);
+						}
+
+						String ar2 = arstrelems[1];
+						Feature feat = new Feature();
+						feat.setChromosome(Chromosome.parseChr(elems[0]));
+						Integer pos = Integer.parseInt(elems[1]);
+						String name = elems[2];
+
+						feat.setName(name);
+						feat.setStart(pos);
+						feat.setStop(pos);
+
+
+						Pair<String, String> pair = new Pair<String, String>(ar2, alleles);
+
+						p.put(feat, pair);
+					}
+
+
+					elems = tf.readLineElems(Strings.whitespace);
+					ln++;
+				}
+				tf.close();
+
+				System.out.println(ln + " lines and " + p.size() + " variants parsed.");
+			}
+
+			dataQualVal.add(p);
+		}
+
+		// merge
+
+		TextFile out = new TextFile(outputfilename, TextFile.W);
+		// make some kind of header
+
+		String header = "Chr\t" +
+				"Pos\t" +
+				"Id";
+
+		for (int f = 0; f < files.length; f++) {
+			String name = names[f];
+			header += "\t" + name + "-MAF\t" + name + "-AR2\t" + name + "-Alleles\t" + name + "-AssocP";
+		}
+
+		out.writeln(header);
+
+		for (Feature feat : uniqueFeats) {
+			String outln = feat.getChromosome().toString() + "\t" + feat.getStart() + "\t" + feat.getName();
+			for (int f = 0; f < files.length; f++) {
+				Pair<String, String> quals = dataQualVal.get(f).get(feat);
+				Pair<String, String> assoc = dataPVal.get(f).get(feat);
+				String maf = "NaN";
+				String ar2 = "NaN";
+				String alleles = "NaN";
+				String assocp = "NaN";
+				if (quals != null) {
+					alleles = quals.getRight();
+					ar2 = quals.getLeft();
+				}
+				if (assoc != null) {
+					maf = assoc.getLeft();
+					assocp = assoc.getRight();
+				}
+				outln += "\t" + maf + "\t" + ar2 + "\t" + alleles + "\t" + assocp;
+			}
+			out.writeln(outln);
+		}
+		out.close();
 
 
 	}

@@ -36,7 +36,7 @@ public enum Chromosome {
     X(23, "ChrX", 156040895),
     Y(24, "ChrY", 57227415),
     MT(25, "ChrMT", 1),
-    NA(Integer.MAX_VALUE, "N/A", 1);
+    NA(26, "N/A", 1);
 
     private final int number;
     private final String name;

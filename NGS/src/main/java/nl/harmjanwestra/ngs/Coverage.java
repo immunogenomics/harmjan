@@ -79,8 +79,6 @@ public class Coverage {
 	}
 
 
-
-
 	public void bamToBedWithinRegionsForList(String listFile, String outdir, String targetregions, boolean outputcoverageperregion, int threads) throws IOException {
 		TextFile lf = new TextFile(listFile, TextFile.R);
 		ArrayList<String> samples = new ArrayList<String>();
@@ -88,10 +86,10 @@ public class Coverage {
 
 		String[] lfelems = lf.readLineElems(TextFile.tab);
 		while (lfelems != null) {
-
-			samples.add(lfelems[0]);
-			files.add(lfelems[1]);
-
+			if (lfelems.length >= 2) {
+				samples.add(lfelems[0]);
+				files.add(lfelems[1]);
+			}
 			lfelems = lf.readLineElems(TextFile.tab);
 		}
 
@@ -155,8 +153,8 @@ public class Coverage {
 
 		// concatenate everything
 		HashMap<String, Integer> regionOrder = null;
-		TextFile out = new TextFile(outdir + "region-coverage.txt", TextFile.W);
-		TextFile out2 = new TextFile(outdir + "region-summary.txt", TextFile.W);
+		TextFile out = new TextFile(outdir + "coverage.txt", TextFile.W);
+		TextFile out2 = new TextFile(outdir + "summary.txt", TextFile.W);
 
 		boolean headerWritten = false;
 

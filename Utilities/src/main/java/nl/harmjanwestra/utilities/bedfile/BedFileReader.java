@@ -12,6 +12,7 @@ import nl.harmjanwestra.utilities.features.Track;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * @author Harm-Jan
@@ -55,40 +56,68 @@ public class BedFileReader {
 		return track;
 	}
 
+	public ArrayList<Feature> readAsList(String file) throws IOException {
+
+		TextFile tf = new TextFile(file, TextFile.R);
+
+		System.out.println("Reading file: " + file);
+
+		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
+		String[] elems = tf.readLineElems(TextFile.tab);
+
+		ArrayList<Feature> allFeatures = new ArrayList<Feature>();
+		while (elems != null) {
+			Feature f = parseElems(elems);
+			if (f != null) {
+				allFeatures.add(f);
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
+		tf.close();
+
+
+		return allFeatures;
+	}
+
 	protected Feature parseElems(String[] elems) {
 
-		int len = 0;
-		Chromosome featureChr = Chromosome.parseChr(elems[0]);
+		if (elems.length > 2) {
+			int len = 0;
+			Chromosome featureChr = Chromosome.parseChr(elems[0]);
 
-		Strand featureStrand = Strand.NA;
+			Strand featureStrand = Strand.NA;
 
-		featureStrand = Strand.parseStr(elems[elems.length - 1]);
+			featureStrand = Strand.parseStr(elems[elems.length - 1]);
 
-		int featureStart = -1;
-		int featureStop = -1;
-		try {
-			featureStart = Integer.parseInt(elems[1]);
-		} catch (NumberFormatException e) {
-			System.out.println("Could not parse chromosome start position: " + elems[1]);
-		}
+			int featureStart = -1;
+			int featureStop = -1;
+			try {
+				featureStart = Integer.parseInt(elems[1]);
+			} catch (NumberFormatException e) {
+				System.out.println("Could not parse chromosome start position: " + elems[1]);
+			}
 
-		try {
-			featureStop = Integer.parseInt(elems[2]);
-		} catch (NumberFormatException e) {
-			System.out.println("Could not parse chromosome stop position: " + elems[2]);
-		}
+			try {
+				featureStop = Integer.parseInt(elems[2]);
+			} catch (NumberFormatException e) {
+				System.out.println("Could not parse chromosome stop position: " + elems[2]);
+			}
 
 
-		len = featureStop - featureStart;
-		featureLengthSum += len;
-		nrFeatures++;
-		Feature f = new Feature();
-		f.setChromosome(featureChr);
-		f.setStrand(featureStrand);
-		f.setStart(featureStart);
-		f.setStop(featureStop);
-		if (filter == null || filter.passesFilter(f)) {
-			return f;
+			len = featureStop - featureStart;
+			featureLengthSum += len;
+			nrFeatures++;
+			Feature f = new Feature();
+			f.setChromosome(featureChr);
+			f.setStrand(featureStrand);
+			f.setStart(featureStart);
+			f.setStop(featureStop);
+			if (filter == null || filter.passesFilter(f)) {
+				return f;
+			} else {
+				return null;
+			}
 		} else {
 			return null;
 		}
