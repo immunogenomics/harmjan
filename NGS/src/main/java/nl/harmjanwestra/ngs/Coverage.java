@@ -1,20 +1,20 @@
 package nl.harmjanwestra.ngs;
 
-import com.xeiam.xchart.*;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.filter.AggregateFilter;
-import htsjdk.samtools.filter.SamRecordFilter;
+import JSci.maths.ArrayMath;
+import com.lowagie.text.DocumentException;
+import htsjdk.samtools.*;
+import htsjdk.samtools.filter.*;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
+import nl.harmjanwestra.utilities.bamfile.filters.FailsVendorQualityCheckFilter;
+import nl.harmjanwestra.utilities.bamfile.filters.MappingQualityUnavailableFilter;
+import nl.harmjanwestra.utilities.bamfile.filters.UnmappedReadFilter;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.FeatureMerger;
-import nl.harmjanwestra.utilities.graphics.ColorGenerator;
+import nl.harmjanwestra.utilities.graphics.Grid;
+import nl.harmjanwestra.utilities.graphics.panels.HistogramPanel;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
-import org.broadinstitute.gatk.engine.filters.*;
-import org.broadinstitute.gatk.tools.walkers.haplotypecaller.HCMappingQualityFilter;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
@@ -23,11 +23,9 @@ import umcg.genetica.math.stats.Descriptives;
 import umcg.genetica.text.Strings;
 import umcg.genetica.util.Primitives;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -72,7 +70,19 @@ public class Coverage {
 ////					c.bamToBedWithinRegions(file, sampleOutDir, targetregions);
 				//String bamfile, String outdir, String regionFile, boolean outputcoverageperregion
 			}
+//		try {
+//			if (args.length < 2) {
+//				System.out.println("Usage: coverage.jar bam.bam out.txt");
+//			} else {
+//				int posshift = 4;
+//				int negshift = -5;
+//				String bamin = args[0];//"/Data/tmp/20141202-0-hrs-sorted-dedup.bam";
+//				String outfile = args[1];//"/Data/tmp/20141202-0-hrs-sorted-dedup-output.txt";
+//				c.coveragePerChromosome(bamin, outfile, posshift, negshift);
+//			}
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -103,11 +113,12 @@ public class Coverage {
 		}
 
 		System.out.println("Loading regions from: " + targetregions);
-		ArrayList<Feature> features = loadRegions(targetregions);
+		BedFileReader bedFileReader = new BedFileReader();
+		ArrayList<Feature> features = bedFileReader.readAsList(targetregions);
 		System.out.println(features.size() + " target regions loaded");
 		if (outputcoverageperregion) {
 			System.out.println("Merging overlapping regions for .bedGraph output");
-			features = FeatureMerger.merge(features);
+			features = FeatureMerger.merge(features, false);
 			System.out.println(features.size() + " regions remain after mergin overlapping regions");
 		}
 
@@ -347,7 +358,7 @@ public class Coverage {
 		filters.add(new DuplicateReadFilter());
 		filters.add(new UnmappedReadFilter());
 		filters.add(new MappingQualityUnavailableFilter());
-		filters.add(new HCMappingQualityFilter());
+		filters.add(new MappingQualityFilter(20));
 		// ilters.add(new MalformedReadFilter());
 
 		SAMRecordIterator it = reader.iterator();
@@ -517,8 +528,401 @@ public class Coverage {
 
 	}
 
+	public void coveragePerChromosome(String bamfile, String outfile, int posShift, int negShift) throws IOException {
+		BamFileReader reader = new BamFileReader(new File(bamfile));
+
+		TextFile out = new TextFile(outfile, TextFile.W);
+
+		SAMSequenceDictionary dictionary = reader.getHeader().getSequenceDictionary();
+		List<SAMSequenceRecord> sequences = dictionary.getSequences();
+
+		ArrayList<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
+		AggregateFilter filter = new AggregateFilter(filters);
+
+		filters.add(new NotPrimaryAlignmentFilter());
+		filters.add(new FailsVendorQualityCheckFilter());
+		filters.add(new DuplicateReadFilter());
+		filters.add(new UnmappedReadFilter());
+		filters.add(new MappingQualityUnavailableFilter());
+		filters.add(new MappingQualityFilter(20));
+
+		/*
+			long nrWithSecondaryMapping = 0;
+			long nrWithSecondaryMappingAlsoDup = 0;
+			long nrWithSecondaryMappingPassingFilter = 0;
+
+			long nrWithSupplementaryMapping = 0;
+			long nrWithSupplementaryMappingAlsoDup = 0;
+			long nrWithSupplementaryMappingPassingFilter = 0;
+
+			long nrFragments = 0;
+			long nrFragmentsDup = 0;
+			long nrFragmentsPassingFilter = 0;
+			 */
+
+		out.writeln("Seq" +
+				"\tNrBases" +
+				"\tnrBasesCovered" +
+				"\tpercBasesCovered" +
+				"\tnrReads" +
+				"\tnrReadsPassingFilter" +
+				"\tnrDups" +
+				"\tpercDups" +
+				"\tnrDupsPassingFilter" +
+				"\tnrFragments" +
+				"\tnrFragmentsDup" +
+				"\tnrFragmentsPassingFilter" +
+				"\tavgInsertSize" +
+				"\tavgCoverageAllBases" +
+				"\tstDevCoverageAllBases" +
+				"\tcvCoverageAllBases" +
+				"\tavgCoverageCoveredBases" +
+				"\tstDevCoverageCoveredBases" +
+				"\tcvCoverageCoveredBases"
+		);
+
+		int distSize = 1000;
+
+		int[] globalInsertSizeDist = new int[distSize];
+		long[] globalCoverageDist = new long[distSize];
+
+		TextFile insertDistOut = new TextFile(outfile + "-insertDists.txt", TextFile.W);
+		TextFile coverageDistOut = new TextFile(outfile + "-coverageDists.txt", TextFile.W);
+
+		String header = "Chr";
+		for (int i = 0; i < distSize; i++) {
+			header += "\t" + i;
+		}
+		insertDistOut.writeln(header);
+		coverageDistOut.writeln(header);
+
+		int nrChr = sequences.size() + 1;
+		int nrColInPlot = 9;
+
+
+		Grid gridCoverage = new Grid(400, 300, 3, nrColInPlot, 100, 100);
+		Grid gridInsert = new Grid(400, 300, 3, nrColInPlot, 100, 100);
+
+
+		for (int i = 0; i < sequences.size(); i++) {
+//		for (int i = 0; i < 2; i++) {
+			SAMSequenceRecord sequence = sequences.get(i);
+			int stop = sequence.getSequenceLength();
+
+			double averageSumAllBases = 0;
+			double averageSumCoveredBases = 0;
+			double varianceSumAllBases = 0;
+			double varianceSumCoveredBases = 0;
+			long nrReadsTotal = 0;
+			long nrReadsTotalPassingFilter = 0;
+			long nrDupsTotal = 0;
+			long nrDupsTotalPassingFilter = 0;
+			long nrBasesCovered = 0;
+			int[] insertSizeDist = new int[distSize];
+			int[] coverageDist = new int[distSize];
+
+
+			long nrFragments = 0;
+			long nrFragmentsDup = 0;
+			long nrFragmentsPassingFilter = 0;
+
+			nl.harmjanwestra.utilities.coverage.Coverage coverage = new nl.harmjanwestra.utilities.coverage.Coverage();
+
+			coverage.setCountReads(true);
+			coverage.setCountDuplicates(true);
+			coverage.setCountMultiMapping(true);
+			coverage.setCountFragments(true);
+			coverage.setCountSupplementaryReads(true);
+			coverage.setDetermineInsertSize(true, distSize);
+			coverage.setBaseqQualThreshold(20);
+			coverage.setFilter(filter);
+
+			int initialWindowSize = 10000000;
+
+			if (initialWindowSize > sequence.getSequenceLength()) {
+				initialWindowSize = sequence.getSequenceLength();
+			}
+
+			int nrWindowsWithCoverage = 0;
+			int nrWindowsTotal = 0;
+			for (int pos = 0; pos < stop; pos += initialWindowSize) {
+
+				int windowStop = pos + initialWindowSize;
+				if (windowStop > stop) {
+					windowStop = stop;
+				}
+				Feature window = new Feature(Chromosome.parseChr(sequence.getSequenceName()), pos, windowStop);
+
+				int windowSize = windowStop - pos;
+
+
+				SAMRecordIterator iterator = reader.query(sequence.getSequenceName(), pos, pos + windowSize, true);
+				coverage.calculate(iterator, window, posShift, negShift);
+
+				nrDupsTotal += coverage.getNrDups();
+
+
+				nrFragments += coverage.getNrFragments();
+				nrFragmentsDup += coverage.getNrFragmentsDup();
+				nrFragmentsPassingFilter += coverage.getNrFragmentsPassingFilter();
+
+
+				nrReadsTotal += coverage.getNrReads();
+				nrReadsTotalPassingFilter += coverage.getNrReadsPassingFilter();
+				nrDupsTotalPassingFilter += coverage.getnrDupsPassingFilter();
+
+
+				int[] insertSize = coverage.getInsertSize();
+				for (int q = 0; q < insertSize.length; q++) {
+					insertSizeDist[q] += insertSize[q];
+					globalInsertSizeDist[q] += insertSize[q];
+				}
+
+
+				int[][] windowcoverage = coverage.getCoverageUnStranded(); // ind|bp
+
+				double sum = 0;
+
+				int nrBasesCoveredInWindow = 0;
+				for (int ind = 0; ind < windowcoverage.length; ind++) {
+					for (int windowpos = 0; windowpos < windowcoverage[0].length; windowpos++) {
+						int depth = windowcoverage[ind][windowpos];
+						if (depth >= globalCoverageDist.length) {
+							globalCoverageDist[globalCoverageDist.length - 1]++;
+							coverageDist[globalCoverageDist.length - 1]++;
+						} else {
+							globalCoverageDist[depth]++;
+							coverageDist[depth]++;
+						}
+						if (depth != 0) {
+							nrBasesCovered++;
+							nrBasesCoveredInWindow++;
+							sum += depth;
+						}
+					}
+				}
+
+				if (nrBasesCoveredInWindow > 0) {
+					double windowAverageCoveredBases = (sum / nrBasesCoveredInWindow);
+
+					double windowssq = 0;
+					for (int ind = 0; ind < windowcoverage.length; ind++) {
+						for (int windowpos = 0; windowpos < windowcoverage[0].length; windowpos++) {
+							int depth = windowcoverage[ind][windowpos];
+							if (depth != 0) {
+								double xminmu = depth - windowAverageCoveredBases;
+								windowssq += (xminmu * xminmu);
+							}
+						}
+					}
+
+					averageSumCoveredBases += windowAverageCoveredBases;
+					averageSumAllBases += ArrayMath.mean(windowcoverage[0]);
+					double windowVariance = ArrayMath.variance(windowcoverage[0]);
+					varianceSumAllBases += windowVariance;
+					varianceSumCoveredBases += (windowssq / nrBasesCoveredInWindow);
+
+					nrWindowsWithCoverage++;
+				} else {
+					averageSumAllBases += 0;
+					varianceSumAllBases += 0;
+				}
+				nrWindowsTotal++;
+				System.out.println(sequence.getSequenceName() + " - " + pos + "-" + windowStop + " - " + windowSize);
+				System.out.println(averageSumAllBases + "\t" + averageSumCoveredBases);
+				iterator.close();
+			}
+
+			long insertSizeSum = 0;
+			int totalEvents = 0;
+			for (int q = 0; q < insertSizeDist.length; q++) {
+				insertSizeSum += (q * insertSizeDist[q]);
+				totalEvents += insertSizeDist[q];
+			}
+
+			double avgInsertSize = (double) insertSizeSum / totalEvents;
+
+			double percBasesCovered = (double) nrBasesCovered / sequence.getSequenceLength();
+			double percDups = (double) nrDupsTotal / nrReadsTotal;
+
+			double avgCoverageAllBases = averageSumAllBases / nrWindowsTotal;
+			double stDevCoverageAllBases = Math.sqrt(varianceSumAllBases / nrWindowsTotal);
+			double avgCoverageCoveredBases = averageSumCoveredBases / nrWindowsWithCoverage;
+			double stDevCoverageCoveredBases = Math.sqrt(varianceSumCoveredBases / nrWindowsWithCoverage);
+
+			double cvAllBases = stDevCoverageAllBases / avgCoverageAllBases;
+			double cvCoveredBases = stDevCoverageCoveredBases / avgCoverageCoveredBases;
+
+
+			out.writeln(sequence.getSequenceName()
+					+ "\t" + sequence.getSequenceLength()
+					+ "\t" + nrBasesCovered
+					+ "\t" + percBasesCovered
+					+ "\t" + nrReadsTotal
+					+ "\t" + nrReadsTotalPassingFilter
+					+ "\t" + nrDupsTotal
+					+ "\t" + percDups
+					+ "\t" + nrDupsTotalPassingFilter
+
+
+					+ "\t" + nrFragments
+					+ "\t" + nrFragmentsDup
+					+ "\t" + nrFragmentsPassingFilter
+
+
+					+ "\t" + avgInsertSize
+					+ "\t" + avgCoverageAllBases
+					+ "\t" + stDevCoverageAllBases
+					+ "\t" + cvAllBases
+					+ "\t" + avgCoverageCoveredBases
+					+ "\t" + stDevCoverageCoveredBases
+					+ "\t" + cvCoveredBases);
+
+			HistogramPanel panel1 = new HistogramPanel(1, 1);
+			panel1.setData(insertSizeDist);
+			panel1.setLabels("Insert size", "Density");
+			panel1.setTitle(sequence.getSequenceName());
+
+			gridInsert.addPanel(panel1);
+
+			HistogramPanel panel2 = new HistogramPanel(1, 1);
+//			panel2.setAxisLog(HistogramPanel.LOG.TEN, HistogramPanel.LOG.TEN);
+			panel2.setData(log10(coverageDist));
+			panel2.setLabels("Coverage", "log10(Density)");
+			panel2.setTitle(sequence.getSequenceName());
+			gridCoverage.addPanel(panel2);
+
+			StringBuilder builderInsert = new StringBuilder(10000);
+			StringBuilder builderCoverage = new StringBuilder(10000);
+			builderInsert.append(sequence.getSequenceName());
+			builderCoverage.append(sequence.getSequenceName());
+			for (int q = 0; q < distSize; q++) {
+				builderInsert.append("\t").append(insertSizeDist[q]);
+				builderCoverage.append("\t").append(coverageDist[q]);
+			}
+			coverageDistOut.writeln(builderCoverage.toString());
+			insertDistOut.writeln(builderInsert.toString());
+		}
+
+		// iterate once more, because why not
+		Iterator<SAMRecord> it = reader.iterator();
+
+		int nrReads1 = 0;
+		int nrReads2 = 0;
+		int properpair = 0;
+		int nrDups = 0;
+		int unmapped = 0;
+		int secondary = 0;
+		int nrAlignments = 0;
+		HashSet<String> secondaryStr = new HashSet<String>();
+		System.out.println("Second iteration");
+		int nrMappingToChr = 0;
+		while (it.hasNext()) {
+			SAMRecord record = it.next();
+			if (!record.isSecondaryOrSupplementary()) {
+				Chromosome chr = Chromosome.parseChr(record.getReferenceName());
+				if (!chr.equals(Chromosome.NA)) {
+					nrMappingToChr++;
+				}
+				if (record.getReadUnmappedFlag()) {
+					unmapped++;
+				}
+				if (record.getProperPairFlag() && record.getFirstOfPairFlag()) {
+					properpair++;
+				}
+				if (record.getFirstOfPairFlag()) {
+					nrReads1++;
+				} else {
+					nrReads2++;
+				}
+
+				if (record.getDuplicateReadFlag()) {
+					nrDups++;
+				}
+			} else {
+				if (record.getFirstOfPairFlag()) {
+					secondaryStr.add(record.getReadName() + "_" + 1);
+				} else {
+					secondaryStr.add(record.getReadName() + "_" + 2);
+				}
+			}
+
+			nrAlignments++;
+			if (nrAlignments % 10000000 == 0) {
+				System.out.println(nrAlignments + " records processed");
+			}
+		}
+		TextFile allChr = new TextFile(outfile + "-allchr.txt", TextFile.W);
+		allChr.writeln("nrReads1\tnrReads2\tproperpair\tnrMappingToChr\tnrDups\tunmapped\tsecondary\tnrAlignments");
+		allChr.writeln(nrReads1 + "\t" + nrReads2 + "\t" + properpair + "\t" + nrMappingToChr + "\t" + nrDups + "\t" + unmapped + "\t" + secondaryStr.size() + "\t" + nrAlignments);
+		allChr.close();
+
+		StringBuilder builderInsert = new StringBuilder(10000);
+		StringBuilder builderCoverage = new StringBuilder(10000);
+		builderInsert.append("Global");
+		builderCoverage.append("Global");
+		for (int q = 0; q < distSize; q++) {
+			builderInsert.append("\t").append(globalInsertSizeDist[q]);
+			builderCoverage.append("\t").append(globalCoverageDist[q]);
+		}
+		coverageDistOut.writeln(builderCoverage.toString());
+		insertDistOut.writeln(builderInsert.toString());
+
+		HistogramPanel panel1 = new HistogramPanel(1, 1);
+		panel1.setData(globalInsertSizeDist);
+		panel1.setLabels("Insert size", "Density");
+		panel1.setTitle("Global");
+		gridInsert.addPanel(panel1);
+
+		HistogramPanel panel2 = new HistogramPanel(1, 1);
+		panel2.setData(log10(globalCoverageDist));
+		panel2.setLabels("Coverage", "log10(Density)");
+		panel2.setTitle("Global");
+		gridCoverage.addPanel(panel2);
+
+		coverageDistOut.close();
+		insertDistOut.close();
+
+		try {
+			gridInsert.draw(outfile + "-insertSizeDist.pdf");
+			gridCoverage.draw(outfile + "-coverageSizeDist.pdf");
+		} catch (DocumentException e) {
+			e.printStackTrace();
+		}
+
+		out.close();
+		reader.close();
+
+	}
+
+	private double[] log10(int[] coverageDist) {
+		double[] output = new double[coverageDist.length];
+		for (int i = 0; i < coverageDist.length; i++) {
+			if (coverageDist[i] == 0) {
+				output[i] = 0;
+			} else {
+				output[i] = Math.log10(coverageDist[i]);
+			}
+		}
+		return output;
+	}
+
+	private double[] log10(long[] coverageDist) {
+		double[] output = new double[coverageDist.length];
+		for (int i = 0; i < coverageDist.length; i++) {
+			if (coverageDist[i] == 0) {
+				output[i] = 0;
+			} else {
+				output[i] = Math.log10(coverageDist[i]);
+			}
+		}
+		return output;
+	}
+
 	public void correlateCoverageWithinRegionFiles(String regionFile, String inputdir, String output) throws IOException {
-		ArrayList<Feature> regions = loadRegions(regionFile);
+		BedFileReader bedFileReader = new BedFileReader();
+
+		ArrayList<Feature> regions = bedFileReader.readAsList(regionFile);
 
 		TextFile outputF = new TextFile(output + "averageCorrelationPerRegion.txt", TextFile.W);
 
@@ -559,358 +963,329 @@ public class Coverage {
 		outputF.close();
 	}
 
-	public ArrayList<Feature> loadRegions(String regionfile) throws IOException {
-		ArrayList<Feature> regions = new ArrayList<Feature>();
-
-		TextFile featurefile = new TextFile(regionfile, TextFile.R);
-		String[] felems = featurefile.readLineElems(TextFile.tab);
-		while (felems != null) {
-
-			if (felems.length >= 3) {
-				Feature f = new Feature();
-				Chromosome c = Chromosome.parseChr(felems[0]);
-				f.setChromosome(c);
-				f.setStart(Integer.parseInt(felems[1]));
-				f.setStop(Integer.parseInt(felems[2]));
-				regions.add(f);
-			}
-
-			felems = featurefile.readLineElems(TextFile.tab);
-		}
-		featurefile.close();
-
-
-		// now sort them
-		Collections.sort(regions, new FeatureComparator(false));
-		return regions;
-	}
-
-
-	public void createCoveragePlots(String coverageFile, String sampleFile, String outdir) throws IOException {
-
-		Gpio.createDir(outdir);
-
-
-		HashMap<String, String> sampleToRun = null;
-		HashMap<String, Color> runToColor = null;
-		HashSet<String> runIds = null;
-		if (sampleFile != null && Gpio.exists(sampleFile)) {
-
-			TextFile sf = new TextFile(sampleFile, TextFile.R);
-			sampleToRun = (HashMap<String, String>) sf.readAsHashMap(1, 0);
-			sf.close();
-			sf.open();
-			runIds = (HashSet<String>) sf.readAsSet(0, TextFile.tab);
-			sf.close();
-
-			runToColor = new HashMap<String, Color>();
-
-			for (String s : runIds) {
-				runToColor.put(s, ColorGenerator.generate());
-			}
-
-
-		}
-
-		// HashMap<String, String> sampleToRun = loadSampleRuns(sampleFile);
-
-		Triple<String[], String[], double[][]> coverageObj = loadMatrix(coverageFile, true);
-		String[] samples = coverageObj.getLeft();
-		String[] regions = coverageObj.getMiddle();
-		double[][] coverage = coverageObj.getRight();
-
-		HashMap<String, Integer> rowIndex = index(coverageObj.getLeft());
-		HashMap<String, Integer> colIndex = index(coverageObj.getMiddle());
-
-
-		int maxBinCoverage = 300;
-		int increment = 5;
-		double[][] bins = new double[samples.length][maxBinCoverage / increment];
-		int binNo = 0;
-
-		double maxCoverage = 0;
-		// for each sample,
-		// for 5x, 10x, 15x etc, determine the number of regions
-		// that pass this threshold
-		for (int i = 0; i < maxBinCoverage; i += increment) {
-			for (int s = 0; s < samples.length; s++) {
-				for (int r = 0; r < regions.length; r++) {
-					double d = coverage[s][r];
-					if (d >= i) {
-						bins[s][binNo]++;
-					}
-					if (d > maxCoverage) {
-						maxCoverage = d;
-					}
-				}
-			}
-			binNo++;
-		}
-
-		// convert to frequencies
-		double[] x = new double[bins[0].length];
-		for (int s = 0; s < samples.length; s++) {
-			for (int d = 0; d < bins[s].length; d++) {
-				bins[s][d] /= regions.length;
-				if (s == 0) {
-					System.out.println(d + "\t" + bins[s][d]);
-				}
-				x[d] = (d) * increment;
-			}
-		}
-
-
-		// plotVariantsUniqueIneachDataset
-		makeCoveragePlot(samples, null, x, bins, runIds, outdir + "coveragePerSampleCumulative-", 100);
-
-		int nrBins = (int) Math.ceil(maxBinCoverage / increment);
-		double[][] bins2 = new double[samples.length][nrBins];
-
-		// for each sample,
-		// make a distribution of coverage over all regions
-		for (int s = 0; s < samples.length; s++) {
-			for (int r = 0; r < regions.length; r++) {
-				double d = coverage[s][r];
-				int bin = (int) Math.ceil(d / increment);
-				if (bin >= nrBins) {
-					bin = nrBins - 1;
-				}
-				bins2[s][bin]++;
-			}
-		}
-
-		makeCoveragePlot(samples, null, x, bins2, runIds, outdir + "coveragePerSamplePerRegion-", 100);
-
-
-		int threshold = 20;
-
-		double[] bins3 = new double[100];
-
-		// percentage of
-		// y : proportion of samples
-		// x : percent of regions covered
-
-		for (int s = 0; s < samples.length; s++) {
-			int nrHigherThenThreshold = 0;
-			for (int r = 0; r < regions.length; r++) {
-				if (coverage[s][r] > threshold) {
-					nrHigherThenThreshold++;
-				}
-			}
-			double perc = (double) nrHigherThenThreshold / regions.length;
-
-			perc -= .8; // move > 80 to 0
-			if (perc < 0) {
-				perc = 0;
-			}
-			perc /= .20; // move back to percentage space
-
-
-			int bin = (int) Math.floor(perc * 100);
-			bins3[bin]++;
-		}
-
-		double[] xvals = new double[bins3.length];
-		for (int bin = 0; bin < bins3.length; bin++) {
-			bins3[bin] /= samples.length;
-			xvals[bin] = 80 + (bin * 20 / 100); // bin 80 + (bin * 20/100)
-		}
-
-		Chart barchart = initBarChart("Coverage > " + threshold + "x", "Percent of targeted regions covered", "Proportion of samples", 1200, 800, true, 50);
-		barchart.addSeries("Series1", xvals, bins3);
-		barchart.getStyleManager().setLegendVisible(false);
-		BitmapEncoder.saveBitmapWithDPI(barchart, outdir + "regionsWithCoverageLt" + threshold + "x", BitmapEncoder.BitmapFormat.PNG, 300);
-
-
-		// determine average coverage per region
-		TextFile out = new TextFile(outdir + "averageCoveragePerRegion.txt", TextFile.W);
-		double[] plotVals = new double[regions.length];
-		double[] plotValsX = new double[regions.length];
-		for (int r = 0; r < regions.length; r++) {
-			plotValsX[r] = r;
-			double sum = 0;
-			double[] vals = new double[samples.length];
-			for (int s = 0; s < samples.length; s++) {
-				sum += coverage[s][r];
-				vals[s] = coverage[s][r];
-			}
-			sum /= samples.length;
-			plotVals[r] = sum;
-			double sd = JSci.maths.ArrayMath.standardDeviation(vals);
-			out.writeln(regions[r] + "\t" + sum + "\t" + sd);
-		}
-		out.close();
-
-		Arrays.sort(plotVals);
-
-		barchart = initBarChart("Average coverage per targeted region", "Targeted region", "Average coverage (bp)", 1200, 800, true, 50);
-		barchart.getStyleManager().setXAxisTicksVisible(false);
-		barchart.addSeries("Series1", plotValsX, plotVals);
-		barchart.getStyleManager().setLegendVisible(false);
-		BitmapEncoder.saveBitmapWithDPI(barchart, outdir + "averageCoveragePerRegion", BitmapEncoder.BitmapFormat.PNG, 300);
-
-		// determine average coverage per sample
-		out = new TextFile(outdir + "averageCoveragePerSample.txt", TextFile.W);
-		plotVals = new double[samples.length];
-		plotValsX = new double[samples.length];
-		for (int s = 0; s < samples.length; s++) {
-			double sum = 0;
-			plotValsX[s] = s;
-			double[] vals = new double[regions.length];
-			for (int r = 0; r < regions.length; r++) {
-				sum += coverage[s][r];
-				vals[s] = coverage[s][r];
-			}
-			sum /= regions.length;
-			plotVals[s] = sum;
-			double sd = JSci.maths.ArrayMath.standardDeviation(vals);
-			out.writeln(samples[s] + "\t" + sum + "\t" + sd);
-		}
-		out.close();
-
-		Arrays.sort(plotVals);
-
-		barchart = initBarChart("Average coverage per sample", "Sample", "Average coverage (bp)", 1200, 800, true, 50);
-		barchart.getStyleManager().setXAxisTicksVisible(false);
-		barchart.addSeries("Series1", plotValsX, plotVals);
-		barchart.getStyleManager().setLegendVisible(false);
-		BitmapEncoder.saveBitmapWithDPI(barchart, outdir + "averageCoveragePerSample", BitmapEncoder.BitmapFormat.PNG, 300);
-
-		System.out.println();
-
-		for (int s = 0; s < samples.length; s++) {
-			int count = 0;
-
-			for (int r = 0; r < regions.length; r++) {
-				if (coverage[s][r] > threshold) {
-					count++;
-				}
-			}
-
-			System.out.println(samples[s] + "\t" + count + "\t" + ((double) count / regions.length));
-
-		}
-	}
-
-	private void makeCoveragePlot(String[] samples, HashMap<String, String> sampleToRun,
-								  double[] x, double[][] bins, HashSet<String> runIds, String outdir, int ticksEvery) throws IOException {
-		if (sampleToRun != null) {
-
-			HashMap<String, Chart> chartsForRun = new HashMap<String, Chart>();
-			for (int s = 0; s < samples.length; s++) {
-				String sample = samples[s];
-				Color seriesColor = ColorGenerator.generate();
-				String seriesName = sample;
-
-				String run = sampleToRun.get(sample);
-				Chart chart = chartsForRun.get(run);
-				if (chart == null) {
-					chart = initLineChart("Coverage per sample", "Coverage (bp)", "Proportion of targeted regions", 1200, 800, true, ticksEvery);
-					chart.getStyleManager().setXAxisMin(0);
-				}
-
-				double[] y = bins[s];
-				Series series = chart.addSeries(seriesName, x, y);
-				series.setLineColor(seriesColor);
-				series.setMarker(SeriesMarker.NONE);
-				series.setLineStyle(SeriesLineStyle.SOLID);
-
-				chartsForRun.put(run, chart);
-			}
-
-			for (String run : runIds) {
-				Chart chart = chartsForRun.get(run);
-				BitmapEncoder.saveBitmapWithDPI(chart, outdir + run, BitmapEncoder.BitmapFormat.PNG, 300);
-			}
-
-		} else {
-			Chart chart = initLineChart("Coverage per sample", "Coverage (bp)", "Proportion of targeted regions", 1200, 800, false, ticksEvery);
-			chart.getStyleManager().setXAxisMin(0);
-			for (int s = 0; s < samples.length; s++) {
-				String sample = samples[s];
-				Color seriesColor = Color.black;
-				String seriesName = sample;
-
-
-				double[] y = bins[s];
-				Series series = chart.addSeries(seriesName, x, y);
-				series.setLineColor(seriesColor);
-				series.setMarker(SeriesMarker.NONE);
-				series.setLineStyle(SeriesLineStyle.SOLID);
-			}
-
-			BitmapEncoder.saveBitmapWithDPI(chart, outdir + "overall", BitmapEncoder.BitmapFormat.PNG, 300);
-		}
-	}
-
-
-	private Chart initLineChart(String title, String xaxis, String yaxis, int width, int height, boolean showLegend, int ticksEvery) {
-		Chart chart = new ChartBuilder().width(width).height(height).build();
-
-		chart.setChartTitle(title);
-		chart.setXAxisTitle(xaxis);
-		chart.setYAxisTitle(yaxis);
-
-		chart.getStyleManager().setPlotBorderVisible(false);
-		chart.getStyleManager().setPlotBackgroundColor(Color.WHITE);
-		chart.getStyleManager().setPlotGridLinesColor(Color.WHITE);
-		chart.getStyleManager().setPlotGridLinesVisible(false);
-		chart.getStyleManager().setPlotPadding(20);
-
-		chart.getStyleManager().setChartFontColor(Color.BLACK);
-		chart.getStyleManager().setChartBackgroundColor(Color.WHITE);
-
-		chart.getStyleManager().setChartTitleFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
-
-		chart.getStyleManager().setLegendVisible(showLegend);
-		chart.getStyleManager().setLegendFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
-
-		chart.getStyleManager().setLegendBackgroundColor(Color.white);
-		chart.getStyleManager().setLegendBorderColor(Color.white);
-		chart.getStyleManager().setLegendPosition(StyleManager.LegendPosition.OutsideE);
-
-		chart.getStyleManager().setAxisTickPadding(10);
-		chart.getStyleManager().setAxisTickMarkLength(5);
-		chart.getStyleManager().setAxisTitleFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
-		chart.getStyleManager().setAxisTickLabelsFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
-
-		chart.getStyleManager().setXAxisTickMarkSpacingHint(ticksEvery);
-		return chart;
-	}
-
-	public Chart initBarChart(String title, String xaxis, String yaxis, int width, int height, boolean showLegend, int ticksEvery) {
-		Chart chart = new ChartBuilder().chartType(StyleManager.ChartType.Bar).width(width).height(height).build();
-
-		chart.setChartTitle(title);
-		chart.setXAxisTitle(xaxis);
-		chart.setYAxisTitle(yaxis);
-
-		chart.getStyleManager().setPlotBorderVisible(false);
-		chart.getStyleManager().setPlotBackgroundColor(Color.WHITE);
-		chart.getStyleManager().setPlotGridLinesColor(Color.WHITE);
-		chart.getStyleManager().setPlotGridLinesVisible(false);
-		chart.getStyleManager().setPlotPadding(20);
-
-		chart.getStyleManager().setChartFontColor(Color.BLACK);
-		chart.getStyleManager().setChartBackgroundColor(Color.WHITE);
-
-		chart.getStyleManager().setChartTitleFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
-
-		chart.getStyleManager().setLegendVisible(showLegend);
-		chart.getStyleManager().setLegendFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
-
-		chart.getStyleManager().setLegendBackgroundColor(Color.white);
-		chart.getStyleManager().setLegendBorderColor(Color.white);
-		chart.getStyleManager().setLegendPosition(StyleManager.LegendPosition.OutsideE);
-
-		chart.getStyleManager().setAxisTickPadding(10);
-		chart.getStyleManager().setAxisTickMarkLength(5);
-		chart.getStyleManager().setAxisTitleFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
-		chart.getStyleManager().setAxisTickLabelsFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
-
-		chart.getStyleManager().setXAxisTickMarkSpacingHint(ticksEvery);
-		return chart;
-	}
+//	public void createCoveragePlots(String coverageFile, String sampleFile, String outdir) throws IOException {
+//
+//		Gpio.createDir(outdir);
+//		HashMap<String, String> sampleToRun = null;
+//		HashMap<String, Color> runToColor = null;
+//		HashSet<String> runIds = null;
+//		if (sampleFile != null && Gpio.exists(sampleFile)) {
+//
+//			TextFile sf = new TextFile(sampleFile, TextFile.R);
+//			sampleToRun = (HashMap<String, String>) sf.readAsHashMap(1, 0);
+//			sf.close();
+//			sf.open();
+//			runIds = (HashSet<String>) sf.readAsSet(0, TextFile.tab);
+//			sf.close();
+//
+//			runToColor = new HashMap<String, Color>();
+//
+//			for (String s : runIds) {
+//				runToColor.put(s, ColorGenerator.generate());
+//			}
+//
+//
+//		}
+//
+//		// HashMap<String, String> sampleToRun = loadSampleRuns(sampleFile);
+//
+//		Triple<String[], String[], double[][]> coverageObj = loadMatrix(coverageFile, true);
+//		String[] samples = coverageObj.getLeft();
+//		String[] regions = coverageObj.getMiddle();
+//		double[][] coverage = coverageObj.getRight();
+//
+//		HashMap<String, Integer> rowIndex = index(coverageObj.getLeft());
+//		HashMap<String, Integer> colIndex = index(coverageObj.getMiddle());
+//
+//
+//		int maxBinCoverage = 300;
+//		int increment = 5;
+//		double[][] bins = new double[samples.length][maxBinCoverage / increment];
+//		int binNo = 0;
+//
+//		double maxCoverage = 0;
+//		// for each sample,
+//		// for 5x, 10x, 15x etc, determine the number of regions
+//		// that pass this threshold
+//		for (int i = 0; i < maxBinCoverage; i += increment) {
+//			for (int s = 0; s < samples.length; s++) {
+//				for (int r = 0; r < regions.length; r++) {
+//					double d = coverage[s][r];
+//					if (d >= i) {
+//						bins[s][binNo]++;
+//					}
+//					if (d > maxCoverage) {
+//						maxCoverage = d;
+//					}
+//				}
+//			}
+//			binNo++;
+//		}
+//
+//		// convert to frequencies
+//		double[] x = new double[bins[0].length];
+//		for (int s = 0; s < samples.length; s++) {
+//			for (int d = 0; d < bins[s].length; d++) {
+//				bins[s][d] /= regions.length;
+//				if (s == 0) {
+//					System.out.println(d + "\t" + bins[s][d]);
+//				}
+//				x[d] = (d) * increment;
+//			}
+//		}
+//
+//
+//		// plotVariantsUniqueIneachDataset
+//		makeCoveragePlot(samples, null, x, bins, runIds, outdir + "coveragePerSampleCumulative-", 100);
+//
+//		int nrBins = (int) Math.ceil(maxBinCoverage / increment);
+//		double[][] bins2 = new double[samples.length][nrBins];
+//
+//		// for each sample,
+//		// make a distribution of coverage over all regions
+//		for (int s = 0; s < samples.length; s++) {
+//			for (int r = 0; r < regions.length; r++) {
+//				double d = coverage[s][r];
+//				int bin = (int) Math.ceil(d / increment);
+//				if (bin >= nrBins) {
+//					bin = nrBins - 1;
+//				}
+//				bins2[s][bin]++;
+//			}
+//		}
+//
+//		makeCoveragePlot(samples, null, x, bins2, runIds, outdir + "coveragePerSamplePerRegion-", 100);
+//
+//
+//		int threshold = 20;
+//
+//		double[] bins3 = new double[100];
+//
+//		// percentage of
+//		// y : proportion of samples
+//		// x : percent of regions covered
+//
+//		for (int s = 0; s < samples.length; s++) {
+//			int nrHigherThenThreshold = 0;
+//			for (int r = 0; r < regions.length; r++) {
+//				if (coverage[s][r] > threshold) {
+//					nrHigherThenThreshold++;
+//				}
+//			}
+//			double perc = (double) nrHigherThenThreshold / regions.length;
+//
+//			perc -= .8; // move > 80 to 0
+//			if (perc < 0) {
+//				perc = 0;
+//			}
+//			perc /= .20; // move back to percentage space
+//
+//
+//			int bin = (int) Math.floor(perc * 100);
+//			bins3[bin]++;
+//		}
+//
+//		double[] xvals = new double[bins3.length];
+//		for (int bin = 0; bin < bins3.length; bin++) {
+//			bins3[bin] /= samples.length;
+//			xvals[bin] = 80 + (bin * 20 / 100); // bin 80 + (bin * 20/100)
+//		}
+//
+//		Chart barchart = initBarChart("Coverage > " + threshold + "x", "Percent of targeted regions covered", "Proportion of samples", 1200, 800, true, 50);
+//		barchart.addSeries("Series1", xvals, bins3);
+//		barchart.getStyleManager().setLegendVisible(false);
+//		BitmapEncoder.saveBitmapWithDPI(barchart, outdir + "regionsWithCoverageLt" + threshold + "x", BitmapEncoder.BitmapFormat.PNG, 300);
+//
+//
+//		// determine average coverage per region
+//		TextFile out = new TextFile(outdir + "averageCoveragePerRegion.txt", TextFile.W);
+//		double[] plotVals = new double[regions.length];
+//		double[] plotValsX = new double[regions.length];
+//		for (int r = 0; r < regions.length; r++) {
+//			plotValsX[r] = r;
+//			double sum = 0;
+//			double[] vals = new double[samples.length];
+//			for (int s = 0; s < samples.length; s++) {
+//				sum += coverage[s][r];
+//				vals[s] = coverage[s][r];
+//			}
+//			sum /= samples.length;
+//			plotVals[r] = sum;
+//			double sd = JSci.maths.ArrayMath.standardDeviation(vals);
+//			out.writeln(regions[r] + "\t" + sum + "\t" + sd);
+//		}
+//		out.close();
+//
+//		Arrays.sort(plotVals);
+//
+//		barchart = initBarChart("Average coverage per targeted region", "Targeted region", "Average coverage (bp)", 1200, 800, true, 50);
+//		barchart.getStyleManager().setXAxisTicksVisible(false);
+//		barchart.addSeries("Series1", plotValsX, plotVals);
+//		barchart.getStyleManager().setLegendVisible(false);
+//		BitmapEncoder.saveBitmapWithDPI(barchart, outdir + "averageCoveragePerRegion", BitmapEncoder.BitmapFormat.PNG, 300);
+//
+//		// determine average coverage per sample
+//		out = new TextFile(outdir + "averageCoveragePerSample.txt", TextFile.W);
+//		plotVals = new double[samples.length];
+//		plotValsX = new double[samples.length];
+//		for (int s = 0; s < samples.length; s++) {
+//			double sum = 0;
+//			plotValsX[s] = s;
+//			double[] vals = new double[regions.length];
+//			for (int r = 0; r < regions.length; r++) {
+//				sum += coverage[s][r];
+//				vals[s] = coverage[s][r];
+//			}
+//			sum /= regions.length;
+//			plotVals[s] = sum;
+//			double sd = JSci.maths.ArrayMath.standardDeviation(vals);
+//			out.writeln(samples[s] + "\t" + sum + "\t" + sd);
+//		}
+//		out.close();
+//
+//		Arrays.sort(plotVals);
+//
+//		barchart = initBarChart("Average coverage per sample", "Sample", "Average coverage (bp)", 1200, 800, true, 50);
+//		barchart.getStyleManager().setXAxisTicksVisible(false);
+//		barchart.addSeries("Series1", plotValsX, plotVals);
+//		barchart.getStyleManager().setLegendVisible(false);
+//		BitmapEncoder.saveBitmapWithDPI(barchart, outdir + "averageCoveragePerSample", BitmapEncoder.BitmapFormat.PNG, 300);
+//
+//		System.out.println();
+//
+//		for (int s = 0; s < samples.length; s++) {
+//			int count = 0;
+//
+//			for (int r = 0; r < regions.length; r++) {
+//				if (coverage[s][r] > threshold) {
+//					count++;
+//				}
+//			}
+//
+//			System.out.println(samples[s] + "\t" + count + "\t" + ((double) count / regions.length));
+//
+//		}
+//	}
+//
+//	private void makeCoveragePlot(String[] samples, HashMap<String, String> sampleToRun,
+//								  double[] x, double[][] bins, HashSet<String> runIds, String outdir, int ticksEvery) throws IOException {
+//		if (sampleToRun != null) {
+//
+//			HashMap<String, Chart> chartsForRun = new HashMap<String, Chart>();
+//			for (int s = 0; s < samples.length; s++) {
+//				String sample = samples[s];
+//				Color seriesColor = ColorGenerator.generate();
+//				String seriesName = sample;
+//
+//				String run = sampleToRun.get(sample);
+//				Chart chart = chartsForRun.get(run);
+//				if (chart == null) {
+//					chart = initLineChart("Coverage per sample", "Coverage (bp)", "Proportion of targeted regions", 1200, 800, true, ticksEvery);
+//					chart.getStyleManager().setXAxisMin(0);
+//				}
+//
+//				double[] y = bins[s];
+//				Series series = chart.addSeries(seriesName, x, y);
+//				series.setLineColor(seriesColor);
+//				series.setMarker(SeriesMarker.NONE);
+//				series.setLineStyle(SeriesLineStyle.SOLID);
+//
+//				chartsForRun.put(run, chart);
+//			}
+//
+//			for (String run : runIds) {
+//				Chart chart = chartsForRun.get(run);
+//				BitmapEncoder.saveBitmapWithDPI(chart, outdir + run, BitmapEncoder.BitmapFormat.PNG, 300);
+//			}
+//
+//		} else {
+//			Chart chart = initLineChart("Coverage per sample", "Coverage (bp)", "Proportion of targeted regions", 1200, 800, false, ticksEvery);
+//			chart.getStyleManager().setXAxisMin(0);
+//			for (int s = 0; s < samples.length; s++) {
+//				String sample = samples[s];
+//				Color seriesColor = Color.black;
+//				String seriesName = sample;
+//
+//
+//				double[] y = bins[s];
+//				Series series = chart.addSeries(seriesName, x, y);
+//				series.setLineColor(seriesColor);
+//				series.setMarker(SeriesMarker.NONE);
+//				series.setLineStyle(SeriesLineStyle.SOLID);
+//			}
+//
+//			BitmapEncoder.saveBitmapWithDPI(chart, outdir + "overall", BitmapEncoder.BitmapFormat.PNG, 300);
+//		}
+//	}
+//
+//
+//	private Chart initLineChart(String title, String xaxis, String yaxis, int width, int height, boolean showLegend, int ticksEvery) {
+//		Chart chart = new ChartBuilder().width(width).height(height).build();
+//
+//		chart.setChartTitle(title);
+//		chart.setXAxisTitle(xaxis);
+//		chart.setYAxisTitle(yaxis);
+//
+//		chart.getStyleManager().setPlotBorderVisible(false);
+//		chart.getStyleManager().setPlotBackgroundColor(Color.WHITE);
+//		chart.getStyleManager().setPlotGridLinesColor(Color.WHITE);
+//		chart.getStyleManager().setPlotGridLinesVisible(false);
+//		chart.getStyleManager().setPlotPadding(20);
+//
+//		chart.getStyleManager().setChartFontColor(Color.BLACK);
+//		chart.getStyleManager().setChartBackgroundColor(Color.WHITE);
+//
+//		chart.getStyleManager().setChartTitleFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
+//
+//		chart.getStyleManager().setLegendVisible(showLegend);
+//		chart.getStyleManager().setLegendFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+//
+//		chart.getStyleManager().setLegendBackgroundColor(Color.white);
+//		chart.getStyleManager().setLegendBorderColor(Color.white);
+//		chart.getStyleManager().setLegendPosition(StyleManager.LegendPosition.OutsideE);
+//
+//		chart.getStyleManager().setAxisTickPadding(10);
+//		chart.getStyleManager().setAxisTickMarkLength(5);
+//		chart.getStyleManager().setAxisTitleFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
+//		chart.getStyleManager().setAxisTickLabelsFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+//
+//		chart.getStyleManager().setXAxisTickMarkSpacingHint(ticksEvery);
+//		return chart;
+//	}
+//
+//	public Chart initBarChart(String title, String xaxis, String yaxis, int width, int height, boolean showLegend, int ticksEvery) {
+//		Chart chart = new ChartBuilder().chartType(StyleManager.ChartType.Bar).width(width).height(height).build();
+//
+//		chart.setChartTitle(title);
+//		chart.setXAxisTitle(xaxis);
+//		chart.setYAxisTitle(yaxis);
+//
+//		chart.getStyleManager().setPlotBorderVisible(false);
+//		chart.getStyleManager().setPlotBackgroundColor(Color.WHITE);
+//		chart.getStyleManager().setPlotGridLinesColor(Color.WHITE);
+//		chart.getStyleManager().setPlotGridLinesVisible(false);
+//		chart.getStyleManager().setPlotPadding(20);
+//
+//		chart.getStyleManager().setChartFontColor(Color.BLACK);
+//		chart.getStyleManager().setChartBackgroundColor(Color.WHITE);
+//
+//		chart.getStyleManager().setChartTitleFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
+//
+//		chart.getStyleManager().setLegendVisible(showLegend);
+//		chart.getStyleManager().setLegendFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+//
+//		chart.getStyleManager().setLegendBackgroundColor(Color.white);
+//		chart.getStyleManager().setLegendBorderColor(Color.white);
+//		chart.getStyleManager().setLegendPosition(StyleManager.LegendPosition.OutsideE);
+//
+//		chart.getStyleManager().setAxisTickPadding(10);
+//		chart.getStyleManager().setAxisTickMarkLength(5);
+//		chart.getStyleManager().setAxisTitleFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
+//		chart.getStyleManager().setAxisTickLabelsFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+//
+//		chart.getStyleManager().setXAxisTickMarkSpacingHint(ticksEvery);
+//		return chart;
+//	}
 
 	private Triple<String[], String[], double[][]> loadMatrix(String f, boolean hasHeader) throws IOException {
 

@@ -7,4 +7,6 @@ public interface SmoothingFunction {
 
 	double kernel(int[] data);
 
+	double kernel(double[] data);
+
 }

@@ -237,7 +237,7 @@ public class GosiaViz2 {
 //
 //				if (bedfile.toLowerCase().endsWith(".bed") || bedfile.toLowerCase().endsWith(".bed.gz")) {
 //					System.out.println("Loading: " + bedfile);
-//					Track t = bfr.read(bedfile, bedfile, null, 0, 0, false);
+//					Track t = bfr.readAsTrack(bedfile, bedfile, null, 0, 0, false);
 //					System.out.println(loci.size() + " loci will be annotated.");
 //					int locusId = 0;
 //					for (Locus l : loci) {
@@ -268,7 +268,7 @@ public class GosiaViz2 {
 //
 //					int locusId = 0;
 //					System.out.println("Loading: " + bedfile);
-//					Track t = bfr.read(bedfile, bedfile, null, 0, 0, false);
+//					Track t = bfr.readAsTrack(bedfile, bedfile, null, 0, 0, false);
 //					System.out.println(loci.size() + " loci will be annotated.");
 //					for (Locus l : loci) {
 //						int maxStart = l.getLeftBound();
@@ -291,12 +291,12 @@ public class GosiaViz2 {
 //
 //		BedFileReader bfr = new BedFileReader();
 //		int locusId = 0;
-//		Track t = bfr.read(peakfile, peakfile, null, 0, 0, false);
+//		Track t = bfr.readAsTrack(peakfile, peakfile, null, 0, 0, false);
 //
 //		for (Locus l : loci) {
 //			int maxStart = l.getLeftBound();
 //			int maxStop = l.getRightBound();
-//			peakTracks[locusId] = t.getSubset(l.getChromosome(), maxStart, maxStop); //bfr.read(peakfile, peakfile, l.getChromosome(), maxStart, maxStop, false);
+//			peakTracks[locusId] = t.getSubset(l.getChromosome(), maxStart, maxStop); //bfr.readAsTrack(peakfile, peakfile, l.getChromosome(), maxStart, maxStop, false);
 //			locusId++;
 //		}
 //	}

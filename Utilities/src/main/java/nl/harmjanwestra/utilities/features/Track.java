@@ -5,6 +5,7 @@
  */
 package nl.harmjanwestra.utilities.features;
 
+import java.util.ArrayList;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -14,6 +15,7 @@ import java.util.TreeSet;
 public class Track extends Feature {
 
 	private TreeSet<Feature> features;
+	private ArrayList<Feature> allFeatures;
 
 	public Track(String name) {
 		this(name, 0, Integer.MAX_VALUE);
@@ -22,6 +24,7 @@ public class Track extends Feature {
 	public Track(String name, int start, int stop) {
 		this.name = name;
 		this.features = new TreeSet<Feature>(new FeatureComparator(false));
+		this.allFeatures = new ArrayList<Feature>();
 		this.start = start;
 		this.stop = stop;
 	}
@@ -32,6 +35,10 @@ public class Track extends Feature {
 
 	public Iterable<Feature> getFeatures() {
 		return features;
+	}
+
+	public ArrayList<Feature> getAllFeatures() {
+		return allFeatures;
 	}
 
 	public int getNrReads() {
@@ -50,7 +57,7 @@ public class Track extends Feature {
 		right.setStop(end);
 		right.setStrand(Strand.NEG);
 		NavigableSet<Feature> set = features.subSet(left, true, right, true);
-		System.out.println(set.size() + "\t" + left.toString() + "\t" + right.toString());
+//		System.out.println(set.size() + "\t" + left.toString() + "\t" + right.toString());
 		return set;
 	}
 
@@ -60,7 +67,9 @@ public class Track extends Feature {
 
 	public void setFeatures(NavigableSet<Feature> f) {
 		this.features = new TreeSet<Feature>(new FeatureComparator(false));
+		this.allFeatures = new ArrayList<Feature>();
 		features.addAll(f);
+		allFeatures.addAll(f);
 	}
 
 	public Track getSubset(Chromosome chr, int start, int stop) {
@@ -71,8 +80,12 @@ public class Track extends Feature {
 		return t;
 	}
 
-	public int getNrFeatures() {
+	public int getNrUniqueFeatures() {
 		return features.size();
+	}
+
+	public int getNrFeatures() {
+		return allFeatures.size();
 	}
 
 	public boolean containsFeature(Feature f) {
@@ -81,6 +94,17 @@ public class Track extends Feature {
 
 	public void addFeatures(Track t) {
 		features.addAll(t.features);
+		allFeatures.addAll(t.features);
 	}
 
+	public void addFeatures(ArrayList<Feature> features) {
+		for (Feature f : features) {
+			this.features.add(f);
+		}
+		allFeatures.addAll(features);
+	}
+
+	public NavigableSet<Feature> getFeatureSet(Feature feat1) {
+		return getFeatureSet(feat1.getChromosome(), feat1.getStart(), feat1.getStop());
+	}
 }

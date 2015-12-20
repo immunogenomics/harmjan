@@ -17,7 +17,7 @@ public class BedFileFromGTF {
 
 	public static void main(String[] args) {
 
-		String[] genes = new String[]{"CD8", "CD4", "CD3", "CD28", "IFNG", "IL2", "TNFA","STAT1","VWCE"};
+		String[] genes = new String[]{"CD8", "CD4", "CD3", "CD28", "IFNG", "IL2", "TNFA", "STAT1", "VWCE"};
 		String gtfFile = "/Data/Annotation/UCSC/genes.gtf";
 		String outfile = "/Data/tmp/genes.bed";
 		int margin = 1000;
@@ -52,11 +52,10 @@ public class BedFileFromGTF {
 				features.add(f);
 
 
-
 			}
 		}
 
-		features = FeatureMerger.merge(features);
+		features = FeatureMerger.merge(features, true);
 		Collections.sort(features, new FeatureComparator(false));
 
 		TextFile tf = new TextFile(outfile, TextFile.W);

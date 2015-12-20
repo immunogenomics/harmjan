@@ -1,14 +1,13 @@
 package nl.harmjanwestra.ngs.graphics;
 
 import com.lowagie.text.DocumentException;
-import nl.harmjanwestra.ngs.GenotypeFormats.VCF.VCFGenotypeData;
-import nl.harmjanwestra.ngs.GenotypeFormats.VCFFunctions;
-import nl.harmjanwestra.ngs.GenotypeFormats.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFFunctions;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.containers.Pair;
-import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
@@ -25,6 +24,10 @@ public class VariantPlot extends DefaultGraphics {
 
 	private int margin;
 
+	public VariantPlot(){
+
+	}
+
 	public VariantPlot(String name, int pageWidth, int pageHeight) throws FileNotFoundException, DocumentException {
 		super(name, pageWidth, pageHeight);
 		figureWidth = pageWidth;
@@ -32,14 +35,6 @@ public class VariantPlot extends DefaultGraphics {
 
 	public void setMargin(int margin) {
 		this.margin = margin;
-	}
-
-	private double determineUnit(double range) {
-
-		double divisor = Math.log10(range);
-		divisor = Math.floor(divisor);
-		divisor = Math.pow(10, divisor);
-		return divisor;
 	}
 
 	public void plotVariantsUniqueIneachDataset(String[] variantFiles, String[] variantFileNames, String sequencedRegionFile, Feature region, String gtf) throws IOException {
@@ -231,6 +226,7 @@ public class VariantPlot extends DefaultGraphics {
 	public void plotImputationRSquared(
 			String[] datasetFiles,
 			String[] datasetNames,
+			String[] inputBeforeImputation,
 			String sequencedRegionFile,
 			Feature region,
 			String gtf) throws IOException {
@@ -260,6 +256,15 @@ public class VariantPlot extends DefaultGraphics {
 		drawOverlappingGenes(gtf, region, regionSize, nrPixels);
 
 		g2d.setColor(new Color(208, 83, 77));
+
+		// plot sequenced regions
+		Font defaultfont = g2d.getFont();
+		g2d.setFont(new Font("default", Font.BOLD, 16));
+
+		g2d.drawString("Targeted regions in sequencing", margin, margin - 20);
+
+		g2d.setFont(defaultfont);
+
 		for (Feature f : sequencedRegions) {
 			if (f.overlaps(region)) {
 				int start = f.getStart();
@@ -289,7 +294,7 @@ public class VariantPlot extends DefaultGraphics {
 			}
 		}
 
-		int betweenmargin = 50;
+		int betweenmargin = 100;
 		int starty = margin + betweenmargin + 10;
 		int plotSize = 500 / datasetFiles.length;
 		int minDotSize = 2;
@@ -344,8 +349,38 @@ public class VariantPlot extends DefaultGraphics {
 			int plotStarty = starty + (dataset * plotSize) + (dataset * betweenmargin);
 			if (datasetFiles[dataset] != null) {
 
-				TextFile tf = new TextFile(datasetFiles[dataset], TextFile.R);
+				g2d.setColor(new Color(98, 182, 177));
+
+				// plot input before imputation (if any)
+				if (inputBeforeImputation != null && inputBeforeImputation[dataset] != null) {
+					TextFile tf = new TextFile(inputBeforeImputation[dataset], TextFile.R);
+					elems = tf.readLineElems(Strings.whitespace);
+					while (elems != null) {
+						if (elems.length > 1 && !elems[0].startsWith("#")) {
+							Chromosome chr = Chromosome.parseChr(elems[0]);
+							Integer pos = Integer.parseInt(elems[1]);
+//					System.out.println(chr.toString() + "\t" + pos);
+							Feature f = new Feature();
+							f.setChromosome(chr);
+							f.setStart(pos);
+							f.setStop(pos);
+							if (region.overlaps(f)) {
+								int relativeStart = pos - region.getStart();
+								double percStart = (double) relativeStart / regionSize;
+								int pixelStart = margin + (int) Math.ceil(percStart * nrPixels);
+								int pixelY = 20;
+								int dotsize = 4;
+								g2d.fillOval(pixelStart - (dotsize / 2), plotStarty - plotSize - pixelY - (dotsize / 2), dotsize, dotsize);
+							}
+						}
+						elems = tf.readLineElems(Strings.whitespace);
+					}
+					tf.close();
+				}
+
 				g2d.setColor(colors[dataset]);
+				TextFile tf = new TextFile(datasetFiles[dataset], TextFile.R);
+
 				elems = tf.readLineElems(Strings.whitespace);
 				while (elems != null) {
 					if (elems.length > 1 && !elems[0].startsWith("#")) {
@@ -381,8 +416,7 @@ public class VariantPlot extends DefaultGraphics {
 				}
 				int adv = metrics.stringWidth(datasetNames[dataset]);
 				int hgt = metrics.getHeight();
-				Dimension size = new Dimension(adv + 10, hgt + 10);
-				g2d.drawString(datasetNames[dataset], margin + nrPixels - (int) size.getWidth(), plotStarty - 150 + (dataset * hgt));
+				g2d.drawString(datasetNames[dataset], margin, plotStarty - plotSize - 40);
 				tf.close();
 			}
 		}
@@ -423,7 +457,7 @@ public class VariantPlot extends DefaultGraphics {
 					int adv = metrics.stringWidth(formattedStr);
 					int hgt = metrics.getHeight();
 					Dimension size = new Dimension(adv + 10, hgt + 10);
-					g2d.drawString(formattedStr, margin - (int) size.getWidth() - 10, plotStarty - plusY + 5);
+					g2d.drawString(formattedStr, margin - (int) Math.ceil(size.getWidth()) - 10, plotStarty - plusY + 5);
 				}
 			}
 
@@ -450,13 +484,13 @@ public class VariantPlot extends DefaultGraphics {
 					int adv = metrics.stringWidth(formattedString);
 					int hgt = metrics.getHeight();
 
-					g2d.drawString(formattedString, margin + pixelStart - (adv / 2), plotStarty + 5 + 20);
+					g2d.drawString(formattedString, margin + pixelStart - (int) Math.ceil((double) adv / 2), plotStarty + 5 + 20);
 				}
 			}
 		}
 
 
-		starty += betweenmargin + 10;
+
 
 
 		close();
@@ -537,6 +571,21 @@ public class VariantPlot extends DefaultGraphics {
 
 		HashMap<Gene, Integer> ylevels = new HashMap<Gene, Integer>();
 
+		HashSet<String> geneNames = new HashSet<String>();
+
+		for (Gene g : overlappingGenes) {
+			int ctr = 2;
+			if (geneNames.contains(g.getName())) {
+				String name = g.getName() + "_" + ctr;
+				while (geneNames.contains(name)) {
+					name = g.getName() + "_" + ctr;
+					ctr++;
+				}
+				g.setName(name);
+			}
+			geneNames.add(g.getName());
+		}
+
 
 		// get gene plot positions
 
@@ -565,8 +614,13 @@ public class VariantPlot extends DefaultGraphics {
 				f1.setChromosome(gene1.getChromosome());
 
 				f1.setStart(pixelStart);
-				f1.setStop(pixelStop + geneXmargin);
-				System.out.println(ylevel + " - " + gene1.getName() + " iterating " + allgenesAtThisYLevel.size());
+
+
+				String name = gene1.getName();
+				FontMetrics metrics = g2d.getFontMetrics();
+				int strWidth = metrics.stringWidth(name);
+				f1.setStop(pixelStop + strWidth + 100);
+//				System.out.println(ylevel + " - " + gene1.getName() + " iterating " + allgenesAtThisYLevel.size());
 
 
 				if (!visitedGenes.contains(gene1)) {
@@ -581,9 +635,13 @@ public class VariantPlot extends DefaultGraphics {
 						int pixelStart2 = pixelPair2.getLeft();
 						int pixelStop2 = pixelPair2.getRight();
 						f2.setStart(pixelStart2);
-						f2.setStop(pixelStop2 + geneXmargin);
+
+						String name2 = gene2.getName();
+						strWidth = metrics.stringWidth(name2);
+						f2.setStop(pixelStop2 + strWidth + 100);
+
 						if (f1.overlaps(f2)) {
-							System.out.println("overlap with " + gene2.getName());
+//							System.out.println("overlap with " + gene2.getName());
 							visitedGenes.add(gene2);
 						} else {
 							overlap = false;
@@ -601,11 +659,20 @@ public class VariantPlot extends DefaultGraphics {
 			ylevel++;
 		}
 		// System.exit(-1);
-		System.out.println(ylevel);
+//		System.out.println(ylevel);
+
 
 		g2d.setColor(new Color(70, 67, 58));
 		int marginbetweengenes = 5;
 		int geneheight = 10;
+
+		Font defaultfont = g2d.getFont();
+		g2d.setFont(new Font("default", Font.BOLD, 16));
+		int y0 = margin - 100 - 20;
+		int x0 = margin;
+		g2d.drawString("Genes", x0, y0);
+		g2d.setFont(defaultfont);
+
 		for (Gene g : overlappingGenes) {
 			ylevel = ylevels.get(g);
 
@@ -685,323 +752,343 @@ public class VariantPlot extends DefaultGraphics {
 
 		int pixelStart = (int) Math.ceil(percStart * nrPixels);
 		int pixelStop = (int) Math.ceil(percStop * nrPixels);
+
+
 		return new Pair<Integer, Integer>(pixelStart, pixelStop);
 	}
 
 
-	public void plotAssocPvalue(String gtf,
-								String[] datasetFiles,
-								String[] datasetNames,
-								String sequencedRegionFile,
-								Feature region,
-								double mafthreshold,
-								boolean logtransform) throws IOException {
-
-		TextFile tf1 = new TextFile(sequencedRegionFile, TextFile.R);
-
-		HashSet<Feature> sequencedRegions = new HashSet<Feature>();
-
-		String[] elems = tf1.readLineElems(TextFile.tab);
-		while (elems != null) {
-			Feature f = new Feature();
-			if (elems.length > 2) {
-				f.setChromosome(Chromosome.parseChr(elems[0]));
-				f.setStart(Integer.parseInt(elems[1]));
-				f.setStop(Integer.parseInt(elems[2]));
-				sequencedRegions.add(f);
-			}
-			elems = tf1.readLineElems(TextFile.tab);
-		}
-		tf1.close();
-
-		int regionSize = region.getStop() - region.getStart();
-		int nrPixelsX = figureWidth - (2 * margin);
-
-		System.out.println(nrPixelsX);
-
-		drawOverlappingGenes(gtf, region, regionSize, nrPixelsX);
-
-		// draw sequenced regions
-		g2d.setColor(new Color(208, 83, 77));
-		for (Feature f : sequencedRegions) {
-			if (f.overlaps(region)) {
-				int start = f.getStart();
-				int featurewidth = f.getStop() - start;
-				int relativeStart = start - region.getStart();
-				if (relativeStart < 0) {
-					featurewidth -= Math.abs(relativeStart);
-					relativeStart = 0;
-				}
-
-				int relativeStop = relativeStart + featurewidth;
-				if (relativeStop > region.getStop()) {
-					relativeStop = regionSize;
-				}
-
-				double percStart = (double) relativeStart / regionSize;
-				double percStop = (double) relativeStop / regionSize;
-
-				int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
-				int pixelStop = (int) Math.ceil(percStop * nrPixelsX);
-
-//				System.out.println(f.toString());
-//				System.out.println(pixelStart + "\t" + pixelStop);
-				int y1 = margin;
-				int y2 = margin + 10;
-				g2d.fillRect(margin + pixelStart, y1, pixelStop - pixelStart, 10);
-			}
-		}
-
-		int betweenmargin = 50;
-		int starty = margin + betweenmargin + 10;
-		int plotSize = 500 / datasetFiles.length;
-		int minDotSize = 2;
-
-		starty += betweenmargin + plotSize;
-
-
-		Color grey = new Color(70, 67, 58);
-
-
-		int plotStart = starty;
-		int q = 0;
-
-		// plot the actual p-values..
-
-		// generate colors
-		double maxPval = -Double.MAX_VALUE;
-		ArrayList<ArrayList<Pair<Integer, Double>>> allPValues = new ArrayList<ArrayList<Pair<Integer, Double>>>();
-		for (int dataset = 0; dataset < datasetFiles.length; dataset++) {
-			String file = datasetFiles[dataset];
-			if (Gpio.exists(file)) {
-				Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> pair = readVariantPValues(file, region);
-				ArrayList<Pair<Integer, Double>> pvals = pair.getRight();
-				for (Pair<Integer, Double> p : pvals) {
-					if (p.getRight() > maxPval) {
-						maxPval = p.getRight();
-					}
-				}
-				allPValues.add(pvals);
-			} else {
-				allPValues.add(null);
-			}
-		}
-
-		Color[] colors = new Color[datasetFiles.length];
-		for (int i = 0; i < colors.length; i++) {
-			switch (i) {
-				case 0:
-					colors[i] = new Color(70, 67, 58);
-					break;
-				case 1:
-					colors[i] = new Color(174, 164, 140);
-					break;
-				case 2:
-					colors[i] = new Color(208, 83, 77);
-					break;
-				case 3:
-					colors[i] = new Color(98, 182, 177);
-					break;
-				case 4:
-					colors[i] = new Color(116, 156, 80);
-					break;
-
-			}
-		}
-
-
-		double unit = determineUnit(maxPval);
-		double remainder = maxPval % unit;
-		System.out.println(maxPval + " maxp");
-		System.out.println(unit + " unit");
-		System.out.println(remainder + " remainder");
-
-		maxPval += (unit - remainder); // round off using unit
-		System.out.println(maxPval + " maxp");
-
-		Font originalfont = g2d.getFont();
-		g2d.setFont(new Font("default", Font.BOLD, 16));
-		FontMetrics metrics = g2d.getFontMetrics(g2d.getFont());
-
-		for (int z = allPValues.size() - 1; z > -1; z--) {
-			int plotStarty = starty + (z * plotSize) + (z * betweenmargin);
-			ArrayList<Pair<Integer, Double>> toPlot = allPValues.get(z);
-			if (toPlot != null) {
-				g2d.setColor(colors[z]);
-
-				for (Pair<Integer, Double> p : toPlot) {
-					Integer pos = p.getLeft();
-					Double pval = p.getRight();
-
-					// x-coord
-					int relativeStart = pos - region.getStart();
-					double percStart = (double) relativeStart / regionSize;
-					int pixelStart = margin + (int) Math.ceil(percStart * nrPixelsX);
-
-					// y-coord
-
-					double yperc = pval / maxPval;
-					int pixelY = (int) Math.ceil(yperc * plotSize);
-
-					int dotsize = 2 + (int) Math.ceil(yperc * 10);
-					if (z == 0) {
-//						dotsize = 8 + (int) Math.ceil(yperc * 10);
-					}
-
-					g2d.fillOval(pixelStart - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
-
-
-				}
-
-
-				int adv = metrics.stringWidth(datasetNames[z]);
-				int hgt = metrics.getHeight();
-				Dimension size = new Dimension(adv + 10, hgt + 10);
-				g2d.drawString(datasetNames[z], margin + nrPixelsX - (int) size.getWidth(), plotStarty - 150 + (z * hgt));
-			}
-
-
-		}
-
-
-		// plotVariantsUniqueIneachDataset coordinates
-		starty += 5;
-
-
-		// determine unit
-
-
-		double steps = maxPval / 10;
-
-		String pattern = "###,###,###.##";
-		DecimalFormat decimalFormat = new DecimalFormat(pattern);
-
-
-		starty += 5;
-		for (int z = allPValues.size() - 1; z > -1; z--) {
-			int plotStarty = starty + (z * plotSize) + (z * betweenmargin);
-
-
-			// draw red line near 5E-8)
-			double gwas = -Math.log10(5E-8);
-			if (maxPval >= gwas) {
-				double yperc = gwas / maxPval;
-				int pixelY = (int) Math.ceil(yperc * plotSize);
-				g2d.setColor(new Color(208, 83, 77));
-				g2d.drawLine(margin, plotStarty - pixelY, margin + nrPixelsX, plotStarty - pixelY);
-			}
-
-			g2d.setFont(originalfont);
-			g2d.setColor(new Color(70, 67, 58));
-			// y-axis
-			g2d.drawLine(margin - 10, plotStarty, margin - 10, plotStarty - plotSize);
-
-			for (double i = 0; i < maxPval + steps; i += steps) {
-				if (i <= maxPval) {
-					int plusY = (int) Math.ceil(((double) i / maxPval) * plotSize);
-					g2d.drawLine(margin - 13, plotStarty - plusY, margin - 7, plotStarty - plusY);
-					String formattedStr = decimalFormat.format(i);
-					int adv = metrics.stringWidth(formattedStr);
-					int hgt = metrics.getHeight();
-					Dimension size = new Dimension(adv + 10, hgt + 10);
-					g2d.drawString(formattedStr, margin - (int) size.getWidth() - 10, plotStarty - plusY + 5);
-				}
-
-			}
-// x-axis
-			g2d.drawLine(margin - 5, plotStarty, margin + nrPixelsX + 5, plotStarty);
-
-			int xunit = (int) Math.ceil(determineUnit(regionSize));
-			while (regionSize / xunit < 10 && xunit > 1) {
-				xunit /= 2;
-			}
-			while (regionSize / xunit > 10) {
-				xunit *= 2;
-			}
-
-
-			for (int i = region.getStart(); i < region.getStop(); i++) {
-				if (i % xunit == 0) {
-					int relativeStart = i - region.getStart();
-					double percStart = (double) relativeStart / regionSize;
-					int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
-					g2d.drawLine(margin + pixelStart, plotStarty - 5, margin + pixelStart, plotStarty + 5);
-					String formattedString = decimalFormat.format(i);
-					int adv = metrics.stringWidth(formattedString);
-					int hgt = metrics.getHeight();
-
-					g2d.drawString(formattedString, margin + pixelStart - (adv / 2), plotStarty + 20);
-				}
-			}
-
-
-		}
-
-
-		starty += betweenmargin + 10;
-
-
-		close();
-
-	}
-
-	private Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> readVariantPValues(String pvaluefile, Feature region) throws IOException {
-		HashSet<String> variantHash = new HashSet<String>();
-		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
-
-		ArrayList<Pair<Integer, Double>> pvaluesPerPosition = new ArrayList<Pair<Integer, Double>>();
-
-		// skip header
-		textfile.readLine();
-		String[] elems = textfile.readLineElems(TextFile.tab);
-		int pvalctr = 0;
-		while (elems != null) {
-			// Marker	Chr	Position	PValue	Odds Ratio
-			if (pvaluefile.endsWith(".tab")) {
-				Chromosome chr = Chromosome.parseChr(elems[1]);
-				if (region.getChromosome().equals(chr)) {
-					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
-					Feature f2 = new Feature();
-					f2.setChromosome(chr);
-					f2.setStart(Integer.parseInt(elems[2]));
-					f2.setStop(Integer.parseInt(elems[2]));
-					if (f2.overlaps(region)) {
-						Integer position = Integer.parseInt(elems[2]);
-						Double pval = Double.parseDouble(elems[elems.length - 2]); // need to check position...
-						double log10 = -Math.log10(pval);
-						variantHash.add(variant);
-						pvaluesPerPosition.add(new Pair<Integer, Double>(position, log10));
-						pvalctr++;
-					}
-
-				}
-			} else {
-				Chromosome chr = Chromosome.parseChr(elems[1]);
-				if (region.getChromosome().equals(chr)) {
-					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
-					Feature f2 = new Feature();
-					f2.setChromosome(chr);
-					f2.setStart(Integer.parseInt(elems[2]));
-					f2.setStop(Integer.parseInt(elems[2]));
-					if (f2.overlaps(region)) {
-						Integer position = Integer.parseInt(elems[2]);
-						Double pval = Double.parseDouble(elems[elems.length - 1]); // need to check position...
-						variantHash.add(variant);
-						pvaluesPerPosition.add(new Pair<Integer, Double>(position, pval));
-						pvalctr++;
-					}
-
-				}
-			}
-			elems = textfile.readLineElems(TextFile.tab);
-		}
-		textfile.close();
-
-		System.out.println(pvalctr + " pvalues for " + pvaluesPerPosition.size() + " positions from file: " + pvaluefile);
-
-
-		return new Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>>(variantHash, pvaluesPerPosition);
-	}
+//	public void plotAssocPvalue(String gtf,
+//								String[] datasetFiles,
+//								String[] datasetNames,
+//								String sequencedRegionFile,
+//								Feature region,
+//								double mafthreshold,
+//								boolean logtransform) throws IOException {
+//
+//		TextFile tf1 = new TextFile(sequencedRegionFile, TextFile.R);
+//
+//		HashSet<Feature> sequencedRegions = new HashSet<Feature>();
+//
+//		String[] elems = tf1.readLineElems(TextFile.tab);
+//		while (elems != null) {
+//			Feature f = new Feature();
+//			if (elems.length > 2) {
+//				f.setChromosome(Chromosome.parseChr(elems[0]));
+//				f.setStart(Integer.parseInt(elems[1]));
+//				f.setStop(Integer.parseInt(elems[2]));
+//				sequencedRegions.add(f);
+//			}
+//			elems = tf1.readLineElems(TextFile.tab);
+//		}
+//		tf1.close();
+//
+//		int regionSize = region.getStop() - region.getStart();
+//		int nrPixelsX = figureWidth - (2 * margin);
+//
+//		System.out.println(nrPixelsX);
+//
+//		drawOverlappingGenes(gtf, region, regionSize, nrPixelsX);
+//
+//		// draw sequenced regions
+//		g2d.setColor(new Color(208, 83, 77));
+//
+//
+//		// plot sequenced regions
+//		Font defaultfont = g2d.getFont();
+//		g2d.setFont(new Font("default", Font.BOLD, 16));
+//
+//		g2d.drawString("Targeted regions in sequencing", margin, margin - 20);
+//
+//		g2d.setFont(defaultfont);
+//		for (Feature f : sequencedRegions) {
+//			if (f.overlaps(region)) {
+//				int start = f.getStart();
+//				int featurewidth = f.getStop() - start;
+//				int relativeStart = start - region.getStart();
+//				if (relativeStart < 0) {
+//					featurewidth -= Math.abs(relativeStart);
+//					relativeStart = 0;
+//				}
+//
+//				int relativeStop = relativeStart + featurewidth;
+//				if (relativeStop > region.getStop()) {
+//					relativeStop = regionSize;
+//				}
+//
+//				double percStart = (double) relativeStart / regionSize;
+//				double percStop = (double) relativeStop / regionSize;
+//
+//				int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
+//				int pixelStop = (int) Math.ceil(percStop * nrPixelsX);
+//
+////				System.out.println(f.toString());
+////				System.out.println(pixelStart + "\t" + pixelStop);
+//				int y1 = margin;
+//				int y2 = margin + 10;
+//				g2d.fillRect(margin + pixelStart, y1, pixelStop - pixelStart, 10);
+//			}
+//		}
+//
+//		int betweenmargin = 100;
+//		int starty = margin + betweenmargin + 10;
+//
+//		int nrPixelsY = figureHeight - (2 * margin);
+//
+//		int plotHeight = (int) Math.floor((double) (nrPixelsY - 300) / datasetFiles.length);
+//		int plotWidth = (int) Math.floor((double) nrPixelsX / datasetFiles.length);
+//
+//		int minDotSize = 2;
+//
+//		starty += betweenmargin + 100;
+//
+//
+//		Color grey = new Color(70, 67, 58);
+//
+//
+//		int plotStart = starty;
+//		int q = 0;
+//
+//		// plot the actual p-values..
+//
+//		// generate colors
+//		double maxPval = -Double.MAX_VALUE;
+//		ArrayList<ArrayList<Pair<Integer, Double>>> allPValues = new ArrayList<ArrayList<Pair<Integer, Double>>>();
+//		for (int dataset = 0; dataset < datasetFiles.length; dataset++) {
+//			String file = datasetFiles[dataset];
+//			if (Gpio.exists(file)) {
+//				Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> pair = readVariantPValues(file, region);
+//				ArrayList<Pair<Integer, Double>> pvals = pair.getRight();
+//				for (Pair<Integer, Double> p : pvals) {
+//					if (p.getRight() > maxPval) {
+//						maxPval = p.getRight();
+//					}
+//				}
+//				allPValues.add(pvals);
+//			} else {
+//				allPValues.add(null);
+//			}
+//		}
+//
+//		Color[] colors = new Color[datasetFiles.length];
+//		for (int i = 0; i < colors.length; i++) {
+//			switch (i) {
+//				case 0:
+//					colors[i] = new Color(70, 67, 58);
+//					break;
+//				case 1:
+//					colors[i] = new Color(174, 164, 140);
+//					break;
+//				case 2:
+//					colors[i] = new Color(208, 83, 77);
+//					break;
+//				case 3:
+//					colors[i] = new Color(98, 182, 177);
+//					break;
+//				case 4:
+//					colors[i] = new Color(116, 156, 80);
+//					break;
+//
+//			}
+//		}
+//
+//
+//		double unit = determineUnit(maxPval);
+//		double remainder = maxPval % unit;
+//		System.out.println(maxPval + " maxp");
+//		System.out.println(unit + " unit");
+//		System.out.println(remainder + " remainder");
+//
+//		maxPval += (unit - remainder); // round off using unit
+//		System.out.println(maxPval + " maxp");
+//
+//		Font originalfont = g2d.getFont();
+//		g2d.setFont(new Font("default", Font.BOLD, 16));
+//		FontMetrics metrics = g2d.getFontMetrics(g2d.getFont());
+//
+//		for (int z = allPValues.size() - 1; z > -1; z--) {
+//			int plotStarty = starty + (z * plotHeight) + (z * betweenmargin);
+//			ArrayList<Pair<Integer, Double>> toPlot = allPValues.get(z);
+//			if (toPlot != null) {
+//				g2d.setColor(colors[z]);
+//
+//				for (Pair<Integer, Double> p : toPlot) {
+//					Integer pos = p.getLeft();
+//					Double pval = p.getRight();
+//
+//					// x-coord
+//					int relativeStart = pos - region.getStart();
+//					double percStart = (double) relativeStart / regionSize;
+//					int pixelStart = margin + (int) Math.ceil(percStart * nrPixelsX);
+//
+//					// y-coord
+//
+//					double yperc = pval / maxPval;
+//					int pixelY = (int) Math.ceil(yperc * plotHeight);
+//
+//					int dotsize = 2 + (int) Math.ceil(yperc * 10);
+//					if (z == 0) {
+////						dotsize = 8 + (int) Math.ceil(yperc * 10);
+//					}
+//
+//					g2d.fillOval(pixelStart - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
+//
+//
+//				}
+//
+//
+//				int adv = metrics.stringWidth(datasetNames[z]);
+//				int hgt = metrics.getHeight();
+//				Dimension size = new Dimension(adv + 10, hgt + 10);
+//				g2d.drawString(datasetNames[z], margin, plotStarty - plotHeight - 20);
+//			}
+//
+//
+//		}
+//
+//
+//		// plotVariantsUniqueIneachDataset coordinates
+//		starty += 5;
+//
+//
+//		// determine unit
+//
+//
+//		double steps = maxPval / 10;
+//
+//		String pattern = "###,###,###.##";
+//		DecimalFormat decimalFormat = new DecimalFormat(pattern);
+//
+//
+//		starty += 5;
+//		for (int z = allPValues.size() - 1; z > -1; z--) {
+//			int plotStarty = starty + (z * plotHeight) + (z * betweenmargin);
+//
+//
+//			// draw red line near 5E-8)
+//			double gwas = -Math.log10(5E-8);
+//			if (maxPval >= gwas) {
+//				double yperc = gwas / maxPval;
+//				int pixelY = (int) Math.ceil(yperc * plotHeight);
+//				g2d.setColor(new Color(208, 83, 77));
+//				g2d.drawLine(margin, plotStarty - pixelY, margin + nrPixelsX, plotStarty - pixelY);
+//			}
+//
+//			g2d.setFont(originalfont);
+//			g2d.setColor(new Color(70, 67, 58));
+//			// y-axis
+//			g2d.drawLine(margin - 10, plotStarty, margin - 10, plotStarty - plotHeight);
+//
+//			for (double i = 0; i < maxPval + steps; i += steps) {
+//				if (i <= maxPval) {
+//					int plusY = (int) Math.ceil(((double) i / maxPval) * plotHeight);
+//					g2d.drawLine(margin - 13, plotStarty - plusY, margin - 7, plotStarty - plusY);
+//					String formattedStr = decimalFormat.format(i);
+//					int adv = metrics.stringWidth(formattedStr);
+//					int hgt = metrics.getHeight();
+//					Dimension size = new Dimension(adv + 10, hgt + 10);
+//					g2d.drawString(formattedStr, margin - (int) size.getWidth() - 10, plotStarty - plusY + 5);
+//				}
+//
+//			}
+//// x-axis
+//			g2d.drawLine(margin - 5, plotStarty, margin + nrPixelsX + 5, plotStarty);
+//
+//			int xunit = (int) Math.ceil(determineUnit(regionSize));
+//			while (regionSize / xunit < 10 && xunit > 1) {
+//				xunit /= 2;
+//			}
+//			while (regionSize / xunit > 10) {
+//				xunit *= 2;
+//			}
+//
+//
+//			for (int i = region.getStart(); i < region.getStop(); i++) {
+//				if (i % xunit == 0) {
+//					int relativeStart = i - region.getStart();
+//					double percStart = (double) relativeStart / regionSize;
+//					int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
+//					g2d.drawLine(margin + pixelStart, plotStarty - 5, margin + pixelStart, plotStarty + 5);
+//					String formattedString = decimalFormat.format(i);
+//					int adv = metrics.stringWidth(formattedString);
+//					int hgt = metrics.getHeight();
+//
+//					g2d.drawString(formattedString, margin + pixelStart - (adv / 2), plotStarty + 20);
+//				}
+//			}
+//
+//
+//		}
+//
+//
+//		starty += betweenmargin + 10;
+//
+//
+//		close();
+//
+//	}
+
+//	public Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> readVariantPValues(String pvaluefile, Feature region) throws IOException {
+//		HashSet<String> variantHash = new HashSet<String>();
+//		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
+//
+//		ArrayList<Pair<Integer, Double>> pvaluesPerPosition = new ArrayList<Pair<Integer, Double>>();
+//
+//		// skip header
+//		textfile.readLine();
+//		String[] elems = textfile.readLineElems(TextFile.tab);
+//		int pvalctr = 0;
+//		while (elems != null) {
+//			// Marker	Chr	Position	PValue	Odds Ratio
+//			if (pvaluefile.endsWith(".tab")) {
+//				Chromosome chr = Chromosome.parseChr(elems[1]);
+//				if (region.getChromosome().equals(chr)) {
+//					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
+//					Feature f2 = new Feature();
+//					f2.setChromosome(chr);
+//					f2.setStart(Integer.parseInt(elems[2]));
+//					f2.setStop(Integer.parseInt(elems[2]));
+//					if (f2.overlaps(region)) {
+//						Integer position = Integer.parseInt(elems[2]);
+//						try {
+//							Double pval = Double.parseDouble(elems[elems.length - 2]); // need to check position...
+//							double log10 = -Math.log10(pval);
+//							variantHash.add(variant);
+//							pvaluesPerPosition.add(new Pair<Integer, Double>(position, log10));
+//						} catch (NumberFormatException e) {
+//
+//						}
+//						pvalctr++;
+//					}
+//
+//				}
+//			} else {
+//				Chromosome chr = Chromosome.parseChr(elems[1]);
+//				if (region.getChromosome().equals(chr)) {
+//					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
+//					Feature f2 = new Feature();
+//					f2.setChromosome(chr);
+//					f2.setStart(Integer.parseInt(elems[2]));
+//					f2.setStop(Integer.parseInt(elems[2]));
+//					if (f2.overlaps(region)) {
+//						Integer position = Integer.parseInt(elems[2]);
+//						Double pval = Double.parseDouble(elems[elems.length - 1]); // need to check position...
+//						variantHash.add(variant);
+//						pvaluesPerPosition.add(new Pair<Integer, Double>(position, pval));
+//						pvalctr++;
+//					}
+//
+//				}
+//			}
+//			elems = textfile.readLineElems(TextFile.tab);
+//		}
+//		textfile.close();
+//
+//		System.out.println(pvalctr + " pvalues for " + pvaluesPerPosition.size() + " positions from file: " + pvaluefile);
+//
+//
+//		return new Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>>(variantHash, pvaluesPerPosition);
+//	}
 
 
 	public void plot2(String[] variantFiles, String[] variantFileNames, String sequencedRegionFile, String regionFile) throws IOException {

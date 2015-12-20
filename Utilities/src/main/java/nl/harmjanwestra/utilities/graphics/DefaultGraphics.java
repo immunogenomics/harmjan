@@ -2,7 +2,9 @@ package nl.harmjanwestra.utilities.graphics;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
+import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfWriter;
+import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -12,11 +14,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Locale;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 /**
  * @author hwestra
@@ -32,7 +29,7 @@ public class DefaultGraphics {
 	protected int figureHeight;
 	protected String outputFileName;
 	private Locale defaultLocale;
-
+	protected com.lowagie.text.pdf.PdfContentByte cb = null;
 
 
 	public enum Output {
@@ -40,27 +37,93 @@ public class DefaultGraphics {
 		PDF, PNG
 	}
 
-	;
-
-	protected static final Font LARGE_FONT = new Font("Verdana", Font.PLAIN, 14);
-	protected static final Font LARGE_FONT_BOLD = new Font("Verdana", Font.BOLD, 14);
-	protected static final Font SMALL_FONT = new Font("Verdana", Font.PLAIN, 10);
-	protected static final Font SMALL_FONT_BOLD = new Font("Verdana", Font.BOLD, 10);
-
-	protected static final Stroke dashed = new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{4}, 0);
-	protected static final Stroke line2pt = new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-	protected static final Stroke line = new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-	protected com.lowagie.text.pdf.PdfContentByte cb = null;
-
-	protected DefaultGraphics(){
-
+	protected DefaultGraphics() {
 	}
 
 	protected DefaultGraphics(String outputFileName, int width, int height) throws FileNotFoundException, DocumentException {
-		this.initializePlot(outputFileName,width,height);
+		this.initializePlot(outputFileName, width, height);
+	}
+
+	public Output getOutput() {
+		return output;
+	}
+
+	public void setOutput(Output output) {
+		this.output = output;
+	}
+
+	public BufferedImage getBi() {
+		return bi;
+	}
+
+	public void setBi(BufferedImage bi) {
+		this.bi = bi;
+	}
+
+	public void setG2d(Graphics2D g2d) {
+		this.g2d = g2d;
+	}
+
+	public Document getDocument() {
+		return document;
+	}
+
+	public void setDocument(Document document) {
+		this.document = document;
+	}
+
+	public PdfWriter getWriter() {
+		return writer;
+	}
+
+	public void setWriter(PdfWriter writer) {
+		this.writer = writer;
+	}
+
+	public int getFigureWidth() {
+		return figureWidth;
+	}
+
+	public void setFigureWidth(int figureWidth) {
+		this.figureWidth = figureWidth;
+	}
+
+	public int getFigureHeight() {
+		return figureHeight;
+	}
+
+	public void setFigureHeight(int figureHeight) {
+		this.figureHeight = figureHeight;
+	}
+
+	public String getOutputFileName() {
+		return outputFileName;
+	}
+
+	public void setOutputFileName(String outputFileName) {
+		this.outputFileName = outputFileName;
+	}
+
+	public Locale getDefaultLocale() {
+		return defaultLocale;
+	}
+
+	public void setDefaultLocale(Locale defaultLocale) {
+		this.defaultLocale = defaultLocale;
+	}
+
+	public PdfContentByte getCb() {
+		return cb;
+	}
+
+	public void setCb(PdfContentByte cb) {
+		this.cb = cb;
 	}
 
 	protected void initializePlot(String outputFileName, int width, int height) throws DocumentException, FileNotFoundException {
+		if (outputFileName.toLowerCase().endsWith("png")) {
+			output = Output.PNG;
+		}
 		defaultLocale = Locale.getDefault();
 		Locale.setDefault(Locale.US);
 		// set up Graphics2D depending on required format using iText in case PDF
@@ -71,6 +134,9 @@ public class DefaultGraphics {
 		this.outputFileName = outputFileName;
 		bi = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
 		g2d = bi.createGraphics();
+
+		figureWidth = width;
+		figureHeight = height;
 
 		// initialize plot
 		if (output == Output.PDF) {
@@ -91,22 +157,38 @@ public class DefaultGraphics {
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setColor(Color.white);
 		g2d.fillRect(0, 0, width, height);
-		g2d.setStroke(line);
+
+		g2d.setStroke(new DefaultTheme().getStroke());
 	}
 
 	public void close() throws IOException {
 		// dispose
 		g2d.dispose();
 		if (output == Output.PDF) {
+
 			g2d.dispose();
 			cb.restoreState();
 			document.close();
 			writer.close();
 		} else {
 			bi.flush();
-			ImageIO.write(bi, output.toString().toLowerCase(), new File(outputFileName));
+			ImageIO.write(bi, "PNG", new File(outputFileName));
 		}
 
 		Locale.setDefault(defaultLocale);
 	}
+
+	public Graphics2D getG2d() {
+		return g2d;
+	}
+
+	public double determineUnit(double range) {
+
+		double divisor = Math.log10(range);
+		divisor = Math.floor(divisor);
+		divisor = Math.pow(10, divisor);
+		return divisor;
+	}
+
+
 }

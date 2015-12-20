@@ -4244,7 +4244,7 @@ public class Fmath{
                 oos.flush();
                 oos.close();
                 // Make an input stream from the byte array and
-                // read a copy of the object back in.
+                // readAsTrack a copy of the object back in.
                 ObjectInputStream ois = new ObjectInputStream(
                     new ByteArrayInputStream(bos.toByteArray()));
                 objCopy = ois.readObject();

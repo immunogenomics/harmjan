@@ -8,22 +8,27 @@ package nl.harmjanwestra.ngs;
 import htsjdk.samtools.*;
 import htsjdk.samtools.filter.AggregateFilter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
+import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import nl.harmjanwestra.ngs.containers.ReadGroup;
 import nl.harmjanwestra.ngs.wrappers.MarkDups;
 import nl.harmjanwestra.ngs.wrappers.SortBAM;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
+import nl.harmjanwestra.utilities.bamfile.filters.FailsVendorQualityCheckFilter;
+import nl.harmjanwestra.utilities.bamfile.filters.MappingQualityUnavailableFilter;
+import nl.harmjanwestra.utilities.bamfile.filters.UnmappedReadFilter;
 import nl.harmjanwestra.utilities.features.Chromosome;
-import org.broadinstitute.gatk.engine.filters.FailsVendorQualityCheckFilter;
-import org.broadinstitute.gatk.engine.filters.MappingQualityUnavailableFilter;
-import org.broadinstitute.gatk.engine.filters.NotPrimaryAlignmentFilter;
-import org.broadinstitute.gatk.engine.filters.UnmappedReadFilter;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
+//import org.broadinstitute.gatk.engine.filters.FailsVendorQualityCheckFilter;
+//import org.broadinstitute.gatk.engine.filters.MappingQualityUnavailableFilter;
+//import org.broadinstitute.gatk.engine.filters.NotPrimaryAlignmentFilter;
+//import org.broadinstitute.gatk.engine.filters.UnmappedReadFilter;
 
 /**
  * @author hwestra
@@ -51,25 +56,63 @@ public class Resequencing {
 //			e.printStackTrace();
 //		}
 
+
+		if (args.length < 3) {
+			System.out.println("Usage: samplename filelist.txt output.bam");
+		} else {
+			String sample = args[0];
+			String filelistStr = args[1];
+			String output = args[2];
+			try {
+				s.mergeBamFiles(sample, null, filelistStr, false, output);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+
+//		s.indexDedupSortIndex(args[0],args[1]);
+	}
+
+	public void removeUnpairedReadsAndMisaligningReads(String[] args) {
+
+		try {
+
+			if (args.length < 3) {
+				System.out.println("Usage: bamin bamout tmp");
+			} else {
+				String bamin = args[0];
+				String bamout = args[1];
+				String tmpdir = args[2];
+
+				filterBAMForImproperMates(bamin, bamout, tmpdir);
+			}
+
+
+		} catch (IOException e) {
+			e.printStackTrace();
+
+		}
+	}
+
+	public void renameBamReadGroups(String[] args) {
 		try {
 //			String filein = args[0];
 //			String tmp = args[1];
 //			s.indexDedupSortIndex(filein,tmp);
-			if(args.length <4){
+			if (args.length < 4) {
 				System.out.println("Usage: bamin bamout tmpdir readgroup");
 			} else {
 				String bamin = args[0];
 				String bamout = args[1];
 				String tmpdir = args[2];
 				String rg = args[3];
-				s.replaceReadGroupDedupAndSort(bamin, bamout, tmpdir, rg);
+				replaceReadGroupDedupAndSort(bamin, bamout, tmpdir, rg);
 			}
 //			s.rewritePlatform(filein, tmp);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-//		s.indexDedupSortIndex(args[0],args[1]);
 	}
 
 
@@ -455,7 +498,7 @@ public class Resequencing {
 		List<SAMReadGroupRecord> var = header.getReadGroups();
 		System.out.println(var.size() + " readgroups found");
 		for (SAMReadGroupRecord r : var) {
-			System.out.println(String.format("Detected read group ID=%s PL=%s LB=%s SM=%s%n", r.getId(), r.getPlatform(), r.getLibrary(), r.getSample()));
+			System.out.println(String.format("Detected readAsTrack group ID=%s PL=%s LB=%s SM=%s%n", r.getId(), r.getPlatform(), r.getLibrary(), r.getSample()));
 		}
 
 		List<SAMReadGroupRecord> varOut = new ArrayList<SAMReadGroupRecord>();
@@ -466,7 +509,7 @@ public class Resequencing {
 			rg.setPlatform("ILLUMINA");
 			rg.setSample(r.getSample());
 			rg.setPlatformUnit(r.getPlatformUnit());
-			System.out.println(String.format("\tCreated read group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
+			System.out.println(String.format("\tCreated readAsTrack group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
 			varOut.add(rg);
 		}
 		header.setReadGroups(varOut);
@@ -542,7 +585,7 @@ public class Resequencing {
 			RGSM = sample;
 		} else {
 			for (SAMReadGroupRecord r : var) {
-				System.out.println(String.format(sample + "\tDetected read group ID=%s PL=%s LB=%s SM=%s%n", r.getId(), r.getPlatform(), r.getLibrary(), r.getSample()));
+				System.out.println(String.format(sample + "\tDetected readAsTrack group ID=%s PL=%s LB=%s SM=%s%n", r.getId(), r.getPlatform(), r.getLibrary(), r.getSample()));
 			}
 			RGID = sample;
 			RGLB = var.get(0).getLibrary();
@@ -565,7 +608,7 @@ public class Resequencing {
 		rg.setPlatform(RGPL);
 		rg.setSample(RGSM);
 		rg.setPlatformUnit(RGPU);
-		System.out.println(String.format(sample + "\tCreated read group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
+		System.out.println(String.format(sample + "\tCreated readAsTrack group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
 		header.setReadGroups(Arrays.asList(rg));
 
 		SAMFileWriter outputSam = new SAMFileWriterFactory().makeSAMOrBAMWriter(headerMerger.getMergedHeader(), false, outfile);
@@ -658,6 +701,109 @@ public class Resequencing {
 
 		indexBAM(outfile);
 
+	}
+
+	public void filterBAMForImproperMates(String bamin, String bamout, String tmpdir) throws IOException {
+
+		System.out.println("Filtering for bad readAsTrack pairs:");
+		System.out.println("This will remove non-FR readAsTrack pairs, and readAsTrack pairs where one of the mates is mapping outside of the chromosome");
+		System.out.println(bamin);
+		System.out.println(bamout);
+
+		String randomString = UUID.randomUUID().toString();
+
+		SamReader reader = SamReaderFactory.makeDefault().open(new File(bamin));
+		SAMSequenceDictionary dictionary = reader.getFileHeader().getSequenceDictionary();
+
+		String tmpBam = tmpdir + randomString + ".bam";
+		File tmpBamFile = new File(tmpBam);
+
+		SAMFileWriter outputSam = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, tmpBamFile);
+
+		Iterator<SAMRecord> it = reader.iterator();
+		int nrReads = 0;
+		int nrReadsFiltered = 0;
+		int nrReadsWritten = 0;
+		HashMap<String, SAMRecord> buffer = new HashMap<String, SAMRecord>();
+
+		int nrReadsWPairOnSameStrand = 0;
+		int nrReadsNotCorrectlyMapping = 0;
+		int nrUnproperPair = 0;
+
+		while (it.hasNext()) {
+
+			SAMRecord record = null;
+			try {
+				record = it.next();
+			} catch (SAMFormatException e) {
+				System.out.println(e.getMessage());
+				continue;
+			}
+			boolean readOnNegativeStrand = record.getReadNegativeStrandFlag();
+			boolean mateOnNegativeStrand = record.getMateNegativeStrandFlag();
+
+			nrReads++;
+
+			if (record.getProperPairFlag()) {
+				if ((readOnNegativeStrand && !mateOnNegativeStrand) || (!readOnNegativeStrand && mateOnNegativeStrand)) {
+
+					String readName = record.getReadName();
+					if (buffer.containsKey(readName)) {
+						SAMRecord mate = buffer.get(readName);
+
+						boolean mateCorrect = checkSamRecordPosition(mate, dictionary);
+						boolean readCorrect = checkSamRecordPosition(record, dictionary);
+
+						if (mateCorrect && readCorrect) {
+							outputSam.addAlignment(record);
+							outputSam.addAlignment(mate);
+							buffer.remove(readName);
+							nrReadsWritten += 2;
+						} else {
+							nrReadsNotCorrectlyMapping++;
+						}
+					} else {
+						buffer.put(readName, record);
+					}
+				} else {
+					nrReadsWPairOnSameStrand++;
+				}
+			} else {
+				nrUnproperPair++;
+			}
+
+			if (nrReads % 100000 == 0) {
+				System.out.println(nrReads + " reads processed..\t" + buffer.size() + " unpaired.\t" + nrReadsWritten + " reads written.");
+				System.out.println(nrReadsWPairOnSameStrand + " on same strand.\t" + nrReadsNotCorrectlyMapping + " mapping outside of genome.\t" + nrUnproperPair + " not proper pair");
+			}
+		}
+
+		System.out.println(buffer.size() + " reads not paired.");
+
+		System.out.println(nrReads + " reads total. " + nrReadsWritten + " reads written.");
+		outputSam.close();
+		System.out.println("Now sorting and indexing output.");
+		File bamFileOut = new File(bamout);
+		SortBAM sb = new SortBAM(tmpBamFile, bamFileOut, new File(tmpdir));
+
+		Gpio.delete(tmpBam);
+		indexBAM(bamFileOut);
+	}
+
+	private boolean checkSamRecordPosition(SAMRecord read, SAMSequenceDictionary dictionary) {
+		String refname = read.getReferenceName();
+		SAMSequenceRecord ref = dictionary.getSequence(refname);
+		int sequenceLength = ref.getSequenceLength();
+		List<AlignmentBlock> blocks = read.getAlignmentBlocks();
+		boolean properAlignment = true;
+		for (AlignmentBlock block : blocks) {
+			int len = block.getLength();
+			int refStart = block.getReferenceStart();
+			if (refStart + len > sequenceLength) {
+				properAlignment = false;
+			}
+		}
+		return properAlignment;
 	}
 
 	private void indexBAM(File in) {
@@ -909,7 +1055,7 @@ public class Resequencing {
 
 			reader.close();
 
-			System.out.println(strToSample.size() + " read groups found");
+			System.out.println(strToSample.size() + " readAsTrack groups found");
 
 		}
 

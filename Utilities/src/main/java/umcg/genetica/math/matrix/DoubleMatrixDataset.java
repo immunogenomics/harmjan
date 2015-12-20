@@ -320,7 +320,7 @@ public class DoubleMatrixDataset<T, U> extends DoubleMatrixDatasetAC<T, U> {
         rawData = new double[nrRows][nrCols];
         rowObjects = new ArrayList<T>(nrRows);
         in.open();
-        in.readLine(); // read header
+        in.readLine(); // readAsTrack header
         int row = 0;
 
         boolean correctData = true;
@@ -430,7 +430,7 @@ public class DoubleMatrixDataset<T, U> extends DoubleMatrixDatasetAC<T, U> {
         rawData = new double[nrRows][nrCols];
 
         in.open();
-        str = in.readLine(); // read header
+        str = in.readLine(); // readAsTrack header
 
         int nrprocs = Runtime.getRuntime().availableProcessors();
 //        System.out.println("Using " + nrprocs + " threads for parsing the file");

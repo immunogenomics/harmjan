@@ -6,6 +6,7 @@ import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
 import nl.harmjanwestra.utilities.features.Transcript;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
+import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 import umcg.genetica.util.Primitives;
 
 import java.awt.*;
@@ -134,6 +135,7 @@ public class LocusCoveragePlot extends DefaultGraphics {
 
 		}
 
+		DefaultTheme theme = new DefaultTheme();
 
 		// determine scaling
 		for (int row = 0; row < nrSamples; row++) {
@@ -146,13 +148,13 @@ public class LocusCoveragePlot extends DefaultGraphics {
 			if (coverageMapNegStr != null) {
 				int halfway = y0 + (plotIndividualHeight / 2);
 				g2d.setColor(Color.gray);
-				g2d.setStroke(line);
+				g2d.setStroke(theme.getStroke());
 				g2d.drawLine(x0, halfway, x0 + plotIndividualWidth, halfway);
 			}
 
 
 			// indicate the buffer zone
-			g2d.setStroke(dashed);
+			g2d.setStroke(theme.getStrokeDashed());
 			g2d.setColor(Color.lightGray);
 			g2d.drawLine(x0, y0, x0, y0 + plotIndividualHeight);
 			g2d.drawLine(x0 + plotIndividualWidth, y0, x0 + plotIndividualWidth, y0 + plotIndividualHeight);
@@ -178,7 +180,7 @@ public class LocusCoveragePlot extends DefaultGraphics {
 
 			if (rowLabels != null) {
 				g2d.setColor(new Color(0, 0, 0));
-				g2d.setFont(SMALL_FONT);
+				g2d.setFont(theme.getSmallFont());
 				g2d.drawString(rowLabels[row] + " max coverage: " + maxCoverage, x0, y0 - 10);
 			}
 

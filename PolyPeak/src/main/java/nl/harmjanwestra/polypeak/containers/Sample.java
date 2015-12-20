@@ -71,7 +71,7 @@ public class Sample {
 				List<SAMReadGroupRecord> allBamFileReadGroups = r.getReadGroups();
 
 				if (allBamFileReadGroups.isEmpty()) {
-					System.err.println("WARNING: trying to check sample names in BAM file: " + bamfiles[i].getAbsolutePath() + " but no read group information found.");
+					System.err.println("WARNING: trying to check sample names in BAM file: " + bamfiles[i].getAbsolutePath() + " but no readAsTrack group information found.");
 					System.err.println("Forcing: " + bamfiles[i].getAbsolutePath() + " as BAM file for sample: " + samplename);
 					tmpReaders.add(r);
 				} else {

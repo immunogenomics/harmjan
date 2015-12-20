@@ -1,13 +1,13 @@
 package nl.harmjanwestra.ngs;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.filter.AggregateFilter;
-import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.*;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
+import nl.harmjanwestra.utilities.bamfile.filters.FailsVendorQualityCheckFilter;
+import nl.harmjanwestra.utilities.bamfile.filters.MappingQualityUnavailableFilter;
+import nl.harmjanwestra.utilities.bamfile.filters.UnmappedReadFilter;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import org.broadinstitute.gatk.engine.filters.*;
-import org.broadinstitute.gatk.tools.walkers.haplotypecaller.HCMappingQualityFilter;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 
@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
+
+//import org.broadinstitute.gatk.engine.filters.*;
+//import org.broadinstitute.gatk.tools.walkers.haplotypecaller.HCMappingQualityFilter;
 
 /**
  * Created by hwestra on 3/30/15.
@@ -83,7 +86,7 @@ public class CoverageTask implements Callable<Boolean> {
 		filters.add(new DuplicateReadFilter());
 		filters.add(new UnmappedReadFilter());
 		filters.add(new MappingQualityUnavailableFilter());
-		filters.add(new HCMappingQualityFilter());
+		filters.add(new MappingQualityFilter(20));
 		// ilters.add(new MalformedReadFilter());
 
 		int[][] data = new int[samples.length][14];
@@ -104,7 +107,6 @@ public class CoverageTask implements Callable<Boolean> {
 
 		HashMap<String, String> chromosomeToSequence = reader.matchChromosomeNames(regions);
 
-
 		TextFile[] bedout = new TextFile[samples.length];
 		for (int i = 0; i < samples.length; i++) {
 			String[] samplenameelems = samples[i].split("/");
@@ -114,6 +116,7 @@ public class CoverageTask implements Callable<Boolean> {
 
 
 		int fctr = 0;
+		double lastperc = -1;
 		for (Feature f : regions) {
 			Chromosome c = f.getChromosome();
 			int start = f.getStart();
@@ -238,7 +241,7 @@ public class CoverageTask implements Callable<Boolean> {
 								List<CigarElement> cigarElements = cigar.getCigarElements();
 
 								if (bases == null || bases.length == 0 || baseQual == null || baseQual.length == 0) {
-									System.err.println("No bases for read: " + record.getReadUnmappedFlag() + "\t" + record.toString() + "\t" + bases.length + "\t" + baseQual.length);
+									System.err.println("No bases for readAsTrack: " + record.getReadUnmappedFlag() + "\t" + record.toString() + "\t" + bases.length + "\t" + baseQual.length);
 								} else {
 									for (CigarElement e : cigarElements) {
 										int cigarElementLength = e.getLength();
@@ -268,7 +271,7 @@ public class CoverageTask implements Callable<Boolean> {
 													boolean properbase = false;
 													byte base = bases[pos];
 
-													if (windowRelativePosition >= 0 && windowRelativePosition < windowSize) { // the read could overlap the leftmost edge of this window
+													if (windowRelativePosition >= 0 && windowRelativePosition < windowSize) { // the readAsTrack could overlap the leftmost edge of this window
 														if (base == 78 || base == 110) {
 															// N
 
@@ -301,7 +304,7 @@ public class CoverageTask implements Callable<Boolean> {
 												break;
 											default:
 												System.err.println("Unknown CIGAR operator found: " + e.getOperator().toString());
-												System.err.println("In read: " + record.toString());
+												System.err.println("In readAsTrack: " + record.toString());
 												break;
 										} // switch operator
 									} // for each cigar element
@@ -313,7 +316,7 @@ public class CoverageTask implements Callable<Boolean> {
 					}
 				}
 
-				System.out.println("Region: " + f.getChromosome().getName() + ":" + f.getStart() + "-" + f.getStop() + " - nr reads: " + nrReads);
+				// System.out.println("Region: " + f.getChromosome().getName() + ":" + f.getStart() + "-" + f.getStop() + " - nr reads: " + nrReads);
 
 				for (int i = 0; i < samples.length; i++) {
 					avgmapq[i][fct] /= readsperregion[i][fct];
@@ -383,7 +386,11 @@ public class CoverageTask implements Callable<Boolean> {
 			}
 			fctr++;
 			int perc = (int) Math.ceil(((double) fctr / regions.size()) * 100);
-			//System.out.print(perc + "% done " + fctr + "\t" + regions.size() + "\r");
+			if (perc % 10 == 0 && perc> lastperc) {
+				System.out.println(reader.getFile().getName() + "\t" + perc + "% done " + fctr + "\t" + regions.size());
+				lastperc = perc;
+			}
+
 
 		}
 		//System.out.println();
@@ -509,7 +516,6 @@ public class CoverageTask implements Callable<Boolean> {
 		outf4.close();
 		reader.close();
 	}
-
 
 
 	@Override

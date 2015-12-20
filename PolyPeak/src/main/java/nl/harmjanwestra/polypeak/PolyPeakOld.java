@@ -104,12 +104,12 @@ public class PolyPeakOld {
 
                 int nrReadsWindowTotal = 0;
                 if (recordIterator != null) {
-                    // -- determine read coverage per strand
+                    // -- determine readAsTrack coverage per strand
                     int[][] coverage = new int[2][windowSizeWithOverlap]; // [strand][position] 
                     int[][] insertLengthDist = new int[2][maxInsertSize];
                     int[][] readLengthDistribution = new int[2][maxReadLen];
 
-                    //    -- get read
+                    //    -- get readAsTrack
 
                     if (fragmentsprocessed % 100000 == 0) {
                         long diff = timer.getTimeDiff();
@@ -125,7 +125,7 @@ public class PolyPeakOld {
                     double meanInsertLengthNegStrand = JSci.maths.ArrayMath.mean(insertLengthDist[1]);
                     double varInsertNegStrand = JSci.maths.ArrayMath.variance(insertLengthDist[1]);
 
-                    // determine mean read length and variance
+                    // determine mean readAsTrack length and variance
                     double meanReadLengthPosStrand = JSci.maths.ArrayMath.mean(readLengthDistribution[0]);
                     double varReadPosStrand = JSci.maths.ArrayMath.variance(readLengthDistribution[0]);
 
@@ -144,8 +144,8 @@ public class PolyPeakOld {
                     LOG.debug("QTY\t\tPositive Strand\tNegative Strand");
                     LOG.debug("Mean insert size:\t" + meanInsertLengthPosStrand + "\t" + meanInsertLengthNegStrand);
                     LOG.debug("Variance insert:\t" + varInsertPosStrand + "\t" + varInsertNegStrand);
-                    LOG.debug("Mean read length:\t" + meanReadLengthPosStrand + "\t" + meanReadLengthNegStrand);
-                    LOG.debug("Variance read len:\t" + varReadPosStrand + "\t" + varReadNegStrand);
+                    LOG.debug("Mean readAsTrack length:\t" + meanReadLengthPosStrand + "\t" + meanReadLengthNegStrand);
+                    LOG.debug("Variance readAsTrack len:\t" + varReadPosStrand + "\t" + varReadNegStrand);
                     LOG.debug("Mean coverage:\t" + meanCoveragePosStrand + "\t" + meanCoverageNegStrand);
                     LOG.debug("Variance coverage:\t" + varCoveragePosStrand + "\t" + varCoverageNegStrand);
                     LOG.debug("---");
@@ -176,8 +176,8 @@ public class PolyPeakOld {
 
     private boolean properPairFilter(SAMRecord record) {
         // -- if paired end, check whether other pair is present
-        // -- check whether read pair maps to same chr;
-        // -- check whether read pair maps to same strand;
+        // -- check whether readAsTrack pair maps to same chr;
+        // -- check whether readAsTrack pair maps to same strand;
 
         return true;
     }

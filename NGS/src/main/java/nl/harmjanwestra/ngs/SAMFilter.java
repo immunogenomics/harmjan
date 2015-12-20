@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Set;
 
 /**
  * Created by hwestra on 6/22/15.
@@ -26,20 +25,20 @@ public class SAMFilter {
 		} else {
 			SAMFilter filter = new SAMFilter();
 			try {
-				filter.filter(args[0], args[1], args[2]);
+				filter.filterRegions(args[0], args[1], args[2]);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 	}
 
-	public void filter(String samfilename, String samout, String bedfilename) throws IOException {
+	public void filterRegions(String samfilename, String samout, String bedfilename) throws IOException {
 
 		BedFileReader bed = new BedFileReader();
 		ArrayList<Feature> regions = bed.readAsList(bedfilename);
 
 		FeatureMerger merger = new FeatureMerger();
-		regions = merger.merge(regions);
+		regions = merger.merge(regions, false);
 
 		System.out.println(regions.size() + " regions after merging....");
 
@@ -51,31 +50,33 @@ public class SAMFilter {
 
 		SAMFileHeader header = reader.getHeader();
 
-		SAMFileHeader newHeader = new SAMFileHeader();
-		newHeader.setReadGroups(header.getReadGroups());
-		newHeader.setComments(header.getComments());
-		newHeader.setProgramRecords(header.getProgramRecords());
-		newHeader.setGroupOrder(header.getGroupOrder());
-
-		newHeader.setSortOrder(header.getSortOrder());
-		newHeader.setTextHeader(header.getTextHeader());
-		newHeader.setValidationErrors(header.getValidationErrors());
-
-		SAMSequenceDictionary newDictionary = new SAMSequenceDictionary();
-
-		newHeader.setSequenceDictionary(newDictionary);
-		CoverageTask t = new CoverageTask();
+//		SAMFileHeader newHeader = new SAMFileHeader();
+//		newHeader.setReadGroups(header.getReadGroups());
+//		newHeader.setComments(header.getComments());
+//		newHeader.setProgramRecords(header.getProgramRecords());
+//		newHeader.setGroupOrder(header.getGroupOrder());
+//
+//		newHeader.setSortOrder(header.getSortOrder());
+//		newHeader.setTextHeader(header.getTextHeader());
+//		newHeader.setValidationErrors(header.getValidationErrors());
+//
+//		SAMSequenceDictionary newDictionary = new SAMSequenceDictionary();
+//
+//		newHeader.setSequenceDictionary(reader.);
+//		CoverageTask t = new CoverageTask();
 		HashMap<String, String> chromosomeToSequence = reader.matchChromosomeNames(regions);
-		Set<String> chroms = chromosomeToSequence.keySet();
-		for (String s : chroms) {
-			SAMSequenceRecord record = reader.getHeader().getSequence(s);
-			if (record != null) {
-				newDictionary.addSequence(record);
-			}
-		}
+//		Set<String> chroms = chromosomeToSequence.keySet();
+//		for (String s : chroms) {
+//			SAMSequenceRecord record = reader.getHeader().getSequence(s);
+//			if (record != null) {
+//				newDictionary.addSequence(record);
+//			}
+//		}
 
 
-		SAMFileWriter outputSam = new SAMFileWriterFactory().makeSAMOrBAMWriter(newHeader, false, new File(samout));
+		File samoutfile = new File(samout);
+
+		SAMFileWriter outputSam = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, samoutfile);
 
 		Collections.sort(regions, new FeatureComparator(false));
 
@@ -93,12 +94,14 @@ public class SAMFilter {
 					outputSam.addAlignment(record);
 					nrWritten++;
 				}
+				it.close();
 			}
 
 		}
 
-		outputSam.close();
 		reader.close();
+		outputSam.close();
+
 		System.out.println(nrWritten + " records written");
 	}
 

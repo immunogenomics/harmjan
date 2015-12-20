@@ -86,8 +86,8 @@ public class Viz {
             int start = 56025316; // 56025316-56041464
             int stop = 56041464;
 
-            // read all data
-//            Track t = f.read(file, "NaivePrimaryCD8", chr, s0tart, stop, false);
+            // readAsTrack all data
+//            Track t = f.readAsTrack(file, "NaivePrimaryCD8", chr, s0tart, stop, false);
 
 //            start = 117294211;
 //            stop = 117294211 + 5000000;
@@ -251,7 +251,7 @@ public class Viz {
                 plot1YStart,
                 distPlotSize, plotHeight);
 
-        // read length distribution
+        // readAsTrack length distribution
         int nrReadLengthBins = 200;
         g2d.drawString("Read length distribution within window",
                 plot2XStart, plot1YStart - withinPlotMargin);

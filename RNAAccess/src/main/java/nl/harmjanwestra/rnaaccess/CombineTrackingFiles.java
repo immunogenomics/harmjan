@@ -506,7 +506,7 @@ public class CombineTrackingFiles {
             int startX = margin + (col * marginBetween) + (col * plotSize);
             int startY = margin + (row * marginBetween) + (row * plotSize);
 
-            // System.out.println(sample + "\t" + row + "\t" + col + "\t" + startX + "\t" + startY);
+            // System.out.println(sample + "\t" + row + "\t" + col + "\t" + x0 + "\t" + y0);
             // draw bars
             int barWidth = (plotSize / nrBins);
             for (int bin = 0; bin < nrBins; bin++) {

@@ -174,7 +174,7 @@ public class ModelBuildingTask implements Callable<Boolean> {
 								// create bedlike file:
 								// - store pileup average + std. deviance
 								// - store average insert size
-								// - store average read length
+								// - store average readAsTrack length
 
 								if (nrWindowsInTMPBuffer == tmpWindowBufferSize) {
 									updateFinalWindowBuffer(tmpBuffer, finalBuffer);
@@ -421,7 +421,7 @@ public class ModelBuildingTask implements Callable<Boolean> {
 		for (int i : arr) {
 			if (i < 0) {
 				i = 0;
-				System.err.println("WARNING: Negative read length for window: " + pileupWindow.toString());
+				System.err.println("WARNING: Negative readAsTrack length for window: " + pileupWindow.toString());
 			}
 			if (i >= readLengthDistribution.length) {
 				i = readLengthDistribution.length - 1;

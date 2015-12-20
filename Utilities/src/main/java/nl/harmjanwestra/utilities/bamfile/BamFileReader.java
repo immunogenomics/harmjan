@@ -43,7 +43,6 @@ public class BamFileReader {
 				.validationStringency(ValidationStringency.DEFAULT_STRINGENCY)
 				.open(bamFile);
 
-
 		if (tmpreader.hasIndex()) {
 
 			reader = tmpreader;
@@ -146,51 +145,74 @@ public class BamFileReader {
 
 		// hash the chromosome names (because of stupid non-conventional chromosome names)
 		for (Feature f : regions) {
+
 			String name = f.getChromosome().getName();
+
 			if (!chromosomeToSequence.containsKey(name)) {
-				boolean match = false;
-				int format = 0;
-				while (!match) {
-					SAMSequenceRecord record = null;
-					String newname = null;
-					switch (format) {
-						case 0:
-
-							record = getHeader().getSequence(name);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, name);
-							}
-							break;
-						case 1:
-							newname = name.toLowerCase();
-							record = getHeader().getSequence(newname);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, newname);
-							}
-							break;
-						case 2:
-							newname = name.replaceAll("chr", "");
-							newname = newname.replaceAll("Chr", "");
-							record = getHeader().getSequence(newname);
-							if (record != null) {
-								match = true;
-								chromosomeToSequence.put(name, newname);
-							}
-							break;
-						case 3:
-							chromosomeToSequence.put(name, null);
-							System.out.println("Could not find chr in bamfile: " + name);
-							match = true;
-							break;
-					}
-
-
-					format++;
-				}
+				String newname = matchChromosomeName(f);
+				chromosomeToSequence.put(name, newname);
 			}
+
 		}
 		return chromosomeToSequence;
+	}
+
+	public String matchChromosomeName(Feature f) {
+		String name = f.getChromosome().getName();
+
+
+		boolean match = false;
+		int format = 0;
+		while (!match) {
+			SAMSequenceRecord record = null;
+			String newname = null;
+			switch (format) {
+				case 0:
+					record = getHeader().getSequence(name);
+					if (record != null) {
+						match = true;
+//						chromosomeToSequence.put(name, name);
+						return name;
+					}
+					break;
+				case 1:
+					newname = name.toLowerCase();
+					record = getHeader().getSequence(newname);
+					if (record != null) {
+						match = true;
+//						chromosomeToSequence.put(name, newname);
+						return newname;
+					}
+					break;
+				case 2:
+					newname = name.replaceAll("chr", "");
+					newname = newname.replaceAll("Chr", "");
+					record = getHeader().getSequence(newname);
+					if (record != null) {
+						match = true;
+//						chromosomeToSequence.put(name, newname);
+						return newname;
+					}
+					break;
+				case 3:
+					// match for chrX and chrM, etc
+					newname = name.replaceAll("Chr", "chr");
+					record = getHeader().getSequence(newname);
+					if (record != null) {
+						match = true;
+//						chromosomeToSequence.put(name, newname);
+						return newname;
+					}
+					break;
+				case 4:
+//					chromosomeToSequence.put(name, null);
+					System.out.println("Could not find chr in bamfile: " + name);
+					match = true;
+					break;
+			}
+			format++;
+		}
+		return null;
+
 	}
 }

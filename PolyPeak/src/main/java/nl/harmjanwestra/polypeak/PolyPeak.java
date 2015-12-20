@@ -64,13 +64,13 @@ public class PolyPeak {
 		this.nrThreads = nrThreads;
 		this.outputDirectory = outputDirectory;
 
-		// read sample definition
+		// readAsTrack sample definition
 		System.out.println("Initializing samples");
 		initializeSamples(sampleFileName);
 		System.out.println(samples.length + " samples found.");
 		System.out.println("The data contains information on: " + SequenceLibrary.getSequences().size() + " sequences");
 
-		// read blacklisted regions
+		// readAsTrack blacklisted regions
 		if (blackListFile != null) {
 			blackListedRegions = loadRegionsFromFile(blackListFile);
 		} else {
@@ -164,7 +164,7 @@ public class PolyPeak {
 	// this method currently uses the Chromosome object, which cannot account for weird contig names
 	private Track loadRegionsFromFile(String regionListFile) throws IOException {
 		BedFileReader reader = new BedFileReader();
-		return reader.read(regionListFile, "");
+		return reader.readAsTrack(regionListFile, "");
 	}
 
 	private void initializeSamples(String sampleFileName) throws IOException {

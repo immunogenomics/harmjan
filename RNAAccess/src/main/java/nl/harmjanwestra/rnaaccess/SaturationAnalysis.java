@@ -148,7 +148,7 @@ public class SaturationAnalysis {
 
         correlateFullTableSamples(dsOut, fullReadCounts, outdir + "AllSamples-CorrelationsWithReadCounts.txt");
 
-        // plot and test read distributions per iteration.
+        // plot and test readAsTrack distributions per iteration.
         // test the difference between genes between samples:
         // pick pair of samples, calculate fold-change per gene for full set of reads
         // plot FPKM vs fold-change
@@ -189,7 +189,7 @@ public class SaturationAnalysis {
     }
 
     public int[] getReadCounts(String dir, int nrIter) throws IOException {
-        // read the number of reads
+        // readAsTrack the number of reads
         int[] readCounts = new int[nrIter];
         for (int i = 1; i < nrIter + 1; i++) {
             double d = (double) i / nrIter;

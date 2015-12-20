@@ -435,7 +435,7 @@ public class SymmetricShortDistanceMatrix {
             int bufferLength = 2500 * 1024;
             byte[] buffer = new byte[bufferLength * 2];
 
-            //Define length of read bytes:
+            //Define length of readAsTrack bytes:
             int len = 0;
 
             //Initialize location where data is and should go:
@@ -502,7 +502,7 @@ public class SymmetricShortDistanceMatrix {
                 int bufferLength = 5000 * 1024;
                 byte[] buffer = new byte[bufferLength];
 
-                //Define length of read bytes:
+                //Define length of readAsTrack bytes:
                 int len = 0;
                 
                 //Initialize location where data is and should go:
@@ -536,7 +536,7 @@ public class SymmetricShortDistanceMatrix {
             in.close();
 
         } catch (java.io.IOException e) {
-            System.out.println("Cannot read from file! (" + e.getMessage() + ")");
+            System.out.println("Cannot readAsTrack from file! (" + e.getMessage() + ")");
         }
         
     }

@@ -63,7 +63,7 @@ public class AssociatingPcasWithAnnotation {
 
 //        TextFile tf = new TextFile("/Data/MJ/Top500AgeProbes.txt", TextFile.R);
 //        Set<String> probes = new HashSet<String>(tf.readAsArrayList());
-//        System.out.println(probes.size() + " probes read");
+//        System.out.println(probes.size() + " probes readAsTrack");
 
         TextFile tf = new TextFile("/Data/GeneExpressionFinal/SampleAnnotation/GPL570/GPL570CellLineSamplesAsPerTextMiningAndCorrelationWithCellLineProfile.txt", TextFile.R);
 //        TextFile tf = new TextFile("/Data/GeneExpressionFinal/SampleAnnotation/GPL96/GPL96CellLineSamplesAsPerTextMiningAndCorrelationWithCellLineProfile.txt", TextFile.R);

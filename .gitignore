@@ -21,3 +21,4 @@ eqtl-mapping-pipeline/nbactions-testAse.xml
 eqtl-mapping-pipeline/nbactions-testAse.xml
 /MiscTests/build/
 /MiscTests/nbproject/private/
+*.zip

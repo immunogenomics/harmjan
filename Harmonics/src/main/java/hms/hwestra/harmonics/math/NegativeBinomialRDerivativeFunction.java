@@ -1,6 +1,5 @@
 package hms.hwestra.harmonics.math;
 
-import JSci.maths.ArrayMath;
 import org.apache.commons.math3.special.Gamma;
 
 /**
@@ -10,7 +9,7 @@ import org.apache.commons.math3.special.Gamma;
 public class NegativeBinomialRDerivativeFunction implements Function {
 
 
-	private final int N ;
+	private final int N;
 	private final int[] data;
 
 	public NegativeBinomialRDerivativeFunction(int[] data) {
@@ -21,15 +20,18 @@ public class NegativeBinomialRDerivativeFunction implements Function {
 	@Override
 	public double calc(double r) {
 
-		double sum = 0;
-		double meanK = ArrayMath.mean(data);
+
+		double suma = 0;
+		double sumK = 0;
 		for (int i = 0; i < N; i++) {
-			sum += Gamma.digamma(data[i] + r)
-					- (N * Gamma.digamma(r))
-					+ (N * Math.log(r / r + meanK));
+			suma += Gamma.digamma(data[i] + r);
+			sumK += ((double) data[i]);
 		}
 
-		return sum;
+
+		double ll = suma - (N * Gamma.digamma(r)) + (N * Math.log(r / (r + (sumK / N))));
+
+		return ll;
 	}
 
 

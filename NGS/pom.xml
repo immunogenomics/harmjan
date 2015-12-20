@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>hms.hwestra</groupId>
@@ -51,22 +52,6 @@
             <version>2.1</version>
         </dependency>
         <dependency>
-            <groupId>org.broadinstitute.gatk</groupId>
-            <artifactId>gatk-package-distribution</artifactId>
-            <version>3.3</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>com.xeiam.xchart</groupId>
-            <artifactId>xchart</artifactId>
-            <version>2.4.3</version>
-        </dependency>
-        <dependency>
-            <groupId>de.erichseifert.vectorgraphics2d</groupId>
-            <artifactId>VectorGraphics2D</artifactId>
-            <version>0.9.1</version>
-        </dependency>
-        <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>20040616</version>
@@ -107,7 +92,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>nl.harmjanwestra.ngs.PlayGround</mainClass>
+                            <mainClass>nl.harmjanwestra.ngs.Coverage</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>

@@ -4,25 +4,17 @@
  */
 package umcg.genetica.io.text;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.text.Strings;
 
+import java.io.*;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
 /**
- *
  * @author harmjan
  */
 public class TextFile implements Iterable<String> {
@@ -53,10 +45,10 @@ public class TextFile implements Iterable<String> {
 	}
 
 	public TextFile(File file, boolean mode, int buffersize) throws IOException {
-		
+
 		this.buffersize = buffersize;
 		this.file = file;
-		
+
 		String loc = file.getAbsolutePath();
 		if (loc.trim().length() == 0) {
 			throw new IOException("Could not find file: no file specified");
@@ -64,11 +56,12 @@ public class TextFile implements Iterable<String> {
 		this.writeable = mode;
 
 		if (loc.endsWith(".gz")) {
+			this.buffersize = 500 * 1024;
 			gzipped = true;
 		}
 		open();
 	}
-	
+
 	public TextFile(String file, boolean mode, int buffersize) throws IOException {
 		this(new File(file), mode, buffersize);
 	}
@@ -80,6 +73,7 @@ public class TextFile implements Iterable<String> {
 		} else {
 			if (writeable) {
 				if (gzipped) {
+					this.buffersize = 500 * 1024;
 					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(file));
 					out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
 				} else {
@@ -87,6 +81,7 @@ public class TextFile implements Iterable<String> {
 				}
 			} else {
 				if (gzipped) {
+					this.buffersize = 500 * 1024;
 					GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(file));
 					in = new BufferedReader(new InputStreamReader(gzipInputStream, "US-ASCII"));
 				} else {
@@ -119,7 +114,7 @@ public class TextFile implements Iterable<String> {
 	 * returns default substrings delimited by Pattern p.
 	 *
 	 * @param p The Pattern object to split with (e.g. TextFile.tab or
-	 * Strings.comma)
+	 *          Strings.comma)
 	 * @return New String objects for each substring delimited by Pattern p
 	 * @throws IOException
 	 */
@@ -134,14 +129,14 @@ public class TextFile implements Iterable<String> {
 	public Iterable<String[]> readLineElemsIterable(Pattern p) {
 		return new TextFileIterableElements(this, p);
 	}
-	
+
 	/**
 	 * This method returns default substrings delimited by Pattern p. As such,
 	 * this method may be more memory-efficient in some situations (for example
 	 * when only a multiple columns should be loaded and stored in memory).
 	 *
 	 * @param p The Pattern object to split with (e.g. TextFile.tab or
-	 * Strings.comma)
+	 *          Strings.comma)
 	 * @return New String objects for each substring delimited by Pattern p
 	 * @throws IOException
 	 */
@@ -168,7 +163,7 @@ public class TextFile implements Iterable<String> {
 	 * column should be loaded and stored in memory).
 	 *
 	 * @param p The Pattern object to split with (e.g. TextFile.tab or
-	 * Strings.comma)
+	 *          Strings.comma)
 	 * @return New String objects for each substring delimited by Pattern p
 	 * @throws IOException
 	 */
@@ -254,8 +249,8 @@ public class TextFile implements Iterable<String> {
 
 	public ArrayList<String> readAsArrayList() throws IOException {
 		ArrayList<String> data = new ArrayList<String>();
-        
-        String ln = readLine();
+
+		String ln = readLine();
 		while (ln != null) {
 			if (ln.trim().length() > 0) {
 				data.add(ln);
@@ -267,7 +262,7 @@ public class TextFile implements Iterable<String> {
 
 	public ArrayList<String> readAsArrayList(int col, Pattern p) throws IOException {
 		ArrayList<String> data = new ArrayList<String>();
-        
+
 		String[] elems = readLineElems(p);
 		while (elems != null) {
 			if (elems.length > col) {
@@ -475,7 +470,7 @@ public class TextFile implements Iterable<String> {
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 	}
-	
+
 	private static class TextFileIterableElements implements Iterable<String[]> {
 
 		private final TextFile textFile;
@@ -485,7 +480,7 @@ public class TextFile implements Iterable<String> {
 			this.textFile = textFile;
 			this.pattern = pattern;
 		}
-		
+
 		@Override
 		public Iterator<String[]> iterator() {
 			try {
@@ -494,6 +489,6 @@ public class TextFile implements Iterable<String> {
 				throw new RuntimeException(ex);
 			}
 		}
-		
+
 	}
 }

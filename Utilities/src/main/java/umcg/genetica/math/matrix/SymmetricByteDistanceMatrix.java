@@ -311,13 +311,13 @@ public class SymmetricByteDistanceMatrix {
             int bufferLength = 5000 * 1024;
             byte[] buffer = new byte[bufferLength];
 
-            //Define length of read bytes:
+            //Define length of readAsTrack bytes:
             int len = 0;
 
             //Initialize location where data is and should go:
             int loc = 0;
 
-            //(len = in.read(buffer, 0, bufferLength)) != -1
+            //(len = in.readAsTrack(buffer, 0, bufferLength)) != -1
             while(1==1){
 
                 // Copy data
@@ -369,7 +369,7 @@ public class SymmetricByteDistanceMatrix {
                 int bufferLength = 5000 * 1024;
                 byte[] buffer = new byte[bufferLength];
 
-                //Define length of read bytes:
+                //Define length of readAsTrack bytes:
                 int len = 0;
                 
                 //Initialize location where data is and should go:
@@ -399,7 +399,7 @@ public class SymmetricByteDistanceMatrix {
             in.close();
 
         } catch (Exception e) {
-            System.out.println("Cannot read from file! (" + e.getMessage() + ")");
+            System.out.println("Cannot readAsTrack from file! (" + e.getMessage() + ")");
         }
         
     }

@@ -5,14 +5,12 @@
  */
 package nl.harmjanwestra.utilities.bedfile;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
-import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.features.Strand;
-import nl.harmjanwestra.utilities.features.Track;
+import nl.harmjanwestra.utilities.features.*;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * @author Harm-Jan
@@ -28,7 +26,7 @@ public class BedFileReader {
 		this.filter = filter;
 	}
 
-	public Track read(String file, String name) throws IOException {
+	public Track readAsTrack(String file, String name) throws IOException {
 		nrFeatures = 0;
 		featureLengthSum = 0;
 		TextFile tf = new TextFile(file, TextFile.R);
@@ -60,8 +58,6 @@ public class BedFileReader {
 
 		TextFile tf = new TextFile(file, TextFile.R);
 
-		System.out.println("Reading file: " + file);
-
 		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
 		String[] elems = tf.readLineElems(TextFile.tab);
 
@@ -76,6 +72,7 @@ public class BedFileReader {
 
 		tf.close();
 
+		Collections.sort(allFeatures, new FeatureComparator(false));
 
 		return allFeatures;
 	}
@@ -113,6 +110,9 @@ public class BedFileReader {
 			f.setStrand(featureStrand);
 			f.setStart(featureStart);
 			f.setStop(featureStop);
+
+
+
 			if (filter == null || filter.passesFilter(f)) {
 				return f;
 			} else {

@@ -5,6 +5,7 @@ import cern.jet.random.tdouble.engine.DRand;
 
 /**
  * Created by hwestra on 6/28/15.
+ * WARNING: THIS CODE IS EXPERIMENTAL AND IS BOUND TO YIELD INCORRECT RESULTS
  */
 public class NegativeBinomial {
 
@@ -21,9 +22,16 @@ public class NegativeBinomial {
 		NegativeBinomialLikelihoodFunction fx = new NegativeBinomialLikelihoodFunction(data);
 		NegativeBinomialRDerivativeFunction fprime = new NegativeBinomialRDerivativeFunction(data);
 
-		NewtonRaphson nr = new NewtonRaphson(fx, fprime, 0.5, 1000);
+		// get the mean and variance over the data
+		double mean = JSci.maths.ArrayMath.mean(data);
+		double sd = JSci.maths.ArrayMath.standardDeviation(data);
+
+		double start = mean + 3*sd;
+
+		NewtonRaphson nr = new NewtonRaphson(fx, fprime, start, 200);
 		double r = nr.findRoot();
-		double p = fx.determineP(r);
+		NegativeBinomialLikelihoodFunction nb = new NegativeBinomialLikelihoodFunction(data);
+		double p = nb.determineP(r);
 		return new double[]{r, p};
 	}
 

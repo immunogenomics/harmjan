@@ -32,19 +32,28 @@ public class NewtonRaphson {
 		int niter = 0;
 		while (niter < maxIterations) {
 
+
 			double y = fx.calc(x0);
 			double yprime = fprime.calc(x0);
+
+
+			System.out.println("nr step1: " + niter + "\ty: " + y + "\typrime: " + yprime);
 
 			if (Math.abs(yprime) < epsilon) {
 				// already at minimum
 				return x0;
 			}
 
-			double x1 = x0 - (y / yprime);
+			double x1 = x0 - ((y / yprime));
+
+			System.out.println("nr step2: " + niter + "\tx0: " + x0 + "\tx1: " + x1 + "\t" + (Math.abs(x1 - x0) / Math.abs(x1)));
+
 			if ((Math.abs(x1 - x0) / Math.abs(x1)) < tolerance) {
 				// found new minimum;
 				return x0;
 			}
+
+
 
 
 			x0 = x1;

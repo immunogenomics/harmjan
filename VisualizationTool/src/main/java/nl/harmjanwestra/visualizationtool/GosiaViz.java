@@ -433,7 +433,7 @@ public class GosiaViz {
 //                        for (String file : bedFiles) {
 //                            // load the track
 //                            String chrStr = "chr" + ChrAnnotation.parseByte(chr);
-//                            Track t = reader.read(bedFileDir + file, file, Chromosome.parseChr(chrStr), windowStart, windowStop, true);
+//                            Track t = reader.readAsTrack(bedFileDir + file, file, Chromosome.parseChr(chrStr), windowStart, windowStop, true);
 //                            // bin the peaks
 //
 //                            Set<Feature> featureSet = t.getFeatureSet(Chromosome.parseChr(chrStr), windowStart, windowStop);
@@ -453,7 +453,7 @@ public class GosiaViz {
 //                                if (stop > windowStop) {
 //                                    stop = windowStop;
 //                                }
-//                                int startX = figureMargin + (start - windowStart) / bpPerPixel;
+//                                int x0 = figureMargin + (start - windowStart) / bpPerPixel;
 //                                int stopX = figureMargin + (stop - windowStart) / bpPerPixel;
 //
 ////                                double peakQ =  f2.getPeakQ();
@@ -462,14 +462,14 @@ public class GosiaViz {
 ////                                }
 ////                                int peakHeight = (int) Math.ceil((peakQ / 100) * distPlotSize);
 ////
-////                                g2d.fillRect(startX, yPos + distPlotSize - peakHeight, stopX - startX, peakHeight);
+////                                g2d.fillRect(x0, yPos + distPlotSize - peakHeight, stopX - x0, peakHeight);
 ////
 ////                                int peakPos =  f2.getPeakPos();
 ////                                int peakPosX = figureMargin + (peakPos - windowStart) / bpPerPixel;
 //                                g2d.setColor(new Color(0, 125, 255, 255));
 //                                g2d.setStroke(line2pt);
 ////                                g2d.drawLine(peakPosX, yPos + distPlotSize - peakHeight, peakPosX, yPos + distPlotSize);
-//                                System.out.println(stopX - startX);
+//                                System.out.println(stopX - x0);
 //                                g2d.setStroke(defaultStroke);
 //                            }
 //                            g2d.setStroke(defaultStroke);

@@ -48,7 +48,7 @@ public class PileUp {
 		}
 
 		// TODO: filter for MAPQ, insert size, mate pair mapping, etc
-		// TODO: setting that allows to only use the first read of a pair (also useful if data is unpaired).
+		// TODO: setting that allows to only use the first readAsTrack of a pair (also useful if data is unpaired).
 
 		ArrayList<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
 		filters.add(new DuplicateReadFilter());
@@ -105,7 +105,7 @@ public class PileUp {
 				byte[] bases = record.getReadBases();
 
 				if (bases.length == 0) {
-					System.err.println("No bases for read: " + record.getReadUnmappedFlag() + "\t" + record.toString());
+					System.err.println("No bases for readAsTrack: " + record.getReadUnmappedFlag() + "\t" + record.toString());
 				} else {
 					for (CigarElement e : cigarElements) {
 						int cigarElementLength = e.getLength();
@@ -135,7 +135,7 @@ public class PileUp {
 									boolean properbase = false;
 									byte base = bases[pos];
 
-									if (windowRelativePosition >= 0 && windowRelativePosition < windowSize) { // the read could overlap the leftmost edge of this window
+									if (windowRelativePosition >= 0 && windowRelativePosition < windowSize) { // the readAsTrack could overlap the leftmost edge of this window
 										if (base == 78 || base == 110) {
 											nN++;
 										} else if (baseQual[readPosition] > basequalthreshold) { //    -- for each base pos: check whether basequal > 50
@@ -167,7 +167,7 @@ public class PileUp {
 								break;
 							default:
 								System.err.println("Unknown CIGAR operator found: " + e.getOperator().toString());
-								System.err.println("In read: " + record.toString());
+								System.err.println("In readAsTrack: " + record.toString());
 								break;
 						} // switch operator
 					} // for each cigar element

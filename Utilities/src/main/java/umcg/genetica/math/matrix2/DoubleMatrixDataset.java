@@ -141,7 +141,7 @@ public class DoubleMatrixDataset<R extends Comparable, C extends Comparable> {
             DenseDoubleMatrix2D tmpMatrix = new DenseDoubleMatrix2D(tmpRows, tmpCols);
 
             in.open();
-            in.readLine(); // read header
+            in.readLine(); // readAsTrack header
             int row = 0;
 
             boolean correctData = true;
@@ -178,7 +178,7 @@ public class DoubleMatrixDataset<R extends Comparable, C extends Comparable> {
             LinkedHashMap<String, Integer> rowMap = new LinkedHashMap<String, Integer>((int) Math.ceil(tmpRows / 0.75));
             DenseLargeDoubleMatrix2D tmpMatrix = new DenseLargeDoubleMatrix2D(tmpRows, tmpCols);
             in.open();
-            in.readLine(); // read header
+            in.readLine(); // readAsTrack header
             int row = 0;
 
             boolean correctData = true;
@@ -267,7 +267,7 @@ public class DoubleMatrixDataset<R extends Comparable, C extends Comparable> {
         if ((rowsToStore * (long) tmpCols) < (Integer.MAX_VALUE - 2)) {
             DenseDoubleMatrix2D matrix = new DenseDoubleMatrix2D(rowsToStore, storedCols);
             in.open();
-            in.readLine(); // read header
+            in.readLine(); // readAsTrack header
             int storingRow = 0;
             totalRows = 0;
             LinkedHashMap<String, Integer> rowMap = new LinkedHashMap<String, Integer>((int) Math.ceil(rowsToStore / 0.75));
@@ -311,7 +311,7 @@ public class DoubleMatrixDataset<R extends Comparable, C extends Comparable> {
             DenseLargeDoubleMatrix2D matrix = new DenseLargeDoubleMatrix2D(rowsToStore, storedCols);
 
             in.open();
-            in.readLine(); // read header
+            in.readLine(); // readAsTrack header
             int storingRow = 0;
             totalRows = 0;
             LinkedHashMap<String, Integer> rowMap = new LinkedHashMap<String, Integer>((int) Math.ceil(rowsToStore / 0.75));

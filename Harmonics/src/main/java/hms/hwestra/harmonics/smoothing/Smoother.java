@@ -42,7 +42,7 @@ public class Smoother {
 			}
 
 
-			int[] tmpData = new int[stop-start];
+			int[] tmpData = new int[stop - start];
 			System.arraycopy(data, start, tmpData, 0, tmpData.length);
 
 			output[i] = (int) Math.ceil(smoothingFunction.kernel(tmpData));
@@ -64,17 +64,44 @@ public class Smoother {
 		int smoothingWindow = data.length / newResolution;
 		int[] output = new int[newResolution];
 
-		int windowCtr=0;
+		int windowCtr = 0;
 		for (int i = 0; i < data.length; i += smoothingWindow) {
 			int start = i;
 			int stop = i + smoothingWindow;
-			if(stop >= data.length){
-				stop = data.length-1;
+			if (stop >= data.length) {
+				stop = data.length - 1;
 			}
 
-			int[] tmpData = new int[stop-start];
+			int[] tmpData = new int[stop - start];
 			System.arraycopy(data, start, tmpData, 0, tmpData.length);
 			output[windowCtr] = (int) Math.ceil(smoothingFunction.kernel(tmpData));
+			windowCtr++;
+		}
+		return output;
+	}
+
+
+	public double[] reduce(double[] data, int newResolution) {
+		double smoothingWindowSize = (double) data.length / newResolution;
+
+		double[] output = new double[newResolution];
+
+		System.out.println(data.length + "\t" + newResolution + "\t" + smoothingWindowSize);
+
+		int windowCtr = 0;
+		for (int window = 0; window < newResolution; window++) {
+
+
+			int start = (int) Math.floor(window * smoothingWindowSize);
+			int stop = (int) Math.floor(start + smoothingWindowSize);
+			if (stop >= data.length) {
+				stop = data.length - 1;
+			}
+			System.out.println("window " + windowCtr + "/" + newResolution + "\t" + window + "\t" + start + "\t" + stop);
+
+			double[] tmpData = new double[stop - start];
+			System.arraycopy(data, start, tmpData, 0, tmpData.length);
+			output[windowCtr] = Math.ceil(smoothingFunction.kernel(tmpData));
 			windowCtr++;
 		}
 		return output;
