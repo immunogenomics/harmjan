@@ -1,3 +1,5 @@
+package nl.harmjanwestra.VCFUtils;
+
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;

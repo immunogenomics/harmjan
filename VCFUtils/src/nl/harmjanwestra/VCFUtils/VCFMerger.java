@@ -1,3 +1,5 @@
+package nl.harmjanwestra.VCFUtils;
+
 import com.gs.collections.api.list.MutableList;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
 import nl.harmjanwestra.utilities.features.Chromosome;

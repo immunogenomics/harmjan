@@ -1,3 +1,5 @@
+package nl.harmjanwestra.VCFUtils;
+
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 

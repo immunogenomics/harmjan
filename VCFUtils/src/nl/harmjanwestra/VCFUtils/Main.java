@@ -1,3 +1,5 @@
+package nl.harmjanwestra.VCFUtils;
+
 import nl.harmjanwestra.utilities.oxford.HapSample;
 import nl.harmjanwestra.utilities.vcf.VCFFunctions;
 import org.apache.commons.cli.*;
