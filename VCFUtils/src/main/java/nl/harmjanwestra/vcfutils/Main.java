@@ -313,16 +313,32 @@ public class Main {
 					System.out.println("Provide --nrbatches");
 				}
 
-				if(run) {
+				if (run) {
 					try {
 						combine.run(input, out, refname, nriter, nrbatches);
-					} catch (IOException e){
+					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				}
 			} else if (cmd.hasOption("merge")) {
 //				VCFMerger merger = new VCFMerger();
 //				merger.mergeAndIntersect(linux,chrint,vcfsort,vcf1,vcf2,out,sep);
+			} else if (cmd.hasOption("mergeimputation")) {
+				VCFMerger merger = new VCFMerger();
+				int nrbatches = 0;
+				if (cmd.hasOption("nrbatches")) {
+					nrbatches = Integer.parseInt(cmd.getOptionValue("nrbatches"));
+				} else {
+					run = false;
+					System.out.println("Provide --nrbatches");
+				}
+				if (run) {
+					try {
+						merger.mergeImputationBatches(input, out, nrbatches);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			} else if (cmd.hasOption("mergecheese")) {
 				VCFMerger merger = new VCFMerger();
 				String vcf1 = input;

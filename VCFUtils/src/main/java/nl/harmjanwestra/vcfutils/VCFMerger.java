@@ -10,8 +10,10 @@ import nl.harmjanwestra.utilities.vcf.VCFFunctions;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
+import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
+import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
 import java.util.*;
@@ -55,6 +57,43 @@ public class VCFMerger {
 	}
 
 
+	/*
+	Concatenate variants for samples that are present in both VCF files
+	 */
+	public void concatenate(String vcf1, String vcf2, String out) throws IOException {
+
+		VCFFunctions functions = new VCFFunctions();
+		ArrayList<String> samples1 = functions.getVCFSamples(vcf1);
+		ArrayList<String> samples2 = functions.getVCFSamples(vcf2);
+
+		// determine shared samples
+		HashSet<String> samples1Hash = new HashSet<String>();
+		samples1Hash.addAll(samples1);
+		HashMap<String, Integer> shared = new HashMap<String, Integer>();
+		int ctr = 0;
+		for (String s : samples2) {
+			if (samples1Hash.contains(s)) {
+				if (!shared.containsKey(s)) {
+					shared.put(s, ctr);
+					ctr++;
+				}
+			}
+		}
+		System.out.println(shared.size() + " shared samples");
+
+
+		VariantSampler sampler = new VariantSampler();
+		ArrayList<String> variants1 = sampler.getListOfVariants(vcf1);
+		ArrayList<String> variants2 = sampler.getListOfVariants(vcf2);
+
+
+		
+
+	}
+
+	/*
+	This merges samples from two VCF files if there are variants that are overlapping. Non-overlapping variants are excluded.
+	 */
 	public void mergeAndIntersect(boolean linux, int chrint, String vcfsort, String refVCF, String testVCF, String matchedPanelsOut, String separator) throws IOException {
 		Chromosome chr = Chromosome.parseChr("" + chrint);
 
@@ -74,6 +113,9 @@ public class VCFMerger {
 		t.sortVCF(linux, vcfsort, matchedPanelsOut + "ref-test-merged-" + chr.getName() + ".vcf.gz", matchedPanelsOut + "ref-test-merged-sorted-" + chr.getName() + ".vcf.gz", matchedPanelsOut + "test-sort-" + chr.getName() + ".sh");
 	}
 
+	/*
+	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
+	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
 											  String testVCF,
 											  String vcf1out,
@@ -369,16 +411,8 @@ public class VCFMerger {
 
 	}
 
-	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-											   String separatorInMergedFile
-	) {
+	private int countIdenticalAlleles(String[] refAlleles, String[] testVariantAlleles) {
 		int nridenticalalleles = 0;
-
-		String[] refAlleles = refVariant.getAlleles();
-		String refMinorAllele = refVariant.getMinorAllele();
-		String[] testVariantAlleles = testVariant.getAlleles();
-		String testVariantMinorAllele = testVariant.getMinorAllele();
-
 		for (int i = 0; i < refAlleles.length; i++) {
 			String allele1 = refAlleles[i];
 			for (int j = 0; j < testVariantAlleles.length; j++) {
@@ -387,7 +421,23 @@ public class VCFMerger {
 				}
 			}
 		}
+		return nridenticalalleles;
+	}
 
+	/*
+	Utility function to merge two variants with non-overlapping samples.
+	 */
+	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
+											   String separatorInMergedFile
+	) {
+
+
+		String[] refAlleles = refVariant.getAlleles();
+		String refMinorAllele = refVariant.getMinorAllele();
+		String[] testVariantAlleles = testVariant.getAlleles();
+		String testVariantMinorAllele = testVariant.getMinorAllele();
+
+		int nridenticalalleles = countIdenticalAlleles(refAlleles, testVariantAlleles);
 		GenotypeTools gtools = new GenotypeTools();
 
 		boolean complement = false;
@@ -396,16 +446,7 @@ public class VCFMerger {
 			complement = true;
 			String[] complementAlleles2 = gtools.convertToComplement(testVariantAlleles);
 			testVariantMinorAllele = gtools.getComplement(testVariantMinorAllele);
-			nridenticalalleles = 0;
-
-			for (int i = 0; i < refAlleles.length; i++) {
-				String allele1 = refAlleles[i];
-				for (int j = 0; j < testVariantAlleles.length; j++) {
-					if (complementAlleles2[j].equals(allele1)) {
-						nridenticalalleles++;
-					}
-				}
-			}
+			nridenticalalleles = countIdenticalAlleles(refAlleles, complementAlleles2);
 		}
 
 		VCFFunctions t = new VCFFunctions();
@@ -507,7 +548,11 @@ public class VCFMerger {
 		}
 	}
 
-
+	/*
+	For two VCF files with no overlapping samples (for now), this merges the variants.
+	Overlapping variants are merged if their characteristics are similar. Otherwise they are excluded.
+	Variants present in only one VCF will be given null genotypes for the samples of the other VCF
+	 */
 	public void merge(String vcf1, String vcf2, String out) throws IOException {
 
 		VCFGenotypeData data1 = new VCFGenotypeData(vcf1);
@@ -691,7 +736,165 @@ public class VCFMerger {
 			System.out.println(vcf1specific + " variants specific to: " + vcf1);
 			outf.close();
 		} else {
-			System.out.println("Not supported yet");
+			System.out.println(sharedSamples.size() + " shared samples detected. This method only supports unique samples for now");
+		}
+
+	}
+
+	public void mergeImputationBatches(String dirInPrefix, String outfilename, int nrBatches) throws IOException {
+
+		// make a list of variants to include
+		ArrayList<String> files = new ArrayList<String>();
+		HashMap<String, ArrayList<Double>> allVariants = new HashMap<String, ArrayList<Double>>();
+
+
+		System.out.println("Looking for " + nrBatches + " batches near " + dirInPrefix);
+		System.out.println("Out: " + outfilename);
+
+		for (int batch = 0; batch < nrBatches; batch++) {
+			String batchvcfName = dirInPrefix + batch + ".vcf.gz";
+			if (Gpio.exists(batchvcfName)) {
+				files.add(batchvcfName);
+				TextFile tf = new TextFile(batchvcfName, TextFile.R);
+				String[] elems = tf.readLineElems(TextFile.tab);
+				System.out.println("reading: " + batchvcfName);
+				while (elems != null) {
+					if (elems[0].startsWith("##")) {
+
+					} else if (elems[0].startsWith("#CHROM")) {
+
+					} else {
+						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+						String infoStr = elems[7];
+						ArrayList<Double> rsquareds = allVariants.get(variant);
+						if (rsquareds == null) {
+							rsquareds = new ArrayList<Double>();
+						}
+						String[] infoElems = elems[7].split(";");
+						for (String s : infoElems) {
+							if (s.startsWith("AR2")) {
+								String[] rsquaredElems = s.split("=");
+								Double d = Double.parseDouble(rsquaredElems[1]);
+								rsquareds.add(d);
+							}
+						}
+						allVariants.put(variant, rsquareds);
+					}
+					elems = tf.readLineElems(TextFile.tab);
+				}
+				tf.close();
+			} else {
+				System.out.println("Could not find: " + batchvcfName);
+			}
+		}
+
+		if (files.size() != nrBatches) {
+			System.err.println("Batches missing for " + dirInPrefix);
+		} else {
+			System.out.println("great. all files are here :)");
+			// remap variants
+			Set<String> variants = allVariants.keySet();
+
+			HashMap<String, Integer> variantToInt = new HashMap<String, Integer>();
+			int ctr = 0;
+			HashMap<String, Double> variantToAR2 = new HashMap<String, Double>();
+			for (String s : variants) {
+				ArrayList<Double> d = allVariants.get(s);
+				if (d.size() == nrBatches) {
+					variantToInt.put(s, ctr);
+					double[] doubleArr = Primitives.toPrimitiveArr(d.toArray(new Double[0]));
+					double medianar2 = JSci.maths.ArrayMath.median(doubleArr);
+					variantToAR2.put(s, medianar2);
+					ctr++;
+				} else {
+					System.out.println(s + " may have duplicates?");
+				}
+
+
+			}
+
+			System.out.println(variantToInt.size() + " variants in total");
+
+			StringBuilder[] variantoutput = new StringBuilder[variantToInt.size()];
+			StringBuilder[] variantoutputHeaders = new StringBuilder[variantToInt.size()];
+
+			StringBuilder header = new StringBuilder();
+			header.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
+
+			for (int batch = 0; batch < nrBatches; batch++) {
+				String batchvcfName = dirInPrefix + batch + ".vcf.gz";
+				TextFile tf = new TextFile(batchvcfName, TextFile.R);
+				String[] elems = tf.readLineElems(TextFile.tab);
+				System.out.println("reading: " + batchvcfName);
+				while (elems != null) {
+					if (elems[0].startsWith("##")) {
+
+					} else if (elems[0].startsWith("#CHROM")) {
+
+						for (int i = 9; i < elems.length; i++) {
+							header.append("\t").append(elems[i]);
+						}
+
+					} else {
+						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+						Integer id = variantToInt.get(variant);
+						if (id != null) {
+							StringBuilder builder = variantoutput[id];
+							if (builder == null) {
+								variantoutputHeaders[id] = new StringBuilder();
+								variantoutputHeaders[id].append(Strings.concat(elems, Strings.tab, 0, 7));
+								variantoutputHeaders[id].append("\t").append("AR2=").append(variantToAR2.get(variant))
+										.append("\t").append(elems[8]);
+								builder = new StringBuilder(100000);
+								variantoutput[id] = builder;
+							}
+							for (int i = 9; i < elems.length; i++) {
+								builder.append("\t").append(elems[i]);
+							}
+						}
+					}
+					elems = tf.readLineElems(TextFile.tab);
+				}
+				tf.close();
+			}
+
+			System.out.println("done reading. writing to: " + outfilename);
+			TextFile vcfout = new TextFile(outfilename, TextFile.W);
+
+			vcfout.writeln("##fileformat=VCFv4.1");
+			vcfout.writeln(header.toString());
+			for (int i = 0; i < variantoutput.length; i++) {
+				vcfout.writeln(variantoutputHeaders[i].toString() + variantoutput[i].toString());
+			}
+			vcfout.close();
+
+
+			TextFile tfin = new TextFile(outfilename, TextFile.R);
+			String[] elems = tfin.readLineElems(TextFile.tab);
+			int nr = -1;
+			int ln = 0;
+			while (elems != null) {
+				if (elems[0].startsWith("##")) {
+
+				} else if (elems[0].startsWith("#")) {
+					System.out.println(elems.length + " header elems");
+				} else {
+					if (nr == -1) {
+						System.out.println(elems.length + " sample elems: " + (elems.length - 9) + " samples");
+						nr = elems.length;
+					} else {
+						if (nr != elems.length) {
+							System.err.println("error detected in output on line " + ln + " " + elems.length + " found " + nr + " expected ");
+						}
+					}
+				}
+				ln++;
+				elems = tfin.readLineElems(TextFile.tab);
+			}
+			tfin.close();
+
 		}
 
 	}
