@@ -1,4 +1,4 @@
-package nl.harmjanwestra.VCFUtils;
+package nl.harmjanwestra.vcfutils;
 
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;

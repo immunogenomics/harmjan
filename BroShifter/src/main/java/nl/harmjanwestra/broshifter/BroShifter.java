@@ -1,4 +1,7 @@
-import CLI.BroShifterOptions;
+package nl.harmjanwestra.broshifter;
+
+
+import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;

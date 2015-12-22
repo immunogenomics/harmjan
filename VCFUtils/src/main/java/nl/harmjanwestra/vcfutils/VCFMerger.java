@@ -1,4 +1,4 @@
-package nl.harmjanwestra.VCFUtils;
+package nl.harmjanwestra.vcfutils;
 
 import com.gs.collections.api.list.MutableList;
 import com.gs.collections.impl.multimap.list.FastListMultimap;

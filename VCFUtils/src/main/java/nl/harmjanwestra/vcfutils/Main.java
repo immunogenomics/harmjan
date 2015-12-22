@@ -1,4 +1,4 @@
-package nl.harmjanwestra.VCFUtils;
+package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.oxford.HapSample;
 import nl.harmjanwestra.utilities.vcf.VCFFunctions;

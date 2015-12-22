@@ -1,5 +1,8 @@
-import CLI.BroShifterOptions;
-import CLI.MainOptions;
+package nl.harmjanwestra.broshifter;
+
+
+import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
+import nl.harmjanwestra.broshifter.CLI.MainOptions;
 
 import java.io.IOException;
 

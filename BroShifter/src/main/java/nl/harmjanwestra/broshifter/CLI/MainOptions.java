@@ -1,4 +1,4 @@
-package CLI;
+package nl.harmjanwestra.broshifter.CLI;
 
 import org.apache.commons.cli.*;
 

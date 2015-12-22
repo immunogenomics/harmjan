@@ -1,3 +1,6 @@
+
+package nl.harmjanwestra.broshifter;
+
 import com.lowagie.text.DocumentException;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
@@ -5,9 +8,7 @@ import nl.harmjanwestra.utilities.association.PosteriorPValFile;
 import nl.harmjanwestra.utilities.association.VCFRSquares;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
-import nl.harmjanwestra.utilities.graphics.panels.*;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -15,8 +16,12 @@ import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
+import java.awt.*;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Created by hwestra on 11/23/15.

@@ -1,4 +1,7 @@
-import CLI.BroShifterOptions;
+package nl.harmjanwestra.broshifter;
+
+
+import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.*;
 import umcg.genetica.containers.Pair;

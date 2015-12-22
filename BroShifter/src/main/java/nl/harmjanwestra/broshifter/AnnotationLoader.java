@@ -1,3 +1,6 @@
+package nl.harmjanwestra.broshifter;
+
+
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureMerger;
