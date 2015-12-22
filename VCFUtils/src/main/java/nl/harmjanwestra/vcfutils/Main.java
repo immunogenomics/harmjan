@@ -91,10 +91,40 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Combine correlation results")
+				.longOpt("combine")
+				.build();
+		OPTIONS.addOption(option);
+
 
 		option = Option.builder("i")
 				.desc("Input VCF")
 				.argName("file")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Reference name")
+				.argName("string")
+				.longOpt("refname")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Number of iterations")
+				.argName("int")
+				.longOpt("nriter")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Number of batches")
+				.argName("int")
+				.longOpt("nrbatches")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
@@ -255,8 +285,43 @@ public class Main {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			} else if (cmd.hasOption("combine")) {
+				CorrelationResultCombiner combine = new CorrelationResultCombiner();
+
+				String refname = null;
+				int nriter = 0;
+				int nrbatches = 0;
+				run = true;
+				if (cmd.hasOption("refname")) {
+					refname = cmd.getOptionValue("refname");
+				} else {
+					run = false;
+					System.out.println("Provide --refname");
+				}
+
+				if (cmd.hasOption("nriter")) {
+					nriter = Integer.parseInt(cmd.getOptionValue("nriter"));
+				} else {
+					run = false;
+					System.out.println("Provide --nriter");
+				}
+
+				if (cmd.hasOption("nrbatches")) {
+					nrbatches = Integer.parseInt(cmd.getOptionValue("nrbatches"));
+				} else {
+					run = false;
+					System.out.println("Provide --nrbatches");
+				}
+
+				if(run) {
+					try {
+						combine.run(input, out, refname, nriter, nrbatches);
+					} catch (IOException e){
+						e.printStackTrace();
+					}
+				}
 			} else if (cmd.hasOption("merge")) {
-				VCFMerger merger = new VCFMerger();
+//				VCFMerger merger = new VCFMerger();
 //				merger.mergeAndIntersect(linux,chrint,vcfsort,vcf1,vcf2,out,sep);
 			} else if (cmd.hasOption("mergecheese")) {
 				VCFMerger merger = new VCFMerger();
