@@ -42,6 +42,7 @@ public class CorrelationResultCombiner {
 
 		double[] correlations = new double[variantList.size()];
 		double[] imputationquals = new double[variantList.size()];
+		int[] samplesizes = new int[variantList.size()];
 		double[] ctrs = new double[variantList.size()];
 		double[] mafs1 = new double[variantList.size()];
 		double[] mafs2 = new double[variantList.size()];
@@ -61,6 +62,7 @@ public class CorrelationResultCombiner {
 							if (id != null) {
 								correlations[id] += result.rsqPearson;
 								imputationquals[id] += result.rsqBeagle;
+								samplesizes[id] += result.nrSamples;
 								mafs1[id] += result.maf1;
 								mafs2[id] += result.maf2;
 								ctrs[id] += 1d;
@@ -76,21 +78,31 @@ public class CorrelationResultCombiner {
 
 		TextFile outfile = new TextFile(outfilename, TextFile.W);
 
-		String header = "Variant\tmaf1\tmaf2\tpearsonrsquared\tbeaglersquared\tn";
-		outfile.writeln(header);
+//		String header = "Variant\tmaf1\tmaf2\tpearsonrsquared\tbeaglersquared\tn";
+
+		// 9-34970885-rs77176551   G       G,A     0.5     A       G,A     0.0019759791583874244   1       2237    0.04873531816737055     0.002375131236874838    0.0     null
+
+		// outfile.writeln(header);
 
 		for (int i = 0; i < variantList.size(); i++) {
 			String variant = variantList.get(i);
+
 			double n = ctrs[i];
 			if (n > 0) {
-				variant += "\t" + (mafs1[i] / n)
-						+ "\t" + (mafs2[i] / n)
+				variant += "\t-t\t-\t" + (mafs1[i] / n)
+						+ "\t-t\t-\t" + (mafs2[i] / n)
+						+ "\t-"
+						+ "\t" + samplesizes[i]
+						+ "\t-"
 						+ "\t" + (correlations[i] / n)
 						+ "\t" + (imputationquals[i] / n)
 						+ "\t" + n;
 			} else {
-				variant += "\t" + 0
+				variant += "\t-t\t-\t" + 0
+						+ "\t-t\t-\t" + 0
+						+ "\t-"
 						+ "\t" + 0
+						+ "\t-"
 						+ "\t" + 0
 						+ "\t" + 0
 						+ "\t" + n;
@@ -118,7 +130,7 @@ public class CorrelationResultCombiner {
 		return output;
 	}
 
-	private ArrayList<CorrelationResult> getData(String file) throws IOException {
+	public ArrayList<CorrelationResult> getData(String file) throws IOException {
 		ArrayList<CorrelationResult> output = new ArrayList<>();
 		TextFile tf = new TextFile(file, TextFile.R);
 
@@ -130,7 +142,7 @@ public class CorrelationResultCombiner {
 
 			double maf1 = Double.parseDouble(elems[3]);
 			double maf2 = Double.parseDouble(elems[6]);
-
+			int nrSamples = Integer.parseInt(elems[8]);
 			double rsqPearson = Double.parseDouble(elems[10]);
 			double rsqBeagle = Double.parseDouble(elems[11]);
 
@@ -140,6 +152,7 @@ public class CorrelationResultCombiner {
 			result.rsqBeagle = rsqBeagle;
 			result.rsqPearson = rsqPearson;
 			result.variant = variant;
+			result.nrSamples = nrSamples;
 
 			output.add(result);
 
@@ -151,12 +164,6 @@ public class CorrelationResultCombiner {
 		return output;
 	}
 
-	class CorrelationResult {
-		double maf1;
-		double maf2;
-		double rsqPearson;
-		double rsqBeagle;
-		String variant;
-	}
+
 
 }
