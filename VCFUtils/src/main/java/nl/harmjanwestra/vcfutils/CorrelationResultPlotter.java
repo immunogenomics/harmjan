@@ -17,7 +17,7 @@ public class CorrelationResultPlotter {
 
 		CorrelationResultCombiner c = new CorrelationResultCombiner();
 		ArrayList<CorrelationResult> data = c.getData(summaryFile);
-		Grid grid = new Grid(400, 400, 1, 6, 100, 100);
+		Grid grid = new Grid(400, 400, 1, 6 , 100, 100);
 
 		// make panel with maf1 vs maf2
 
