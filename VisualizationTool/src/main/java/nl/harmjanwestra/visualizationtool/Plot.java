@@ -5,7 +5,7 @@
  */
 package nl.harmjanwestra.visualizationtool;
 
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Exon;
 import nl.harmjanwestra.utilities.features.Feature;

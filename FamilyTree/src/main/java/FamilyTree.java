@@ -1,4 +1,4 @@
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 

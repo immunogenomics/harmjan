@@ -5,11 +5,11 @@
  */
 package nl.harmjanwestra.rnaaccess;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.PdfContentByte;
-import com.lowagie.text.pdf.PdfWriter;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfWriter;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -108,13 +108,13 @@ public class ScatterPlot2 {
 
         if (format == ScatterPlot.OUTPUTFORMAT.PDF) {
             Rectangle rectangle = new Rectangle(figureWidth, figureHeight);
-            document = new com.lowagie.text.Document(rectangle);
+            document = new com.itextpdf.text.Document(rectangle);
 
             if (!outfilename.toLowerCase().endsWith(".pdf")) {
                 outfilename += ".pdf";
             }
             try {
-                writer = com.lowagie.text.pdf.PdfWriter.getInstance(document, new java.io.FileOutputStream(outfilename));
+                writer = com.itextpdf.text.pdf.PdfWriter.getInstance(document, new java.io.FileOutputStream(outfilename));
 
             } catch (DocumentException e) {
                 e.printStackTrace();
@@ -125,7 +125,7 @@ public class ScatterPlot2 {
             cb = writer.getDirectContent();
             cb.saveState();
 
-//            com.lowagie.text.pdf.DefaultFontMapper fontMap = new com.lowagie.text.pdf.DefaultFontMapper();
+//            com.itextpdf.text.pdf.DefaultFontMapper fontMap = new com.itextpdf.text.pdf.DefaultFontMapper();
             g2d = cb.createGraphics(figureWidth, figureHeight);
         } else {
             bi = new java.awt.image.BufferedImage(figureWidth, figureHeight, java.awt.image.BufferedImage.TYPE_INT_RGB);

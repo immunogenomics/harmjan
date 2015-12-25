@@ -1,9 +1,9 @@
 package nl.harmjanwestra.utilities.graphics;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.pdf.PdfContentByte;
-import com.lowagie.text.pdf.PdfWriter;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfWriter;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 
 import javax.imageio.ImageIO;
@@ -29,7 +29,7 @@ public class DefaultGraphics {
 	protected int figureHeight;
 	protected String outputFileName;
 	private Locale defaultLocale;
-	protected com.lowagie.text.pdf.PdfContentByte cb = null;
+	private PdfContentByte cb;
 
 
 	public enum Output {
@@ -140,9 +140,9 @@ public class DefaultGraphics {
 
 		// initialize plot
 		if (output == Output.PDF) {
-			com.lowagie.text.Rectangle rectangle = new com.lowagie.text.Rectangle(width, height);
-			document = new com.lowagie.text.Document(rectangle);
-			writer = com.lowagie.text.pdf.PdfWriter.getInstance(document, new java.io.FileOutputStream(outputFileName));
+			com.itextpdf.text.Rectangle rectangle = new com.itextpdf.text.Rectangle(width, height);
+			document = new Document(rectangle);
+			writer = com.itextpdf.text.pdf.PdfWriter.getInstance(document, new java.io.FileOutputStream(outputFileName));
 
 			document.open();
 			cb = writer.getDirectContent();

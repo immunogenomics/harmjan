@@ -1,4 +1,4 @@
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 

@@ -10,6 +10,7 @@ import htsjdk.samtools.filter.AggregateFilter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.util.CloseableIterator;
 import nl.harmjanwestra.ngs.containers.ReadGroup;
 import nl.harmjanwestra.ngs.wrappers.MarkDups;
 import nl.harmjanwestra.ngs.wrappers.SortBAM;
@@ -568,7 +569,7 @@ public class Resequencing {
 		}
 
 		SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, true);
-		MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, false);
+		MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, (Map<SamReader, CloseableIterator<SAMRecord>>) readers, false);
 
 		SAMFileHeader header = headerMerger.getMergedHeader();
 		header.setSortOrder(SAMFileHeader.SortOrder.coordinate);

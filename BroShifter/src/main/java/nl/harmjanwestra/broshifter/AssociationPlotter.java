@@ -1,14 +1,15 @@
-
 package nl.harmjanwestra.broshifter;
 
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.PosteriorPValFile;
 import nl.harmjanwestra.utilities.association.VCFRSquares;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
+import nl.harmjanwestra.utilities.graphics.panels.*;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -16,7 +17,6 @@ import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,7 +37,7 @@ public class AssociationPlotter {
 //			p.bedgraphfilter(f, "/Data/Projects/2015-cd4timelinepilot/BedGraphsSeqProj/samples.txt");
 //			p.makePlotSpecificRegion();
 
-			Feature feat = new Feature(Chromosome.SIX, 32627241-5000, 32634466+5000);
+			Feature feat = new Feature(Chromosome.SIX, 32627241 - 5000, 32634466 + 5000);
 
 //			String out = "/Data/tmp/dqb1/rna/plot-atac.pdf";
 //			String bg = "/Data/tmp/dqb1/atac/allbedfiles.txt";
@@ -476,12 +476,12 @@ public class AssociationPlotter {
 	}
 
 	private void annotationPlot(Feature region, ArrayList<Track> annotations,
-								ArrayList<AssociationResult> assoc,
-								boolean[] mark,
-								GTFAnnotation annot,
-								HashSet<Feature> zoomregionhash,
+	                            ArrayList<AssociationResult> assoc,
+	                            boolean[] mark,
+	                            GTFAnnotation annot,
+	                            HashSet<Feature> zoomregionhash,
 
-								String outfile) throws IOException, DocumentException {
+	                            String outfile) throws IOException, DocumentException {
 
 		Grid grid = new Grid(400, 300, 3, 2, 300, 300);
 
@@ -567,9 +567,9 @@ public class AssociationPlotter {
 
 
 	private ArrayList<Track> loadAnnotations(String listOfAnnotationsFile,
-											 boolean usepeakcenter,
-											 int bptoextendannotation,
-											 boolean mergeverlapping) throws IOException {
+	                                         boolean usepeakcenter,
+	                                         int bptoextendannotation,
+	                                         boolean mergeverlapping) throws IOException {
 
 		TextFile tf = new TextFile(listOfAnnotationsFile, TextFile.R);
 		String[] list = tf.readAsArray();

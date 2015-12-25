@@ -5,7 +5,7 @@
  */
 package nl.harmjanwestra.rnaaccess;
 
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -440,19 +440,19 @@ public class CombineTrackingFiles {
         Locale.setDefault(Locale.US);
         // set up Graphics2D depending on required format using iText in case PDF
         Graphics2D g2d = null;
-        com.lowagie.text.Document document = null;
-        com.lowagie.text.pdf.PdfWriter writer = null;
+        com.itextpdf.text.Document document = null;
+        com.itextpdf.text.pdf.PdfWriter writer = null;
         BufferedImage bi = null;
 
         bi = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
         g2d = bi.createGraphics();
 
         g2d.setFont(LARGE_FONT);
-        com.lowagie.text.pdf.PdfContentByte cb = null;
+        com.itextpdf.text.pdf.PdfContentByte cb = null;
         if (output == Output.PDF) {
-            com.lowagie.text.Rectangle rectangle = new com.lowagie.text.Rectangle(width, height);
-            document = new com.lowagie.text.Document(rectangle);
-            writer = com.lowagie.text.pdf.PdfWriter.getInstance(document, new java.io.FileOutputStream(histogramOut));
+            com.itextpdf.text.Rectangle rectangle = new com.itextpdf.text.Rectangle(width, height);
+            document = new com.itextpdf.text.Document(rectangle);
+            writer = com.itextpdf.text.pdf.PdfWriter.getInstance(document, new java.io.FileOutputStream(histogramOut));
 
             document.open();
             cb = writer.getDirectContent();

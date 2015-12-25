@@ -1,8 +1,10 @@
 package nl.harmjanwestra.vcfutils;
 
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.Panel;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
+import nl.harmjanwestra.utilities.graphics.panels.SpacerPanel;
 import umcg.genetica.containers.Pair;
 
 import java.io.IOException;
@@ -17,20 +19,24 @@ public class CorrelationResultPlotter {
 
 		CorrelationResultCombiner c = new CorrelationResultCombiner();
 		ArrayList<CorrelationResult> data = c.getData(summaryFile);
-		Grid grid = new Grid(400, 400, 1, 6 , 100, 100);
+		Grid grid = new Grid(400, 400, 2, 4, 100, 100);
 
 		// make panel with maf1 vs maf2
 
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.maf2, "Maf1", "Maf2"));
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqb, "Maf1", "Beagle R-square"));
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqp, "Maf1", "Pearson R-square"));
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.maf2, "Maf1", "Maf2"), 0, 0);
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqb, "Maf1", "Beagle R-square"), 0, 1);
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqp, "Maf1", "Pearson R-square"), 0, 2);
+		grid.addPanel(new SpacerPanel(1, 1), 0, 3);
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf2, CorrelationResult.TYPE.rsqb, "Maf2", "Beagle R-square"), 1, 1);
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf2, CorrelationResult.TYPE.rsqp, "Maf2", "Pearson R-square"), 1, 2);
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.rsqb, CorrelationResult.TYPE.rsqp, "Beagle R-square", "Pearson R-square"), 1, 3);
+		grid.addPanel(new SpacerPanel(1, 1), 1, 0);
 
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf2, CorrelationResult.TYPE.rsqb, "Maf2", "Beagle R-square"));
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf2, CorrelationResult.TYPE.rsqp, "Maf2", "Pearson R-square"));
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.rsqb, CorrelationResult.TYPE.rsqp, "Beagle R-square", "Pearson R-square"));
-
-		grid.draw(output);
-
+		try {
+			grid.draw(output);
+		} catch (DocumentException e) {
+			e.printStackTrace();
+		}
 
 
 	}

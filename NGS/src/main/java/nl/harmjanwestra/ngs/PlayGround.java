@@ -1129,7 +1129,8 @@ public class PlayGround {
 
 	void mergeImputedBatches(String prefix, String outfilename, int nrbatches, int chr) throws IOException {
 		VCFFunctions f = new VCFFunctions();
-		f.mergeImputationBatches(prefix, outfilename, nrbatches, chr);
+
+//		f.mergeImputationBatches(prefix, outfilename, nrbatches, chr);
 	}
 
 	public void imputeImmunoChipBatches() throws IOException {

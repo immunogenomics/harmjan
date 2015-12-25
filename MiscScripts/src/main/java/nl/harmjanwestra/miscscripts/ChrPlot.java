@@ -1,6 +1,6 @@
 package nl.harmjanwestra.miscscripts;
 
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.graphics.ChromosomePlot;
 
 import java.io.FileNotFoundException;

@@ -1,6 +1,6 @@
 package nl.harmjanwestra.ngs.graphics;
 
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.features.Exon;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;

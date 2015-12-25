@@ -1,7 +1,7 @@
 package nl.harmjanwestra.ngs;
 
 import JSci.maths.ArrayMath;
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import htsjdk.samtools.*;
 import htsjdk.samtools.filter.*;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;

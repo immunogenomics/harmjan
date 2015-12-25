@@ -3,11 +3,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>hms.hwestra</groupId>
+        <groupId>nl.harmjanwestra</groupId>
         <artifactId>hmsprojects</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <artifactId>Harmonics</artifactId>
+    <groupId>nl.harmjanwestra</groupId>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
@@ -16,23 +17,18 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.5</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.5</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
             <groupId>nl.systemsgenetics</groupId>
             <artifactId>eqtl-mapping-pipeline</artifactId>
             <version>1.3.5-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.5</version>
+            <type>jar</type>
+        </dependency>
+
     </dependencies>
     <properties>
         <maven.compiler.source>1.7</maven.compiler.source>
@@ -48,7 +44,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>hms.hwestra.harmonics.FilterAndShift</mainClass>
+                            <mainClass>FilterAndShift</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>

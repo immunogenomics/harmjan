@@ -1,6 +1,6 @@
 package nl.harmjanwestra.ngs.graphics;
 
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFFunctions;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;

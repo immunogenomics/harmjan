@@ -5,7 +5,7 @@
  */
 package nl.harmjanwestra.visualizationtool;
 
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;

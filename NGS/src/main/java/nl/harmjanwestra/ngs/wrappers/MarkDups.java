@@ -5,8 +5,10 @@
  */
 package nl.harmjanwestra.ngs.wrappers;
 
+import picard.sam.markduplicates.MarkDuplicates;
+
 import java.io.File;
-import picard.sam.MarkDuplicates;
+
 
 /**
  *

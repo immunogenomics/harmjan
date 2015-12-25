@@ -1,6 +1,6 @@
 package nl.harmjanwestra.utilities.graphics;
 
-import com.lowagie.text.DocumentException;
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.graphics.panels.AssociationPanel;
 import nl.harmjanwestra.utilities.graphics.panels.Panel;
 
