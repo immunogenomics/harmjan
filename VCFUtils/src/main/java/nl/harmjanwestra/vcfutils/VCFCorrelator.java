@@ -18,10 +18,10 @@ import java.util.HashSet;
 public class VCFCorrelator {
 
 	public static void main(String[] args) {
-		String vcf1 = "/Data/tmp/tmp3/meh1000.vcf";
-		String vcf2 = "/Data/tmp/tmp3/meh1000.vcf";
-		String vartotest = "/Data/tmp/tmp3/mehsampled-variantList.txt";
-		String out = "/Data/tmp/tmp3/output.txt";
+		String vcf2 = "D:/tmp/data/RA-Chr2.vcf.gz";
+		String vcf1 = "D:/tmp/data/1kg-iter1.vcf.gz";
+		String vartotest = "D:/tmp/data/RA-Chr2-iter1-variantList.txt";
+		String out = "D:/tmp/data/output2.txt";
 
 		VCFCorrelator c = new VCFCorrelator();
 		try {
@@ -70,8 +70,21 @@ public class VCFCorrelator {
 		if (variantsToTestFile != null) {
 			TextFile fin = new TextFile(variantsToTestFile, TextFile.R);
 			ArrayList<String> str = fin.readAsArrayList();
+			boolean splitweirdly = false;
 			varsToTest = new HashSet<String>();
-			varsToTest.addAll(str);
+			for (String s : str) {
+				String[] elems = s.split(";");
+				if (elems.length > 1) {
+					varsToTest.add(elems[0] + "-" + elems[1]);
+					splitweirdly = true;
+				} else {
+					varsToTest.add(s);
+				}
+
+			}
+			if (splitweirdly) {
+				System.out.println("split weirdly ;)");
+			}
 			fin.close();
 			System.out.println(varsToTest.size() + " variants to test from " + variantsToTestFile);
 		}
@@ -87,9 +100,14 @@ public class VCFCorrelator {
 
 		System.out.println(variantMap.size() + " variants loaded from " + vcf1);
 		TextFile tfot = new TextFile(out, TextFile.W);
+
+
+		HashMap<String, VCFVariant> variantMap2 = new HashMap<>();
+		HashSet<String> writtenVariants = new HashSet<String>();
 		while (data2.hasNext()) {
 			VCFVariant var2 = data2.next();
 			String varStr = var2.toString();
+
 			VCFVariant var1 = variantMap.get(varStr);
 			if (var1 != null) {
 
@@ -128,8 +146,8 @@ public class VCFCorrelator {
 
 						double r = Correlation.correlate(x, y);
 						String ln;
-						String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF();
-						String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF();
+						String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
+						String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 						if (Double.isNaN(r)) {
 							ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
 						} else {
@@ -137,14 +155,62 @@ public class VCFCorrelator {
 							ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
 						}
 						tfot.writeln(ln);
+						writtenVariants.add(varStr);
 					}
 				} else {
 					// ?
 				}
+			} else {
+				if (varsToTest == null || varsToTest.contains(varStr)) {
+					variantMap2.put(varStr, var2);
+				}
 			}
 		}
+
+		// write variants that are not in variantlist
+		if (varsToTest != null) {
+			for (String variant : varsToTest) {
+
+				if (!writtenVariants.contains(variant)) {
+					VCFVariant var1 = variantMap.get(variant);
+					VCFVariant var2 = variantMap2.get(variant);
+
+					if ((var1 == null || var2 == null) || (var1 == null && var2 == null)) {
+
+						String var1Str = "";
+						String var2Str = "";
+						String infoStr1 = null;
+						String infoStr2 = null;
+						String varstr = variant;
+
+
+
+						if (var1 == null && var2 == null) {
+							var1Str = null + "\t" + null + "\t" + 0 + "\t" + 0;
+							var2Str = null + "\t" + null + "\t" + 0 + "\t" + 0;
+						} else if (var1 != null && var2 == null) {
+							varstr = var1.toString();
+							infoStr1 = "" + var1.getInfo().get("AR2");
+							var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
+							var2Str = null + "\t" + null + "\t" + 0;
+						} else if (var1 == null && var2 != null) {
+							varstr = var2.toString();
+							infoStr2 = "" + var2.getInfo().get("AR2");
+							var1Str = null + "\t" + null + "\t" + 0;
+							var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
+						}
+						String ln = varstr + "\t" + var1Str + "\t" + var2Str + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + infoStr1 + "\t" + infoStr2;
+						tfot.writeln(ln);
+					}
+				}
+
+			}
+		}
+
+
 		tfot.close();
 	}
+
 
 	private Pair<double[][], double[][]> removeNulls(double[][] gprobs1, double[][] gprobs2) {
 

@@ -16,9 +16,12 @@ import java.util.regex.Pattern;
 public class VCFVariant {
 
 	private static final int nrHeaderElems = 9;
-	private int[] nrAllelesObserved;
+	private static final Pattern slash = Pattern.compile("/");
+	private static final Pattern pipe = Pattern.compile("\\|");
+	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
 	private final byte[][] genotypeAllelesNew;
 	private final HashMap<String, Double> info = new HashMap<String, Double>();
+	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
 	private double[][] genotypeProbsNew;
 	private int[] genotypeQuals;
@@ -30,7 +33,6 @@ public class VCFVariant {
 	private boolean biallelic = false;
 	private double[] allelefrequencies;
 	private String minorAllele;
-
 	private String[] alleles = null;
 	private String chr = null;
 	private int pos = -1;
@@ -40,9 +42,6 @@ public class VCFVariant {
 	private double MAF;
 	private String separator = "/";
 
-	private static final Pattern slash = Pattern.compile("/");
-	private static final Pattern pipe = Pattern.compile("\\|");
-
 	public VCFVariant(String ln, boolean skipLoadingGenotypes, boolean skipsplittinggenotypes) {
 		this(ln, 0, 0, skipLoadingGenotypes, skipsplittinggenotypes);
 	}
@@ -51,12 +50,10 @@ public class VCFVariant {
 		this(ln, 0, 0, skipLoadingGenotypes, false);
 	}
 
+
 	public VCFVariant(String ln) {
 		this(ln, 0, 0, false, false);
 	}
-
-
-	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
 
 	public VCFVariant(String ln, int minimalReadDepth, int minimalGenotypeQual, boolean skipLoadingGenotypes, boolean skipsplittinggenotypes) {
 
@@ -99,6 +96,9 @@ public class VCFVariant {
 					break;
 				case 2:
 					id = new String(token);
+					if (id.contains("rs116699914")) {
+						System.out.println("Found it!");
+					}
 					break;
 				case 3:
 					ref = token;
@@ -350,7 +350,7 @@ public class VCFVariant {
 			genotypeAllelesNew = null;
 		}
 
-		callrate = (double) nrCalled / (nrTokens - nrHeaderElems);
+		callrate = (double) nrCalled / ((nrTokens - nrHeaderElems) * 2);
 
 		int totalAllelesObs = nrCalled * 2;
 
@@ -760,6 +760,7 @@ public class VCFVariant {
 		}
 
 		callrate = (double) nrCalled / nrIndividuals;
+
 
 		int totalAllelesObs = nrCalled * 2;
 

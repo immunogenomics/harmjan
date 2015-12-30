@@ -38,7 +38,7 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Batch splitter")
+				.desc("Correlate imputation output")
 				.longOpt("correlate")
 				.build();
 		OPTIONS.addOption(option);
@@ -76,6 +76,12 @@ public class Main {
 		option = Option.builder()
 				.desc("Chr splitter")
 				.longOpt("splitchr")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Merge imputation batches")
+				.longOpt("mergeimputation")
 				.build();
 		OPTIONS.addOption(option);
 

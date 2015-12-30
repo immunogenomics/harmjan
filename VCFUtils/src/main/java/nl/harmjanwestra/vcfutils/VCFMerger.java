@@ -87,7 +87,7 @@ public class VCFMerger {
 		ArrayList<String> variants2 = sampler.getListOfVariants(vcf2);
 
 
-		
+
 
 	}
 
@@ -781,8 +781,10 @@ public class VCFMerger {
 						}
 						allVariants.put(variant, rsquareds);
 					}
+
 					elems = tf.readLineElems(TextFile.tab);
 				}
+				System.out.println(allVariants.size() + " variants found...");
 				tf.close();
 			} else {
 				System.out.println("Could not find: " + batchvcfName);
