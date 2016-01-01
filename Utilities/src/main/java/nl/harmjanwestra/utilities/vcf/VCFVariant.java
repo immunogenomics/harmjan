@@ -96,9 +96,6 @@ public class VCFVariant {
 					break;
 				case 2:
 					id = new String(token);
-					if (id.contains("rs116699914")) {
-						System.out.println("Found it!");
-					}
 					break;
 				case 3:
 					ref = token;

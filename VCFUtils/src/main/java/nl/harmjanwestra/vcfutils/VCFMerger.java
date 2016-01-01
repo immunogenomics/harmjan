@@ -87,8 +87,6 @@ public class VCFMerger {
 		ArrayList<String> variants2 = sampler.getListOfVariants(vcf2);
 
 
-
-
 	}
 
 	/*
@@ -117,13 +115,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-											  String testVCF,
-											  String vcf1out,
-											  String vcf2out,
-											  String vcfmergedout,
-											  String separatorInMergedFile,
-											  String logoutfile,
-											  boolean keepNonOverlapping) throws IOException {
+	                                          String testVCF,
+	                                          String vcf1out,
+	                                          String vcf2out,
+	                                          String vcfmergedout,
+	                                          String separatorInMergedFile,
+	                                          String logoutfile,
+	                                          boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -428,7 +426,7 @@ public class VCFMerger {
 	Utility function to merge two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-											   String separatorInMergedFile
+	                                           String separatorInMergedFile
 	) {
 
 
@@ -898,6 +896,92 @@ public class VCFMerger {
 			tfin.close();
 
 		}
+
+	}
+
+	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
+	                                           boolean linux, String vcfsort) throws IOException {
+
+
+		// get list of imputed variants
+		VCFGenotypeData dataset1 = new VCFGenotypeData(imputedVCF);
+		ArrayList<String> samplesImputed = dataset1.getSamples();
+
+		VCFGenotypeData dataset2 = new VCFGenotypeData(unimputedVCF);
+		ArrayList<String> samplesNonImputed = dataset2.getSamples();
+
+		// reorder samples in unimputed file
+		HashMap<String, Integer> sampleIndex = new HashMap<String, Integer>();
+		for (int i = 0; i < samplesImputed.size(); i++) {
+			sampleIndex.put(samplesImputed.get(i), i);
+		}
+
+		int[] sampleIndexArr = new int[samplesNonImputed.size()];
+		for (int i = 0; i < sampleIndexArr.length; i++) {
+			sampleIndexArr[i] = -1;
+		}
+
+		int shared = 0;
+		for (int i = 0; i < samplesNonImputed.size(); i++) {
+			String sample = samplesNonImputed.get(i);
+			Integer index = sampleIndex.get(sample);
+			if (index != null) {
+				sampleIndexArr[i] = index;
+				shared++;
+			}
+		}
+
+		System.out.println(samplesImputed.size() + " samples in: " + imputedVCF);
+		System.out.println(samplesNonImputed.size() + " samples in: " + unimputedVCF);
+		System.out.println(shared + " samples shared.");
+
+		dataset1.close();
+		dataset2.close();
+
+		// get list of variants unique to non-imputed list
+		TextFile outfile = new TextFile(outfilename, TextFile.W);
+
+		TextFile vcf1 = new TextFile(imputedVCF, TextFile.R);
+		String ln = vcf1.readLine();
+		HashSet<String> variantsImputed = new HashSet<String>();
+		while (ln != null) {
+			String[] elems = Strings.tab.split(ln);
+			String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
+			variantsImputed.add(variant);
+			outfile.writeln(ln);
+		}
+		vcf1.close();
+
+		TextFile vcf2 = new TextFile(unimputedVCF, TextFile.R);
+		String[] elems = vcf2.readLineElems(TextFile.tab);
+		while (elems != null) {
+			if (elems.length > 0 && elems[0].startsWith("#")) {
+				String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
+				if (!variantsImputed.contains(variant)) {
+					String lnout = Strings.concat(elems, Strings.tab, 0, 9);
+					String[] outElems = new String[samplesImputed.size()];
+					for (int i = 9; i < elems.length; i++) {
+						int index = sampleIndexArr[i - 9];
+						if (index != -1) {
+							outElems[index] = elems[i];
+						}
+					}
+					lnout += "\t" + Strings.concat(outElems, Strings.tab);
+					outfile.writeln(lnout);
+				}
+			}
+			elems = vcf2.readLineElems(TextFile.tab);
+		}
+		vcf2.close();
+
+		outfile.close();
+
+		// sort the output
+		VCFFunctions func = new VCFFunctions();
+		func.sortVCF(linux, vcfsort, outfilename, outfilename + "-sorted.vcf.gz", outfilename + "-sorting.sh");
+		Gpio.delete(outfilename + "-sorting.sh");
+		Gpio.moveFile(outfilename + "-sorted.vcf.gz", outfilename);
+
 
 	}
 }
