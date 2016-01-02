@@ -26,6 +26,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Reintroduce unimputed variants (can also be used to merge two VCF files)")
+				.longOpt("reintroduce")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Merge two VCF files (with non-overlapping samples) as a big chunk of swiss cheese; with holes that is.")
 				.longOpt("mergecheese")
 				.build();
@@ -283,6 +289,35 @@ public class Main {
 					f.replaceMissingCodes(input, out);
 				} catch (IOException e) {
 					e.printStackTrace();
+				}
+			} else if (cmd.hasOption("reintroduce")) {
+				VCFMerger merger = new VCFMerger();
+				boolean linux = false;
+				String v2 = "";
+				String vcfsort = "";
+
+				if (cmd.hasOption("linux")) {
+					linux = true;
+				}
+				if (cmd.hasOption("i2")) {
+					v2 = cmd.getOptionValue("i2");
+				} else {
+					System.err.println("Provide -i2 with --correlate");
+					run = false;
+				}
+				if (cmd.hasOption("vcfsort")) {
+					vcfsort = cmd.getOptionValue("vcfsort");
+				} else {
+					System.out.println("Please supply --vcfsort");
+				}
+				if (run) {
+					try {
+						merger.reintroducteNonImputedVariants(input, v2, out, linux, vcfsort);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} else {
+					printHelp();
 				}
 			} else if (cmd.hasOption("dedup")) {
 				VCFFunctions f = new VCFFunctions();

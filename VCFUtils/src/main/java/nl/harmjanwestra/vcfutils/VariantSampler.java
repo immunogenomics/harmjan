@@ -1,5 +1,7 @@
 package nl.harmjanwestra.vcfutils;
 
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
@@ -81,22 +83,16 @@ public class VariantSampler {
 	}
 
 	public ArrayList<String> getListOfVariants(String vcf) throws IOException {
-		TextFile tf = new TextFile(vcf, TextFile.R);
 
 		ArrayList<String> variants = new ArrayList<String>();
-		String ln = tf.readLine();
-		while (ln != null) {
-
-			if (ln.startsWith("#")) {
-				// skip
-			} else {
-				String[] elems = Strings.tab.split(ln);
-				String variant = elems[0] + "-" + elems[1] + ";" + elems[2];
-				variants.add(variant);
+		VCFGenotypeData data = new VCFGenotypeData(vcf);
+		System.out.println("Sampling variants with maf > 0 and CR > 0");
+		while (data.hasNext()) {
+			VCFVariant variant = data.next();
+			if (variant.getCallrate() > 0 && variant.getMAF() > 0) {
+				variants.add(variant.toString());
 			}
-			ln = tf.readLine();
 		}
-		tf.close();
 		return variants;
 	}
 

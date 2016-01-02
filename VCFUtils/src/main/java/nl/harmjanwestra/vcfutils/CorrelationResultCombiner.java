@@ -2,6 +2,7 @@ package nl.harmjanwestra.vcfutils;
 
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,6 +13,51 @@ import java.util.HashSet;
  * Created by hwestra on 12/21/15.
  */
 public class CorrelationResultCombiner {
+
+	public static void main(String[] args) {
+		CorrelationResultCombiner comb = new CorrelationResultCombiner();
+		int nriter = 10;
+		String dir = "d:\\tmp\\files\\T1D\\";
+		String[] refs = new String[]{"1kg", "1kg-seq-merged", "seq", "swisscheese", "swisscheesebeagle41"};
+		for (String ref : refs) {
+
+			String[] files = new String[nriter];
+			for (int i = 0; i < files.length; i++) {
+				String file = dir + ref + "-iter" + (i + 1) + ".txt";
+				files[i] = file;
+
+			}
+			String outfile = dir + "" + ref + ".txt";
+
+			try {
+				comb.concat(files, outfile);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		try {
+			String[] files = new String[refs.length];
+			dir = "d:\\tmp\\files\\T1D\\";
+			for (int i = 0; i < refs.length; i++) {
+				files[i] = dir + refs[i] + ".txt";
+			}
+			String outprefix = "d:\\tmp\\files\\T1D";
+			comb.mergeIntoOneBigTable(files, refs, outprefix);
+
+			files = new String[refs.length];
+			dir = "d:\\tmp\\files\\RA\\";
+			for (int i = 0; i < refs.length; i++) {
+				files[i] = dir + refs[i] + ".txt";
+			}
+			outprefix = "d:\\tmp\\files\\RA";
+			comb.mergeIntoOneBigTable(files, refs, outprefix);
+		} catch (IOException e) {
+
+		}
+
+	}
 
 	public void run(String indir, String outfilename, String refname, int nriter, int nrBatches) throws IOException {
 
@@ -61,7 +107,7 @@ public class CorrelationResultCombiner {
 							Integer id = variantToId.get(result.variant);
 							if (id != null) {
 								correlations[id] += result.rsqPearson;
-								imputationquals[id] += result.rsqBeagle;
+								imputationquals[id] += result.rsqBeagle1;
 								samplesizes[id] += result.nrSamples;
 								mafs1[id] += result.maf1;
 								mafs2[id] += result.maf2;
@@ -144,12 +190,16 @@ public class CorrelationResultCombiner {
 			double maf2 = Double.parseDouble(elems[6]);
 			int nrSamples = Integer.parseInt(elems[8]);
 			double rsqPearson = Double.parseDouble(elems[10]);
-			double rsqBeagle = Double.parseDouble(elems[11]);
+			double rsqBeagle1 = Double.parseDouble(elems[11]);
+			double rsqBeagle2 = Double.parseDouble(elems[12]);
 
 			CorrelationResult result = new CorrelationResult();
 			result.maf1 = maf1;
 			result.maf2 = maf2;
-			result.rsqBeagle = rsqBeagle;
+//			result.callrate1 = cr1;
+//			result.callrate2 = cr2;
+			result.rsqBeagle1 = rsqBeagle1;
+			result.rsqBeagle1 = rsqBeagle2;
 			result.rsqPearson = rsqPearson;
 			result.variant = variant;
 			result.nrSamples = nrSamples;
@@ -164,6 +214,138 @@ public class CorrelationResultCombiner {
 		return output;
 	}
 
+	public void concat(String[] files, String out) throws IOException {
+		TextFile outf = new TextFile(out, TextFile.W);
+		for (String f : files) {
+			TextFile in = new TextFile(f, TextFile.R);
+			String ln = in.readLine();
+			while (ln != null) {
+				outf.writeln(ln);
+				ln = in.readLine();
+			}
+			in.close();
+		}
+		outf.close();
+	}
+
+	public void mergeIntoOneBigTable(String[] files, String[] names, String outprefix) throws IOException {
+
+
+		// get list of unique variants
+		HashSet<String> uniqueVariants = new HashSet<String>();
+		for (String file : files) {
+			TextFile tf = new TextFile(file, TextFile.R);
+			String[] elems = tf.readLineElems(TextFile.tab);
+			while (elems != null) {
+				String variant = elems[0];
+				uniqueVariants.add(variant);
+				elems = tf.readLineElems(TextFile.tab);
+			}
+			tf.close();
+		}
+		System.out.println(uniqueVariants.size() + " variants found.");
+
+
+		// now index
+		HashMap<String, Integer> variantToId = new HashMap<String, Integer>();
+		ArrayList<String> variants = new ArrayList<>();
+		int ctr = 0;
+		for (String variant : uniqueVariants) {
+			variantToId.put(variant, ctr);
+			variants.add(variant);
+			ctr++;
+		}
+
+		double[][] pearsons = new double[variants.size()][files.length];
+		double[][] mafs1 = new double[variants.size()][files.length];
+		double[][] mafs2 = new double[variants.size()][files.length];
+		double[][] beaglersq1 = new double[variants.size()][files.length];
+		double[][] beaglersq2 = new double[variants.size()][files.length];
+
+		for (int f = 0; f < files.length; f++) {
+			TextFile tf = new TextFile(files[f], TextFile.R);
+			String[] elems = tf.readLineElems(TextFile.tab);
+			while (elems != null) {
+				if (elems.length > 14) {
+					String variant = elems[0];
+					Integer index = variantToId.get(variant);
+					if (index != null) {
+
+
+						double p = Double.NaN;
+						double d1 = Double.NaN;
+						double d2 = Double.NaN;
+						double maf1 = Double.NaN;
+						double maf2 = Double.NaN;
+
+						try {
+							p = Double.parseDouble(elems[12]);
+						} catch (NumberFormatException e) {
+
+						}
+
+						try {
+							maf1 = Double.parseDouble(elems[3]);
+						} catch (NumberFormatException e) {
+
+						}
+
+						try {
+							maf2 = Double.parseDouble(elems[7]);
+						} catch (NumberFormatException e) {
+
+						}
+
+						try {
+							d1 = Double.parseDouble(elems[13]);
+						} catch (NumberFormatException e) {
+
+						}
+
+						try {
+							d2 = Double.parseDouble(elems[14]);
+						} catch (NumberFormatException e) {
+
+						}
+
+						pearsons[index][f] = p;
+
+						mafs1[index][f] = maf1;
+						mafs2[index][f] = maf2;
+						beaglersq1[index][f] = d1;
+						beaglersq2[index][f] = d2;
+
+					}
+				}
+				elems = tf.readLineElems(TextFile.tab);
+			}
+			tf.close();
+		}
+
+		String[] variantArr = new String[variants.size()];
+		for (int i = 0; i < variants.size(); i++) {
+			variantArr[i] = variants.get(i);
+		}
+
+		write(pearsons, variantArr, names, outprefix + "-pearsons.txt");
+		write(mafs1, variantArr, names, outprefix + "-mafs1.txt");
+		write(mafs2, variantArr, names, outprefix + "-mafs2.txt");
+		write(beaglersq1, variantArr, names, outprefix + "-beaglersq1.txt");
+		write(beaglersq2, variantArr, names, outprefix + "-beaglersq2.txt");
+
+
+	}
+
+	private void write(double[][] d, String[] rows, String[] cols, String outfilename) throws IOException {
+		String header = "-\t" + Strings.concat(cols, Strings.tab);
+		TextFile out = new TextFile(outfilename, TextFile.W);
+		out.writeln(header);
+		for (int r = 0; r < d.length; r++) {
+			String ln = rows[r] + "\t" + Strings.concat(d[r], Strings.tab);
+			out.writeln(ln);
+		}
+		out.close();
+	}
 
 
 }

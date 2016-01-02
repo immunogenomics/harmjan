@@ -148,6 +148,8 @@ public class VCFCorrelator {
 						String ln;
 						String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
 						String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
+						var1.recalculateMAFAndCallRate();
+						var2.recalculateMAFAndCallRate();
 						if (Double.isNaN(r)) {
 							ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
 						} else {

@@ -9,7 +9,8 @@ public class CorrelationResult {
 	double maf1;
 	double maf2;
 	double rsqPearson;
-	double rsqBeagle;
+	double rsqBeagle1;
+	double rsqBeagle2;
 	int nrSamples;
 	String variant;
 
@@ -19,8 +20,10 @@ public class CorrelationResult {
 				return maf1;
 			case maf2:
 				return maf2;
-			case rsqb:
-				return rsqBeagle;
+			case rsqb1:
+				return rsqBeagle1;
+			case rsqb2:
+				return rsqBeagle2;
 			case rsqp:
 				return rsqPearson;
 			case nrsa:
@@ -33,7 +36,8 @@ public class CorrelationResult {
 		maf1,
 		maf2,
 		rsqp,
-		rsqb,
+		rsqb1,
+		rsqb2,
 		nrsa
 	}
 }

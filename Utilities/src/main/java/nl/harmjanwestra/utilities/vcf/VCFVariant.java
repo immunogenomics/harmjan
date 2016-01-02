@@ -4,10 +4,7 @@ import nl.harmjanwestra.utilities.features.Chromosome;
 import umcg.genetica.io.trityper.util.BaseAnnot;
 import umcg.genetica.text.Strings;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -21,6 +18,7 @@ public class VCFVariant {
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
 	private final byte[][] genotypeAllelesNew;
 	private final HashMap<String, Double> info = new HashMap<String, Double>();
+	HashSet<String> notSplittableElems = new HashSet<String>();
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
 	private double[][] genotypeProbsNew;
@@ -46,10 +44,10 @@ public class VCFVariant {
 		this(ln, 0, 0, skipLoadingGenotypes, skipsplittinggenotypes);
 	}
 
+
 	public VCFVariant(String ln, boolean skipLoadingGenotypes) {
 		this(ln, 0, 0, skipLoadingGenotypes, false);
 	}
-
 
 	public VCFVariant(String ln) {
 		this(ln, 0, 0, false, false);
@@ -96,6 +94,7 @@ public class VCFVariant {
 					break;
 				case 2:
 					id = new String(token);
+
 					break;
 				case 3:
 					ref = token;
@@ -142,7 +141,10 @@ public class VCFVariant {
 								} else if (infoElems[e].equals("PR")) {
 									info.put(id, 1d);
 								} else {
-									System.out.println("info: " + infoElems[e] + " not splitable");
+									if (!notSplittableElems.contains(infoElems[e])) {
+										System.out.println("info: " + infoElems[e] + " not splitable");
+										notSplittableElems.add(infoElems[e]);
+									}
 								}
 
 							}
@@ -349,7 +351,7 @@ public class VCFVariant {
 
 		callrate = (double) nrCalled / ((nrTokens - nrHeaderElems) * 2);
 
-		int totalAllelesObs = nrCalled * 2;
+		int totalAllelesObs = nrCalled;
 
 		int nrAllelesThatHaveAlleleFrequency = 0;
 		double minAlleleFreq = 2;
@@ -691,6 +693,9 @@ public class VCFVariant {
 
 	public void recalculateMAFAndCallRate(Boolean[] individualIsFemale) {
 
+		if (id.equals("rs13413810")) {
+			System.out.println("Got it");
+		}
 
 		int nrCalled = 0;
 		nrAllelesObserved = new int[nrAllelesObserved.length];

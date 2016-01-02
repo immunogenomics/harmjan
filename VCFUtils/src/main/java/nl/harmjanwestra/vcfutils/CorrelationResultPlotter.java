@@ -24,12 +24,12 @@ public class CorrelationResultPlotter {
 		// make panel with maf1 vs maf2
 
 		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.maf2, "Maf1", "Maf2"), 0, 0);
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqb, "Maf1", "Beagle R-square"), 0, 1);
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqb1, "Maf1", "Beagle R-square"), 0, 1);
 		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqp, "Maf1", "Pearson R-square"), 0, 2);
 		grid.addPanel(new SpacerPanel(1, 1), 0, 3);
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf2, CorrelationResult.TYPE.rsqb, "Maf2", "Beagle R-square"), 1, 1);
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf2, CorrelationResult.TYPE.rsqb1, "Maf2", "Beagle R-square"), 1, 1);
 		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf2, CorrelationResult.TYPE.rsqp, "Maf2", "Pearson R-square"), 1, 2);
-		grid.addPanel(makePanel(data, CorrelationResult.TYPE.rsqb, CorrelationResult.TYPE.rsqp, "Beagle R-square", "Pearson R-square"), 1, 3);
+		grid.addPanel(makePanel(data, CorrelationResult.TYPE.rsqb1, CorrelationResult.TYPE.rsqp, "Beagle R-square", "Pearson R-square"), 1, 3);
 		grid.addPanel(new SpacerPanel(1, 1), 1, 0);
 
 		try {
