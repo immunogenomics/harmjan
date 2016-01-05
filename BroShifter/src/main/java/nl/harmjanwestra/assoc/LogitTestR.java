@@ -1,8 +1,8 @@
-package nl.harmjanwestra.ngs;
+package nl.harmjanwestra.assoc;
 
+import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import nl.harmjanwestra.utilities.features.Feature;
 import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPLogical;
 import org.rosuda.REngine.REXPMismatchException;

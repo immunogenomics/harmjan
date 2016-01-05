@@ -1,11 +1,12 @@
-package nl.harmjanwestra.ngs;
+package nl.harmjanwestra.assoc;
 
 import JSci.maths.ArrayMath;
-import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.assoc.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.math.LogisticRegression;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
@@ -28,113 +29,100 @@ public class LRTest {
 
 	boolean useR = false;
 
+//	public static void main(String[] args) {
+//
+//		String vcf = "/Data/tmp/logit/merged-Chr21.vcf";
+//		String outputdir = "/Data/tmp/logit/";
+//		String diseaseStatusFile = "/Data/tmp/logit/T1D-diseaseStatus.txt";
+//		String covariateFile = "/Data/tmp/logit/T1D-covarmerged.txtmergedCovariates-withPseudos.txt";
+//		HashSet<String> covariatesToInclude = null;
+//
+//		HashSet<String> snpLimit = null;
+//		String samplesToExclude = null; // "/Data/tmp/logit/SamplesToExclude.txt";
+//
+//		String famfile = "/Data/tmp/logit/T1D.fam";
+//		boolean imputationqualityfilter = true;
+//		double imputationqualitythreshold = 0.8;
+//		int minNObservedAllele = 5;
+//		int threadnum = 1;
+//
+//		LRTest lrtest = new LRTest(vcf,
+//				outputdir,
+//				diseaseStatusFile,
+//				covariateFile,
+//				covariatesToInclude,
+//				snpLimit,
+//				samplesToExclude,
+//				famfile,
+//				imputationqualityfilter,
+//				imputationqualitythreshold,
+//				minNObservedAllele,
+//				threadnum);
+//		try {
+//			lrtest.test();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+//
+////	private final HashSet<String> covariatesToInclude;
+////	private final HashSet<String> snpLimit;
+//
+////	public LRTest(String vcf,
+////				  String outputdir,
+////				  String diseaseStatusFile,
+////				  String covariateFile,
+////				  HashSet<String> covariatesToInclude,
+////				  HashSet<String> snpLimit,
+////				  String samplesToExclude,
+////				  String famfile,
+////				  boolean imputationqualityfilter,
+////				  double imputationqualitythreshold,
+////				  int minNObservedAllele,
+////				  int threadnum) {
+////		this.vcf = vcf;
+////		this.outputdir = outputdir;
+////		this.diseaseStatusFile = diseaseStatusFile;
+////		this.covariateFile = covariateFile;
+////		this.covariatesToInclude = covariatesToInclude;
+////		this.samplesToExclude = samplesToExclude;
+////		this.imputationqualityfilter = imputationqualityfilter;
+////		this.imputationqualitythreshold = imputationqualitythreshold;
+////		this.minNObservedAllele = minNObservedAllele;
+////		this.threadnum = threadnum;
+////		this.famfile = famfile;
+////		this.snpLimit = snpLimit;
+////	}
 
-	public static void main(String[] args) {
+	LRTestOptions options;
 
-		String vcf = "/Data/tmp/logit/merged-Chr21.vcf";
-		String outputdir = "/Data/tmp/logit/";
-		String diseaseStatusFile = "/Data/tmp/logit/T1D-diseaseStatus.txt";
-		String covariateFile = "/Data/tmp/logit/T1D-covarmerged.txtmergedCovariates-withPseudos.txt";
-		HashSet<String> covariatesToInclude = null;
-
-		HashSet<String> snpLimit = null;
-		String samplesToExclude = null; // "/Data/tmp/logit/SamplesToExclude.txt";
-
-		String famfile = "/Data/tmp/logit/T1D.fam";
-		boolean imputationqualityfilter = true;
-		double imputationqualitythreshold = 0.8;
-		int minNObservedAllele = 5;
-		int threadnum = 1;
-
-		LRTest lrtest = new LRTest(vcf,
-				outputdir,
-				diseaseStatusFile,
-				covariateFile,
-				covariatesToInclude,
-				snpLimit,
-				samplesToExclude,
-				famfile,
-				imputationqualityfilter,
-				imputationqualitythreshold,
-				minNObservedAllele,
-				threadnum);
-		try {
-			lrtest.test();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public LRTest(LRTestOptions options) {
+		this.options = options;
 	}
-
-	private final String vcf;
-	private final String outputdir;
-	private final String diseaseStatusFile;
-	private final String covariateFile;
-	private final HashSet<String> covariatesToInclude;
-	private final String samplesToExclude;
-	private final boolean imputationqualityfilter;
-	private final double imputationqualitythreshold;
-	private final int minNObservedAllele;
-	private final int threadnum;
-	private final String famfile;
-	private final HashSet<String> snpLimit;
-
-	public LRTest(String vcf,
-				  String outputdir,
-				  String diseaseStatusFile,
-				  String covariateFile,
-				  HashSet<String> covariatesToInclude,
-				  HashSet<String> snpLimit,
-				  String samplesToExclude,
-				  String famfile,
-				  boolean imputationqualityfilter,
-				  double imputationqualitythreshold,
-				  int minNObservedAllele,
-				  int threadnum) {
-		this.vcf = vcf;
-		this.outputdir = outputdir;
-		this.diseaseStatusFile = diseaseStatusFile;
-		this.covariateFile = covariateFile;
-		this.covariatesToInclude = covariatesToInclude;
-		this.samplesToExclude = samplesToExclude;
-		this.imputationqualityfilter = imputationqualityfilter;
-		this.imputationqualitythreshold = imputationqualitythreshold;
-		this.minNObservedAllele = minNObservedAllele;
-		this.threadnum = threadnum;
-		this.famfile = famfile;
-		this.snpLimit = snpLimit;
-	}
-
-	private final static boolean lingpipe = false;
-	boolean skipMakingPseudoControls = true;
-
-	Feature region = null;
 
 	public void test() throws IOException {
 
-		double mafthresholdD = 0.005;
-
 		// load covariates
-		Gpio.createDir(outputdir);
-
-
+		Gpio.createDir(options.getOutputdir());
 		VCFVariant lastVariant = null;
 
-		System.out.println("Assoc: " + vcf);
-		System.out.println("Covar: " + covariateFile);
-		System.out.println("Disease: " + diseaseStatusFile);
-		System.out.println("Out: " + outputdir);
+		System.out.println("Assoc: " + options.getVcf());
+		System.out.println("Covar: " + options.getCovariateFile());
+		System.out.println("Disease: " + options.getDiseaseStatusFile());
+		System.out.println("Out: " + options.getOutputdir());
+
 		// index covariate samples to vcf samples
 		HashSet<String> excludeTheseSamples = new HashSet<String>();
-		if (samplesToExclude != null) {
-			TextFile excl = new TextFile(samplesToExclude, TextFile.R);
+		if (options.getSamplesToExclude() != null) {
+			TextFile excl = new TextFile(options.getSamplesToExclude(), TextFile.R);
 			excludeTheseSamples = (HashSet<String>) excl.readAsSet(0, TextFile.tab);
 			excl.close();
-			System.out.println("Loaded: " + excludeTheseSamples.size() + " samples to exclude from " + samplesToExclude);
+			System.out.println("Loaded: " + excludeTheseSamples.size() + " samples to exclude from " + options.getSamplesToExclude());
 		}
 		HashMap<String, Integer> diseaseStatus = new HashMap<String, Integer>();
 
 		// load disease status
-		TextFile tf = new TextFile(diseaseStatusFile, TextFile.R);
+		TextFile tf = new TextFile(options.getDiseaseStatusFile(), TextFile.R);
 		String[] elems = tf.readLineElems(Strings.tab);
 		while (elems != null) {
 			String sample = elems[0];
@@ -150,7 +138,7 @@ public class LRTest {
 		System.out.println(diseaseStatus.size() + " disease status samples loaded");
 
 		// load samples from vcf file
-		VCFGenotypeData data = new VCFGenotypeData(vcf);
+		VCFGenotypeData data = new VCFGenotypeData(options.getVcf());
 		ArrayList<String> vcfSamples = data.getSamples();
 		HashSet<String> vcfSamplesWithDiseaseStatus = new HashSet<String>();
 		for (String sample : vcfSamples) {
@@ -162,7 +150,7 @@ public class LRTest {
 		}
 
 		// remove related samples based on fam file if any
-		if (famfile != null) {
+		if (options.getFamfile() != null) {
 			if (excludeTheseSamples == null) {
 				excludeTheseSamples = new HashSet<String>();
 			}
@@ -180,7 +168,18 @@ public class LRTest {
 
 		// assume rows are samples and columns are covariates
 		// this loads only samples that also have a disease status loaded..
-		DoubleMatrixDataset<String, String> covariates = DoubleMatrixDataset.loadSubsetOfTextDoubleData(covariateFile, "\t", vcfSamplesWithDiseaseStatus, covariatesToInclude);
+
+		//
+		HashSet<String> covariatesToInclude = null;
+		if (options.getCovariatesToInclude() != null) {
+			// load hashet
+			TextFile excl = new TextFile(options.getCovariatesToInclude(), TextFile.R);
+			covariatesToInclude = (HashSet<String>) excl.readAsSet(0, TextFile.tab);
+			excl.close();
+			System.out.println(covariatesToInclude + " covariates selected from: " + options.getCovariatesToInclude());
+		}
+
+		DoubleMatrixDataset<String, String> covariates = DoubleMatrixDataset.loadSubsetOfTextDoubleData(options.getCovariateFile(), "\t", vcfSamplesWithDiseaseStatus, covariatesToInclude);
 		System.out.println("Covariate matrix: " + covariates.rows() + " samples " + covariates.columns() + " covariates");
 
 		LinkedHashMap<String, Integer> covariateSampleHash = covariates.getHashRows();
@@ -218,8 +217,8 @@ public class LRTest {
 				double[] finalDiseaseStatus = new double[sampleToIntGenotypes.size()];
 				double[][] finalCovariates = new double[sampleToIntGenotypes.size()][covariates.columns()];
 
-				TextFile sampleListOut = new TextFile(outputdir + "samplelist.txt", TextFile.W);
-				System.out.println(outputdir + "samplelist.txt");
+				TextFile sampleListOut = new TextFile(options.getOutputdir() + "samplelist.txt", TextFile.W);
+				System.out.println(options.getOutputdir() + "samplelist.txt");
 				for (int i = 0; i < finalCovariates.length; i++) {
 					sampleListOut.writeln(samplesIntersect.get(i));
 				}
@@ -281,14 +280,13 @@ public class LRTest {
 				System.out.println("max/min status: " + maxstatus + "/" + minstatus);
 
 				// TODO: other VCF info scores...
-
 				RConnection rConnection = null;
 				if (useR) {
 					rConnection = new RConnection();
 					System.out.println("R server found: " + rConnection.getServerVersion());
 				}
 
-				int maxIter = 5;
+
 				int iter = 0;
 				boolean continueTesting = true;
 
@@ -311,10 +309,17 @@ public class LRTest {
 						"\tPval" +
 						"\t-Log10(pval)";
 
-				while (iter < maxIter && continueTesting) {
+				HashSet<String> snpLimit = null;
+				if (options.getSnpLimitFile() != null) {
+					TextFile excl = new TextFile(options.getSnpLimitFile(), TextFile.R);
+					snpLimit = (HashSet<String>) excl.readAsSet(0, TextFile.tab);
+					excl.close();
+				}
+//options.getOutputdir()
+				while (iter < options.getMaxIter() && continueTesting) {
 
-					TextFile logout = new TextFile(outputdir + "log-iter" + iter + ".txt", TextFile.W);
-					TextFile pvalout = new TextFile(outputdir + "assoc-" + iter + ".txt", TextFile.W);
+					TextFile logout = new TextFile(options.getOutputdir() + "log-iter" + iter + ".txt", TextFile.W);
+					TextFile pvalout = new TextFile(options.getOutputdir() + "assoc-" + iter + ".txt", TextFile.W);
 					pvalout.writeln(header);
 //					TextFile pvalout2 = new TextFile(outputdir + "assoc-prob-" + iter + ".txt", TextFile.W);
 //					pvalout2.writeln(header);
@@ -358,24 +363,21 @@ public class LRTest {
 
 							Double imputationqualityscore = variant.getInfo().get("AR2");
 							boolean testvariant = false;
-							if (imputationqualityfilter) {
-								if (imputationqualityscore != null && imputationqualityscore >= imputationqualitythreshold) {
-									testvariant = true;
-								} else if (imputationqualityscore == null) {
-									System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
-									System.err.println("In file: " + vcf);
-									logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
-								}
-							} else {
+
+							if ((imputationqualityscore == null && options.isTestVariantsWithoutImputationQuality()) || (imputationqualityscore != null && imputationqualityscore >= options.getImputationqualitythreshold())) {
 								testvariant = true;
+							} else if (imputationqualityscore == null) {
+								System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
+								System.err.println("In file: " + options.getVcf());
+								logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
 							}
 
 							if (!testvariant) {
 								logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
-												variant.getId()
-												+ "\t" + variant.getChr()
-												+ "\t" + variant.getPos()
-												+ "\t" + variant.getMAF()
+										variant.getId()
+										+ "\t" + variant.getChr()
+										+ "\t" + variant.getPos()
+										+ "\t" + variant.getMAF()
 								);
 							} else {
 								// recode the genotypes to the same ordering as the covariate table
@@ -398,12 +400,12 @@ public class LRTest {
 								Pair<Double, Double> summary = recodeGenotypes.getRight();
 
 								double maf = summary.getLeft();
-								if (maf < mafthresholdD) {
+								if (maf < options.getMafthresholdD()) {
 									logout.writeln("variant skipped maf: " + maf + " below threshold " +
-													variant.getId()
-													+ "\t" + variant.getChr()
-													+ "\t" + variant.getPos()
-													+ "\t" + variant.getMAF()
+											variant.getId()
+											+ "\t" + variant.getChr()
+											+ "\t" + variant.getPos()
+											+ "\t" + variant.getMAF()
 									);
 								} else {
 
@@ -433,7 +435,7 @@ public class LRTest {
 									variantCtr++;
 
 									if (variantCtr % 10 == 0) {
-										System.out.println("Thread: " + threadnum + "\tIteration: " + iter + "\tnr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs);
+										System.out.println("Iteration: " + iter + "\tnr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs);
 									}
 								} // end maf > threshold
 							}
@@ -444,7 +446,7 @@ public class LRTest {
 						conditional.add(currentLowestPValSNP);
 					}
 					if (currentLowestDosagePValSNP != null) {
-						System.out.println("Thread: " + threadnum + " finished.\tIteration: " + iter + "\tnr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs);
+						System.out.println("Iteration: " + iter + "\tnr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs);
 						conditionalDosages.add(currentLowestDosagePValSNP);
 						conditionalVariantIds.add(currentLowestDosagePValSNPId);
 					}
@@ -460,24 +462,24 @@ public class LRTest {
 			} catch (RserveException ex) {
 				System.err.println(ex.getMessage());
 				System.err.println("Could not connect to RServe");
-				System.err.println("ERRORRRRRR: " + vcf);
+				System.err.println("ERRORRRRRR: " + options.getVcf());
 				System.err.println(lastVariant.getChr() + ":" + lastVariant.getPos() + "-" + lastVariant.getId());
 				System.exit(0);
 
 			} catch (REngineException e) {
 				e.printStackTrace();
-				System.err.println("ERRORRRRRR: " + vcf);
+				System.err.println("ERRORRRRRR: " + options.getVcf());
 				System.err.println(lastVariant.getChr() + ":" + lastVariant.getPos() + "-" + lastVariant.getId());
 				System.exit(0);
 
 			} catch (REXPMismatchException e) {
 				e.printStackTrace();
-				System.err.println("ERRORRRRRR: " + vcf);
+				System.err.println("ERRORRRRRR: " + options.getVcf());
 				System.err.println(lastVariant.getChr() + ":" + lastVariant.getPos() + "-" + lastVariant.getId());
 				System.exit(0);
 
 			} catch (Exception e) {
-				System.err.println("ERRORRRRRR: " + vcf);
+				System.err.println("ERRORRRRRR: " + options.getVcf());
 
 				e.printStackTrace();
 				System.err.println(lastVariant.getChr() + ":" + lastVariant.getPos() + "-" + lastVariant.getId());
@@ -1070,9 +1072,7 @@ public class LRTest {
 		return (alleles[0] == alleles[1]);
 	}
 
-	public void skipMakingPseudoControls(boolean makePseudoControls) {
-		this.skipMakingPseudoControls = makePseudoControls;
-	}
+	
 
 	private Pair<ArrayList<double[][]>, ArrayList<String>> overlapVariantsWithBedRegion(Feature
 																								region, ArrayList<Integer> variantPositions, ArrayList<String> variantNames, ArrayList<double[][]>
@@ -1097,7 +1097,7 @@ public class LRTest {
 			(HashSet<String> samplesToRemove, HashSet<String> samplesWithGenotypeAndDiseaseStatus) throws IOException {
 
 		// get the trios (only trios where kid is a case)
-		ArrayList<Pair<String, Triple<String, String, String>>> famData = getTrios(famfile); // format: familyname<kid, mom, dad>
+		ArrayList<Pair<String, Triple<String, String, String>>> famData = getTrios(options.getFamfile()); // format: familyname<kid, mom, dad>
 
 		HashSet<String> visitedFamilies = new HashSet<String>();
 		if (famData.size() > 0) {

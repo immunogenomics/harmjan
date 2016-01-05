@@ -1,6 +1,7 @@
-package nl.harmjanwestra.broshifter;
+package nl.harmjanwestra.assoc;
 
 import com.itextpdf.text.DocumentException;
+import nl.harmjanwestra.broshifter.AnnotationLoader;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.PosteriorPValFile;

@@ -1,4 +1,4 @@
-package nl.harmjanwestra.broshifter;
+package nl.harmjanwestra.assoc;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;

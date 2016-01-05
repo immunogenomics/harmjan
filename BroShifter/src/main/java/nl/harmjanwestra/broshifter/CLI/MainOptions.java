@@ -15,7 +15,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOT,
 		MERGE,
-		NA
+		ASSOC, NA
 	}
 
 	public static final Options OPTIONS;
