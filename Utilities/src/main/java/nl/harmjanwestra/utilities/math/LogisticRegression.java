@@ -11,8 +11,8 @@ import umcg.genetica.math.stats.ChiSquare;
 
 public class LogisticRegression {
 
-	int max_iter = 100;
-	double EPSILON = 1E-8;
+	int max_iter = 50;
+	double EPSILON = 1E-6;
 
 	public LogisticRegressionResult univariate(double[][] y, double[][] x) {
 		if (x.length != y.length) {

@@ -103,7 +103,6 @@ public class LRTest {
 	public void test() throws IOException {
 
 		// load covariates
-		Gpio.createDir(options.getOutputdir());
 		VCFVariant lastVariant = null;
 
 		System.out.println("Assoc: " + options.getVcf());
@@ -380,6 +379,7 @@ public class LRTest {
 										+ "\t" + variant.getMAF()
 								);
 							} else {
+								// TODO: switch this around: make the ordering of the covariate table the same as the genotype file...
 								// recode the genotypes to the same ordering as the covariate table
 								Triple<double[][], boolean[], Integer> unfilteredGenotypeData = filterAndRecodeGenotypes(
 										genotypesWithCovariatesAndDiseaseStatus,

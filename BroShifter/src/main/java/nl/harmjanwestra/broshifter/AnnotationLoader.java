@@ -8,6 +8,7 @@ import nl.harmjanwestra.utilities.features.PeakFeature;
 import nl.harmjanwestra.utilities.features.Track;
 import nl.harmjanwestra.utilities.peakfiles.XLSFile;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -20,7 +21,7 @@ public class AnnotationLoader {
 
 		ArrayList<Feature> allAnnotations = null;
 		if (annotation1.endsWith(".xls")) {
-			XLSFile xlsFile = new XLSFile();
+			XLSFile xlsFile = new nl.harmjanwestra.utilities.peakfiles.XLSFile();
 			ArrayList<PeakFeature> pf = xlsFile.readAllPeaks(annotation1, false, 0.05);
 			allAnnotations = new ArrayList<>();
 			for (Feature p : pf) {

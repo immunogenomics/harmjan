@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>goshifter</artifactId>
+    <artifactId>GoShifter</artifactId>
     <groupId>nl.harmjanwestra</groupId>
     <dependencies>
         <dependency>

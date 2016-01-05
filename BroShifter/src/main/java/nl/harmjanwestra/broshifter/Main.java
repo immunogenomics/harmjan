@@ -1,6 +1,8 @@
 package nl.harmjanwestra.broshifter;
 
 
+import nl.harmjanwestra.assoc.CLI.LRTestOptions;
+import nl.harmjanwestra.assoc.LRTest;
 import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import nl.harmjanwestra.broshifter.CLI.MainOptions;
 
@@ -16,11 +18,10 @@ public class Main {
 
 		try {
 			MainOptions options = new MainOptions(args);
-			System.out.println(options.mode);
 			if (options.mode.equals(MainOptions.MODE.NA)) {
-				options.printHelp();
+				System.out.println("Please specify a mode");
 			} else if (options.mode.equals(MainOptions.MODE.BROSHIFTER)) {
-				BroShifter bs = new BroShifter(new BroShifterOptions(args));
+				new BroShifter(new BroShifterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.POSTERIORPVAL)) {
 
 			} else if (options.mode.equals(MainOptions.MODE.PLOT)) {
@@ -28,9 +29,10 @@ public class Main {
 			} else if (options.mode.equals(MainOptions.MODE.MERGE)) {
 
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
-
+				LRTest test = new LRTest(new LRTestOptions(args));
+				test.test();
 			}
-		} catch (IOException e){
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
