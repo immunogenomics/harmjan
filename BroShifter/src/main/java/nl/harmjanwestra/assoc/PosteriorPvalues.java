@@ -71,7 +71,7 @@ public class PosteriorPvalues {
 		AssociationFile associationFile = new AssociationFile();
 		ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
 
-		ArrayList<AssociationResult> assoc = associationFile.loadConditionalAssocData(assocfile);
+		ArrayList<AssociationResult> assoc = associationFile.read(assocfile);
 
 
 		// determine posteriors within defined regions
@@ -118,14 +118,14 @@ public class PosteriorPvalues {
 	public String getCredibleSetStr(ArrayList<AssociationResult> credibleSet) {
 		double[] csPosteriors = new double[credibleSet.size()];
 		double[] csPvals = new double[credibleSet.size()];
-		double[] csORs = new double[credibleSet.size()];
+		String[] csORs = new String[credibleSet.size()];
 		String[] csNames = new String[credibleSet.size()];
 		String line = "";
 		for (int v = 0; v < credibleSet.size(); v++) {
 			AssociationResult result = credibleSet.get(v);
 			csPosteriors[v] = result.getPosterior();
 			csPvals[v] = result.getPval();
-			csORs[v] = result.getOr();
+			csORs[v] = Strings.concat(result.getORs(), Strings.colon);
 			Feature f = result.getSnp();
 			csNames[v] = f.getChromosome().toString() + ":" + f.getStart() + "-" + f.getName();
 		}

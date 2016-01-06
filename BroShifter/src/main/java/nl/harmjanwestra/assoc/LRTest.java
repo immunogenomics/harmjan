@@ -2,6 +2,9 @@ package nl.harmjanwestra.assoc;
 
 import JSci.maths.ArrayMath;
 import nl.harmjanwestra.assoc.CLI.LRTestOptions;
+import nl.harmjanwestra.utilities.association.AssociationFile;
+import nl.harmjanwestra.utilities.association.AssociationResult;
+import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.math.LogisticRegression;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
@@ -95,8 +98,9 @@ public class LRTest {
 
 	LRTestOptions options;
 
-	public LRTest(LRTestOptions options) {
+	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
+		test();
 	}
 
 	public void test() throws IOException {
@@ -293,20 +297,8 @@ public class LRTest {
 				ArrayList<double[][]> conditionalDosages = new ArrayList<>();
 				ArrayList<String> conditionalVariantIds = new ArrayList<String>();
 
-				String header = "Chr\tPos\tId\tCombinedId" +
-						"\tN" +
-						"\tMAF" +
-						"\tImputationQual" +
-						"\tDevianceNull" +
-						"\tDevianceGeno" +
-						"\tDf" +
-						"\tBeta(Genotype)" +
-						"\tSE(Genotype)" +
-						"\tOR" +
-						"\tOR-Hi" +
-						"\tOR-Lo" +
-						"\tPval" +
-						"\t-Log10(pval)";
+				AssociationFile associationFile = new AssociationFile();
+				String header = associationFile.getHeader();
 
 				HashSet<String> snpLimit = null;
 				if (options.getSnpLimitFile() != null) {
@@ -537,6 +529,12 @@ public class LRTest {
 		}
 
 		double log10p = 0;
+		AssociationResult result = new AssociationResult();
+		Feature snp = new Feature(Chromosome.parseChr(variant.getChr()), variant.getPos(), variant.getPos());
+		result.setSnp(snp);
+		result.setN(x.length);
+		result.setMaf(maf);
+
 		if (nrRemaining > 0) {
 			// perform test on full model
 			// remove genotypes and run test on reduced model
@@ -617,47 +615,55 @@ public class LRTest {
 				double p = ChiSquare.getP(df, deltaDeviance);
 				log10p = Math.abs((-Math.log10(p)));
 
-				StringBuilder builder = new StringBuilder();
 
-				builder.append(variant.getChr());
-				builder.append("\t").append(variant.getPos());
-				builder.append("\t").append(variant.getId());
-				builder.append("\t").append(variant.getChr().toString()).append(":").append(variant.getPos()).append("-").append(variant.getId());
-				builder.append("\t").append(x.length);
-				builder.append("\t").append(maf);
-				builder.append("\t").append(devnull);
-				builder.append("\t").append(devx);
-				builder.append("\t").append(df);
-				builder.append("\t").append(Strings.concat(betasmlelr, Strings.semicolon));
-				builder.append("\t").append(Strings.concat(stderrsmlelr, Strings.semicolon));
-				builder.append("\t").append(Strings.concat(or, Strings.semicolon));
-				builder.append("\t").append(Strings.concat(orhi, Strings.semicolon));
-				builder.append("\t").append(Strings.concat(orlo, Strings.semicolon));
-				builder.append("\t").append(p);
-				builder.append("\t").append(log10p);
-				out.writeln(builder.toString());
+				result.setDevianceNull(devnull);
+				result.setDevianceGeno(devx);
+				result.setDf(df);
+
+				result.setBeta(betasmlelr);
+				result.setSe(stderrsmlelr);
+				result.setPval(p);
+
+//StringBuilder builder = new StringBuilder();
+//				builder.append(variant.getChr());
+//				builder.append("\t").append(variant.getPos());
+//				builder.append("\t").append(variant.getId());
+//				builder.append("\t").append(variant.getChr().toString()).append(":").append(variant.getPos()).append("-").append(variant.getId());
+//				builder.append("\t").append(x.length);
+//				builder.append("\t").append(maf);
+//				builder.append("\t").append(devnull);
+//				builder.append("\t").append(devx);
+//				builder.append("\t").append(df);
+//				builder.append("\t").append(Strings.concat(betasmlelr, Strings.semicolon));
+//				builder.append("\t").append(Strings.concat(stderrsmlelr, Strings.semicolon));
+//				builder.append("\t").append(Strings.concat(or, Strings.semicolon));
+//				builder.append("\t").append(Strings.concat(orhi, Strings.semicolon));
+//				builder.append("\t").append(Strings.concat(orlo, Strings.semicolon));
+//				builder.append("\t").append(p);
+//				builder.append("\t").append(log10p);
+				out.writeln(result.toString());
 			}
 //			System.out.println(betaMLE + "\t" + betaR + "\t" + deltaDeviance + "\t" + deltaR + "\t" + df + "\t" + dfR + "\t" + p + "\t" + pvalR);
 		} else {
 			// result is null..
-			StringBuilder builder = new StringBuilder();
-			builder.append(variant.getChr());
-			builder.append("\t").append(variant.getPos());
-			builder.append("\t").append(variant.getId());
-			builder.append("\t").append(variant.getChr().toString()).append(":").append(variant.getPos()).append("-").append(variant.getId());
-			builder.append("\t").append(x.length);
-			builder.append("\t").append(maf);
-			builder.append("\t").append(0);
-			builder.append("\t").append(0);
-			builder.append("\t").append(0);
-			builder.append("\t").append(0);
-			builder.append("\t").append(0);
-			builder.append("\t").append(1);
-			builder.append("\t").append(1);
-			builder.append("\t").append(1);
-			builder.append("\t").append(1);
-			builder.append("\t").append(0);
-			out.writeln(builder.toString());
+//			StringBuilder builder = new StringBuilder();
+//			builder.append(variant.getChr());
+//			builder.append("\t").append(variant.getPos());
+//			builder.append("\t").append(variant.getId());
+//			builder.append("\t").append(variant.getChr().toString()).append(":").append(variant.getPos()).append("-").append(variant.getId());
+//			builder.append("\t").append(x.length);
+//			builder.append("\t").append(maf);
+//			builder.append("\t").append(0);
+//			builder.append("\t").append(0);
+//			builder.append("\t").append(0);
+//			builder.append("\t").append(0);
+//			builder.append("\t").append(0);
+//			builder.append("\t").append(1);
+//			builder.append("\t").append(1);
+//			builder.append("\t").append(1);
+//			builder.append("\t").append(1);
+//			builder.append("\t").append(0);
+			out.writeln(result.toString());
 
 		}
 		return log10p;

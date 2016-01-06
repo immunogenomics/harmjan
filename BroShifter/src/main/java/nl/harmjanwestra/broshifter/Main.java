@@ -1,8 +1,12 @@
 package nl.harmjanwestra.broshifter;
 
 
+import nl.harmjanwestra.assoc.AssociationResultMerger;
+import nl.harmjanwestra.assoc.CLI.AssociationResultMergerOptions;
 import nl.harmjanwestra.assoc.CLI.LRTestOptions;
+import nl.harmjanwestra.assoc.CLI.PosteriorPvalueOptions;
 import nl.harmjanwestra.assoc.LRTest;
+import nl.harmjanwestra.assoc.PosteriorPvalues;
 import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import nl.harmjanwestra.broshifter.CLI.MainOptions;
 
@@ -23,14 +27,13 @@ public class Main {
 			} else if (options.mode.equals(MainOptions.MODE.BROSHIFTER)) {
 				new BroShifter(new BroShifterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.POSTERIORPVAL)) {
-
+				new PosteriorPvalues(new PosteriorPvalueOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.PLOT)) {
 
 			} else if (options.mode.equals(MainOptions.MODE.MERGE)) {
-
+				new AssociationResultMerger(new AssociationResultMergerOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
-				LRTest test = new LRTest(new LRTestOptions(args));
-				test.test();
+				new LRTest(new LRTestOptions(args));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

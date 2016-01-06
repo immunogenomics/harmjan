@@ -44,8 +44,8 @@ public class AssociationFile {
 							f2.setName(elems[0]);
 							AssociationResult r = new AssociationResult();
 							r.setSnp(f2);
-							r.setPval(log10);
-							r.setOr(Double.parseDouble(elems[4]));
+							r.setPval(pval);
+
 							output.add(r);
 						} catch (NumberFormatException e) {
 
@@ -60,16 +60,18 @@ public class AssociationFile {
 					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
 					Feature f2 = new Feature();
 					f2.setChromosome(chr);
-					f2.setStart(Integer.parseInt(elems[2]));
-					f2.setStop(Integer.parseInt(elems[2]));
+					Integer position = Integer.parseInt(elems[2]);
+					f2.setStart(position);
+					f2.setStop(position);
 					if (f2.overlaps(region)) {
-						Integer position = Integer.parseInt(elems[2]);
+
 						Double pval = Double.parseDouble(elems[elems.length - 1]); // need to check position...
 						variantHash.add(variant);
 
 						AssociationResult r = new AssociationResult();
 						r.setSnp(f2);
 						r.setPval(pval);
+
 
 						output.add(r);
 						pvalctr++;
@@ -93,11 +95,11 @@ public class AssociationFile {
 		return model;
 	}
 
-	public ArrayList<AssociationResult> loadConditionalAssocData(String file) throws IOException {
-		return loadConditionalAssocData(file, null);
+	public ArrayList<AssociationResult> read(String file) throws IOException {
+		return read(file, null);
 	}
 
-	public ArrayList<AssociationResult> loadConditionalAssocData(String file, Feature region) throws IOException {
+	public ArrayList<AssociationResult> read(String file, Feature region) throws IOException {
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
 
@@ -110,6 +112,7 @@ public class AssociationFile {
 		int combinedIdCol = -1;
 		int ncol = -1;
 		int mafcol = -1;
+		int impqualscorecol = -1;
 		int deviancenullcol = -1;
 		int deviancegenocol = -1;
 		int dfcol = -1;
@@ -130,13 +133,13 @@ public class AssociationFile {
 			if (ln.startsWith("#")) {
 				// get the model
 				model = ln;
-			} else if (ln.startsWith("VariantID")) {
+			} else if (ln.startsWith("#Chromosome")) {
 // skip header
 
 				String[] elems = Strings.tab.split(ln);
 				for (int i = 0; i < elems.length; i++) {
 					String e = elems[i];
-					if (e.equals("Chr")) {
+					if (e.equals("#Chromosome")) {
 						chrcol = i;
 					} else if (e.equals("Pos")) {
 						poscol = i;
@@ -156,6 +159,8 @@ public class AssociationFile {
 						dfcol = i;
 					} else if (e.equals("Beta(Genotype)")) {
 						betacol = i;
+					} else if (e.equals("ImputationQualScore")) {
+						impqualscorecol = i;
 					} else if (e.equals("SE(Genotype)")) {
 						secol = i;
 					} else if (e.equals("OR")) {
@@ -182,75 +187,116 @@ public class AssociationFile {
 				String[] elems = Strings.tab.split(ln);
 				if (elems.length > 4) {
 					// VariantID	N	MAF	DevianceNull	DfNull	DevianceGeno	DfAlt	Beta(Genotype)	SE(Genotype)	OR	OR-Hi	OR-Lo	Pval	-Log10(pval)
-
-
 					Chromosome chr = Chromosome.NA;
 					int pos = -1;
 					String id = null;
-					String combinedId = null;
 					int n = 0;
 					double maf = 0d;
 					double deviancenull = 0d;
 					double deviancegeno = 0d;
 					int df = 0;
-					double beta = 0d;
-					double se = 0d;
-					double or = 0d;
-					double orhi = 0d;
-					double orlo = 0d;
+					double[] beta = null;
+					double[] se = null;
+
 					double pval = 1d;
-					double log10pval = 0d;
+
 					double bf = 0d;
 					double posterior = 0d;
 					Feature assocregion = null;
+					double impqualscore = Double.NaN;
 
 					if (chrcol != -1) {
 						chr = Chromosome.parseChr(elems[chrcol]);
 					}
 					if (poscol != -1) {
-						pos = Integer.parseInt(elems[poscol]);
+						try {
+							pos = Integer.parseInt(elems[poscol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 					if (idcol != -1) {
 						id = elems[idcol];
 					}
 					if (ncol != -1) {
-						n = Integer.parseInt(elems[ncol]);
+						try {
+							n = Integer.parseInt(elems[ncol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 					if (mafcol != -1) {
-						maf = Double.parseDouble(elems[mafcol]);
+						try {
+							maf = Double.parseDouble(elems[mafcol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 					if (deviancenullcol != -1) {
-						deviancenull = Double.parseDouble(elems[deviancenullcol]);
+						try {
+							deviancenull = Double.parseDouble(elems[deviancenullcol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 					if (deviancegenocol != -1) {
-						deviancegeno = Double.parseDouble(elems[deviancegenocol]);
+						try {
+							deviancegeno = Double.parseDouble(elems[deviancegenocol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 					if (dfcol != -1) {
-						df = Integer.parseInt(elems[dfcol]);
+						try {
+							df = Integer.parseInt(elems[dfcol]);
+						} catch (NumberFormatException e) {
+
+						}
+
 					}
 
 					if (betacol != -1) {
-						beta = Double.parseDouble(elems[betacol]);
+						String betaStr = elems[betacol];
+						String[] betaStrElems = betaStr.split(";");
+						beta = new double[betaStrElems.length];
+						for (int i = 0; i < betaStrElems.length; i++) {
+							try {
+								beta[i] = Double.parseDouble(betaStrElems[i]);
+							} catch (NumberFormatException e) {
+
+							}
+						}
 					}
+
 					if (secol != -1) {
-						se = Double.parseDouble(elems[secol]);
+						String seStr = elems[secol];
+						String[] seStrElems = seStr.split(";");
+						se = new double[seStrElems.length];
+						for (int i = 0; i < seStrElems.length; i++) {
+							try {
+								se[i] = Double.parseDouble(seStrElems[i]);
+							} catch (NumberFormatException e) {
+
+							}
+						}
 					}
-					if (orcol != -1) {
-						or = Double.parseDouble(elems[orcol]);
-					}
-					if (orhicol != -1) {
-						orhi = Double.parseDouble(elems[orhicol]);
-					}
-					if (orlocol != -1) {
-						orlo = Double.parseDouble(elems[orlocol]);
-					}
+
 
 					if (pvalcol != -1) {
-						pval = Double.parseDouble(elems[pvalcol]);
+						try {
+							pval = Double.parseDouble(elems[pvalcol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 
-					if (log10pvalcol != -1) {
-						log10pval = Double.parseDouble(elems[log10pvalcol]);
+
+					if (impqualscorecol != -1) {
+						try {
+							impqualscore = Double.parseDouble(elems[impqualscorecol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 
 					if (regioncol != -1) {
@@ -262,11 +308,16 @@ public class AssociationFile {
 						bf = Double.parseDouble(elems[bfcol]);
 					}
 					if (posteriorcol != -1) {
-						posterior = Double.parseDouble(elems[posteriorcol]);
+						try {
+							posterior = Double.parseDouble(elems[posteriorcol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 
 
 					Feature snp = new Feature(chr, pos, pos);
+					snp.setName(id);
 					if (region == null || region.overlaps(snp)) {
 						AssociationResult result = new AssociationResult();
 						result.setSnp(snp);
@@ -277,13 +328,11 @@ public class AssociationFile {
 						result.setDf(df);
 						result.setBeta(beta);
 						result.setSe(se);
-						result.setOr(or);
-						result.setOrHi(orhi);
-						result.setOrLo(orlo);
 						result.setPval(pval);
 						result.setBf(bf);
 						result.setPosterior(posterior);
 						result.setRegion(assocregion);
+						result.setImputationQualScore(impqualscore);
 					}
 				}
 			}
@@ -294,10 +343,19 @@ public class AssociationFile {
 		return results;
 	}
 
-	public String getHeader(){
-		String str = "VariantID" +
+	public String getHeader() {
+		String str = "";
+		if (model != null) {
+			str = model + "\n";
+		}
+
+		str += "#Chromosome" +
+				"\tPos" +
+				"\tId" +
+				"\tCombinedId" +
 				"\tN" +
 				"\tMAF" +
+				"\tImputationQualScore" +
 				"\tDevianceNull" +
 				"\tDfNull" +
 				"\tDevianceGeno" +

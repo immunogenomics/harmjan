@@ -707,7 +707,7 @@ public class AssociationPlotter {
 //							}
 
 							AssociationFile associationFile = new AssociationFile();
-							ArrayList<AssociationResult> associationResults = associationFile.loadConditionalAssocData(assocFile, region);
+							ArrayList<AssociationResult> associationResults = associationFile.read(assocFile, region);
 
 							String model = associationFile.getModel();
 

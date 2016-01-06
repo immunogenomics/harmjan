@@ -78,25 +78,21 @@ public class AssociationResultMerger {
 		String[] files = fileStr.split(",");
 		TextFile out = new TextFile(outfile, TextFile.W);
 		boolean headerwritten = false;
+
 		for (String file : files) {
 			if (Gpio.exists(file)) {
-				TextFile in = new TextFile(file, TextFile.R);
-				String ln = in.readLine();
+				AssociationFile assocFile = new AssociationFile();
+				ArrayList<AssociationResult> result = assocFile.read(file);
 				if (!headerwritten) {
-					out.writeln(ln);
-				} else {
-					ln = in.readLine();
+					out.writeln(assocFile.getHeader());
 				}
-				while (ln != null) {
-					out.writeln(ln);
-					ln = in.readLine();
+				for (AssociationResult r : result) {
+					out.writeln(r.toString());
 				}
-				in.close();
 			}
 		}
 		out.close();
 	}
-
 
 	private void mergeDatasetForDifferentReferences(String outprefix,
 													String[] refs,
@@ -160,7 +156,7 @@ public class AssociationResultMerger {
 					if (assocFile.endsWith(".tab")) {
 						associationResults = associationFile.readVariantPValues(assocFile, region);
 					} else {
-						associationResults = associationFile.loadConditionalAssocData(assocFile, region);
+						associationResults = associationFile.read(assocFile, region);
 					}
 
 					nrAssociationResultsPerDataset[refId] = associationResults.size();
@@ -233,7 +229,6 @@ public class AssociationResultMerger {
 					for (int q = 0; q < maxNr; q++) {
 						String line = region.toString() + "\t" + pos;
 
-
 						for (int s = 0; s < resultsForPos.size(); s++) {
 							ArrayList<AssociationResult> resultForDs = resultsForPos.get(s);
 							if (resultForDs.size() > q) {
@@ -241,9 +236,9 @@ public class AssociationResultMerger {
 
 								line += "\t" + result.getSnp().getName()
 										+ "\t" + result.getMaf()
-										+ "\t" + result.getBeta()
-										+ "\t" + result.getSe()
-										+ "\t" + result.getOr()
+										+ "\t" + Strings.concat(result.getBeta(), Strings.semicolon)
+										+ "\t" + Strings.concat(result.getSe(), Strings.semicolon)
+										+ "\t" + Strings.concat(result.getORs(), Strings.semicolon)
 										+ "\t" + result.getPval()
 										+ "\t" + result.getBf()
 										+ "\t" + result.getPosterior();
@@ -274,13 +269,13 @@ public class AssociationResultMerger {
 				ArrayList<AssociationResult> credibleSet = credibleSetsPerDataset.get(dataset);
 				double[] csPosteriors = new double[credibleSet.size()];
 				double[] csPvals = new double[credibleSet.size()];
-				double[] csORs = new double[credibleSet.size()];
+				String[] csORs = new String[credibleSet.size()];
 				String[] csNames = new String[credibleSet.size()];
 				for (int v = 0; v < credibleSet.size(); v++) {
 					AssociationResult result = credibleSet.get(v);
 					csPosteriors[v] = result.getPosterior();
 					csPvals[v] = result.getPval();
-					csORs[v] = result.getOr();
+					csORs[v] = Strings.concat(result.getORs(), Strings.colon);
 					Feature f = result.getSnp();
 					csNames[v] = f.getChromosome().toString() + ":" + f.getStart() + "-" + f.getName();
 				}

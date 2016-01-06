@@ -1,6 +1,7 @@
 package nl.harmjanwestra.utilities.association;
 
 import nl.harmjanwestra.utilities.features.Feature;
+import umcg.genetica.text.Strings;
 
 
 /**
@@ -10,21 +11,18 @@ public class AssociationResult {
 
 
 	private Feature snp;
-	private double or = Double.NaN;
-	private double beta = Double.NaN;
-	private double se = Double.NaN;
+	private double[] beta = null;
+	private double[] se = null;
 	private double pval = Double.NaN;
 	private double maf = Double.NaN;
-
 	private Feature region;
 	private double bf = Double.NaN;
 	private int n;
 	private double devianceNull;
 	private double devianceGeno;
 	private int df;
-	private double orLo;
-	private double orHi;
 	private double posterior;
+	private double imputationQualScore;
 
 	public Feature getSnp() {
 		return snp;
@@ -34,27 +32,19 @@ public class AssociationResult {
 		this.snp = snp;
 	}
 
-	public double getOr() {
-		return or;
-	}
-
-	public void setOr(double or) {
-		this.or = or;
-	}
-
-	public double getBeta() {
+	public double[] getBeta() {
 		return beta;
 	}
 
-	public void setBeta(double beta) {
+	public void setBeta(double[] beta) {
 		this.beta = beta;
 	}
 
-	public double getSe() {
+	public double[] getSe() {
 		return se;
 	}
 
-	public void setSe(double se) {
+	public void setSe(double[] se) {
 		this.se = se;
 	}
 
@@ -122,22 +112,6 @@ public class AssociationResult {
 		this.df = df;
 	}
 
-	public double getOrLo() {
-		return orLo;
-	}
-
-	public void setOrLo(double orLo) {
-		this.orLo = orLo;
-	}
-
-	public double getOrHi() {
-		return orHi;
-	}
-
-	public void setOrHi(double orHi) {
-		this.orHi = orHi;
-	}
-
 	public double getPosterior() {
 		return posterior;
 	}
@@ -155,15 +129,31 @@ public class AssociationResult {
 				+ "\t" + snp.toString()
 				+ "\t" + n
 				+ "\t" + maf
+				+ "\t" + imputationQualScore
 				+ "\t" + devianceNull
-				+ "\t" + getDevianceGeno()
-				+ "\t" + df
-				+ "\t" + beta
-				+ "\t" + se
-				+ "\t" + or
-				+ "\t" + orHi
-				+ "\t" + orLo
-				+ "\t" + pval
+				+ "\t" + devianceGeno
+				+ "\t" + df;
+
+		if (beta != null) {
+			str += "\t" + Strings.concat(beta, Strings.semicolon);
+		} else {
+			str += "\tnull";
+		}
+		if (se != null) {
+			str += "\t" + Strings.concat(se, Strings.semicolon);
+		} else {
+			str += "\tnull";
+		}
+
+		if (beta != null && se != null) {
+			str += "\t" + Strings.concat(getORs(), Strings.semicolon)
+					+ "\t" + Strings.concat(getConfHi(), Strings.semicolon)
+					+ "\t" + Strings.concat(getConfLo(), Strings.semicolon);
+		} else {
+			str += "\tnull";
+		}
+
+		str += "\t" + pval
 				+ "\t" + getLog10Pval();
 		return str;
 
@@ -172,4 +162,46 @@ public class AssociationResult {
 	public double getLog10Pval() {
 		return -Math.log10(pval);
 	}
+
+	public void setImputationQualScore(double imputationQualScore) {
+		this.imputationQualScore = imputationQualScore;
+	}
+
+	public double[] getConfHi() {
+		if (beta != null && se != null) {
+			double[] output = new double[beta.length];
+			for (int i = 0; i < output.length; i++) {
+				output[i] = Math.exp(beta[i] + 1.96 * se[i]);
+			}
+			return output;
+		} else {
+			return null;
+		}
+	}
+
+	public double[] getConfLo() {
+		if (beta != null && se != null) {
+			double[] output = new double[beta.length];
+			for (int i = 0; i < output.length; i++) {
+				output[i] = Math.exp(beta[i] - 1.96 * se[i]);
+			}
+			return output;
+		} else {
+			return null;
+		}
+	}
+
+	public double[] getORs() {
+		if (beta != null && se != null) {
+			double[] output = new double[beta.length];
+			for (int i = 0; i < output.length; i++) {
+				output[i] = Math.exp(beta[i]);
+			}
+			return output;
+		} else {
+			return null;
+		}
+	}
+
+
 }
