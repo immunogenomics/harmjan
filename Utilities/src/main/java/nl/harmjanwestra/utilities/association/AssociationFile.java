@@ -130,11 +130,9 @@ public class AssociationFile {
 
 		ArrayList<AssociationResult> results = new ArrayList<AssociationResult>();
 		while (ln != null) {
-			if (ln.startsWith("#")) {
-				// get the model
-				model = ln;
-			} else if (ln.startsWith("#Chromosome")) {
+			if (ln.startsWith("#Chromosome")) {
 // skip header
+				System.out.println("Found header");
 
 				String[] elems = Strings.tab.split(ln);
 				for (int i = 0; i < elems.length; i++) {
@@ -180,9 +178,10 @@ public class AssociationFile {
 					} else if (e.equals("Posterior")) {
 						posteriorcol = i;
 					}
-
 				}
-
+			} else if (ln.startsWith("#")) {
+				// get the model
+				model = ln;
 			} else {
 				String[] elems = Strings.tab.split(ln);
 				if (elems.length > 4) {
@@ -333,6 +332,7 @@ public class AssociationFile {
 						result.setPosterior(posterior);
 						result.setRegion(assocregion);
 						result.setImputationQualScore(impqualscore);
+						results.add(result);
 					}
 				}
 			}

@@ -79,12 +79,17 @@ public class AssociationResultMerger {
 		TextFile out = new TextFile(outfile, TextFile.W);
 		boolean headerwritten = false;
 
+		System.out.println("Concatenating into: " + outfile);
 		for (String file : files) {
 			if (Gpio.exists(file)) {
+				System.out.println("Concatenating file: " + file);
 				AssociationFile assocFile = new AssociationFile();
 				ArrayList<AssociationResult> result = assocFile.read(file);
+				System.out.println(result.size() + " associations in file..");
 				if (!headerwritten) {
 					out.writeln(assocFile.getHeader());
+					System.out.println("Writing header...");
+					headerwritten = true;
 				}
 				for (AssociationResult r : result) {
 					out.writeln(r.toString());
