@@ -13,7 +13,6 @@ import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
-import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.matrix2.DoubleMatrixDataset;
 import umcg.genetica.math.stats.ChiSquare;
@@ -297,6 +296,7 @@ public class LRTest {
 				String header = "Chr\tPos\tId\tCombinedId" +
 						"\tN" +
 						"\tMAF" +
+						"\tImputationQual" +
 						"\tDevianceNull" +
 						"\tDevianceGeno" +
 						"\tDf" +
@@ -361,15 +361,21 @@ public class LRTest {
 						if (snpLimit == null || snpLimit.contains(name)) {
 
 							Double imputationqualityscore = variant.getInfo().get("AR2");
+							if (imputationqualityscore == null) {
+								imputationqualityscore = Double.NaN;
+							}
+
 							boolean testvariant = false;
 
-							if ((imputationqualityscore == null && options.isTestVariantsWithoutImputationQuality()) || (imputationqualityscore != null && imputationqualityscore >= options.getImputationqualitythreshold())) {
+							if ((Double.isNaN(imputationqualityscore) && options.isTestVariantsWithoutImputationQuality())
+									|| (!Double.isNaN(imputationqualityscore) && imputationqualityscore >= options.getImputationqualitythreshold())) {
 								testvariant = true;
-							} else if (imputationqualityscore == null) {
+							} else if (Double.isNaN(imputationqualityscore)) {
 								System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
 								System.err.println("In file: " + options.getVcf());
 								logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
 							}
+
 
 							if (!testvariant) {
 								logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
@@ -406,6 +412,7 @@ public class LRTest {
 											+ "\t" + variant.getChr()
 											+ "\t" + variant.getPos()
 											+ "\t" + variant.getMAF()
+											+ "\t" + imputationqualityscore
 									);
 								} else {
 
@@ -1072,7 +1079,6 @@ public class LRTest {
 		return (alleles[0] == alleles[1]);
 	}
 
-	
 
 	private Pair<ArrayList<double[][]>, ArrayList<String>> overlapVariantsWithBedRegion(Feature
 																								region, ArrayList<Integer> variantPositions, ArrayList<String> variantNames, ArrayList<double[][]>

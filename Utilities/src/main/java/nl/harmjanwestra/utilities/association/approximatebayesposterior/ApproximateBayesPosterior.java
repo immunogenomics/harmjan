@@ -68,7 +68,7 @@ public class ApproximateBayesPosterior {
 
 		ArrayList<AssociationResultPValuePair> pairs = new ArrayList<AssociationResultPValuePair>();
 		for (AssociationResult r : associationResults) {
-			AssociationResultPValuePair p = new AssociationResultPValuePair(r, r.getAbf(), false);
+			AssociationResultPValuePair p = new AssociationResultPValuePair(r, r.getPosterior(), false);
 			if (!Double.isInfinite(p.getP()) && !Double.isNaN(p.getP())) {
 				pairs.add(p);
 			}
@@ -93,7 +93,7 @@ public class ApproximateBayesPosterior {
 
 	}
 
-	public void calculateABF(ArrayList<AssociationResult> assocResults) {
+	public void calculatePosterior(ArrayList<AssociationResult> assocResults) {
 		double nullVariance = (Math.log(1.5) / 1.96) * (Math.log(1.5) / 1.96); // 0.4
 		ArrayList<Triple<Integer, Double, Double>> output = new ArrayList<Triple<Integer, Double, Double>>();
 		double[] abfs = new double[assocResults.size()];
@@ -114,7 +114,7 @@ public class ApproximateBayesPosterior {
 					double p1 = n2.probability(beta);
 
 					double abf = p1 / p0;
-					r.setBf(abf);
+					r.setPosterior(abf);
 					if (!Double.isNaN(abf) && !Double.isInfinite(abf)) {
 						abfs[i] = abf;
 						sum += abf;
@@ -133,7 +133,7 @@ public class ApproximateBayesPosterior {
 				double relativeABF = abfs[i] / sum;
 
 				AssociationResult r = assocResults.get(i);
-				r.setAbf(relativeABF);
+				r.setPosterior(relativeABF);
 			}
 		}
 	}

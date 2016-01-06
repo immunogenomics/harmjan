@@ -545,7 +545,7 @@ public class AssociationPlotter {
 			f.setName(f2.getName());
 			f.setStart(f2.getStart());
 			f.setStop(f2.getStop());
-			f.setP(assoc.get(i).getAbf());
+			f.setP(assoc.get(i).getPosterior());
 			output.add(f);
 		}
 		return output;
@@ -720,12 +720,12 @@ public class AssociationPlotter {
 									maxP = pval;
 								}
 								p.setBf(0);
-								p.setAbf(0);
+								p.setPosterior(0);
 								pvals.add(pair);
 							}
 
 							// calculate abf
-							abp.calculateABF(associationResults);
+							abp.calculatePosterior(associationResults);
 
 							// make credible sets
 							ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(associationResults, bayesthreshold);
@@ -746,7 +746,7 @@ public class AssociationPlotter {
 								}
 								bayesFactors.add(data);
 
-								double abf = p.getAbf();
+								double abf = p.getPosterior();
 								if (run > 0 && abf > 0.9) {
 									System.out.println("ERROR");
 								}
@@ -900,7 +900,7 @@ public class AssociationPlotter {
 
 		} else {
 			for (AssociationResult s : icData) {
-				output.add(new Pair<Integer, Double>(s.getSnp().getStart(), s.getAbf()));
+				output.add(new Pair<Integer, Double>(s.getSnp().getStart(), s.getPosterior()));
 			}
 		}
 		return output;

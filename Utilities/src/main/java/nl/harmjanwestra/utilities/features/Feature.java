@@ -242,4 +242,22 @@ public class Feature {
 	public int getSize() {
 		return stop - start;
 	}
+
+	public static Feature parseFeature(String regionStr) {
+		String[] elems = regionStr.split("\\_");
+		if (elems.length == 2) {
+			Chromosome chr = Chromosome.parseChr(elems[0]);
+			String posStr = elems[1];
+			String[] posStrElems = posStr.split("\\-");
+			if (posStrElems.length == 2) {
+				int start = Integer.parseInt(posStrElems[0]);
+				int stop = Integer.parseInt(posStrElems[1]);
+				return new Feature(chr, start, stop);
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
 }

@@ -1,8 +1,6 @@
 package nl.harmjanwestra.assoc.CLI;
 
-import nl.harmjanwestra.broshifter.CLI.MainOptions;
 import org.apache.commons.cli.*;
-import umcg.genetica.text.Strings;
 
 /**
  * Created by hwestra on 1/4/16.
@@ -12,9 +10,12 @@ public class LRTestOptions {
 	private static final Options OPTIONS;
 
 	static {
-		OPTIONS = MainOptions.OPTIONS;
+		OPTIONS = new Options();
+		Option option = Option.builder().longOpt("assoc").build();
+		OPTIONS.addOption(option);
 
-		Option option = Option.builder("i")
+
+		 option = Option.builder("i")
 				.hasArg()
 				.desc("Input VCF")
 				.build();
@@ -92,7 +93,6 @@ public class LRTestOptions {
 
 		option = Option.builder()
 				.longOpt("onlyimputed")
-				.hasArg()
 				.desc("Test only variants that were imputed")
 				.build();
 		OPTIONS.addOption(option);
@@ -116,10 +116,6 @@ public class LRTestOptions {
 
 		boolean run = true;
 		try {
-
-			System.out.println(Strings.concat(args, Strings.comma));
-
-			System.out.println("Parsing options");
 			CommandLineParser parser = new DefaultParser();
 			final CommandLine cmd = parser.parse(OPTIONS, args, false);
 

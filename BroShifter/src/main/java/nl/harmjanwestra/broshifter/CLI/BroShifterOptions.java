@@ -41,9 +41,10 @@ public class BroShifterOptions {
 	private static final Options OPTIONS;
 
 	static {
-		OPTIONS = MainOptions.OPTIONS;
+		OPTIONS = new Options();
+		Option option = Option.builder().longOpt("broshifter").build();
+		OPTIONS.addOption(option);
 
-		Option option;
 		option = Option.builder("r")
 				.hasArg()
 				.desc("Input regions in bedfile format")

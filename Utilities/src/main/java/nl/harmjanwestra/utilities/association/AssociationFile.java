@@ -93,11 +93,37 @@ public class AssociationFile {
 		return model;
 	}
 
+	public ArrayList<AssociationResult> loadConditionalAssocData(String file) throws IOException {
+		return loadConditionalAssocData(file, null);
+	}
+
 	public ArrayList<AssociationResult> loadConditionalAssocData(String file, Feature region) throws IOException {
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
 
 		model = null;
+
+		// Chr     Pos     Id      CombinedId      N       MAF     DevianceNull    DevianceGeno    Df      Beta(Genotype)  SE(Genotype)    OR      OR-Hi   OR-Lo   Pval    -Log10(pval)
+		int chrcol = -1;
+		int poscol = -1;
+		int idcol = -1;
+		int combinedIdCol = -1;
+		int ncol = -1;
+		int mafcol = -1;
+		int deviancenullcol = -1;
+		int deviancegenocol = -1;
+		int dfcol = -1;
+		int betacol = -1;
+		int secol = -1;
+		int orcol = -1;
+		int orhicol = -1;
+		int orlocol = -1;
+		int pvalcol = -1;
+		int log10pvalcol = -1;
+		int posteriorcol = -1;
+		int bfcol = -1;
+		int regioncol = -1;
+
 
 		ArrayList<AssociationResult> results = new ArrayList<AssociationResult>();
 		while (ln != null) {
@@ -106,54 +132,158 @@ public class AssociationFile {
 				model = ln;
 			} else if (ln.startsWith("VariantID")) {
 // skip header
+
+				String[] elems = Strings.tab.split(ln);
+				for (int i = 0; i < elems.length; i++) {
+					String e = elems[i];
+					if (e.equals("Chr")) {
+						chrcol = i;
+					} else if (e.equals("Pos")) {
+						poscol = i;
+					} else if (e.equals("Id")) {
+						idcol = i;
+					} else if (e.equals("CombinedId")) {
+						combinedIdCol = i;
+					} else if (e.equals("N")) {
+						ncol = i;
+					} else if (e.equals("MAF")) {
+						mafcol = i;
+					} else if (e.equals("DevianceNull")) {
+						deviancenullcol = i;
+					} else if (e.equals("DevianceGeno")) {
+						deviancegenocol = i;
+					} else if (e.equals("Df")) {
+						dfcol = i;
+					} else if (e.equals("Beta(Genotype)")) {
+						betacol = i;
+					} else if (e.equals("SE(Genotype)")) {
+						secol = i;
+					} else if (e.equals("OR")) {
+						orcol = i;
+					} else if (e.equals("OR-Hi")) {
+						orhicol = i;
+					} else if (e.equals("OR-Lo")) {
+						orlocol = i;
+					} else if (e.equals("Pval")) {
+						pvalcol = i;
+					} else if (e.equals("-Log10(pval)")) {
+						log10pvalcol = i;
+					} else if (e.equals("Region")) {
+						regioncol = i;
+					} else if (e.equals("BF")) {
+						bfcol = i;
+					} else if (e.equals("Posterior")) {
+						posteriorcol = i;
+					}
+
+				}
+
 			} else {
 				String[] elems = Strings.tab.split(ln);
 				if (elems.length > 4) {
 					// VariantID	N	MAF	DevianceNull	DfNull	DevianceGeno	DfAlt	Beta(Genotype)	SE(Genotype)	OR	OR-Hi	OR-Lo	Pval	-Log10(pval)
 
-					String snp = elems[0];
-					String mafStr = elems[2];
-					String betaStr = elems[7];
-					String seStr = elems[8];
-					String orStr = elems[9];
-					String pvalStr = elems[elems.length - 1];
 
-					Double maf = Double.parseDouble(mafStr);
+					Chromosome chr = Chromosome.NA;
+					int pos = -1;
+					String id = null;
+					String combinedId = null;
+					int n = 0;
+					double maf = 0d;
+					double deviancenull = 0d;
+					double deviancegeno = 0d;
+					int df = 0;
+					double beta = 0d;
+					double se = 0d;
+					double or = 0d;
+					double orhi = 0d;
+					double orlo = 0d;
+					double pval = 1d;
+					double log10pval = 0d;
+					double bf = 0d;
+					double posterior = 0d;
+					Feature assocregion = null;
 
-					String[] snpelems = snp.split("-");
-					String[] posElems = snpelems[0].split(":");
-					Integer pos = Integer.parseInt(posElems[1]);
+					if (chrcol != -1) {
+						chr = Chromosome.parseChr(elems[chrcol]);
+					}
+					if (poscol != -1) {
+						pos = Integer.parseInt(elems[poscol]);
+					}
+					if (idcol != -1) {
+						id = elems[idcol];
+					}
+					if (ncol != -1) {
+						n = Integer.parseInt(elems[ncol]);
+					}
+					if (mafcol != -1) {
+						maf = Double.parseDouble(elems[mafcol]);
+					}
+					if (deviancenullcol != -1) {
+						deviancenull = Double.parseDouble(elems[deviancenullcol]);
+					}
+					if (deviancegenocol != -1) {
+						deviancegeno = Double.parseDouble(elems[deviancegenocol]);
+					}
+					if (dfcol != -1) {
+						df = Integer.parseInt(elems[dfcol]);
+					}
 
-					Chromosome chr = Chromosome.parseChr(posElems[0]);
-					Feature f = new Feature(chr, pos, pos);
-					if (region.overlaps(f)) {
-						Double pval = Double.parseDouble(pvalStr);
+					if (betacol != -1) {
+						beta = Double.parseDouble(elems[betacol]);
+					}
+					if (secol != -1) {
+						se = Double.parseDouble(elems[secol]);
+					}
+					if (orcol != -1) {
+						or = Double.parseDouble(elems[orcol]);
+					}
+					if (orhicol != -1) {
+						orhi = Double.parseDouble(elems[orhicol]);
+					}
+					if (orlocol != -1) {
+						orlo = Double.parseDouble(elems[orlocol]);
+					}
 
-						if (betaStr.equals("null")) {
-							AssociationResult r = new AssociationResult(Chromosome.parseChr(posElems[0]), pos, maf, Double.NaN, Double.NaN, Double.NaN, pval);
-							if (snpelems.length > 1) {
-								r.getSnp().setName(snpelems[1]);
-							}
-							results.add(r);
-						} else {
-							Double beta = Double.parseDouble(betaStr);
-							if (pval == 0) {
-								AssociationResult r = new AssociationResult(Chromosome.parseChr(posElems[0]), pos, maf, Double.NaN, Double.NaN, Double.NaN, pval);
-								if (snpelems.length > 1) {
-									r.getSnp().setName(snpelems[1]);
-								}
-								results.add(r);
-							} else {
-								Double se = Double.parseDouble(seStr);
-								Double or = Double.parseDouble(orStr);
-								AssociationResult r = new AssociationResult(Chromosome.parseChr(posElems[0]), pos, maf, or, beta, se, pval);
-								if (snpelems.length > 1) {
-									r.getSnp().setName(snpelems[1]);
-								}
-								results.add(r);
-							}
+					if (pvalcol != -1) {
+						pval = Double.parseDouble(elems[pvalcol]);
+					}
 
-						}
+					if (log10pvalcol != -1) {
+						log10pval = Double.parseDouble(elems[log10pvalcol]);
+					}
+
+					if (regioncol != -1) {
+						String regionStr = elems[regioncol];
+						assocregion = Feature.parseFeature(regionStr);
+					}
+
+					if (bfcol != -1) {
+						bf = Double.parseDouble(elems[bfcol]);
+					}
+					if (posteriorcol != -1) {
+						posterior = Double.parseDouble(elems[posteriorcol]);
+					}
+
+
+					Feature snp = new Feature(chr, pos, pos);
+					if (region == null || region.overlaps(snp)) {
+						AssociationResult result = new AssociationResult();
+						result.setSnp(snp);
+						result.setN(n);
+						result.setMaf(maf);
+						result.setDevianceNull(deviancenull);
+						result.setDevianceGeno(deviancegeno);
+						result.setDf(df);
+						result.setBeta(beta);
+						result.setSe(se);
+						result.setOr(or);
+						result.setOrHi(orhi);
+						result.setOrLo(orlo);
+						result.setPval(pval);
+						result.setBf(bf);
+						result.setPosterior(posterior);
+						result.setRegion(assocregion);
 					}
 				}
 			}
@@ -162,5 +292,23 @@ public class AssociationFile {
 		}
 		tf.close();
 		return results;
+	}
+
+	public String getHeader(){
+		String str = "VariantID" +
+				"\tN" +
+				"\tMAF" +
+				"\tDevianceNull" +
+				"\tDfNull" +
+				"\tDevianceGeno" +
+				"\tDfAlt" +
+				"\tBeta(Genotype)" +
+				"\tSE(Genotype)" +
+				"\tOR" +
+				"\tOR-Hi" +
+				"\tOR-Lo" +
+				"\tPval" +
+				"\t-Log10(pval)";
+		return str;
 	}
 }
