@@ -35,7 +35,7 @@ public class PosteriorPValFile {
 				Feature snp = new Feature(chr, pos, pos);
 				snp.setName(id);
 				result.setSnp(snp);
-				result.setAbf(posterior);
+				result.setPosterior(posterior);
 				result.setPval(pval);
 
 

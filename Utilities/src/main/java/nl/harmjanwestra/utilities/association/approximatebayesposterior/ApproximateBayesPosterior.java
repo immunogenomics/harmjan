@@ -101,9 +101,8 @@ public class ApproximateBayesPosterior {
 		for (int i = 0; i < assocResults.size(); i++) {
 			AssociationResult r = assocResults.get(i);
 //			Double beta = Math.log(Math.abs(assoc.getMiddle()));
-			double beta = Math.abs(r.getBeta());
-			double se = r.getSe();
-
+			double beta = Math.abs(r.getBeta()[0]);
+			double se = r.getSe()[0];
 
 			if (!Double.isNaN(beta) && !Double.isNaN(se)) {
 				double variance = se * se;

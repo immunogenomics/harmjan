@@ -130,7 +130,7 @@ public class AssociationFile {
 
 		ArrayList<AssociationResult> results = new ArrayList<AssociationResult>();
 		while (ln != null) {
-			if (ln.startsWith("#Chromosome")) {
+			if (ln.startsWith("#Chromosome") || ln.startsWith("Chr\tPos")) {
 // skip header
 				System.out.println("Found header");
 
