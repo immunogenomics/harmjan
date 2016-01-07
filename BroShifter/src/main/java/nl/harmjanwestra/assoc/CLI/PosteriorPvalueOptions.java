@@ -6,27 +6,6 @@ import org.apache.commons.cli.*;
  * Created by hwestra on 11/23/15.
  */
 public class PosteriorPvalueOptions {
-	private String assocFile;
-	private String regionFile;
-	private String outputPrefix;
-	private double bayesThreshold;
-
-	public String getAssocFile() {
-		return assocFile;
-	}
-
-	public String getRegionFile() {
-		return regionFile;
-	}
-
-	public String getOutputPrefix() {
-		return outputPrefix;
-	}
-
-	public double getBayesThreshold() {
-		return bayesThreshold;
-	}
-
 	private static final Options OPTIONS;
 
 	static {
@@ -37,7 +16,7 @@ public class PosteriorPvalueOptions {
 
 		option = Option.builder("i")
 				.hasArg()
-				.desc("Input VCF")
+				.desc("Input association file")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -49,7 +28,7 @@ public class PosteriorPvalueOptions {
 
 		option = Option.builder("b")
 				.hasArg()
-				.desc("Bayesian Threshold")
+				.desc("Bayesian Threshold (default = 0.95)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -61,6 +40,11 @@ public class PosteriorPvalueOptions {
 
 
 	}
+
+	private String assocFile;
+	private String regionFile;
+	private String outputPrefix;
+	private double bayesThreshold = 0.95;
 
 	public PosteriorPvalueOptions(String[] args) {
 
@@ -109,6 +93,22 @@ public class PosteriorPvalueOptions {
 			printHelp();
 			System.exit(-1);
 		}
+	}
+
+	public String getAssocFile() {
+		return assocFile;
+	}
+
+	public String getRegionFile() {
+		return regionFile;
+	}
+
+	public String getOutputPrefix() {
+		return outputPrefix;
+	}
+
+	public double getBayesThreshold() {
+		return bayesThreshold;
 	}
 
 	public void printHelp() {

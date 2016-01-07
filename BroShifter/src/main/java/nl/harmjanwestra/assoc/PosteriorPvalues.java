@@ -72,6 +72,7 @@ public class PosteriorPvalues {
 		ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
 
 		ArrayList<AssociationResult> assoc = associationFile.read(assocfile);
+		System.out.println(assoc.size() + " associations loaded from " + assocfile);
 
 
 		// determine posteriors within defined regions
@@ -84,10 +85,12 @@ public class PosteriorPvalues {
 			crediblesetout.writeln(region.toString() + "\t" + getCredibleSetStr(credibleSet));
 		}
 		crediblesetout.close();
+		System.out.println("Credible sets are written here: " + output + "-credibleSets.txt");
 
 		// write new output file.
 
 		TextFile outf = new TextFile(output, TextFile.W);
+		System.out.println("Writing output here: " + output);
 
 		String header = associationFile.getHeader();
 		header += "\tRegion\tBF\tPosterior";
@@ -95,9 +98,9 @@ public class PosteriorPvalues {
 		for (int i = 0; i < assoc.size(); i++) {
 			AssociationResult r = assoc.get(i);
 			String assocStr = r.toString();
-			assocStr += "\t" + r.getRegion().toString()
-					+ "\t" + r.getBf()
-					+ "\t" + r.getPosterior();
+			assocStr += "\t" + r.getRegion().toString();
+			assocStr += "\t" + r.getBf();
+			assocStr += "\t" + r.getPosterior();
 			outf.writeln(assocStr);
 		}
 		outf.close();
