@@ -5,8 +5,8 @@ import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureComparator;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 
 /**
  * Created by hwestra on 11/23/15.
@@ -87,7 +86,7 @@ public class AssociationResultMerger {
 				AssociationFile assocFile = new AssociationFile();
 				ArrayList<AssociationResult> result = assocFile.read(file);
 				System.out.println(result.size() + " associations in file..");
-				totalvars+=result.size();
+				totalvars += result.size();
 				if (!headerwritten) {
 					out.writeln(assocFile.getHeader());
 					System.out.println("Writing header...");
@@ -101,22 +100,80 @@ public class AssociationResultMerger {
 			}
 		}
 		out.close();
-		System.out.println("Done. "+totalvars+" associations written.");
+		System.out.println("Done. " + totalvars + " associations written.");
 	}
 
-	private void mergeDatasetForDifferentReferences(String outprefix,
-	                                                String[] refs,
-	                                                String[] refFiles,
-	                                                ArrayList<Feature> regions,
-	                                                double bayesthreshold) throws IOException {
-		String outfilename = outprefix + "-MergedTable.txt";
-		String credibleSetOut = outprefix + "-CredibleSets-" + bayesthreshold + ".txt";
-		String header = "Region\tPosition";
-		String credibleSetHeader = "Region";
+	private void mergeDatasetDifferentReferences(String outputprefix,
+												 String refStr,
+												 String refFileStr,
+												 String regionfile,
+												 double bayesthreshold) throws IOException {
+
+		String[] refs = refStr.split(",");
+		String[] refFiles = refFileStr.split(",");
+		ArrayList<ArrayList<AssociationResult>> associationResults = new ArrayList<>();
+		AssociationFile assocFile = new AssociationFile();
+		for (int f = 0; f < refFiles.length; f++) {
+			ArrayList<AssociationResult> results = assocFile.read(refFiles[f]);
+			System.out.println(results.size() + " associations read from: " + refs[f] + "; " + refFiles[f]);
+			associationResults.add(results);
+		}
+
+		// get a list of unique variants
+		HashMap<Feature, Integer> uniqueVariants = new HashMap<Feature, Integer>();
+		ArrayList<Feature> allVariants = new ArrayList<>();
+		for (int q = 0; q < associationResults.size(); q++) {
+			ArrayList<AssociationResult> list = associationResults.get(q);
+			for (AssociationResult r : list) {
+				Feature snp = r.getSnp();
+				if (!uniqueVariants.containsKey(snp)) {
+					uniqueVariants.put(snp, uniqueVariants.size());
+					allVariants.add(snp);
+				}
+			}
+			System.out.println(uniqueVariants.size() + " unique variants total after " + refs[q]);
+		}
+
+
+		System.out.println(uniqueVariants.size() + " unique variants total");
+
+		// put them in a matrix for ease of use
+		AssociationResult[][] matrix = new AssociationResult[refs.length][uniqueVariants.size()];
+		for (int q = 0; q < associationResults.size(); q++) {
+			ArrayList<AssociationResult> list = associationResults.get(q);
+			for (AssociationResult r : list) {
+				Feature snp = r.getSnp();
+				Integer index = uniqueVariants.get(snp);
+				if (index != null) {
+					matrix[q][index] = r;
+				}
+			}
+			System.out.println(uniqueVariants.size() + " unique variants total after " + refs[q]);
+		}
+
+		// assign regions to variants
+		BedFileReader bf = new BedFileReader();
+		ArrayList<Feature> regions = bf.readAsList(regionfile);
+		Collections.sort(regions, new FeatureComparator(false));
+		Collections.sort(allVariants, new FeatureComparator(false));
+		for (Feature f : allVariants) {
+			for (Feature f2 : regions) {
+				if (f.overlaps(f2)) {
+					f.setParent(f2);
+					break;
+				}
+			}
+		}
+
+
+		// headers etc
+		String outfilename = outputprefix + "-MergedTable.txt";
+		String credibleSetOut = outputprefix + "-CredibleSets-" + bayesthreshold + ".txt";
+		String header = "Region\tPosition\tRsName";
+		String credibleSetHeader = "Region\tTotalVariantsInRegion";
 		for (int ref = 0; ref < refs.length; ref++) {
 			String rname = refs[ref];
-			header += "\tRsName-" + rname
-					+ "\tMAF-" + rname
+			header += "\tMAF-" + rname
 					+ "\tBeta-" + rname
 					+ "\tSE-" + rname
 					+ "\tOR-" + rname
@@ -131,152 +188,76 @@ public class AssociationResultMerger {
 					+ "\tPosteriors-" + rname;
 		}
 
+
 		TextFile outfile = new TextFile(outfilename, TextFile.W);
-		TextFile outfilecs = new TextFile(credibleSetOut, TextFile.W);
 		outfile.writeln(header);
-		outfilecs.writeln(credibleSetHeader);
 
-		for (int r = 0; r < regions.size(); r++) {
-			Feature region = regions.get(r);
+		for (int f = 0; f < allVariants.size(); f++) {
+			Feature snp = allVariants.get(f);
+			Integer index = uniqueVariants.get(snp);
 
-			AssociationFile associationFile = new AssociationFile();
-
-			ArrayList<ArrayList<AssociationResult>> allResults = new ArrayList<>();
-			ArrayList<ArrayList<AssociationResult>> credibleSetsPerDataset = new ArrayList<>();
-
-			HashSet<Integer> uniquePositions = new HashSet<Integer>();
-			ArrayList<Integer> allPositions = new ArrayList<Integer>();
-
-			HashMap<Integer, Integer> posToMaxCount = new HashMap<Integer, Integer>();
-
-			int[] nrAssociationResultsPerDataset = new int[refs.length];
-			Chromosome chr = region.getChromosome();
-			ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
-
-			if (!chr.equals(Chromosome.X)) {
-				for (int refId = 0; refId < refs.length; refId++) {
-					// read assoc file
-					String ref = refs[refId];
+			StringBuilder ln = new StringBuilder();
+			ln.append(snp.getParent().toString());
+			ln.append("\t").append(snp.getStart());
+			ln.append("\t").append(snp.getName());
+			for (int ref = 0; ref < refs.length; ref++) {
+				AssociationResult r = matrix[ref][index];
+				if (r != null) {
 
 
-					String regionStr = region.toString();
-
-					String assocFile = refFiles[refId];//indir + "/Conditional/" + ds + "/" + ref + "/" + chr.toString() + "-" + regionStr + "-assoc-" + iter + ".txt";
-					ArrayList<AssociationResult> associationResults = null;
-					if (assocFile.endsWith(".tab")) {
-						associationResults = associationFile.readVariantPValues(assocFile, region);
-					} else {
-						associationResults = associationFile.read(assocFile, region);
-					}
-
-					nrAssociationResultsPerDataset[refId] = associationResults.size();
-
-					ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(associationResults, bayesthreshold);
-					credibleSetsPerDataset.add(credibleSet);
-
-					HashMap<Integer, Integer> posToMaxCountDs = new HashMap<Integer, Integer>();
-
-					for (AssociationResult q : associationResults) {
-						int pos = q.getSnp().getStart();
-						if (!uniquePositions.contains(pos)) {
-							uniquePositions.add(pos);
-							allPositions.add(pos);
-						}
-						Integer ct = posToMaxCountDs.get(pos);
-						if (ct == null) {
-							ct = 1;
-						} else {
-							ct++;
-						}
-
-						posToMaxCountDs.put(pos, ct);
-					}
-					allResults.add(associationResults);
-
-					for (Integer pos : uniquePositions) {
-						Integer ct = posToMaxCountDs.get(pos);
-						Integer otherct = posToMaxCount.get(pos);
-						if (ct != null) {
-							if (otherct != null) {
-								if (ct > otherct) {
-									posToMaxCount.put(pos, ct);
-								}
-							} else {
-								posToMaxCount.put(pos, ct);
-							}
-						}
-					}
-				}
-
-				Collections.sort(allPositions);
-
-				// iterate all positions
-				for (int p = 0; p < allPositions.size(); p++) {
-					int pos = allPositions.get(p);
-					ArrayList<ArrayList<AssociationResult>> resultsForPos = new ArrayList<>();
-					int maxNr = 0;
-
-					// get all results for this position
-					for (int q = 0; q < allResults.size(); q++) {
-						ArrayList<AssociationResult> resultForDsForPos = new ArrayList<>();
-						ArrayList<AssociationResult> results = allResults.get(q);
-
-						for (AssociationResult result : results) {
-							int pos2 = result.getSnp().getStart();
-							if (pos2 == pos) {
-								// add result
-								resultForDsForPos.add(result);
-							}
-						}
-
-						resultsForPos.add(resultForDsForPos);
-						if (resultForDsForPos.size() > maxNr) {
-							maxNr = resultForDsForPos.size();
-						}
-					}
-
-					// get first result
-					for (int q = 0; q < maxNr; q++) {
-						String line = region.toString() + "\t" + pos;
-
-						for (int s = 0; s < resultsForPos.size(); s++) {
-							ArrayList<AssociationResult> resultForDs = resultsForPos.get(s);
-							if (resultForDs.size() > q) {
-								AssociationResult result = resultForDs.get(q);
-
-								line += "\t" + result.getSnp().getName()
-										+ "\t" + result.getMaf()
-										+ "\t" + Strings.concat(result.getBeta(), Strings.semicolon)
-										+ "\t" + Strings.concat(result.getSe(), Strings.semicolon)
-										+ "\t" + Strings.concat(result.getORs(), Strings.semicolon)
-										+ "\t" + result.getPval()
-										+ "\t" + result.getBf()
-										+ "\t" + result.getPosterior();
-
-							} else {
-								// add some nulls
-								line += "\t" + null
-										+ "\t" + null
-										+ "\t" + null
-										+ "\t" + null
-										+ "\t" + null
-										+ "\t" + null
-										+ "\t" + null
-										+ "\t" + null;
-
-							}
-						}
-
-
-						// write line
-						outfile.writeln(line);
-					}
+					ln.append("\t").append(r.getMaf());
+					ln.append("\t").append(Strings.concat(r.getBeta(), Strings.semicolon));
+					ln.append("\t").append(Strings.concat(r.getSe(), Strings.semicolon));
+					ln.append("\t").append(Strings.concat(r.getORs(), Strings.semicolon));
+					ln.append("\t").append(r.getPval());
+					ln.append("\t").append(r.getBf());
+					ln.append("\t").append(r.getPosterior());
+				} else {
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
 				}
 			}
+			outfile.writeln(ln.toString());
+		}
+		outfile.close();
 
-			String line = region.toString();
-			for (int dataset = 0; dataset < credibleSetsPerDataset.size(); dataset++) {
-				ArrayList<AssociationResult> credibleSet = credibleSetsPerDataset.get(dataset);
+
+		// determine credible sets per region....
+		ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
+		TextFile outfilecs = new TextFile(credibleSetOut, TextFile.W);
+		outfilecs.writeln(credibleSetHeader);
+
+
+		for (int r = 0; r < regions.size(); r++) {
+			// get variants in region
+			Feature region = regions.get(r);
+			ArrayList<Integer> variantsInRegion = new ArrayList<>();
+			for (Feature f : allVariants) {
+				if (f.overlaps(region)) {
+					Integer index = uniqueVariants.get(f);
+					variantsInRegion.add(index);
+				}
+			}
+			String line = region.toString() + "\t" + variantsInRegion.size();
+
+
+			ArrayList<ArrayList<AssociationResult>> variantsPerDataset = new ArrayList<>();
+			for (int ref = 0; ref < refs.length; ref++) {
+				ArrayList<AssociationResult> dsAssociations = new ArrayList<>();
+				for (Integer i : variantsInRegion) {
+					AssociationResult f = matrix[ref][i];
+					if (f != null) {
+						dsAssociations.add(f);
+					}
+				}
+
+				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(dsAssociations, bayesthreshold);
+
 				double[] csPosteriors = new double[credibleSet.size()];
 				double[] csPvals = new double[credibleSet.size()];
 				String[] csORs = new String[credibleSet.size()];
@@ -291,7 +272,7 @@ public class AssociationResultMerger {
 				}
 
 				line += "\t" + credibleSet.size();
-				line += "\t" + nrAssociationResultsPerDataset[dataset];
+				line += "\t" + dsAssociations.size();
 				line += "\t" + Strings.concat(csNames, Strings.semicolon);
 				line += "\t" + Strings.concat(csPvals, Strings.semicolon);
 				line += "\t" + Strings.concat(csORs, Strings.semicolon);
@@ -299,7 +280,7 @@ public class AssociationResultMerger {
 			}
 			outfilecs.writeln(line);
 		}
-		outfile.close();
 		outfilecs.close();
 	}
+
 }

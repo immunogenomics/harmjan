@@ -12,6 +12,8 @@ import java.util.Objects;
  */
 public class Feature {
 
+	protected Feature parent;
+
 	protected Chromosome chromosome;
 	protected String name;
 	protected Strand strand;
@@ -42,6 +44,14 @@ public class Feature {
 		this.nrN = feature.nrN;
 	}
 
+
+	public void setParent(Feature p) {
+		this.parent = p;
+	}
+
+	public Feature getParent() {
+		return parent;
+	}
 
 	public Chromosome getChromosome() {
 		return chromosome;
