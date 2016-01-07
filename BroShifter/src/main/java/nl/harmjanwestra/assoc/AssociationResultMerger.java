@@ -79,13 +79,15 @@ public class AssociationResultMerger {
 		TextFile out = new TextFile(outfile, TextFile.W);
 		boolean headerwritten = false;
 
-		System.out.println("Concatenating into: " + outfile);
+		System.out.println("Concatenating " + files.length + " files into: " + outfile);
+		int totalvars = 0;
 		for (String file : files) {
 			if (Gpio.exists(file)) {
 				System.out.println("Concatenating file: " + file);
 				AssociationFile assocFile = new AssociationFile();
 				ArrayList<AssociationResult> result = assocFile.read(file);
 				System.out.println(result.size() + " associations in file..");
+				totalvars+=result.size();
 				if (!headerwritten) {
 					out.writeln(assocFile.getHeader());
 					System.out.println("Writing header...");
@@ -94,16 +96,19 @@ public class AssociationResultMerger {
 				for (AssociationResult r : result) {
 					out.writeln(r.toString());
 				}
+			} else {
+				System.out.println("Could not find file: " + file);
 			}
 		}
 		out.close();
+		System.out.println("Done. "+totalvars+" associations written.");
 	}
 
 	private void mergeDatasetForDifferentReferences(String outprefix,
-													String[] refs,
-													String[] refFiles,
-													ArrayList<Feature> regions,
-													double bayesthreshold) throws IOException {
+	                                                String[] refs,
+	                                                String[] refFiles,
+	                                                ArrayList<Feature> regions,
+	                                                double bayesthreshold) throws IOException {
 		String outfilename = outprefix + "-MergedTable.txt";
 		String credibleSetOut = outprefix + "-CredibleSets-" + bayesthreshold + ".txt";
 		String header = "Region\tPosition";

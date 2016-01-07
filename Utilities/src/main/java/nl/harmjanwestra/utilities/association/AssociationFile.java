@@ -137,7 +137,7 @@ public class AssociationFile {
 				String[] elems = Strings.tab.split(ln);
 				for (int i = 0; i < elems.length; i++) {
 					String e = elems[i];
-					if (e.equals("#Chromosome")) {
+					if (e.equals("#Chromosome") || e.equals("Chr")) {
 						chrcol = i;
 					} else if (e.equals("Pos")) {
 						poscol = i;
@@ -357,7 +357,6 @@ public class AssociationFile {
 				"\tMAF" +
 				"\tImputationQualScore" +
 				"\tDevianceNull" +
-				"\tDfNull" +
 				"\tDevianceGeno" +
 				"\tDfAlt" +
 				"\tBeta(Genotype)" +
