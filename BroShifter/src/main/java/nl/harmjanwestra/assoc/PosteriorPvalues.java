@@ -18,43 +18,6 @@ import java.util.ArrayList;
 public class PosteriorPvalues {
 	private final PosteriorPvalueOptions options;
 
-//	public static void main(String[] args) {
-//		PosteriorPvalues p = new PosteriorPvalues();
-//		try {
-////			p.mergeAssociationResults();
-////			p.makeplotsOct27();
-//
-//
-//			// calculate posteriors
-//			String regionsFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-05-18-AllRegions/allLoci.bed";
-//			String t1dDir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/Conditional/T1D/";
-//			String[] refs = new String[]{"1kg", "seq", "1kg-seq-merged"};
-//			String outfilename = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/Posteriors/T1D/";
-//			for (int refId = 0; refId < refs.length; refId++) {
-//
-//				String out = outfilename + "/" + refs[refId] + "/";
-//				Gpio.createDir(out);
-//				String assocdir = t1dDir + "/" + refs[refId] + "/";
-//				p.determinePosteriors(assocdir, regionsFile, out);
-//			}
-//
-//
-//			t1dDir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/Conditional/RA/";
-//			outfilename = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/Posteriors/RA/";
-//			for (int refId = 0; refId < refs.length; refId++) {
-//
-//				String out = outfilename + "/" + refs[refId] + "/";
-//				Gpio.createDir(out);
-//				String assocdir = t1dDir + "/" + refs[refId] + "/";
-//				p.determinePosteriors(assocdir, regionsFile, out);
-//			}
-//
-//
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
-
 	public PosteriorPvalues(PosteriorPvalueOptions options) throws IOException {
 		this.options = options;
 		determinePosteriors(options.getAssocFile(),
