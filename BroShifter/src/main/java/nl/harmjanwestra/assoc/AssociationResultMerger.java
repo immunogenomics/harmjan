@@ -15,42 +15,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by hwestra on 11/23/15.
  */
 public class AssociationResultMerger {
 
-
-//	public void mergeAssociationResults() throws IOException {
-//
-//		String sequencedRegionsFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/2015-03-30-allRegionsWith50PercentOfSamplesAbove20x.bed";
-//		String assocDir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/";
-//		String regionsFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-05-18-AllRegions/allLoci.bed";
-//
-//		String rsquareDir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/ImpQScores/";
-//		String[] refs = new String[]{"1kg", "seq", "1kg-seq-merged", "ImmunoChipStudy"};
-//		String gtf = "/Data/Ref/Annotation/UCSC/genes.gtf";
-//		String outdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/";
-//
-//		String condiontalassocDir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/";
-//		String conditionaloutdir = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-10-25-Assoc/Conditional/Plots/";
-//
-//		String immunoChipT1D = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/T1D-Onengut/hg19_gwas_ic_t1d_onengut_cc_4_18_1.tab";
-//		String immunoChipRA = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/RA-Eyre/hg19_gwas_ic_ra_eyre_4_18_0.tab";
-//
-//		int run = 0;
-//
-//		// make conditional plots
-//		for (int d = 0; d < 2; d++) {
-//			String ds = "T1D";
-//			String ic = immunoChipT1D;
-//			if (d == 1) {
-//				ds = "RA";
-//				ic = immunoChipRA;
-//			}
-//		}
-//	}
 
 	AssociationResultMergerOptions options;
 
@@ -60,14 +31,11 @@ public class AssociationResultMerger {
 		if (options.isConcat()) {
 			concat(options.getInput(), options.getOutputprefix());
 		} else {
-			BedFileReader reader = new BedFileReader();
-			ArrayList<Feature> regions = reader.readAsList(options.getRegions());
-			String[] refs = options.getRefStr().split(",");
-			String[] input = options.getInput().split(",");
-			mergeDatasetForDifferentReferences(options.getOutputprefix(),
-					refs,
-					input,
-					regions,
+
+			mergeDatasetDifferentReferences(options.getOutputprefix(),
+					options.getRefStr(),
+					options.getInput(),
+					options.getRegions(),
 					options.getBayesthreshold());
 
 		}
@@ -123,13 +91,21 @@ public class AssociationResultMerger {
 		HashMap<Feature, Integer> uniqueVariants = new HashMap<Feature, Integer>();
 		ArrayList<Feature> allVariants = new ArrayList<>();
 		for (int q = 0; q < associationResults.size(); q++) {
+			HashSet<Feature> dsVariants = new HashSet<Feature>();
 			ArrayList<AssociationResult> list = associationResults.get(q);
 			for (AssociationResult r : list) {
 				Feature snp = r.getSnp();
+				if (dsVariants.contains(snp)) {
+					System.err.println("Warning: " + snp.toString() + " already loaded. Possible duplicate?");
+				} else {
+					dsVariants.add(snp);
+				}
+
 				if (!uniqueVariants.containsKey(snp)) {
 					uniqueVariants.put(snp, uniqueVariants.size());
 					allVariants.add(snp);
 				}
+
 			}
 			System.out.println(uniqueVariants.size() + " unique variants total after " + refs[q]);
 		}
@@ -173,7 +149,8 @@ public class AssociationResultMerger {
 		String credibleSetHeader = "Region\tTotalVariantsInRegion";
 		for (int ref = 0; ref < refs.length; ref++) {
 			String rname = refs[ref];
-			header += "\tMAF-" + rname
+			header += "\tImpQualScore" + rname
+					+ "\tMAF-" + rname
 					+ "\tBeta-" + rname
 					+ "\tSE-" + rname
 					+ "\tOR-" + rname
@@ -189,49 +166,15 @@ public class AssociationResultMerger {
 		}
 
 
-		TextFile outfile = new TextFile(outfilename, TextFile.W);
-		outfile.writeln(header);
-
-		for (int f = 0; f < allVariants.size(); f++) {
-			Feature snp = allVariants.get(f);
-			Integer index = uniqueVariants.get(snp);
-
-			StringBuilder ln = new StringBuilder();
-			ln.append(snp.getParent().toString());
-			ln.append("\t").append(snp.getStart());
-			ln.append("\t").append(snp.getName());
-			for (int ref = 0; ref < refs.length; ref++) {
-				AssociationResult r = matrix[ref][index];
-				if (r != null) {
-
-
-					ln.append("\t").append(r.getMaf());
-					ln.append("\t").append(Strings.concat(r.getBeta(), Strings.semicolon));
-					ln.append("\t").append(Strings.concat(r.getSe(), Strings.semicolon));
-					ln.append("\t").append(Strings.concat(r.getORs(), Strings.semicolon));
-					ln.append("\t").append(r.getPval());
-					ln.append("\t").append(r.getBf());
-					ln.append("\t").append(r.getPosterior());
-				} else {
-					ln.append("\tnull");
-					ln.append("\tnull");
-					ln.append("\tnull");
-					ln.append("\tnull");
-					ln.append("\tnull");
-					ln.append("\tnull");
-					ln.append("\tnull");
-				}
-			}
-			outfile.writeln(ln.toString());
-		}
-		outfile.close();
-
-
 		// determine credible sets per region....
 		ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
 		TextFile outfilecs = new TextFile(credibleSetOut, TextFile.W);
 		outfilecs.writeln(credibleSetHeader);
 
+		System.out.println("Writing credible sets: " + credibleSetOut);
+		if (options.isRecalculatePosteriors()) {
+			System.out.println("Recalculating posteriors..");
+		}
 
 		for (int r = 0; r < regions.size(); r++) {
 			// get variants in region
@@ -245,8 +188,6 @@ public class AssociationResultMerger {
 			}
 			String line = region.toString() + "\t" + variantsInRegion.size();
 
-
-			ArrayList<ArrayList<AssociationResult>> variantsPerDataset = new ArrayList<>();
 			for (int ref = 0; ref < refs.length; ref++) {
 				ArrayList<AssociationResult> dsAssociations = new ArrayList<>();
 				for (Integer i : variantsInRegion) {
@@ -254,6 +195,10 @@ public class AssociationResultMerger {
 					if (f != null) {
 						dsAssociations.add(f);
 					}
+				}
+
+				if (options.isRecalculatePosteriors()) {
+					abp.calculatePosterior(dsAssociations);
 				}
 
 				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(dsAssociations, bayesthreshold);
@@ -281,6 +226,46 @@ public class AssociationResultMerger {
 			outfilecs.writeln(line);
 		}
 		outfilecs.close();
+
+		TextFile outfile = new TextFile(outfilename, TextFile.W);
+		System.out.println("Output will be written to: " + outfilename);
+		outfile.writeln(header);
+
+		for (int f = 0; f < allVariants.size(); f++) {
+			Feature snp = allVariants.get(f);
+			Integer index = uniqueVariants.get(snp);
+
+			StringBuilder ln = new StringBuilder();
+			ln.append(snp.getParent().toString());
+			ln.append("\t").append(snp.getStart());
+			ln.append("\t").append(snp.getName());
+			for (int ref = 0; ref < refs.length; ref++) {
+				AssociationResult r = matrix[ref][index];
+				if (r != null) {
+
+					ln.append("\t").append(r.getImputationQualScore());
+					ln.append("\t").append(r.getMaf());
+					ln.append("\t").append(Strings.concat(r.getBeta(), Strings.semicolon));
+					ln.append("\t").append(Strings.concat(r.getSe(), Strings.semicolon));
+					ln.append("\t").append(Strings.concat(r.getORs(), Strings.semicolon));
+					ln.append("\t").append(r.getPval());
+					ln.append("\t").append(r.getBf());
+					ln.append("\t").append(r.getPosterior());
+				} else {
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+					ln.append("\tnull");
+				}
+			}
+			outfile.writeln(ln.toString());
+		}
+		outfile.close();
+
+
 	}
 
 }

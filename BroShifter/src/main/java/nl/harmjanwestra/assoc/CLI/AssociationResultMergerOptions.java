@@ -32,6 +32,10 @@ public class AssociationResultMergerOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder("c")
+				.desc("Recalculate posteriors")
+				.build();
+		OPTIONS.addOption(option);
 
 		option = Option.builder("n")
 				.hasArg()
@@ -59,6 +63,7 @@ public class AssociationResultMergerOptions {
 	private String outputprefix;
 	private String refStr;
 	private String regions;
+	private boolean recalculatePosteriors = false;
 
 	public AssociationResultMergerOptions(String[] args) {
 		boolean run = true;
@@ -68,6 +73,9 @@ public class AssociationResultMergerOptions {
 
 			if (cmd.hasOption("concat")) {
 				concat = true;
+			}
+			if (cmd.hasOption("c")) {
+				recalculatePosteriors = true;
 			}
 
 			if (cmd.hasOption("i")) {
@@ -140,6 +148,10 @@ public class AssociationResultMergerOptions {
 
 	public String getRegions() {
 		return regions;
+	}
+
+	public boolean isRecalculatePosteriors() {
+		return recalculatePosteriors;
 	}
 
 	public void printHelp() {

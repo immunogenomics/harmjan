@@ -39,11 +39,14 @@ public class PosteriorPvalueOptions {
 		OPTIONS.addOption(option);
 
 
+
+
 	}
 
 	private String assocFile;
 	private String regionFile;
 	private String outputPrefix;
+
 	private double bayesThreshold = 0.95;
 
 	public PosteriorPvalueOptions(String[] args) {
@@ -60,6 +63,7 @@ public class PosteriorPvalueOptions {
 				System.out.println("Please provide input: -i");
 				run = false;
 			}
+
 
 			if (cmd.hasOption("o")) {
 				outputPrefix = cmd.getOptionValue("o");
@@ -110,6 +114,8 @@ public class PosteriorPvalueOptions {
 	public double getBayesThreshold() {
 		return bayesThreshold;
 	}
+
+
 
 	public void printHelp() {
 		HelpFormatter formatter = new HelpFormatter();

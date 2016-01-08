@@ -80,12 +80,16 @@ public class ApproximateBayesPosterior {
 
 			double sum = 0;
 			int ctr = 0;
-			while (sum < bayesthreshold) {
+			while (sum < bayesthreshold && ctr < pairs.size()) {
 				AssociationResultPValuePair p = pairs.get(ctr);
 				double abf = p.getP();
 				sum += abf;
 				credibleSet.add(p.getAssociationResult());
 				ctr++;
+			}
+
+			if (sum < bayesthreshold && ctr == pairs.size()) {
+				System.out.println("Error when determining credible set: sigmaPosterior == " + sum + " after adding " + ctr + " out of " + pairs.size());
 			}
 		}
 
@@ -113,7 +117,7 @@ public class ApproximateBayesPosterior {
 					double p1 = n2.probability(beta);
 
 					double abf = p1 / p0;
-					r.setPosterior(abf);
+					r.setBf(abf);
 					if (!Double.isNaN(abf) && !Double.isInfinite(abf)) {
 						abfs[i] = abf;
 						sum += abf;
@@ -121,18 +125,20 @@ public class ApproximateBayesPosterior {
 				} catch (OutOfRangeException e) {
 					System.out.println("Distribution out of range: b: " + beta + "\tv: " + variance);
 				}
-
 			}
-
 		}
 
 
 		for (int i = 0; i < assocResults.size(); i++) {
-			if (abfs[i] != 0d) {
-				double relativeABF = abfs[i] / sum;
-
-				AssociationResult r = assocResults.get(i);
-				r.setPosterior(relativeABF);
+			AssociationResult r = assocResults.get(i);
+			double bf = r.getBf();
+			if (!Double.isNaN(bf) && !Double.isInfinite(bf)) {
+				double posterior = bf / sum;
+				if (Double.isNaN(posterior) || Double.isInfinite(posterior)) {
+					r.setPosterior(0);
+				} else {
+					r.setPosterior(posterior);
+				}
 			}
 		}
 	}

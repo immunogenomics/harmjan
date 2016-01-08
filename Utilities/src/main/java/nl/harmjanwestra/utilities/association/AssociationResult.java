@@ -22,6 +22,11 @@ public class AssociationResult {
 	private double devianceGeno;
 	private int df;
 	private double posterior;
+
+	public double getImputationQualScore() {
+		return imputationQualScore;
+	}
+
 	private double imputationQualScore;
 
 	public Feature getSnp() {
