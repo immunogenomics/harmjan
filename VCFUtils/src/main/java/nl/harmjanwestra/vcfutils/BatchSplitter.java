@@ -16,12 +16,12 @@ import java.util.Random;
 public class BatchSplitter {
 
 
-	public void splitVCFOverRandomBatches(String vcfIn, String ped, String outprefix, int nrSamplesPerBatch, long seed) throws IOException {
+	public void splitVCFOverRandomBatches(String vcfIn, String ped, String outprefix, int nrBatches, long seed) throws IOException {
 
 		System.out.println("splitting: " + vcfIn);
 		System.out.println("ped: " + ped);
 		System.out.println("out: " + outprefix);
-		System.out.println("spb: " + nrSamplesPerBatch);
+		System.out.println("#ba: " + nrBatches);
 		HashMap<String, Triple<String, String, String>> trios = new HashMap<String, Triple<String, String, String>>();
 
 		if (ped != null) {
@@ -81,8 +81,9 @@ public class BatchSplitter {
 		tf.close();
 
 		// reassign samples
-		int remainder = samples.size() % nrSamplesPerBatch; // don't give the last batch less samples
-		int nrBatches = (int) Math.ceil((double) (samples.size() - remainder) / nrSamplesPerBatch);
+		int remainder = samples.size() % nrBatches; // don't give the last batch less samples
+		int nrSamplesPerBatch = (samples.size() - remainder) / nrBatches;
+//		int nrBatches = (int) Math.ceil((double) (samples.size() - remainder) / nrSamplesPerBatch);
 
 		int remainderDistributed = (int) Math.ceil((double) remainder / nrBatches);
 		nrSamplesPerBatch += remainderDistributed; // update nr samples per batch to accomodate remainder
