@@ -11,25 +11,37 @@ import java.text.DecimalFormat;
  */
 public class ScatterplotPanel extends Panel {
 
-	double[] x;
-	double[] y;
+	double[][] x; // format [dataset1][point1] [dataset1][point2] [dataset1][pointetc]
+	double[][] y;
 
 	private Range dataRange;
 	private String xAxisLabel;
 	private String yAxisLabel;
+	private String[] datasetLabels;
 
 	public ScatterplotPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
 	}
 
-	public void setData(double[] x, double[] y) {
+	public void setData(double[][] x, double[][] y) {
 		this.x = x;
 		this.y = y;
+	}
+
+	public void setData(double[] x, double[] y) {
+		this.x = new double[1][];
+		this.x[0] = x;
+		this.y = new double[1][];
+		this.y[0] = y;
 	}
 
 	public void setLabels(String xAxis, String yAxis) {
 		this.xAxisLabel = xAxis;
 		this.yAxisLabel = yAxis;
+	}
+
+	public void setDataRange(Range dataRange) {
+		this.dataRange = dataRange;
 	}
 
 	@Override
@@ -40,8 +52,44 @@ public class ScatterplotPanel extends Panel {
 
 		// determine range
 		if (dataRange == null) {
-			dataRange = new Range(x, y);
+			// determine max and min using all data
+
+			dataRange = new Range(Double.MAX_VALUE,
+					Double.MAX_VALUE,
+					-Double.MAX_VALUE,
+					-Double.MAX_VALUE);
+
+			for (int i = 0; i < x.length; i++) {
+				Range r = new Range(x[i], y[i]);
+				r.round();
+				if (r.getMaxX() > dataRange.getMaxX()) {
+					dataRange = new Range(dataRange.getMinX(),
+							dataRange.getMinY(),
+							r.getMaxX(),
+							dataRange.getMaxY());
+				}
+				if (r.getMaxY() > dataRange.getMaxY()) {
+					dataRange = new Range(dataRange.getMinX(),
+							dataRange.getMinY(),
+							dataRange.getMaxX(),
+							r.getMaxX());
+				}
+				if (r.getMinX() < dataRange.getMinX()) {
+					dataRange = new Range(r.getMinX(),
+							dataRange.getMinY(),
+							dataRange.getMaxX(),
+							dataRange.getMaxY());
+				}
+				if (r.getMinY() > dataRange.getMinY()) {
+					dataRange = new Range(dataRange.getMinX(),
+							r.getMinY(),
+							dataRange.getMaxX(),
+							dataRange.getMaxY());
+				}
+			}
+
 			dataRange.round();
+
 		}
 
 		Range plotRange = dataRange;
@@ -50,25 +98,9 @@ public class ScatterplotPanel extends Panel {
 		int nrPixelsMaxX = width - (2 * marginX);
 		int nrPixelsMaxY = height - (2 * marginY);
 
-		g2d.setColor(theme.getDarkGrey());
-
-		for (int i = 0; i < x.length; i++) {
-			double xval = x[i];
-			double yval = y[i];
-
-			double xperc = dataRange.getRelativePositionX(xval);
-			double yperc = dataRange.getRelativePositionY(yval);
-
-
-			int pixelX = x0 + marginX + (int) Math.ceil(nrPixelsMaxX * xperc);
-			int pixelY = y0 + marginY + (int) Math.ceil(nrPixelsMaxY - (nrPixelsMaxY * yperc));
-
-
-			g2d.fillOval(pixelX - 1, pixelY - 1, 2, 2);
-		}
-
 		// axis labels
 		// plot y-axis
+		g2d.setColor(theme.getDarkGrey());
 		double tickUnitY = plotRange.getRangeY() / 10;
 		String pattern = "###,###,###.##";
 		DecimalFormat decimalFormat = new DecimalFormat(pattern);
@@ -86,7 +118,7 @@ public class ScatterplotPanel extends Panel {
 
 			int ypos = y0 + marginY + (int) Math.ceil((1 - yPerc) * nrPixelsMaxY);
 			int startx = xPosYAxis - 5;
-			int stopx = startx + 10;
+			int stopx = startx;
 			g2d.drawLine(startx, ypos, stopx, ypos);
 			String formattedStr = decimalFormat.format(y);
 			int adv = metrics.stringWidth(formattedStr);
@@ -122,7 +154,7 @@ public class ScatterplotPanel extends Panel {
 		for (double x = plotRange.getMinX(); x < plotRange.getMaxX() + (tickUnitX / 2); x += tickUnitX) {
 			double xPerc = plotRange.getRelativePositionX(x);
 			int xpos = xPosXAxis + (int) Math.ceil(xPerc * nrPixelsMaxX);
-			int starty = yPosXAxis - 5;
+			int starty = yPosXAxis;
 			int stopy = starty + 10;
 			String formattedStr = decimalFormat.format(x);
 			g2d.drawLine(xpos, starty, xpos, stopy);
@@ -151,5 +183,57 @@ public class ScatterplotPanel extends Panel {
 			g2d.drawString(title, titlePosX, titlePosY);
 		}
 
+		// plot the points
+		for (int i = 0; i < x.length; i++) {
+			g2d.setColor(theme.getColor(i));
+			for (int j = 0; j < x[i].length; j++) {
+				double xval = x[i][j];
+				double yval = y[i][j];
+
+				if (!Double.isNaN(xval) && !Double.isNaN(yval)) {
+					double xperc = dataRange.getRelativePositionX(xval);
+					double yperc = dataRange.getRelativePositionY(yval);
+					int pixelX = x0 + marginX + (int) Math.ceil(nrPixelsMaxX * xperc);
+					int pixelY = y0 + marginY + (int) Math.ceil(nrPixelsMaxY - (nrPixelsMaxY * yperc));
+
+					g2d.fillOval(pixelX - 1, pixelY - 1, 2, 2);
+
+				} else {
+					// plot some markers somewhere?
+				}
+
+			}
+		}
+
+		if (datasetLabels != null) {
+			// plot a legend
+
+			int maxStrWidth = 0;
+			for (int i = 0; i < datasetLabels.length; i++) {
+				String label = datasetLabels[i];
+				int strwdth = getStringWidth(g2d, label);
+				if (strwdth > maxStrWidth) {
+					maxStrWidth = strwdth;
+				}
+			}
+
+			for (int i = 0; i < datasetLabels.length; i++) {
+				g2d.setColor(theme.getColor(i));
+				int pixelX = x0 + marginX + nrPixelsMaxX - maxStrWidth - 15;
+				int pixelY = y0 + marginY;
+
+				g2d.fillRect(pixelX, pixelY + (i * 15), 10, 10);
+				g2d.drawString(datasetLabels[i], pixelX + 15, pixelY + (i * 15) + 10);
+
+			}
+
+		}
+
+
+	}
+
+
+	public void setDatasetLabels(String[] datasetLabels) {
+		this.datasetLabels = datasetLabels;
 	}
 }

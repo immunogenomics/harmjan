@@ -115,13 +115,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-	                                          String testVCF,
-	                                          String vcf1out,
-	                                          String vcf2out,
-	                                          String vcfmergedout,
-	                                          String separatorInMergedFile,
-	                                          String logoutfile,
-	                                          boolean keepNonOverlapping) throws IOException {
+											  String testVCF,
+											  String vcf1out,
+											  String vcf2out,
+											  String vcfmergedout,
+											  String separatorInMergedFile,
+											  String logoutfile,
+											  boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -426,7 +426,7 @@ public class VCFMerger {
 	Utility function to merge two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-	                                           String separatorInMergedFile
+											   String separatorInMergedFile
 	) {
 
 
@@ -749,22 +749,31 @@ public class VCFMerger {
 		System.out.println("Looking for " + nrBatches + " batches near " + dirInPrefix);
 		System.out.println("Out: " + outfilename);
 
+		// get a list of variants and their R-squared values
 		for (int batch = 0; batch < nrBatches; batch++) {
 			String batchvcfName = dirInPrefix + batch + ".vcf.gz";
 			if (Gpio.exists(batchvcfName)) {
 				files.add(batchvcfName);
 				TextFile tf = new TextFile(batchvcfName, TextFile.R);
-				String[] elems = tf.readLineElems(TextFile.tab);
+//				String[] elems = tf.readLineElems(TextFile.tab);
+				String ln = tf.readLine();
 				System.out.println("reading: " + batchvcfName);
-				while (elems != null) {
-					if (elems[0].startsWith("##")) {
 
-					} else if (elems[0].startsWith("#CHROM")) {
+				while (ln != null) {
+					if (ln.startsWith("#")) {
 
 					} else {
+						String[] elems = new String[9];
+						StringTokenizer tokenizer = new StringTokenizer(ln, "\t");
+						int ctr = 0;
+						while (tokenizer.hasMoreTokens() && ctr < 9) {
+							elems[ctr] = tokenizer.nextToken();
+							ctr++;
+						}
+
 						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
 						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
-						String infoStr = elems[7];
+						//	String infoStr = elems[7];
 						ArrayList<Double> rsquareds = allVariants.get(variant);
 						if (rsquareds == null) {
 							rsquareds = new ArrayList<Double>();
@@ -779,8 +788,7 @@ public class VCFMerger {
 						}
 						allVariants.put(variant, rsquareds);
 					}
-
-					elems = tf.readLineElems(TextFile.tab);
+					ln = tf.readLine();
 				}
 				System.out.println(allVariants.size() + " variants found...");
 				tf.close();
@@ -810,11 +818,10 @@ public class VCFMerger {
 				} else {
 					System.out.println(s + " may have duplicates?");
 				}
-
-
 			}
 
 			System.out.println(variantToInt.size() + " variants in total");
+
 
 			StringBuilder[] variantoutput = new StringBuilder[variantToInt.size()];
 			StringBuilder[] variantoutputHeaders = new StringBuilder[variantToInt.size()];
@@ -825,20 +832,35 @@ public class VCFMerger {
 			for (int batch = 0; batch < nrBatches; batch++) {
 				String batchvcfName = dirInPrefix + batch + ".vcf.gz";
 				TextFile tf = new TextFile(batchvcfName, TextFile.R);
-				String[] elems = tf.readLineElems(TextFile.tab);
+
 				System.out.println("reading: " + batchvcfName);
-				while (elems != null) {
-					if (elems[0].startsWith("##")) {
+				String ln = tf.readLine();
+				while (ln != null) {
+					if (ln.startsWith("##")) {
 
-					} else if (elems[0].startsWith("#CHROM")) {
-
-						for (int i = 9; i < elems.length; i++) {
-							header.append("\t").append(elems[i]);
+					} else if (ln.startsWith("#CHROM")) {
+						StringTokenizer tokenizer = new StringTokenizer(ln, "\t");
+						int elemctr = 0;
+						while (tokenizer.hasMoreTokens()) {
+							String token = tokenizer.nextToken();
+							if (elemctr > 8) {
+								header.append("\t").append(token);
+							}
+							elemctr++;
 						}
-
 					} else {
 						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+						StringTokenizer tokenizer = new StringTokenizer(ln, "\t");
+						int elemctr = 0;
+						String[] elems = new String[9];
+						while (tokenizer.hasMoreTokens() && elemctr < 9) {
+							String token = tokenizer.nextToken();
+							elems[elemctr] = token;
+							elemctr++;
+						}
 						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+
+
 						Integer id = variantToInt.get(variant);
 						if (id != null) {
 							StringBuilder builder = variantoutput[id];
@@ -850,12 +872,13 @@ public class VCFMerger {
 								builder = new StringBuilder(100000);
 								variantoutput[id] = builder;
 							}
-							for (int i = 9; i < elems.length; i++) {
-								builder.append("\t").append(elems[i]);
+							while (tokenizer.hasMoreTokens()) {
+								builder.append("\t").append(tokenizer.nextToken());
 							}
+
 						}
 					}
-					elems = tf.readLineElems(TextFile.tab);
+					ln = tf.readLine();
 				}
 				tf.close();
 			}
@@ -871,6 +894,7 @@ public class VCFMerger {
 			vcfout.close();
 
 
+			System.out.println("Testing output file: " + outfilename);
 			TextFile tfin = new TextFile(outfilename, TextFile.R);
 			String[] elems = tfin.readLineElems(TextFile.tab);
 			int nr = -1;
@@ -900,7 +924,7 @@ public class VCFMerger {
 	}
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-	                                           boolean linux, String vcfsort) throws IOException {
+											   boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants

@@ -466,9 +466,13 @@ public class LRTest {
 		double log10p = 0;
 		AssociationResult result = new AssociationResult();
 		Feature snp = new Feature(Chromosome.parseChr(variant.getChr()), variant.getPos(), variant.getPos());
+		snp.setName(variant.getId());
 		result.setSnp(snp);
 		result.setN(x.length);
 		result.setMaf(maf);
+
+		Double imputationqualityscore = variant.getInfo().get("AR2");
+		result.setImputationQualScore(imputationqualityscore);
 
 		if (nrRemaining > 0) {
 			// perform test on full model

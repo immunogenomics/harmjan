@@ -41,6 +41,12 @@ public abstract class Panel {
 		g2d.translate(-(float) x, -(float) y);
 	}
 
+	public int getStringWidth(Graphics2D g2d, String str) {
+		FontMetrics metrics = g2d.getFontMetrics(g2d.getFont());
+		return metrics.stringWidth(str);
+
+	}
+
 	public void setTitle(String title) {
 		this.title = title;
 	}
@@ -80,7 +86,6 @@ public abstract class Panel {
 	public void setTheme(Theme theme) {
 		this.theme = theme;
 	}
-
 
 
 }

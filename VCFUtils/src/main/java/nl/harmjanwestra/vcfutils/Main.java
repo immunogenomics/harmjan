@@ -1,5 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.oxford.HapSample;
 import nl.harmjanwestra.utilities.vcf.VCFFunctions;
 import org.apache.commons.cli.*;
@@ -22,6 +23,12 @@ public class Main {
 		option = Option.builder()
 				.desc("Batch splitter")
 				.longOpt("split")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Plot r-squared")
+				.longOpt("plotrsq")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -109,6 +116,13 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+
+		option = Option.builder("t")
+				.desc("Threshold")
+				.argName("double")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
 
 		option = Option.builder("i")
 				.desc("Input VCF")
@@ -255,7 +269,24 @@ public class Main {
 
 			}
 
-			if (cmd.hasOption("correlate")) {
+			if (cmd.hasOption("plotrsq")) {
+
+				RSquaredPlot plot = new RSquaredPlot();
+				try {
+
+					double threshold = 0.8;
+					if (cmd.hasOption("t")) {
+						threshold = Double.parseDouble(cmd.getOptionValue("t"));
+					}
+
+					plot.plot(input, out, threshold);
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (DocumentException e) {
+					e.printStackTrace();
+				}
+
+			} else if (cmd.hasOption("correlate")) {
 
 				String v2 = null;
 				String li = null;
