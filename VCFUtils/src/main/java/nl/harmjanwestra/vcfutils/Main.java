@@ -32,6 +32,13 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+
+		option = Option.builder()
+				.desc("Filter monomorphic")
+				.longOpt("filter")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder()
 				.desc("Reintroduce unimputed variants (can also be used to merge two VCF files)")
 				.longOpt("reintroduce")
@@ -269,7 +276,17 @@ public class Main {
 
 			}
 
-			if (cmd.hasOption("plotrsq")) {
+			if (cmd.hasOption("filter")) {
+
+
+				try {
+
+					FrequencyFilter filter = new FrequencyFilter();
+					filter.filter(input, out);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else if (cmd.hasOption("plotrsq")) {
 
 				RSquaredPlot plot = new RSquaredPlot();
 				try {
