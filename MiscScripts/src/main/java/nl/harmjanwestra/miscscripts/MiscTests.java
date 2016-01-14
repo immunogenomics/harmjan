@@ -22,11 +22,12 @@ public class MiscTests {
 	 * @param args the command line arguments
 	 */
 	public static void main(String[] args) {
+//
+//		File f = new File("/Data/Pipelines/tmp/blaat/test/koediekoedie.txt");
+//		System.out.println(f.exists());
+//		System.out.println(f.getParent());
 
-		File f = new File("/Data/Pipelines/tmp/blaat/test/koediekoedie.txt");
-		System.out.println(f.exists());
-		System.out.println(f.getParent());
-
+		String[] meeh = Strings.tab.split(null);
 
 //        int lastI = 0;
 ////        for(int i=0;i<123456789; i+=100000){

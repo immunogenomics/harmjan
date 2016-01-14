@@ -115,13 +115,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-											  String testVCF,
-											  String vcf1out,
-											  String vcf2out,
-											  String vcfmergedout,
-											  String separatorInMergedFile,
-											  String logoutfile,
-											  boolean keepNonOverlapping) throws IOException {
+	                                          String testVCF,
+	                                          String vcf1out,
+	                                          String vcf2out,
+	                                          String vcfmergedout,
+	                                          String separatorInMergedFile,
+	                                          String logoutfile,
+	                                          boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -426,7 +426,7 @@ public class VCFMerger {
 	Utility function to merge two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-											   String separatorInMergedFile
+	                                           String separatorInMergedFile
 	) {
 
 
@@ -739,12 +739,34 @@ public class VCFMerger {
 
 	}
 
-	public void mergeImputationBatches(String dirInPrefix, String outfilename, int nrBatches) throws IOException {
+	public void mergeImputationBatches(String dirInPrefix, String outfilename, String variantsToTestFile, int nrBatches) throws IOException {
 
 		// make a list of variants to include
 		ArrayList<String> files = new ArrayList<String>();
 		HashMap<String, ArrayList<Double>> allVariants = new HashMap<String, ArrayList<Double>>();
 
+		HashSet<String> varsToTest = null;
+		if (variantsToTestFile != null) {
+			TextFile fin = new TextFile(variantsToTestFile, TextFile.R);
+			ArrayList<String> str = fin.readAsArrayList();
+			boolean splitweirdly = false;
+			varsToTest = new HashSet<String>();
+			for (String s : str) {
+				String[] elems = s.split(";");
+				if (elems.length > 1) {
+					varsToTest.add(elems[0] + "-" + elems[1]);
+					splitweirdly = true;
+				} else {
+					varsToTest.add(s);
+				}
+
+			}
+			if (splitweirdly) {
+				System.out.println("split weirdly ;)");
+			}
+			fin.close();
+			System.out.println(varsToTest.size() + " variants to merge from " + variantsToTestFile);
+		}
 
 		System.out.println("Looking for " + nrBatches + " batches near " + dirInPrefix);
 		System.out.println("Out: " + outfilename);
@@ -773,20 +795,23 @@ public class VCFMerger {
 
 						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
 						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
-						//	String infoStr = elems[7];
-						ArrayList<Double> rsquareds = allVariants.get(variant);
-						if (rsquareds == null) {
-							rsquareds = new ArrayList<Double>();
-						}
-						String[] infoElems = elems[7].split(";");
-						for (String s : infoElems) {
-							if (s.startsWith("AR2")) {
-								String[] rsquaredElems = s.split("=");
-								Double d = Double.parseDouble(rsquaredElems[1]);
-								rsquareds.add(d);
+						String variantSelect = elems[0] + "-" + elems[1] + "-" + elems[2];
+						if (varsToTest == null || varsToTest.contains(variantSelect)) {
+							//	String infoStr = elems[7];
+							ArrayList<Double> rsquareds = allVariants.get(variant);
+							if (rsquareds == null) {
+								rsquareds = new ArrayList<Double>();
 							}
+							String[] infoElems = elems[7].split(";");
+							for (String s : infoElems) {
+								if (s.startsWith("AR2")) {
+									String[] rsquaredElems = s.split("=");
+									Double d = Double.parseDouble(rsquaredElems[1]);
+									rsquareds.add(d);
+								}
+							}
+							allVariants.put(variant, rsquareds);
 						}
-						allVariants.put(variant, rsquareds);
 					}
 					ln = tf.readLine();
 				}
@@ -924,7 +949,7 @@ public class VCFMerger {
 	}
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-											   boolean linux, String vcfsort) throws IOException {
+	                                           boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants

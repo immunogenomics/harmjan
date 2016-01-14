@@ -339,7 +339,7 @@ public class LRTest {
 								}
 								if (!overlap) {
 									testvariant = false;
-									System.out.println("Variant does not overlap " + bedRegions.get(0).toString());
+//									System.out.println("Variant does not overlap " + bedRegions.get(0).toString());
 								}
 							}
 
@@ -355,10 +355,11 @@ public class LRTest {
 								}
 							} else {
 								// do some more parsing
-								variant.parseGenotypes(variant.getTokens(), PARSE.ALL);
-								variant.cleartokens();
-								variant.recalculateMAFAndCallRate();
-
+								if (iter == 0) {
+									variant.parseGenotypes(variant.getTokens(), PARSE.ALL);
+									variant.cleartokens();
+									variant.recalculateMAFAndCallRate();
+								}
 								// TODO: switch this around: make the ordering of the covariate table the same as the genotype file...
 								// recode the genotypes to the same ordering as the covariate table
 								Triple<double[][], boolean[], Integer> unfilteredGenotypeData = filterAndRecodeGenotypes(
@@ -426,8 +427,8 @@ public class LRTest {
 						} // end snplimit.contains(snp)
 						variantCtr++;
 
-						if (variantCtr % 10 == 0) {
-							System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10PProbs);
+						if (variantCtr % 100 == 0) {
+							System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10PProbs + "\tBy variant: " + currentLowestDosagePValSNPId);
 						}
 					} // end data.hasnext
 
@@ -435,7 +436,7 @@ public class LRTest {
 						conditional.add(currentLowestPValSNP);
 					}
 					if (currentLowestDosagePValSNP != null) {
-						System.out.println("Iteration: " + iter + "\tnr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs);
+						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs + "\tBy variant: " + currentLowestDosagePValSNPId);
 						conditionalDosages.add(currentLowestDosagePValSNP);
 						conditionalVariantIds.add(currentLowestDosagePValSNPId);
 					}
@@ -482,13 +483,13 @@ public class LRTest {
 	}
 
 	private double pruneTestAndWrite(double[][] x,
-									 double[] y,
-									 int nrAlleles,
-									 int alleleOffset,
-									 RConnection rConnection,
-									 TextFile out,
-									 VCFVariant variant,
-									 double maf) throws REXPMismatchException, REngineException, IOException {
+	                                 double[] y,
+	                                 int nrAlleles,
+	                                 int alleleOffset,
+	                                 RConnection rConnection,
+	                                 TextFile out,
+	                                 VCFVariant variant,
+	                                 double maf) throws REXPMismatchException, REngineException, IOException {
 		Pair<double[][], boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X
@@ -866,7 +867,7 @@ public class LRTest {
 	}
 
 	public void assignAsRMatrix(RConnection rEngine, double[][] sourceArray, String nameToAssignOn,
-								boolean transposeafter) throws REngineException, REXPMismatchException {
+	                            boolean transposeafter) throws REngineException, REXPMismatchException {
 
 //		System.out.println("assigning matrix: " + sourceArray.length + "x" + sourceArray[0].length + " to var: " + nameToAssignOn);
 
@@ -1084,8 +1085,8 @@ public class LRTest {
 
 
 	private Pair<ArrayList<double[][]>, ArrayList<String>> overlapVariantsWithBedRegion(Feature
-																								region, ArrayList<Integer> variantPositions, ArrayList<String> variantNames, ArrayList<double[][]>
-																								genotypes) {
+			                                                                                    region, ArrayList<Integer> variantPositions, ArrayList<String> variantNames, ArrayList<double[][]>
+			                                                                                    genotypes) {
 
 		ArrayList<double[][]> output = new ArrayList<>();
 		ArrayList<String> variantNamesOut = new ArrayList<>();

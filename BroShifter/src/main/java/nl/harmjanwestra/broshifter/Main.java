@@ -1,7 +1,10 @@
 package nl.harmjanwestra.broshifter;
 
 
+import com.itextpdf.text.DocumentException;
+import nl.harmjanwestra.assoc.AssociationPlotter;
 import nl.harmjanwestra.assoc.AssociationResultMerger;
+import nl.harmjanwestra.assoc.CLI.AssociationPlotterOptions;
 import nl.harmjanwestra.assoc.CLI.AssociationResultMergerOptions;
 import nl.harmjanwestra.assoc.CLI.LRTestOptions;
 import nl.harmjanwestra.assoc.CLI.PosteriorPvalueOptions;
@@ -29,13 +32,15 @@ public class Main {
 			} else if (options.mode.equals(MainOptions.MODE.POSTERIORPVAL)) {
 				new PosteriorPvalues(new PosteriorPvalueOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.PLOT)) {
-
+				new AssociationPlotter(new AssociationPlotterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.MERGE)) {
 				new AssociationResultMerger(new AssociationResultMergerOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
 				new LRTest(new LRTestOptions(args));
 			}
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (DocumentException e) {
 			e.printStackTrace();
 		}
 

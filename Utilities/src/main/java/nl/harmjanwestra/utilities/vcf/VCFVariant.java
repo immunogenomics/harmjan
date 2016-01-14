@@ -20,9 +20,9 @@ public class VCFVariant {
 	private static final Pattern slash = Pattern.compile("/");
 	private static final Pattern pipe = Pattern.compile("\\|");
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
-	private byte[][] genotypeAllelesNew;
 	private final HashMap<String, Double> info = new HashMap<String, Double>();
 	HashSet<String> notSplittableElems = new HashSet<String>();
+	private byte[][] genotypeAllelesNew;
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
 	private double[][] genotypeProbsNew;
@@ -53,20 +53,25 @@ public class VCFVariant {
 	private int pgtCol = -1; // ?
 	private int dsCol = -1;
 	private int gpCol = -1;
-
-	public enum PARSE {
-		HEADER,
-		GENOTYPES,
-		ALL
-	}
+	private String[] tokens;
+	private int minimalReadDepth;
+	private int minimalGenotypeQual;
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
 	}
 
-	private String[] tokens;
+	public VCFVariant(String ln, int minimalReadDepth, int minimalGenotypeQual) {
+		this.minimalGenotypeQual = minimalGenotypeQual;
+		this.minimalReadDepth = minimalReadDepth;
+		parse(ln, PARSE.ALL);
+	}
 
 	public VCFVariant(String ln, PARSE p) {
+		parse(ln, p);
+	}
+
+	private void parse(String ln, PARSE p) {
 		String[] tokenArr = Strings.tab.split(ln);//tokens.toArray(new String[0]);
 		// count number of alleles with certain readAsTrack depth
 		parseHeader(tokenArr);
@@ -386,7 +391,6 @@ public class VCFVariant {
 	public byte[][] getGenotypeAllelesNew() {
 		return genotypeAllelesNew;
 	}
-
 
 	public void flipReferenceAlelele() {
 
@@ -724,7 +728,6 @@ public class VCFVariant {
 		}
 	}
 
-
 	public String getInfoString() {
 
 		if (info == null || info.isEmpty()) {
@@ -748,5 +751,11 @@ public class VCFVariant {
 		output.setName(id);
 		return output;
 
+	}
+
+	public enum PARSE {
+		HEADER,
+		GENOTYPES,
+		ALL
 	}
 }

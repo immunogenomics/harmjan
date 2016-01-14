@@ -20,6 +20,8 @@ public class AssociationPanel extends Panel {
 	HashSet<Feature> sequencedRegions;
 	ArrayList<ArrayList<Pair<Integer, Double>>> allPValues;
 	String[] datasetNames;
+	double maxPval = Double.NaN;
+	boolean plotGWASSignificance = true;
 	private ArrayList<Pair<Integer, Double>> ld;
 	private boolean[][] markDifferentColor;
 
@@ -28,9 +30,9 @@ public class AssociationPanel extends Panel {
 	}
 
 	public void setDataSingleDs(Feature region,
-								HashSet<Feature> sequencedRegions,
-								ArrayList<Pair<Integer, Double>> allPValues,
-								String datasetName) {
+	                            HashSet<Feature> sequencedRegions,
+	                            ArrayList<Pair<Integer, Double>> allPValues,
+	                            String datasetName) {
 		this.region = region;
 		this.sequencedRegions = sequencedRegions;
 		ArrayList<ArrayList<Pair<Integer, Double>>> tmp = new ArrayList<ArrayList<Pair<Integer, Double>>>();
@@ -49,10 +51,6 @@ public class AssociationPanel extends Panel {
 	public void setMaxPVal(double d) {
 		maxPval = d;
 	}
-
-	double maxPval = Double.NaN;
-
-	boolean plotGWASSignificance = true;
 
 	public void setPlotGWASSignificance(boolean b) {
 		plotGWASSignificance = b;
@@ -284,17 +282,18 @@ public class AssociationPanel extends Panel {
 
 		g2d.setFont(originalfont);
 		g2d.setColor(new Color(70, 67, 58));
+
 		// y-axis
-		g2d.drawLine(x0 + marginX - 10,
+		g2d.drawLine(x0 + marginX - 5,
 				plotStarty,
-				x0 + marginX - 10,
+				x0 + marginX - 5,
 				y0 + marginY);
 
 		// tick lines
 		for (double i = 0; i < maxPval + steps; i += steps) {
 			if (i <= maxPval) {
 				int plusY = (int) Math.ceil(((double) i / maxPval) * nrPixelsY);
-				g2d.drawLine(x0 + marginX - 13, plotStarty - plusY, x0 + marginX - 7, plotStarty - plusY);
+				g2d.drawLine(x0 + marginX - 10, plotStarty - plusY, x0 + marginX - 5, plotStarty - plusY);
 				String formattedStr = decimalFormat.format(i);
 				int adv = metrics.stringWidth(formattedStr);
 				int hgt = metrics.getHeight();
@@ -305,7 +304,7 @@ public class AssociationPanel extends Panel {
 
 
 // x-axis
-		g2d.drawLine(x0 + marginX - 5, plotStarty, x0 + marginX + nrPixelsX + 5, plotStarty);
+		g2d.drawLine(x0 + marginX, plotStarty + 5, x0 + marginX + nrPixelsX, plotStarty + 5);
 
 		int xunit = (int) Math.ceil(range.determineUnit(regionSize));
 		while (regionSize / xunit < 10 && xunit > 1) {
@@ -321,12 +320,12 @@ public class AssociationPanel extends Panel {
 				int relativeStart = i - region.getStart();
 				double percStart = (double) relativeStart / regionSize;
 				int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
-				g2d.drawLine(x0 + marginX + pixelStart, plotStarty - 5, x0 + marginX + pixelStart, plotStarty + 5);
+				g2d.drawLine(x0 + marginX + pixelStart, plotStarty + 5, x0 + marginX + pixelStart, plotStarty + 10);
 				String formattedString = decimalFormat.format(i);
 				int adv = metrics.stringWidth(formattedString);
 				int hgt = metrics.getHeight();
 
-				g2d.drawString(formattedString, x0 + marginX + pixelStart - (adv / 2), plotStarty + 20);
+				g2d.drawString(formattedString, x0 + marginX + pixelStart - (adv / 2), plotStarty + 25);
 			}
 		}
 

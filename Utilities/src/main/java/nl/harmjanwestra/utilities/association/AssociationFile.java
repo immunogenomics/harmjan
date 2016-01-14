@@ -281,7 +281,7 @@ public class AssociationFile {
 					}
 
 
-					if (pvalcol != -1) {
+					if (pvalcol != -1 && pvalcol < elems.length) {
 						try {
 							pval = Double.parseDouble(elems[pvalcol]);
 						} catch (NumberFormatException e) {

@@ -17,20 +17,6 @@ import java.util.HashSet;
  */
 public class VCFCorrelator {
 
-	public static void main(String[] args) {
-		String vcf2 = "D:/tmp/data/RA-Chr2.vcf.gz";
-		String vcf1 = "D:/tmp/data/1kg-iter1.vcf.gz";
-		String vartotest = "D:/tmp/data/RA-Chr2-iter1-variantList.txt";
-		String out = "D:/tmp/data/output2.txt";
-
-		VCFCorrelator c = new VCFCorrelator();
-		try {
-			c.run(vcf1, vcf2, vartotest, out);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	public void run(String vcf1, String vcf2, String variantsToTestFile, String out) throws IOException {
 
 		// get samples in vcf1 and 2
@@ -90,11 +76,20 @@ public class VCFCorrelator {
 		}
 
 		HashMap<String, VCFVariant> variantMap = new HashMap<String, VCFVariant>();
+		int ctr1 = 0;
 		while (data1.hasNext()) {
-			VCFVariant var = data1.next();
+			VCFVariant var = data1.nextLoadHeader();
 			String varStr = var.toString();
 			if (varsToTest == null || varsToTest.contains(varStr)) {
-				variantMap.put(var.toString(), var);
+				if (var.getTokens() != null) {
+					var.parseGenotypes(var.getTokens(), VCFVariant.PARSE.ALL);
+					var.cleartokens();
+					variantMap.put(var.toString(), var);
+				}
+			}
+			ctr1++;
+			if (ctr1 % 100 == 0) {
+				System.out.println(ctr1 + " variants parsed from vcf1");
 			}
 		}
 
@@ -104,12 +99,20 @@ public class VCFCorrelator {
 
 		HashMap<String, VCFVariant> variantMap2 = new HashMap<>();
 		HashSet<String> writtenVariants = new HashSet<String>();
+		int ctr2 = 0;
 		while (data2.hasNext()) {
-			VCFVariant var2 = data2.next();
+			VCFVariant var2 = data2.nextLoadHeader();
 			String varStr = var2.toString();
 
 			VCFVariant var1 = variantMap.get(varStr);
 			if (var1 != null) {
+
+				if(var2.getTokens()!=null) {
+					var2.parseGenotypes(var2.getTokens(), VCFVariant.PARSE.ALL);
+					var2.cleartokens();
+				} else {
+					System.out.println(var2.toString());
+				}
 
 				double[][] gprobs1 = null;
 				HashMap<String, Double> info1 = var1.getInfo();
@@ -167,6 +170,10 @@ public class VCFCorrelator {
 					variantMap2.put(varStr, var2);
 				}
 			}
+			ctr2++;
+			if (ctr2 % 100 == 0) {
+				System.out.println(ctr2 + " variants parsed from vcf2");
+			}
 		}
 
 		// write variants that are not in variantlist
@@ -184,7 +191,6 @@ public class VCFCorrelator {
 						String infoStr1 = null;
 						String infoStr2 = null;
 						String varstr = variant;
-
 
 
 						if (var1 == null && var2 == null) {

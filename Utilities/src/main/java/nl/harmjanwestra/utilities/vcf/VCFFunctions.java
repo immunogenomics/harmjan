@@ -950,9 +950,9 @@ public class VCFFunctions {
 			} else {
 				nrVariants++;
 
-				VCFVariant variant = new VCFVariant(ln, minimalReadDepth, minimalGenotypeQual, false, false);
+				VCFVariant variant = new VCFVariant(ln, minimalReadDepth, minimalGenotypeQual);
 
-				int[] depths = variant.getAllelicDepths();
+				short[] depths = variant.getAllelicDepths();
 
 				for (int depth : depths) {
 					if (depth > readDepthDist.length - 1) {
@@ -962,7 +962,7 @@ public class VCFFunctions {
 					}
 				}
 
-				int[] gqs = variant.getGenotypeQuals();
+				short[] gqs = variant.getGenotypeQuals();
 				for (int gq : gqs) {
 					if (gq > genotypeQualDist.length - 1) {
 						genotypeQualDist[genotypeQualDist.length - 1]++;
@@ -2105,7 +2105,7 @@ public class VCFFunctions {
 
 		while (ln != null) {
 			if (!ln.startsWith("##") && !ln.startsWith("#CHROM")) {
-				VCFVariant variant = new VCFVariant(ln, !loadGenotypes);
+				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
 
 				Feature f = new Feature();
 				f.setChromosome(Chromosome.parseChr(variant.getChr()));
@@ -2378,7 +2378,7 @@ public class VCFFunctions {
 					textFiles.get(chr).writeln(ln);
 				}
 			} else {
-				VCFVariant var = new VCFVariant(ln, true);
+				VCFVariant var = new VCFVariant(ln );
 				Chromosome chr = Chromosome.parseChr(var.getChr());
 				TextFile tf2 = textFiles.get(chr);
 				if (tf2 != null) {

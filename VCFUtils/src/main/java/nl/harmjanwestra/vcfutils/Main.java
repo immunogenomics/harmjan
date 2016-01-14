@@ -437,9 +437,15 @@ public class Main {
 					run = false;
 					System.out.println("Provide --nrbatches");
 				}
+
+				String variantList = null;
+				if (cmd.hasOption("l")) {
+					variantList = cmd.getOptionValue("l");
+				}
+
 				if (run) {
 					try {
-						merger.mergeImputationBatches(input, out, nrbatches);
+						merger.mergeImputationBatches(input, out, variantList, nrbatches);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
