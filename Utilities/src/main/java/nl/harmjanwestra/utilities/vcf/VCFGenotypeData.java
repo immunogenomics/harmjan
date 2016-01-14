@@ -108,13 +108,17 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 
 	}
 
-	public VCFVariant next(boolean skiploadinggenotypes, boolean skipsplittinggenotypes) {
+	public void close() throws IOException {
+		this.tf.close();
+	}
+
+	public VCFVariant nextLoadGenotypesOnly() {
 		VCFVariant current = next;
 		try {
 
 			String ln = tf.readLine();
 			if (ln != null) {
-				next = new VCFVariant(ln, skiploadinggenotypes, skipsplittinggenotypes);
+				next = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
 			} else {
 				next = null;
 			}
@@ -125,7 +129,20 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 		return current;
 	}
 
-	public void close() throws IOException {
-		this.tf.close();
+	public VCFVariant nextLoadHeader() {
+		VCFVariant current = next;
+		try {
+
+			String ln = tf.readLine();
+			if (ln != null) {
+				next = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+			} else {
+				next = null;
+			}
+
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
+		return current;
 	}
 }

@@ -1,10 +1,14 @@
 package nl.harmjanwestra.utilities.vcf;
 
 import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.io.trityper.util.BaseAnnot;
 import umcg.genetica.text.Strings;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -16,14 +20,14 @@ public class VCFVariant {
 	private static final Pattern slash = Pattern.compile("/");
 	private static final Pattern pipe = Pattern.compile("\\|");
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
-	private final byte[][] genotypeAllelesNew;
+	private byte[][] genotypeAllelesNew;
 	private final HashMap<String, Double> info = new HashMap<String, Double>();
 	HashSet<String> notSplittableElems = new HashSet<String>();
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
 	private double[][] genotypeProbsNew;
-	private int[] genotypeQuals;
-	private int[] allelicDepths;
+	private short[] genotypeQuals;
+	private short[] allelicDepths;
 	private boolean monomorphic;
 	private double callrate;
 	private boolean multiallelic;
@@ -40,52 +44,177 @@ public class VCFVariant {
 	private double MAF;
 	private String separator = "/";
 
-	public VCFVariant(String ln, boolean skipLoadingGenotypes, boolean skipsplittinggenotypes) {
-		this(ln, 0, 0, skipLoadingGenotypes, skipsplittinggenotypes);
-	}
+	private int gtCol = -1; // genotype
+	private int adCol = -1; // Allelic depths for the ref and alt alleles in the order listed
+	private int dpCol = -1; // Approximate readAsTrack depth (reads with MQ=255 or with bad mates are filtered)
+	private int gqCol = -1; // Genotype Quality
+	private int plCol = -1; // Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
+	private int pidCol = -1; // ?
+	private int pgtCol = -1; // ?
+	private int dsCol = -1;
+	private int gpCol = -1;
 
-
-	public VCFVariant(String ln, boolean skipLoadingGenotypes) {
-		this(ln, 0, 0, skipLoadingGenotypes, false);
+	public enum PARSE {
+		HEADER,
+		GENOTYPES,
+		ALL
 	}
 
 	public VCFVariant(String ln) {
-		this(ln, 0, 0, false, false);
+		this(ln, PARSE.ALL);
 	}
 
-	public VCFVariant(String ln, int minimalReadDepth, int minimalGenotypeQual, boolean skipLoadingGenotypes, boolean skipsplittinggenotypes) {
+	private String[] tokens;
 
-
-		String ref = "";
-//		String[] alternateAlleles = null;
-		int gtCol = -1; // genotype
-
-		int adCol = -1; // Allelic depths for the ref and alt alleles in the order listed
-		int dpCol = -1; // Approximate readAsTrack depth (reads with MQ=255 or with bad mates are filtered)
-		int gqCol = -1; // Genotype Quality
-		int plCol = -1; // Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
-		int pidCol = -1; // ?
-		int pgtCol = -1; // ?
-		int dsCol = -1;
-		int gpCol = -1;
-
-
-		StringTokenizer tokenizer = new StringTokenizer(ln, "\t");
-		int nrTokens = tokenizer.countTokens();
-
-		byte[][] tmpgenotypes = new byte[2][nrTokens - nrHeaderElems]; // [allele1/2][nrsamples]
-
-		allelicDepths = new int[nrTokens - nrHeaderElems];
-		genotypeQuals = new int[nrTokens - nrHeaderElems];
-
+	public VCFVariant(String ln, PARSE p) {
+		String[] tokenArr = Strings.tab.split(ln);//tokens.toArray(new String[0]);
 		// count number of alleles with certain readAsTrack depth
+		parseHeader(tokenArr);
+		if (p.equals(PARSE.ALL) || p.equals(PARSE.GENOTYPES)) {
+			parseGenotypes(tokenArr, p);
+			recalculateMAFAndCallRate();
+		} else {
+			// save for future use...
+			tokens = tokenArr;
+		}
+	}
+
+	public void cleartokens() {
+		tokens = null;
+	}
+
+	public String[] getTokens() {
+		return tokens;
+	}
+
+	public void parseGenotypes(String[] tokenArr, PARSE p) {
+
+		// parse actual genotypes.
+		int nrTokens = tokenArr.length;
+		byte[] alleles1 = new byte[nrTokens - nrHeaderElems];
+		byte[] alleles2 = new byte[nrTokens - nrHeaderElems];
+		allelicDepths = new short[nrTokens - nrHeaderElems];
+		genotypeQuals = new short[nrTokens - nrHeaderElems];
+
+		for (int t = 9; t < nrTokens; t++) {
+			String token = tokenArr[t];
+			int indPos = t - nrHeaderElems;
+			String sampleColumn = token;
+			if (nullGenotype.equals(sampleColumn)) {
+				// not called
+				alleles1[indPos] = -1;
+				alleles2[indPos] = -1;
+			} else {
+				//String[] sampleElems = Strings.colon.split(sampleColumn);
+
+				String[] sampleTokens = Strings.colon.split(sampleColumn);
 
 
-		int tokenCtr = 0;
-		while (tokenizer.hasMoreElements()) {
-			String token = tokenizer.nextToken();
+				int sampleTokenCtr = 0;
+				for (int s = 0; s < sampleTokens.length; s++) {
+					String sampleToken = sampleTokens[s];
 
-			switch (tokenCtr) {
+					if (s == gtCol) {
+						String gt = sampleToken;
+						if (nullGenotype.equals(gt)) {
+							alleles1[indPos] = -1;
+							alleles2[indPos] = -1;
+						} else {
+							String[] gtElems = slash.split(gt);
+							separator = "/";
+							if (gtElems.length == 1) { // phased genotypes
+								gtElems = pipe.split(gt);
+								separator = "|";
+							}
+
+							byte gt1 = 0;
+							byte gt2 = 0;
+
+							if (gtElems[0].equals(".")) {
+								alleles1[indPos] = -1;
+								alleles2[indPos] = -1;
+							} else {
+								try {
+									gt1 = Byte.parseByte(gtElems[0]);
+									gt2 = Byte.parseByte(gtElems[1]);
+
+									alleles1[indPos] = gt1;
+									alleles2[indPos] = gt2;
+
+								} catch (NumberFormatException e) {
+									System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length);
+									alleles1[indPos] = -1;
+									alleles2[indPos] = -1;
+								}
+							}
+						}
+					} else if (s == dsCol) {
+						if (p.equals(PARSE.ALL)) {
+							try {
+								genotypeDosages[indPos] = Double.parseDouble(sampleToken);
+							} catch (NumberFormatException e) {
+
+							}
+						}
+					} else if (s == gpCol) {
+						if (p.equals(PARSE.ALL)) {
+							String[] gpElems = Strings.comma.split(sampleToken);
+
+							try {
+
+								if (genotypeProbsNew == null) {
+									genotypeProbsNew = new double[gpElems.length][nrTokens - nrHeaderElems];
+								}
+
+								for (int g = 0; g < gpElems.length; g++) {
+									genotypeProbsNew[g][indPos] = Double.parseDouble(gpElems[g]);
+								}
+
+							} catch (NumberFormatException e) {
+
+							}
+						}
+					} else if (s == gqCol) {
+						short gq = 0;
+
+						try {
+							if (gqCol != -1) {
+								gq = Short.parseShort(sampleToken);
+							}
+						} catch (NumberFormatException e) {
+						}
+						genotypeQuals[indPos] = gq;
+
+					} else if (s == dpCol) {
+						short depth = 0;
+
+						try {
+							if (dpCol != -1) {
+								depth = Short.parseShort(sampleToken);
+							}
+						} catch (NumberFormatException e) {
+						}
+						allelicDepths[indPos] = depth;
+					}
+
+					sampleTokenCtr++;
+				}
+			}
+		}
+
+		genotypeAllelesNew = new byte[2][];
+		genotypeAllelesNew[0] = alleles1;
+		genotypeAllelesNew[1] = alleles2;
+	}
+
+	private void parseHeader(String[] tokenArr) {
+		// parse line header
+		String ref = "";
+		int nrTokens = tokenArr.length;
+		for (int t = 0; t < 9; t++) {
+			String token = tokenArr[t];
+
+			switch (t) {
 				case 0:
 					this.chr = new String(token).intern();
 					break;
@@ -94,7 +223,6 @@ public class VCFVariant {
 					break;
 				case 2:
 					id = new String(token);
-
 					break;
 				case 3:
 					ref = token;
@@ -143,7 +271,7 @@ public class VCFVariant {
 								} else {
 									if (!notSplittableElems.contains(infoElems[e])) {
 										System.out.println("info: " + infoElems[e] + " not splitable");
-										notSplittableElems.add(infoElems[e]);
+										notSplittableElems.add(new String(infoElems[e]));
 									}
 								}
 
@@ -182,218 +310,8 @@ public class VCFVariant {
 						System.out.println("No GT COL: " + token);
 						System.exit(-1);
 					}
-
-
-					break;
-				default:
-
-
-					int indPos = tokenCtr - nrHeaderElems;
-					String sampleColumn = token;
-					if (nullGenotype.equals(sampleColumn)) {
-						// not called
-						tmpgenotypes[0][indPos] = -1;
-						tmpgenotypes[1][indPos] = -1;
-					} else {
-						//String[] sampleElems = Strings.colon.split(sampleColumn);
-
-						StringTokenizer sampleTokenizer = new StringTokenizer(sampleColumn, ":");
-						int sampleTokenCtr = 0;
-						while (sampleTokenizer.hasMoreElements()) {
-							String sampleToken = sampleTokenizer.nextToken();
-							if (sampleTokenCtr == dsCol) {
-								try {
-									genotypeDosages[indPos] = Double.parseDouble(sampleToken);
-								} catch (NumberFormatException e) {
-
-								}
-							} else if (sampleTokenCtr == gpCol) {
-								String[] gpElems = Strings.comma.split(sampleToken);
-
-								try {
-
-									if (genotypeProbsNew == null) {
-										genotypeProbsNew = new double[gpElems.length][nrTokens - nrHeaderElems];
-									}
-
-									for (int g = 0; g < gpElems.length; g++) {
-										genotypeProbsNew[g][indPos] = Double.parseDouble(gpElems[g]);
-									}
-
-								} catch (NumberFormatException e) {
-
-								}
-							} else if (sampleTokenCtr == gqCol) {
-								int gq = 0;
-
-								try {
-									if (gqCol != -1) {
-										gq = Integer.parseInt(sampleToken);
-									}
-								} catch (NumberFormatException e) {
-								}
-								genotypeQuals[indPos] = gq;
-
-							} else if (sampleTokenCtr == dpCol) {
-								int depth = 0;
-
-								try {
-									if (dpCol != -1) {
-										depth = Integer.parseInt(sampleToken);
-									}
-								} catch (NumberFormatException e) {
-								}
-								allelicDepths[indPos] = depth;
-							} else if (sampleTokenCtr == gtCol) {
-								String gt = sampleToken;
-								if (nullGenotype.equals(gt)) {
-									tmpgenotypes[0][indPos] = -1;
-									tmpgenotypes[1][indPos] = -1;
-								} else {
-									String[] gtElems = slash.split(gt);
-									separator = "/";
-									if (gtElems.length == 1) { // phased genotypes
-										gtElems = pipe.split(gt);
-										separator = "|";
-									}
-
-									byte gt1 = 0;
-									byte gt2 = 0;
-
-									if (gtElems[0].equals(".")) {
-										tmpgenotypes[0][indPos] = -1;
-										tmpgenotypes[1][indPos] = -1;
-									} else {
-										try {
-											gt1 = Byte.parseByte(gtElems[0]);
-											gt2 = Byte.parseByte(gtElems[1]);
-
-
-											tmpgenotypes[0][indPos] = gt1;
-											tmpgenotypes[1][indPos] = gt2;
-
-
-										} catch (NumberFormatException e) {
-											System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length);
-											tmpgenotypes[0][indPos] = -1;
-											tmpgenotypes[1][indPos] = -1;
-										}
-									}
-
-
-								}
-
-
-							}
-							sampleTokenCtr++;
-
-						}
-					}
 					break;
 			}
-
-			tokenCtr++;
-		}
-
-
-		/*
-		if (gt1 >= nrAllelesObserved.length || gt2 >= nrAllelesObserved.length) {
-											System.err.println("Found more alleles than expected: " + gt1 + "/" + gt2 + " " + Strings.concat(alleles, Strings.forwardslash) + " for variant " + chr + ":" + pos + ":" + id);
-											System.exit(-1);
-										}
-
-		 */
-
-		int nrCalled = 0;
-		for (int i = 0; i < tmpgenotypes[0].length; i++) {
-			byte gt1 = tmpgenotypes[0][i];
-			byte gt2 = tmpgenotypes[1][i];
-
-			if (gt1 != -1) {
-				if (dpCol == -1) {
-					if (gt1 != -1) {
-						nrCalled += 2;
-						nrAllelesObserved[gt1]++;
-						nrAllelesObserved[gt2]++;
-					}
-				} else {
-					int depth = allelicDepths[i];
-					if (depth < minimalReadDepth) {
-						tmpgenotypes[0][i] = -1;
-						tmpgenotypes[1][i] = -1;
-					} else {
-						if (gqCol != -1) {
-							int gq = genotypeQuals[i];
-							if (gq < minimalGenotypeQual) {
-								// not called
-								tmpgenotypes[0][i] = -1;
-								tmpgenotypes[1][i] = -1;
-							} else {
-								nrCalled += 2;
-								nrAllelesObserved[gt1]++;
-								nrAllelesObserved[gt2]++;
-							}
-						} else {
-							nrCalled += 2;
-							nrAllelesObserved[gt1]++;
-							nrAllelesObserved[gt2]++;
-						}
-					}
-				}
-			}
-		}
-
-		if (!skipLoadingGenotypes) {
-			genotypeAllelesNew = tmpgenotypes;
-		} else {
-			genotypeAllelesNew = null;
-		}
-
-		callrate = (double) nrCalled / ((nrTokens - nrHeaderElems) * 2);
-
-		int totalAllelesObs = nrCalled;
-
-		int nrAllelesThatHaveAlleleFrequency = 0;
-		double minAlleleFreq = 2;
-		allelefrequencies = new double[nrAllelesObserved.length];
-		minorAllele = null;
-
-
-		for (int i = 0; i < nrAllelesObserved.length; i++) {
-			double alleleFreq = (double) nrAllelesObserved[i] / totalAllelesObs;
-			allelefrequencies[i] = alleleFreq;
-
-			if (nrAllelesObserved[i] > 0) {
-				nrAllelesThatHaveAlleleFrequency++;
-				if (alleleFreq < minAlleleFreq) {
-					if (i == 0) {
-						minorAllele = ref;
-					} else {
-						minorAllele = alleles[i];
-					}
-					minAlleleFreq = alleleFreq;
-				}
-			}
-		}
-
-		MAF = minAlleleFreq;
-		if (MAF == 1d) {
-			MAF = 0;
-			if (minorAllele.equals(ref)) {
-				minorAllele = Strings.concat(alleles, Strings.comma, 1, alleles.length);
-			} else {
-				minorAllele = ref;
-			}
-		}
-
-		if (nrAllelesThatHaveAlleleFrequency == 2) {
-			biallelic = true;
-			// TODO: calculate HWE P
-			hwep = 0;
-		} else if (nrAllelesThatHaveAlleleFrequency > 2) {
-			multiallelic = true;
-		} else {
-			monomorphic = true;
 		}
 	}
 
@@ -449,11 +367,11 @@ public class VCFVariant {
 		return filter;
 	}
 
-	public int[] getGenotypeQuals() {
+	public short[] getGenotypeQuals() {
 		return genotypeQuals;
 	}
 
-	public int[] getAllelicDepths() {
+	public short[] getAllelicDepths() {
 		return allelicDepths;
 	}
 
@@ -693,10 +611,6 @@ public class VCFVariant {
 
 	public void recalculateMAFAndCallRate(Boolean[] individualIsFemale) {
 
-		if (id.equals("rs13413810")) {
-			System.out.println("Got it");
-		}
-
 		int nrCalled = 0;
 		nrAllelesObserved = new int[nrAllelesObserved.length];
 		int[] nrAllelesObservedLocal = new int[nrAllelesObserved.length];
@@ -827,5 +741,12 @@ public class VCFVariant {
 			String output = Strings.concat(infoStr, Strings.semicolon);
 			return output;
 		}
+	}
+
+	public Feature asFeature() {
+		Feature output = new Feature(Chromosome.parseChr(chr), pos, pos);
+		output.setName(id);
+		return output;
+
 	}
 }

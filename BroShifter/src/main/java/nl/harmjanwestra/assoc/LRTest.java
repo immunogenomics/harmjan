@@ -4,12 +4,15 @@ import JSci.maths.ArrayMath;
 import nl.harmjanwestra.assoc.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.math.LogisticRegression;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.VCFVariant.PARSE;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
@@ -145,6 +148,15 @@ public class LRTest {
 			vcfSampleCtr++;
 		}
 
+
+		ArrayList<Feature> bedRegions = null;
+		if (options.getBedfile() != null) {
+			BedFileReader reader = new BedFileReader();
+			bedRegions = reader.readAsList(options.getBedfile());
+			System.out.println(bedRegions.size() + " regions loaded from: " + options.getBedfile());
+			Collections.sort(bedRegions, new FeatureComparator(false));
+		}
+
 		System.out.println(sampleToIntGenotypes.size() + " samples with disease status, covariates and genotypes");
 
 		if (sampleToIntGenotypes.size() == 0) {
@@ -242,16 +254,20 @@ public class LRTest {
 					excl.close();
 				}
 //options.getOutputdir()
+				ArrayList<VCFVariant> variants = new ArrayList<>();
+
 				while (iter < options.getMaxIter() && continueTesting) {
 
-					TextFile logout = new TextFile(options.getOutputdir() + "log-iter" + iter + ".txt", TextFile.W);
+					TextFile logout = null;
+					if (iter == 0) {
+						logout = new TextFile(options.getOutputdir() + "log-iter" + iter + ".txt", TextFile.W);
+					}
 					TextFile pvalout = new TextFile(options.getOutputdir() + "assoc-" + iter + ".txt", TextFile.W);
 					pvalout.writeln(header);
 //					TextFile pvalout2 = new TextFile(outputdir + "assoc-prob-" + iter + ".txt", TextFile.W);
 //					pvalout2.writeln(header);
 
 					data.close();
-					boolean debugbreak = false;
 					data.open();
 
 					// variables containing SNP with lowest pval in region
@@ -280,9 +296,15 @@ public class LRTest {
 
 
 					int variantCtr = 0;
-					while (data.hasNext() && !debugbreak) {
+					int nrTested = 0;
+					while ((iter == 0 && data.hasNext()) || (iter > 0 && variantCtr < variants.size())) {
 
-						VCFVariant variant = data.next();
+						VCFVariant variant = null;
+						if (iter == 0) {
+							variant = data.nextLoadHeader();
+						} else {
+							variant = variants.get(variantCtr);
+						}
 
 						String name = variant.getId();
 						if (snpLimit == null || snpLimit.contains(name)) {
@@ -300,18 +322,43 @@ public class LRTest {
 							} else if (Double.isNaN(imputationqualityscore)) {
 								System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
 								System.err.println("In file: " + options.getVcf());
-								logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
+								if (iter == 0) {
+									logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
+								}
 							}
 
+							boolean overlap = false;
+							if (testvariant && bedRegions != null) {
+								Feature variantFeature = variant.asFeature();
+
+								for (Feature r : bedRegions) {
+									if (r.overlaps(variantFeature)) {
+										overlap = true;
+										break;
+									}
+								}
+								if (!overlap) {
+									testvariant = false;
+									System.out.println("Variant does not overlap " + bedRegions.get(0).toString());
+								}
+							}
 
 							if (!testvariant) {
-								logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
-										variant.getId()
-										+ "\t" + variant.getChr()
-										+ "\t" + variant.getPos()
-										+ "\t" + variant.getMAF()
-								);
+								if (iter == 0) {
+									logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
+											variant.getId()
+											+ "\t" + variant.getChr()
+											+ "\t" + variant.getPos()
+											+ "\t" + variant.getMAF()
+											+ "\toverlap: " + overlap
+									);
+								}
 							} else {
+								// do some more parsing
+								variant.parseGenotypes(variant.getTokens(), PARSE.ALL);
+								variant.cleartokens();
+								variant.recalculateMAFAndCallRate();
+
 								// TODO: switch this around: make the ordering of the covariate table the same as the genotype file...
 								// recode the genotypes to the same ordering as the covariate table
 								Triple<double[][], boolean[], Integer> unfilteredGenotypeData = filterAndRecodeGenotypes(
@@ -334,14 +381,20 @@ public class LRTest {
 
 								double maf = summary.getLeft();
 								if (maf < options.getMafthresholdD()) {
-									logout.writeln("variant skipped maf: " + maf + " below threshold " +
-											variant.getId()
-											+ "\t" + variant.getChr()
-											+ "\t" + variant.getPos()
-											+ "\t" + variant.getMAF()
-											+ "\t" + imputationqualityscore
-									);
+									if (iter == 0) {
+										logout.writeln("variant skipped maf: " + maf + " below threshold " +
+												variant.getId()
+												+ "\t" + variant.getChr()
+												+ "\t" + variant.getPos()
+												+ "\t" + variant.getMAF()
+												+ "\timpqual: " + imputationqualityscore
+										);
+									}
 								} else {
+
+									if (iter == 0 && options.getMaxIter() > 1) {
+										variants.add(variant);
+									}
 
 									double[][] probs = variant.getGenotypeProbsNew(); // [probs][inds]
 									int nrAlleles = variant.getAlleles().length;
@@ -366,14 +419,16 @@ public class LRTest {
 										}
 
 									}
-									variantCtr++;
+									nrTested++;
 
-									if (variantCtr % 10 == 0) {
-										System.out.println("Iteration: " + iter + "\tnr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs);
-									}
 								} // end maf > threshold
 							}
 						} // end snplimit.contains(snp)
+						variantCtr++;
+
+						if (variantCtr % 10 == 0) {
+							System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10PProbs);
+						}
 					} // end data.hasnext
 
 					if (currentLowestPValSNP != null) {
@@ -385,7 +440,10 @@ public class LRTest {
 						conditionalVariantIds.add(currentLowestDosagePValSNPId);
 					}
 
-					logout.close();
+					if (iter == 0) {
+						logout.close();
+					}
+
 					pvalout.close();
 //					pvalout2.close();
 					iter++;

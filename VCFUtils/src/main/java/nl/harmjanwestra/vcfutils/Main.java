@@ -131,6 +131,13 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder("m")
+				.desc("Maf threshold")
+				.argName("double")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("i")
 				.desc("Input VCF")
 				.argName("file")
@@ -296,7 +303,16 @@ public class Main {
 						threshold = Double.parseDouble(cmd.getOptionValue("t"));
 					}
 
-					plot.plot(input, out, threshold);
+					double mafthreshold = 0.0;
+					if (cmd.hasOption("t")) {
+						mafthreshold = Double.parseDouble(cmd.getOptionValue("m"));
+					}
+
+					String bedfile = null;
+					if (cmd.hasOption("b")) {
+						bedfile = cmd.getOptionValue("b");
+					}
+					plot.plot(input, out, threshold, mafthreshold, bedfile);
 				} catch (IOException e) {
 					e.printStackTrace();
 				} catch (DocumentException e) {

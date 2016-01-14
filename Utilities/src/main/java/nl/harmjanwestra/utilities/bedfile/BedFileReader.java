@@ -7,6 +7,7 @@ package nl.harmjanwestra.utilities.bedfile;
 
 import nl.harmjanwestra.utilities.features.*;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class BedFileReader {
 		TextFile tf = new TextFile(file, TextFile.R);
 
 		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
-		String[] elems = tf.readLineElems(TextFile.tab);
+		String[] elems = tf.readLineElems(Strings.whitespace);
 
 		ArrayList<Feature> allFeatures = new ArrayList<Feature>();
 		while (elems != null) {
@@ -67,7 +68,7 @@ public class BedFileReader {
 			if (f != null) {
 				allFeatures.add(f);
 			}
-			elems = tf.readLineElems(TextFile.tab);
+			elems = tf.readLineElems(Strings.whitespace);
 		}
 
 		tf.close();
@@ -110,7 +111,6 @@ public class BedFileReader {
 			f.setStrand(featureStrand);
 			f.setStart(featureStart);
 			f.setStop(featureStop);
-
 
 
 			if (filter == null || filter.passesFilter(f)) {

@@ -15,7 +15,7 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 
 
-		 option = Option.builder("i")
+		option = Option.builder("i")
 				.hasArg()
 				.desc("Input VCF")
 				.build();
@@ -30,6 +30,13 @@ public class LRTestOptions {
 		option = Option.builder("d")
 				.hasArg()
 				.desc("Disease status file")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder("r")
+				.hasArg()
+				.desc("Test within these regions")
+				.argName(".bed file")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -111,6 +118,7 @@ public class LRTestOptions {
 	private int maxIter = 1;
 	private double mafthresholdD = 0.005;
 	private String covariatesToInclude;
+	private String bedfile;
 
 	public LRTestOptions(String[] args) {
 
@@ -124,6 +132,10 @@ public class LRTestOptions {
 			} else {
 				System.out.println("Please provide input: -i");
 				run = false;
+			}
+
+			if (cmd.hasOption("r")) {
+				bedfile = cmd.getOptionValue("r");
 			}
 
 			if (cmd.hasOption("o")) {
@@ -271,6 +283,10 @@ public class LRTestOptions {
 
 	public double getMafthresholdD() {
 		return mafthresholdD;
+	}
+
+	public String getBedfile() {
+		return bedfile;
 	}
 
 	public void printHelp() {

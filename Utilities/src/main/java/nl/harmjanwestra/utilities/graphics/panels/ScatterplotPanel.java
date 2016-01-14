@@ -118,7 +118,7 @@ public class ScatterplotPanel extends Panel {
 
 			int ypos = y0 + marginY + (int) Math.ceil((1 - yPerc) * nrPixelsMaxY);
 			int startx = xPosYAxis - 5;
-			int stopx = startx;
+			int stopx = startx + 5;
 			g2d.drawLine(startx, ypos, stopx, ypos);
 			String formattedStr = decimalFormat.format(y);
 			int adv = metrics.stringWidth(formattedStr);
@@ -155,7 +155,7 @@ public class ScatterplotPanel extends Panel {
 			double xPerc = plotRange.getRelativePositionX(x);
 			int xpos = xPosXAxis + (int) Math.ceil(xPerc * nrPixelsMaxX);
 			int starty = yPosXAxis;
-			int stopy = starty + 10;
+			int stopy = starty + 5;
 			String formattedStr = decimalFormat.format(x);
 			g2d.drawLine(xpos, starty, xpos, stopy);
 			int adv = metrics.stringWidth(formattedStr);

@@ -1,9 +1,14 @@
 package nl.harmjanwestra.vcfutils;
 
 import com.itextpdf.text.DocumentException;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 
@@ -17,7 +22,14 @@ import java.util.concurrent.*;
 public class RSquaredPlot {
 
 
-	public void plot(String filedef, String outfile, double threshold) throws IOException, DocumentException {
+	public void plot(String filedef, String outfile, double threshold, double mafThreshold, String bedfile) throws IOException, DocumentException {
+
+
+		System.out.println("infiles:\t" + filedef);
+		System.out.println("outfile:\t" + outfile);
+		System.out.println("rsqthreshold:\t" + threshold);
+		System.out.println("mafthreshold:\t" + mafThreshold);
+		System.out.println("bedfile:\t" + bedfile);
 
 		// load R-squared values for each dataset
 		// and count all unique variants
@@ -37,7 +49,7 @@ public class RSquaredPlot {
 				String ref = elems[0];
 				String file = elems[1];
 
-				LoadTask task = new LoadTask(file, ref);
+				LoadTask task = new LoadTask(file, ref, mafThreshold, bedfile);
 				completionService.submit(task);
 
 				submitted++;
@@ -156,17 +168,28 @@ public class RSquaredPlot {
 
 		String file;
 		String ref;
+		double threshold;
+		String bedfile;
 
-		public LoadTask(String file, String ref) {
+		public LoadTask(String file, String ref, double threshold, String bedfile) {
 			this.file = file;
 			this.ref = ref;
+			this.threshold = threshold;
+			this.bedfile = bedfile;
 		}
 
 		@Override
 		public Triple<String, ArrayList<Double>, ArrayList<String>> call() throws Exception {
 
-			TextFile tf2 = new TextFile(file, TextFile.R);
+			BedFileReader reader = new BedFileReader();
+			ArrayList<Feature> bedregions = null;
+			if (bedfile != null) {
+				bedregions = reader.readAsList(bedfile);
+				Collections.sort(bedregions, new FeatureComparator(false));
+				System.out.println(bedregions.size() + " bed regions read from: " + bedfile);
+			}
 
+			TextFile tf2 = new TextFile(file, TextFile.R);
 			ArrayList<Double> refVals = new ArrayList<Double>();
 			ArrayList<String> allVariants = new ArrayList<String>();
 			System.out.println("Ref: " + ref + " file: " + file);
@@ -177,25 +200,39 @@ public class RSquaredPlot {
 				if (line.startsWith("#")) {
 
 				} else {
+
 					StringTokenizer tokenizer = new StringTokenizer(line);
 					int ctr = 0;
-					String[] tokens = new String[9];
-					while (tokenizer.hasMoreTokens() && ctr < 9) {
+					String[] tokens = new String[3];
+					while (tokenizer.hasMoreTokens() && ctr < 3) {
 						tokens[ctr] = tokenizer.nextToken();
 						ctr++;
 					}
 
-					String[] infoElems = tokens[7].split(";");
-					for (String s : infoElems) {
-						if (s.startsWith("AR2")) {
-							String[] rsquaredElems = s.split("=");
-							Double d = Double.parseDouble(rsquaredElems[1]);
-							refVals.add(d);
+					String chr = tokens[0];
+					int snppos = Integer.parseInt(tokens[1]);
+
+					Feature f = new Feature(Chromosome.parseChr(chr), snppos, snppos);
+					boolean overlaps = false;
+
+					if (bedregions != null) {
+						for (Feature r : bedregions) {
+							if (r.overlaps(f)) {
+								overlaps = true;
+								break;
+							}
 						}
 					}
 
-					String variant = tokens[0] + "_" + tokens[1] + "_" + tokens[2] + "_" + tokens[3] + "_" + tokens[4];
-					allVariants.add(variant);
+					if (bedregions == null || overlaps) {
+						VCFVariant vcfVariant = new VCFVariant(line, VCFVariant.PARSE.GENOTYPES);
+						if (vcfVariant.getMAF() > threshold) {
+							Double Rsq = vcfVariant.getInfo().get("AR2");
+							refVals.add(Rsq);
+							String variant = tokens[0] + "_" + tokens[1] + "_" + tokens[2];
+							allVariants.add(variant);
+						}
+					}
 
 				}
 				line = tf2.readLine();
