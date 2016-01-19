@@ -14,6 +14,12 @@ public class LRTestOptions {
 		Option option = Option.builder().longOpt("assoc").build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("conditional")
+				.hasArg()
+				.desc("Run second iteration conditional on these variants, in specified order (semicolon separated). Format: chrx-start-rsname;chrx2-start2-rsname2")
+				.build();
+		OPTIONS.addOption(option);
 
 		option = Option.builder("i")
 				.hasArg()
@@ -105,6 +111,12 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 	}
 
+	private String conditional;
+
+	public String getConditional() {
+		return conditional;
+	}
+
 	private String vcf;
 	private String outputdir;
 	private String diseaseStatusFile;
@@ -157,6 +169,11 @@ public class LRTestOptions {
 			} else {
 				System.out.println("Please provide input: -c");
 				run = false;
+			}
+
+			if(cmd.hasOption("conditional")) {
+				this.conditional = cmd.getOptionValue("conditional");
+				this.maxIter=1;
 			}
 
 			if (cmd.hasOption("e")) {

@@ -256,7 +256,31 @@ public class LRTest {
 //options.getOutputdir()
 				ArrayList<VCFVariant> variants = new ArrayList<>();
 
-				while (iter < options.getMaxIter() && continueTesting) {
+
+				int maxNrIter = options.getMaxIter();
+
+				String condition = options.getConditional();
+				HashMap<Feature, Integer> conditionsPerIter = null;
+				if (condition != null) {
+					conditionsPerIter = new HashMap<Feature, Integer>();
+					String[] conditionalSNPs = condition.split(";");
+					for (int c = 0; c < conditionalSNPs.length; c++) {
+						String[] snpelems = conditionalSNPs[c].split("-");
+						Feature f = new Feature();
+						f.setChromosome(Chromosome.parseChr(snpelems[0]));
+						f.setStart(Integer.parseInt(snpelems[1]));
+						f.setStop(Integer.parseInt(snpelems[1]));
+						f.setName(snpelems[2]);
+						conditionsPerIter.put(f, c + 1);
+						System.out.println("Will condition on " + f.toString() + "-" + f.getName() + " in iteration " + (c + 1));
+					}
+
+					maxNrIter = conditionsPerIter.size() + 1;
+					System.out.println("Setting max iter to: " + maxNrIter);
+				}
+
+
+				while (iter < maxNrIter) {
 
 					TextFile logout = null;
 					if (iter == 0) {
@@ -271,9 +295,10 @@ public class LRTest {
 					data.open();
 
 					// variables containing SNP with lowest pval in region
-					Triple<double[][], boolean[], Integer> currentLowestPValSNP = null;
-					double[][] currentLowestDosagePValSNP = null;
-					String currentLowestDosagePValSNPId = null;
+//					Triple<double[][], boolean[], Integer> currentLowestPValSNP = null;
+//					double[][] currentLowestDosagePValSNP = null;
+//					String currentLowestDosagePValSNPId = null;
+					VCFVariant currentLowestVariant = null;
 
 					int alleleOffsetGenotypes = 0;
 					int alleleOffsetDosages = 0;
@@ -291,7 +316,9 @@ public class LRTest {
 						System.out.println("Iteration " + iter + " starting. Model: y ~ SNP + covar. Output: " + pvalout.getFileName());
 
 					} else {
-						System.out.println("Iteration " + iter + " starting. Model: y ~ " + Strings.concat(conditionalVariantIds, Strings.semicolon) + " + SNP + covar. Output: " + pvalout.getFileName());
+						System.out.println("Iteration " + iter + " starting. Model: y ~ " + Strings.concat(conditionalVariantIds, Strings.semicolon)
+								+ " + SNP + covar. Output: " + pvalout.getFileName());
+						System.out.println(variants.size() + " variants in total.");
 					}
 
 
@@ -393,7 +420,7 @@ public class LRTest {
 									}
 								} else {
 
-									if (iter == 0 && options.getMaxIter() > 1) {
+									if (iter == 0 && maxNrIter > 1) {
 										variants.add(variant);
 									}
 
@@ -406,7 +433,8 @@ public class LRTest {
 										double p = pruneTestAndWrite(x, y, nrAlleles, alleleOffsetGenotypes, rConnection, pvalout, variant, maf);
 										if (p > highestLog10P) {
 											highestLog10P = p;
-											currentLowestPValSNP = unfilteredGenotypeData;
+//											currentLowestPValSNP = unfilteredGenotypeData;
+											currentLowestVariant = variant;
 										}
 									} else {
 										// recode to dosages
@@ -415,8 +443,9 @@ public class LRTest {
 										double p2 = pruneTestAndWrite(dosageMat, y, nrAlleles, alleleOffsetDosages, rConnection, pvalout, variant, maf);
 										if (p2 > highestLog10PProbs) {
 											highestLog10PProbs = p2;
-											currentLowestDosagePValSNP = dosages;
-											currentLowestDosagePValSNPId = variant.getChr().toString() + ":" + variant.getPos() + "-" + variant.getId();
+											currentLowestVariant = variant;
+//											currentLowestDosagePValSNP = dosages;
+//											currentLowestDosagePValSNPId = variant.getChr().toString() + ":" + variant.getPos() + "-" + variant.getId();
 										}
 
 									}
@@ -427,19 +456,69 @@ public class LRTest {
 						} // end snplimit.contains(snp)
 						variantCtr++;
 
-						if (variantCtr % 100 == 0) {
+						if (variantCtr % 1000 == 0) {
+							String currentLowestDosagePValSNPId = null;
+							if (currentLowestVariant != null) {
+								currentLowestDosagePValSNPId = currentLowestVariant.getId();
+							}
 							System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10PProbs + "\tBy variant: " + currentLowestDosagePValSNPId);
 						}
 					} // end data.hasnext
 
-					if (currentLowestPValSNP != null) {
-						conditional.add(currentLowestPValSNP);
+					String currentLowestDosagePValSNPId = null;
+					if (currentLowestVariant != null) {
+						currentLowestDosagePValSNPId = currentLowestVariant.getId();
 					}
-					if (currentLowestDosagePValSNP != null) {
-						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs + "\tBy variant: " + currentLowestDosagePValSNPId);
-						conditionalDosages.add(currentLowestDosagePValSNP);
-						conditionalVariantIds.add(currentLowestDosagePValSNPId);
+					System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10PProbs + "\tBy variant: " + currentLowestDosagePValSNPId);
+
+
+					System.out.println(conditionsPerIter + " variants preset");
+					// check whether order of conditonal variants is specified on startup
+
+					// TODO: this code does not handle the absence of imputation dosages very well...
+					if (conditionsPerIter != null) {
+						System.out.println("Iterating " + variants.size() + " variants");
+
+						// iterate the variants
+						int nextIter = iter + 1;
+						for (VCFVariant variant : variants) {
+							Feature variantFeature = variant.asFeature();
+							
+							if (conditionsPerIter.containsKey(variantFeature)) {
+								Integer iterForVariant = conditionsPerIter.get(variantFeature);
+								System.out.println("Variant found: " + variantFeature.getName() + " iter: " + iterForVariant + " next: " + nextIter);
+								if (iterForVariant != null && iterForVariant <= nextIter) {
+									Triple<double[][], boolean[], Integer> unfilteredGenotypeData = filterAndRecodeGenotypes(
+											genotypesWithCovariatesAndDiseaseStatus,
+											variant.getGenotypeAllelesNew(),
+											variant.getAlleles().length,
+											finalCovariates.length);
+									conditional.add(unfilteredGenotypeData);
+
+									double[][] dosages = variant.getImputedDosages();
+									conditionalDosages.add(dosages);
+									conditionalVariantIds.add(variant.getId());
+								}
+							}
+						}
+					} else if (currentLowestVariant != null) {
+						VCFVariant variant = currentLowestVariant;
+						Triple<double[][], boolean[], Integer> unfilteredGenotypeData = filterAndRecodeGenotypes(
+								genotypesWithCovariatesAndDiseaseStatus,
+								variant.getGenotypeAllelesNew(),
+								variant.getAlleles().length,
+								finalCovariates.length);
+						conditional.add(unfilteredGenotypeData);
+
+
+						double[][] dosages = variant.getImputedDosages();
+						conditional.add(unfilteredGenotypeData);
+						conditionalDosages.add(dosages);
+						conditionalVariantIds.add(variant.getId());
+						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs + "\tBy variant: " + variant.getId());
+
 					}
+
 
 					if (iter == 0) {
 						logout.close();

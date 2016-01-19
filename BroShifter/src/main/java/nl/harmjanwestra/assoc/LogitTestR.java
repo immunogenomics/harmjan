@@ -176,6 +176,8 @@ public class LogitTestR implements Callable<Boolean> {
 
 		System.out.println(sampleToIntGenotypes.size() + " samples with disease status, covariates and genotypes");
 
+
+
 		if (sampleToIntGenotypes.size() == 0) {
 			System.out.println("Problem with matching samples...");
 		} else {
