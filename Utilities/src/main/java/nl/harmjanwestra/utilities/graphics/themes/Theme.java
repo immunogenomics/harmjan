@@ -12,7 +12,9 @@ public interface Theme {
 	abstract Color getLightGrey();
 	abstract Color getDarkGrey();
 	abstract Font getLargeFont();
+	abstract Font getMediumFont();
 	abstract Font getLargeFontBold();
+	abstract Font getMediumFontBold();
 	abstract Font getSmallFont();
 	abstract Font getSmallFontBold();
 	abstract Stroke getStroke();

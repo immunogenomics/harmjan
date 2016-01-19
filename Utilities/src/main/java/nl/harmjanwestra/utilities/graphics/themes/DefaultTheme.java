@@ -9,6 +9,8 @@ public class DefaultTheme implements Theme {
 
 	public final Font LARGE_FONT = new Font("Helvetica", Font.PLAIN, 14);
 	public final Font LARGE_FONT_BOLD = new Font("Helvetica", Font.BOLD, 14);
+	public final Font MEDIUM_FONT = new Font("Helvetica", Font.PLAIN, 12);
+	public final Font MEDIUM_FONT_BOLD = new Font("Helvetica", Font.BOLD, 12);
 	public final Font SMALL_FONT = new Font("Helvetica", Font.PLAIN, 10);
 	public final Font SMALL_FONT_BOLD = new Font("Helvetica", Font.BOLD, 10);
 
@@ -50,8 +52,18 @@ public class DefaultTheme implements Theme {
 	}
 
 	@Override
+	public Font getMediumFont() {
+		return MEDIUM_FONT;
+	}
+
+	@Override
 	public Font getLargeFontBold() {
 		return LARGE_FONT_BOLD;
+	}
+
+	@Override
+	public Font getMediumFontBold() {
+		return MEDIUM_FONT_BOLD;
 	}
 
 	@Override

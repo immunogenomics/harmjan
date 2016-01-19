@@ -131,6 +131,7 @@ public class LRTestOptions {
 	private double mafthresholdD = 0.005;
 	private String covariatesToInclude;
 	private String bedfile;
+	private int nrThreads = 1;
 
 	public LRTestOptions(String[] args) {
 
@@ -171,9 +172,9 @@ public class LRTestOptions {
 				run = false;
 			}
 
-			if(cmd.hasOption("conditional")) {
+			if (cmd.hasOption("conditional")) {
 				this.conditional = cmd.getOptionValue("conditional");
-				this.maxIter=1;
+				this.maxIter = 1;
 			}
 
 			if (cmd.hasOption("e")) {
@@ -200,6 +201,16 @@ public class LRTestOptions {
 					minNObservedAllele = Integer.parseInt(nStr);
 				} catch (NumberFormatException e) {
 					System.out.println(nStr + " is not a integer for option -n");
+					run = false;
+				}
+			}
+
+			if (cmd.hasOption("t")) {
+				String nStr = cmd.getOptionValue("t");
+				try {
+					nrThreads = Integer.parseInt(nStr);
+				} catch (NumberFormatException e) {
+					System.out.println(nStr + " is not a integer for option -t");
 					run = false;
 				}
 			}
@@ -248,6 +259,10 @@ public class LRTestOptions {
 			System.exit(-1);
 		}
 
+	}
+
+	public int getNrThreads() {
+		return nrThreads;
 	}
 
 	public String getVcf() {

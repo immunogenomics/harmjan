@@ -65,21 +65,19 @@ public class AssociationPlotter {
 			overlappingGenesList.addAll(overlappingGenes);
 
 
-			Grid grid = new Grid(400, 300, assocFiles.length + 1, 1, 100, 100);
+			Grid grid = new Grid(400, 300, 2, assocFiles.length, 100, 100);
 			if (plotPosteriors) {
-				grid = new Grid(400, 300, assocFiles.length + 1, 2, 100, 100);
+				grid = new Grid(400, 300, 3, assocFiles.length, 100, 100);
 			}
-
 
 			GenePanel genePanel = new GenePanel(1, 1);
 			genePanel.setData(region, overlappingGenesList);
-			grid.addPanel(genePanel, 0, 0);
-			if (plotPosteriors) {
-				grid.addPanel(genePanel, 0, 1);
+			for (int i = 0; i < assocFiles.length; i++) {
+				grid.addPanel(genePanel, 0, i);
 			}
 
 			for (int i = 0; i < assocFiles.length; i++) {
-				int row = i + 1;
+
 				System.out.println("Reading: " + assocFiles[i]);
 				ArrayList<AssociationResult> associations = assocFile.read(assocFiles[i], region);
 				HashSet<AssociationResult> credibleSetSet = new HashSet<>();
@@ -100,7 +98,7 @@ public class AssociationPlotter {
 					}
 					posteriorPanel.setDataSingleDs(region, sequencedRegions, posteriors, "Posteriors");
 					posteriorPanel.setMarkDifferentColor(mark);
-					grid.addPanel(posteriorPanel, row, 1);
+					grid.addPanel(posteriorPanel, 2, i);
 				}
 
 				AssociationPanel associationPanel = new AssociationPanel(1, 1);
@@ -117,7 +115,7 @@ public class AssociationPlotter {
 				}
 
 
-				grid.addPanel(associationPanel, row, 0);
+				grid.addPanel(associationPanel, 1, i);
 
 			}
 			grid.draw(outputprefix + region.toString() + ".pdf");

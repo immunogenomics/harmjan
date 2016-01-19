@@ -30,9 +30,9 @@ public class AssociationPanel extends Panel {
 	}
 
 	public void setDataSingleDs(Feature region,
-	                            HashSet<Feature> sequencedRegions,
-	                            ArrayList<Pair<Integer, Double>> allPValues,
-	                            String datasetName) {
+								HashSet<Feature> sequencedRegions,
+								ArrayList<Pair<Integer, Double>> allPValues,
+								String datasetName) {
 		this.region = region;
 		this.sequencedRegions = sequencedRegions;
 		ArrayList<ArrayList<Pair<Integer, Double>>> tmp = new ArrayList<ArrayList<Pair<Integer, Double>>>();
@@ -83,19 +83,14 @@ public class AssociationPanel extends Panel {
 
 		System.out.println(nrPixelsX);
 
-		// drawOverlappingGenes(gtf, region, regionSize, nrPixelsX);
-
 		// draw sequenced regions
 		g2d.setColor(new Color(208, 83, 77));
 		Color highlight = new Color(208, 83, 77);
 
-
 		// plot sequenced regions
-		Font defaultfont = g2d.getFont();
-		g2d.setFont(new Font("default", Font.BOLD, 16));
+		Font defaultfont = theme.getMediumFont();
 
 		g2d.drawString("Targeted regions in sequencing", marginX, marginY - 20);
-
 		g2d.setFont(defaultfont);
 		if (sequencedRegions != null) {
 			for (Feature f : sequencedRegions) {
@@ -182,8 +177,7 @@ public class AssociationPanel extends Panel {
 		maxPval += (unit - remainder); // round off using unit
 		System.out.println(maxPval + " maxp");
 
-		Font originalfont = g2d.getFont();
-		g2d.setFont(new Font("default", Font.BOLD, 12));
+		g2d.setFont(defaultfont);
 		FontMetrics metrics = g2d.getFontMetrics(g2d.getFont());
 
 		if (ld != null) {
@@ -210,6 +204,84 @@ public class AssociationPanel extends Panel {
 				g2d.fillOval(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);// x-coord
 			}
 			g2d.setColor(currentColor);
+		}
+
+
+		// determine unit
+		double steps = maxPval / 10;
+
+		// draw red line near 5E-8)
+		if (plotGWASSignificance) {
+			double gwas = -Math.log10(5E-8);
+			if (maxPval >= gwas) {
+				double yperc = gwas / maxPval;
+				int pixelY = (int) Math.ceil(yperc * nrPixelsY);
+				g2d.setColor(new Color(208, 83, 77));
+				g2d.drawLine(x0 + marginX, plotStarty - pixelY, x0 + marginX + nrPixelsX, plotStarty - pixelY);
+
+
+				g2d.setFont(theme.getSmallFont());
+				int strwidth = getStringWidth(g2d, "GWAS Significance");
+
+
+				g2d.setColor(Color.white);
+				g2d.fillRect(x0 + marginX + 10 - 2, plotStarty - pixelY - 5, strwidth + 4, 10);
+				g2d.setColor(new Color(208, 83, 77));
+				g2d.drawString("GWAS Significance", x0 + marginX + 10, plotStarty - pixelY);
+			}
+			g2d.setFont(defaultfont);
+
+
+		}
+
+		String pattern = "###,###,###.##";
+		DecimalFormat decimalFormat = new DecimalFormat(pattern);
+
+		g2d.setFont(defaultfont);
+		g2d.setColor(new Color(70, 67, 58));
+
+		// y-axis
+		g2d.drawLine(x0 + marginX - 5,
+				plotStarty,
+				x0 + marginX - 5,
+				y0 + marginY);
+
+		// tick lines
+		for (double i = 0; i < maxPval + steps; i += steps) {
+			if (i <= maxPval) {
+				int plusY = (int) Math.ceil((i / maxPval) * nrPixelsY);
+				g2d.drawLine(x0 + marginX - 15, plotStarty - plusY, x0 + marginX - 5, plotStarty - plusY);
+				String formattedStr = decimalFormat.format(i);
+				int adv = metrics.stringWidth(formattedStr);
+				int hgt = metrics.getHeight();
+				Dimension size = new Dimension(adv + 10, hgt + 10);
+				g2d.drawString(formattedStr, x0 + marginX - (int) size.getWidth() - 10, plotStarty - plusY + 5);
+			}
+		}
+
+		// x-axis
+		g2d.drawLine(x0 + marginX, plotStarty + 5, x0 + marginX + nrPixelsX, plotStarty + 5);
+
+		int xunit = (int) Math.ceil(range.determineUnit(regionSize));
+		while (regionSize / xunit < 10 && xunit > 1) {
+			xunit /= 2;
+		}
+		while (regionSize / xunit > 10) {
+			xunit *= 2;
+		}
+
+		for (int i = region.getStart(); i < region.getStop(); i++) {
+			if (i % xunit == 0) {
+				int relativeStart = i - region.getStart();
+				double percStart = (double) relativeStart / regionSize;
+				int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
+				g2d.drawLine(x0 + marginX + pixelStart, plotStarty + 5, x0 + marginX + pixelStart, plotStarty + 10);
+				String formattedString = decimalFormat.format(i);
+				int adv = metrics.stringWidth(formattedString);
+				int hgt = metrics.getHeight();
+
+				g2d.drawString(formattedString, x0 + marginX + pixelStart - (adv / 2), plotStarty + 25);
+			}
 		}
 
 
@@ -261,74 +333,6 @@ public class AssociationPanel extends Panel {
 				g2d.drawString(datasetNames[z], x0 + marginX, y0 + marginY - 30);
 			}
 		}
-
-		// determine unit
-		double steps = maxPval / 10;
-
-		// draw red line near 5E-8)
-		if (plotGWASSignificance) {
-			double gwas = -Math.log10(5E-8);
-			if (maxPval >= gwas) {
-				double yperc = gwas / maxPval;
-				int pixelY = (int) Math.ceil(yperc * nrPixelsY);
-				g2d.setColor(new Color(208, 83, 77));
-				g2d.drawLine(x0 + marginX, plotStarty - pixelY, x0 + marginX + nrPixelsX, plotStarty - pixelY);
-			}
-		}
-
-		String pattern = "###,###,###.##";
-		DecimalFormat decimalFormat = new DecimalFormat(pattern);
-
-
-		g2d.setFont(originalfont);
-		g2d.setColor(new Color(70, 67, 58));
-
-		// y-axis
-		g2d.drawLine(x0 + marginX - 5,
-				plotStarty,
-				x0 + marginX - 5,
-				y0 + marginY);
-
-		// tick lines
-		for (double i = 0; i < maxPval + steps; i += steps) {
-			if (i <= maxPval) {
-				int plusY = (int) Math.ceil(((double) i / maxPval) * nrPixelsY);
-				g2d.drawLine(x0 + marginX - 10, plotStarty - plusY, x0 + marginX - 5, plotStarty - plusY);
-				String formattedStr = decimalFormat.format(i);
-				int adv = metrics.stringWidth(formattedStr);
-				int hgt = metrics.getHeight();
-				Dimension size = new Dimension(adv + 10, hgt + 10);
-				g2d.drawString(formattedStr, x0 + marginX - (int) size.getWidth() - 10, plotStarty - plusY + 5);
-			}
-		}
-
-
-// x-axis
-		g2d.drawLine(x0 + marginX, plotStarty + 5, x0 + marginX + nrPixelsX, plotStarty + 5);
-
-		int xunit = (int) Math.ceil(range.determineUnit(regionSize));
-		while (regionSize / xunit < 10 && xunit > 1) {
-			xunit /= 2;
-		}
-		while (regionSize / xunit > 10) {
-			xunit *= 2;
-		}
-
-
-		for (int i = region.getStart(); i < region.getStop(); i++) {
-			if (i % xunit == 0) {
-				int relativeStart = i - region.getStart();
-				double percStart = (double) relativeStart / regionSize;
-				int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
-				g2d.drawLine(x0 + marginX + pixelStart, plotStarty + 5, x0 + marginX + pixelStart, plotStarty + 10);
-				String formattedString = decimalFormat.format(i);
-				int adv = metrics.stringWidth(formattedString);
-				int hgt = metrics.getHeight();
-
-				g2d.drawString(formattedString, x0 + marginX + pixelStart - (adv / 2), plotStarty + 25);
-			}
-		}
-
 
 	}
 
