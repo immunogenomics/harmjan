@@ -149,6 +149,9 @@ public class LRTest {
 			BedFileReader reader = new BedFileReader();
 			bedRegions = reader.readAsList(options.getBedfile());
 			System.out.println(bedRegions.size() + " regions loaded from: " + options.getBedfile());
+			for (Feature region : bedRegions) {
+				System.out.println(region.toString());
+			}
 			Collections.sort(bedRegions, new FeatureComparator(false));
 		}
 
@@ -322,11 +325,12 @@ public class LRTest {
 							imputationqualityscore = Double.NaN;
 						}
 
-						boolean testvariant = false;
+
+						boolean impqualscoreOK = false;
 
 						if ((Double.isNaN(imputationqualityscore) && options.isTestVariantsWithoutImputationQuality())
 								|| (!Double.isNaN(imputationqualityscore) && imputationqualityscore >= options.getImputationqualitythreshold())) {
-							testvariant = true;
+							impqualscoreOK = true;
 						} else if (Double.isNaN(imputationqualityscore)) {
 							System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
 							System.err.println("In file: " + options.getVcf());
@@ -336,8 +340,12 @@ public class LRTest {
 						}
 
 						boolean overlap = false;
-						if (testvariant && bedRegions != null) {
+						if (bedRegions != null && impqualscoreOK) {
 							Feature variantFeature = variant.asFeature();
+//
+//							if (variant.getId().equals("rs12022522")) {
+//								System.out.println("Got it");
+//							}
 
 							for (Feature r : bedRegions) {
 								if (r.overlaps(variantFeature)) {
@@ -345,20 +353,23 @@ public class LRTest {
 									break;
 								}
 							}
-							if (!overlap) {
-								testvariant = false;
-//									System.out.println("Variant does not overlap " + bedRegions.get(0).toString());
-							}
+//							if (variant.getId().equals("rs12022522")) {
+//								System.out.println(overlap);
+//								for (Feature r : bedRegions) {
+//									System.out.println(r.toString() + "\t" + variantFeature.toString() + "\t" + r.overlaps(variantFeature));
+//								}
+//								System.exit(-1);
+//							}
 						}
 
-						if (!testvariant) {
+						if (!impqualscoreOK || !overlap) {
 							if (iter == 0) {
-								logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
-										variant.getId()
+								logout.writeln("rsq OK?: " + impqualscoreOK + "\timpq:" + imputationqualityscore
+										+ "\t" + variant.getId()
 										+ "\t" + variant.getChr()
 										+ "\t" + variant.getPos()
 										+ "\t" + variant.getMAF()
-										+ "\toverlap: " + overlap
+										+ "\toverlap?: " + overlap
 								);
 							}
 						} else {
@@ -383,7 +394,7 @@ public class LRTest {
 					variantCtr++;
 
 					if (variantCtr % 1000 == 0) {
-						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + " loaded");
+						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + " loaded.\tSubmitted to queue: " + submitted + ".");
 					}
 				} // end data.hasnext
 
@@ -408,7 +419,7 @@ public class LRTest {
 								pvalout.writeln(assoc.toString());
 								nrTested++;
 							}
-							if (variant != null) {
+							if (variant != null && iter == 0) {
 								variants.add(variant);
 							}
 							returned++;
@@ -977,11 +988,11 @@ public class LRTest {
 		}
 
 		private AssociationResult pruneAndTest(double[][] x,
-											   double[] y,
-											   int nrAlleles,
-											   int alleleOffset,
-											   VCFVariant variant,
-											   double maf) throws REXPMismatchException, REngineException, IOException {
+		                                       double[] y,
+		                                       int nrAlleles,
+		                                       int alleleOffset,
+		                                       VCFVariant variant,
+		                                       double maf) throws REXPMismatchException, REngineException, IOException {
 			Pair<double[][], boolean[]> pruned = removeCollinearVariables(x);
 			x = pruned.getLeft(); // x is now probably shorter than original X
 			boolean[] notaliased = pruned.getRight(); // length of original X

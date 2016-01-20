@@ -76,6 +76,8 @@ public class AssociationPlotter {
 				grid.addPanel(genePanel, 0, i);
 			}
 
+			ArrayList<AssociationPanel> allPanels = new ArrayList<>();
+			Double maxP = null;
 			for (int i = 0; i < assocFiles.length; i++) {
 
 				System.out.println("Reading: " + assocFiles[i]);
@@ -98,18 +100,29 @@ public class AssociationPlotter {
 					}
 					posteriorPanel.setDataSingleDs(region, sequencedRegions, posteriors, "Posteriors");
 					posteriorPanel.setMarkDifferentColor(mark);
+					posteriorPanel.setMaxPVal(0.99d);
 					grid.addPanel(posteriorPanel, 2, i);
 				}
 
 				AssociationPanel associationPanel = new AssociationPanel(1, 1);
 				ArrayList<Pair<Integer, Double>> pvals = new ArrayList<Pair<Integer, Double>>();
+
 				for (int a = 0; a < associations.size(); a++) {
 					AssociationResult r = associations.get(a);
 					pvals.add(new Pair<>(r.getSnp().getStart(), r.getLog10Pval()));
+					if (maxP == null) {
+						maxP = r.getLog10Pval();
+					} else {
+						if (r.getLog10Pval() > maxP) {
+							maxP = r.getLog10Pval();
+						}
+					}
 				}
 				associationPanel.setDataSingleDs(region, sequencedRegions, pvals, assocNames[i] + " Association P-values");
 				associationPanel.setMarkDifferentColor(mark);
 				associationPanel.setPlotGWASSignificance(true);
+				allPanels.add(associationPanel);
+
 				if (options.getMaxp() != null) {
 					associationPanel.setMaxPVal(options.getMaxp());
 				}
@@ -117,6 +130,11 @@ public class AssociationPlotter {
 
 				grid.addPanel(associationPanel, 1, i);
 
+			}
+			if (options.getMaxp() == null) {
+				for (AssociationPanel p : allPanels) {
+					p.setMaxPVal(maxP);
+				}
 			}
 			grid.draw(outputprefix + region.toString() + ".pdf");
 		}

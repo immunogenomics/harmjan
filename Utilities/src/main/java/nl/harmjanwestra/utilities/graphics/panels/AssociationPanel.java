@@ -89,9 +89,10 @@ public class AssociationPanel extends Panel {
 
 		// plot sequenced regions
 		Font defaultfont = theme.getMediumFont();
-
-		g2d.drawString("Targeted regions in sequencing", marginX, marginY - 20);
 		g2d.setFont(defaultfont);
+
+		g2d.drawString("Targeted regions in sequencing", x0 + marginX, y0 + marginY - 20);
+
 		if (sequencedRegions != null) {
 			for (Feature f : sequencedRegions) {
 				if (f.overlaps(region)) {
@@ -225,13 +226,11 @@ public class AssociationPanel extends Panel {
 
 
 				g2d.setColor(Color.white);
-				g2d.fillRect(x0 + marginX + 10 - 2, plotStarty - pixelY - 5, strwidth + 4, 10);
+				g2d.fillRect(x0 + marginX + 10 - 2, plotStarty - pixelY - 5, strwidth + 6, 10);
 				g2d.setColor(new Color(208, 83, 77));
-				g2d.drawString("GWAS Significance", x0 + marginX + 10, plotStarty - pixelY);
+				g2d.drawString("GWAS Significance", x0 + marginX + 8, plotStarty - pixelY - 5);
 			}
 			g2d.setFont(defaultfont);
-
-
 		}
 
 		String pattern = "###,###,###.##";
@@ -250,7 +249,7 @@ public class AssociationPanel extends Panel {
 		for (double i = 0; i < maxPval + steps; i += steps) {
 			if (i <= maxPval) {
 				int plusY = (int) Math.ceil((i / maxPval) * nrPixelsY);
-				g2d.drawLine(x0 + marginX - 15, plotStarty - plusY, x0 + marginX - 5, plotStarty - plusY);
+				g2d.drawLine(x0 + marginX - 10, plotStarty - plusY, x0 + marginX - 5, plotStarty - plusY);
 				String formattedStr = decimalFormat.format(i);
 				int adv = metrics.stringWidth(formattedStr);
 				int hgt = metrics.getHeight();
