@@ -84,8 +84,8 @@ public class BroShifter {
 //					if (conditional[i]) {
 //						out += "-conditional";
 //					}
-//					String directoryWithPosteriors = indir + ds[d] + "/";
-//					String assocdir = directoryWithPosteriors + "/" + refs[refId] + "/";
+//					String posteriorFile = indir + ds[d] + "/";
+//					String assocdir = posteriorFile + "/" + refs[refId] + "/";
 //					try {
 //
 //						b.run(regionFile, assocdir, listOfAnnotations, nrIterations, out, conditional[i], usePeakCenter, bpToExtendAroundCenter, trimRegions, extendRegionEdges, nrThreads);
@@ -107,7 +107,7 @@ public class BroShifter {
 	public void run() throws IOException {
 
 		String regionFile = options.regionFile;
-		String directoryWithPosteriors = options.directoryWithPosteriors;
+		String directoryWithPosteriors = options.posteriorFile;
 		String listOfAnnotations = options.listOfAnnotations;
 		int nrIterations = options.nrIterations;
 		String outfile = options.outfile;
@@ -133,39 +133,6 @@ public class BroShifter {
 		CompletionService<Pair<String, ArrayList<String>>> jobHandler = new ExecutorCompletionService<Pair<String, ArrayList<String>>>(threadPool);
 
 		System.out.println("Spinning up a threadpool of " + nrThreads);
-		// for each annotation
-		int submitted = 0;
-		if (conditional) {
-			// conditional task
-			for (int a1 = 0; a1 < annotationFiles.size(); a1++) {
-				String annotation1 = annotationFiles.get(a1);
-				for (int a2 = 0; a2 < annotationFiles.size(); a2++) {
-					if (a2 != a1 || DEBUG) {
-
-						String annotation2 = annotationFiles.get(a2);
-						BroShifterTask task = new BroShifterTask(
-								submitted,
-								annotation1,
-								annotation2,
-								options);
-						submitted++;
-						task.DEBUG = DEBUG;
-						jobHandler.submit(task);
-					}
-				}
-			}
-		} else {
-			for (String annotation1 : annotationFiles) {
-				// normal enrichment task
-				BroShifterTask task = new BroShifterTask(submitted,
-						annotation1,
-						null,
-						options);
-				submitted++;
-				task.DEBUG = DEBUG;
-				jobHandler.submit(task);
-			}
-		}
 
 		String headerOverall = "P"
 				+ "\tP(z)"
@@ -214,35 +181,48 @@ public class BroShifter {
 		TextFile outLocus = new TextFile(outfile + "-Locus.txt", TextFile.W);
 		outOverall.writeln(headerOverall);
 		outLocus.writeln(headerLocus);
-		int returned = 0;
 
-		System.out.println(submitted + " jobs submitted.");
-		while (returned < submitted) {
-			try {
-				Pair<String, ArrayList<String>> output = jobHandler.take().get();
-				if (output != null) {
-					String overallStr = output.getLeft();
-					outOverall.writeln(overallStr);
-					ArrayList<String> locusSpecific = output.getRight();
-					for (String s : locusSpecific) {
-						outLocus.writeln(s);
-					}
 
-					returned++;
-					outOverall.flush();
-					outLocus.flush();
+		// for each annotatios
+		submitted = 0;
+		returned = 0;
+		if (conditional) {
+			// conditional task
+			for (int a1 = 0; a1 < annotationFiles.size(); a1++) {
+				String annotation1 = annotationFiles.get(a1);
+				for (int a2 = 0; a2 < annotationFiles.size(); a2++) {
+					if (a2 != a1 || DEBUG) {
 
-					if (returned % 10 == 0) {
-
-						System.out.println("\nMain: " + returned + " out of " + submitted + " jobs completed\n");
+						String annotation2 = annotationFiles.get(a2);
+						BroShifterTask task = new BroShifterTask(
+								submitted,
+								annotation1,
+								annotation2,
+								options);
+						submitted++;
+						task.DEBUG = DEBUG;
+						jobHandler.submit(task);
 					}
 				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
+			}
+		} else {
+			for (String annotation1 : annotationFiles) {
+				// normal enrichment task
+				BroShifterTask task = new BroShifterTask(submitted,
+						annotation1,
+						null,
+						options);
+				submitted++;
+				task.DEBUG = DEBUG;
+				jobHandler.submit(task);
 			}
 		}
+
+		System.out.println(submitted + " jobs submitted.");
+
+		clearQueue(outOverall, outLocus, jobHandler);
+
+
 		outOverall.close();
 		outLocus.close();
 
@@ -254,6 +234,39 @@ public class BroShifter {
 
 
 	}
+
+	int returned = 0;
+	int submitted = 0;
+
+	private void clearQueue(TextFile outOverall, TextFile outLocus, CompletionService<Pair<String, ArrayList<String>>> jobHandler) throws IOException {
+		System.out.println(submitted + " results to process.");
+		while (returned < submitted) {
+			try {
+				Pair<String, ArrayList<String>> output = jobHandler.take().get();
+				if (output != null) {
+					String overallStr = output.getLeft();
+					outOverall.writeln(overallStr);
+					ArrayList<String> locusSpecific = output.getRight();
+					for (String s : locusSpecific) {
+						outLocus.writeln(s);
+					}
+					outOverall.flush();
+					outLocus.flush();
+					if (returned % 10 == 0) {
+						System.out.println("\nMain: " + returned + " out of " + submitted + " jobs completed\n");
+					}
+				}
+				returned++;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+		returned = 0;
+		submitted = 0;
+	}
+
 
 	private ArrayList<String> checkFiles(ArrayList<String> annotationFiles) {
 		ArrayList<String> filesPresent = new ArrayList<String>();

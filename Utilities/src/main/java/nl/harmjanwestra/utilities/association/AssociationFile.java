@@ -132,7 +132,7 @@ public class AssociationFile {
 		while (ln != null) {
 			if (ln.startsWith("#Chromosome") || ln.startsWith("Chr\tPos")) {
 // skip header
-				System.out.println("Found header");
+//				System.out.println("Found header");
 
 				String[] elems = Strings.tab.split(ln);
 				for (int i = 0; i < elems.length; i++) {
@@ -304,7 +304,11 @@ public class AssociationFile {
 					}
 
 					if (bfcol != -1) {
-						bf = Double.parseDouble(elems[bfcol]);
+						try {
+							bf = Double.parseDouble(elems[bfcol]);
+						} catch (NumberFormatException e) {
+
+						}
 					}
 					if (posteriorcol != -1) {
 						try {

@@ -33,6 +33,12 @@ public class LRTest {
 //	boolean useR = false;
 
 	LRTestOptions options;
+	private int submitted;
+	private int returned;
+	private double highestLog10P;
+	private VCFVariant currentLowestVariant;
+	private double highestLog10PProbs;
+	private int nrTested;
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
@@ -163,7 +169,7 @@ public class LRTest {
 			excl.close();
 		}
 
-		int maxNrIter = options.getMaxIter();
+
 		String condition = options.getConditional();
 		HashMap<Feature, Integer> conditionsPerIter = null;
 		if (condition != null) {
@@ -179,7 +185,8 @@ public class LRTest {
 				conditionsPerIter.put(f, c + 1);
 				System.out.println("Will condition on " + f.toString() + "-" + f.getName() + " in iteration " + (c + 1));
 			}
-			maxNrIter = conditionsPerIter.size() + 1;
+			int maxNrIter = conditionsPerIter.size() + 1;
+			options.setMaxIter(maxNrIter);
 			System.out.println("Setting max iter to: " + maxNrIter);
 		}
 
@@ -271,7 +278,7 @@ public class LRTest {
 			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
 			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
 
-			while (iter < maxNrIter) {
+			while (iter < options.getMaxIter()) {
 				TextFile logout = null;
 				if (iter == 0) {
 					System.out.println("Iteration " + iter + " starting. Model: y ~ SNP + covar.");
@@ -290,12 +297,17 @@ public class LRTest {
 				data.close();
 				data.open();
 
-				VCFVariant currentLowestVariant = null;
+				currentLowestVariant = null;
+
+				int variantCtr = 0;
+				nrTested = 0;
+				submitted = 0;
+				returned = 0;
 
 				int alleleOffsetGenotypes = 0;
 				int alleleOffsetDosages = 0;
-				double highestLog10P = 0;
-				double highestLog10PProbs = 0;
+				highestLog10P = 0;
+				highestLog10PProbs = 0;
 
 				for (Triple<double[][], boolean[], Integer> c : conditional) {
 					alleleOffsetGenotypes += c.getLeft().length;
@@ -305,9 +317,6 @@ public class LRTest {
 				}
 
 
-				int variantCtr = 0;
-				int nrTested = 0;
-				int submitted = 0;
 				while ((iter == 0 && data.hasNext()) || (iter > 0 && variantCtr < variants.size())) {
 
 					VCFVariant variant = null;
@@ -340,7 +349,9 @@ public class LRTest {
 						}
 
 						boolean overlap = false;
-						if (bedRegions != null && impqualscoreOK) {
+						if (bedRegions == null) {
+							overlap = true;
+						} else if (bedRegions != null && impqualscoreOK) {
 							Feature variantFeature = variant.asFeature();
 //
 //							if (variant.getId().equals("rs12022522")) {
@@ -389,53 +400,33 @@ public class LRTest {
 									alleleOffsetDosages);
 							jobHandler.submit(task);
 							submitted++;
+
+							if (submitted % 250 == 0) {
+								clearQueue(logout, pvalout, iter, variants, jobHandler);
+							}
 						}
 					} // end snplimit.contains(snp)
 					variantCtr++;
 
 					if (variantCtr % 1000 == 0) {
-						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + " loaded.\tSubmitted to queue: " + submitted + ".");
+						String currentLowestDosagePValSNPId = null;
+						if (currentLowestVariant != null) {
+							currentLowestDosagePValSNPId = currentLowestVariant.getId();
+						}
+						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + " loaded.\tSubmitted to queue: " + submitted + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10P + "\tSNP: " + currentLowestDosagePValSNPId);
 					}
 				} // end data.hasnext
 
-				int returned = 0;
 
-				while (returned < submitted) {
-					try {
-						Triple<String, AssociationResult, VCFVariant> result = jobHandler.take().get();
-						if (result != null) {
-							AssociationResult assoc = result.getMiddle();
-							VCFVariant variant = result.getRight();
-							String logStr = result.getLeft();
-							if (logStr != null) {
-								logout.writeln(logStr);
-							}
-							if (assoc != null) {
-								double p = assoc.getLog10Pval();
-								if (p > highestLog10P) {
-									highestLog10P = p;
-									currentLowestVariant = variant;
-								}
-								pvalout.writeln(assoc.toString());
-								nrTested++;
-							}
-							if (variant != null && iter == 0) {
-								variants.add(variant);
-							}
-							returned++;
-						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					} catch (ExecutionException e) {
-						e.printStackTrace();
-					}
+				if (submitted % 250 == 0) {
+					clearQueue(logout, pvalout, iter, variants, jobHandler);
 				}
 
 				String currentLowestDosagePValSNPId = null;
 				if (currentLowestVariant != null) {
 					currentLowestDosagePValSNPId = currentLowestVariant.getId();
 				}
-				System.out.println("Iteration: " + iter + " is done. \tNr variants: " + variantCtr + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10PProbs + "\tBy variant: " + currentLowestDosagePValSNPId);
+				System.out.println("Iteration: " + iter + " is done. \tNr variants: " + variantCtr + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10P + "\tBy variant: " + currentLowestDosagePValSNPId);
 
 				// TODO: this code does not handle the absence of imputation dosages very well...
 				LRTestTask tasktmp = new LRTestTask();
@@ -492,6 +483,51 @@ public class LRTest {
 			}
 			threadPool.shutdown();
 		}
+	}
+
+
+	private void clearQueue(TextFile logout, TextFile pvalout,
+							int iter, ArrayList<VCFVariant> variants,
+							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
+//		System.out.println(submitted + " results to process.");
+		while (returned < submitted) {
+			try {
+				Future<Triple<String, AssociationResult, VCFVariant>> future = jobHandler.take();
+				if (future != null) {
+					Triple<String, AssociationResult, VCFVariant> result = future.get();
+					if (result != null) {
+						AssociationResult assoc = result.getMiddle();
+						VCFVariant variant = result.getRight();
+						String logStr = result.getLeft();
+						if (logStr != null) {
+							logout.writeln(logStr);
+						}
+						if (assoc != null) {
+							double p = assoc.getLog10Pval();
+							if (p > highestLog10P) {
+								highestLog10P = p;
+								currentLowestVariant = variant;
+							}
+							pvalout.writeln(assoc.toString());
+							nrTested++;
+						}
+						if (variant != null && iter == 0 && options.getMaxIter() > 1) {
+							variants.add(variant);
+						}
+					}
+				}
+				returned++;
+//				System.out.print(returned + "/" + submitted);
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+//		System.out.println();
+		returned = 0;
+		submitted = 0;
 	}
 
 
@@ -606,9 +642,14 @@ public class LRTest {
 		public Triple<String, AssociationResult, VCFVariant> call() throws Exception {
 			// do some more parsing
 			if (iter == 0) {
-				variant.parseGenotypes(variant.getTokens(), VCFVariant.PARSE.ALL);
-				variant.cleartokens();
-				variant.recalculateMAFAndCallRate();
+				String[] tokens = variant.getTokens();
+				if (tokens != null) {
+					variant.parseGenotypes(tokens, VCFVariant.PARSE.ALL);
+					variant.cleartokens();
+					variant.recalculateMAFAndCallRate();
+				} else {
+					System.out.println("Variant with null tokens.. " + variant.toString());
+				}
 			}
 
 			// TODO: switch this around: make the ordering of the covariate table the same as the genotype file...
@@ -988,11 +1029,11 @@ public class LRTest {
 		}
 
 		private AssociationResult pruneAndTest(double[][] x,
-		                                       double[] y,
-		                                       int nrAlleles,
-		                                       int alleleOffset,
-		                                       VCFVariant variant,
-		                                       double maf) throws REXPMismatchException, REngineException, IOException {
+											   double[] y,
+											   int nrAlleles,
+											   int alleleOffset,
+											   VCFVariant variant,
+											   double maf) throws REXPMismatchException, REngineException, IOException {
 			Pair<double[][], boolean[]> pruned = removeCollinearVariables(x);
 			x = pruned.getLeft(); // x is now probably shorter than original X
 			boolean[] notaliased = pruned.getRight(); // length of original X

@@ -11,7 +11,7 @@ import umcg.genetica.text.Strings;
 public class BroShifterOptions {
 
 	public String regionFile;
-	public String directoryWithPosteriors;
+	public String posteriorFile;
 	public String listOfAnnotations;
 	public int nrIterations = 10000;
 	public String outfile;
@@ -23,6 +23,15 @@ public class BroShifterOptions {
 	public int nrThreads = 1;
 	public double credibleSetThreshold = 0.95;
 	public DISTANCEWEIGHT distanceweight = DISTANCEWEIGHT.NONE;
+	private int maxAllowedDistance = 150;
+
+
+	// TODO: allow code to determine mean + sd annotation size
+	// set some parameters using those stats
+
+	public int getMaxAllowedDistance() {
+		return maxAllowedDistance;
+	}
 
 	public enum HEIGHTWEIGHT {
 		NONE,
@@ -35,6 +44,7 @@ public class BroShifterOptions {
 		LINEAR,
 		INVERSE,
 		SQUAREROOT,
+		EXPONENT,
 		HEIGHTOVERDISTANCE
 	}
 
@@ -55,7 +65,7 @@ public class BroShifterOptions {
 
 		option = Option.builder("p")
 				.hasArg()
-				.desc("Input posterior p-values")
+				.desc("Input posterior p-value file (assoc-file format)")
 				.longOpt("posteriors")
 
 				.build();
@@ -75,6 +85,7 @@ public class BroShifterOptions {
 				.longOpt("iterations")
 				.build();
 		OPTIONS.addOption(option);
+
 
 		option = Option.builder("o")
 				.hasArg()
@@ -97,14 +108,13 @@ public class BroShifterOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder("e")
-
 				.hasArg()
-				.desc("Number of bases to extend around peak center [default = 150]")
+				.desc("Number of bases to extend around peak center [default = 150]. If using a weight, this acts as the max distance from peak center.")
 				.longOpt("peakextend")
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder("t")
+		option = Option.builder()
 				.desc("Trim regions to fit around variants. [default = false]")
 				.longOpt("trim")
 				.build();
@@ -117,7 +127,7 @@ public class BroShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder()
+		option = Option.builder("t")
 				.hasArg()
 				.desc("Number of threads to use [default = 1]")
 				.longOpt("threads")
@@ -130,29 +140,11 @@ public class BroShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder()
-				.desc("Use 1/sqrt(d) as a distance weight")
-				.longOpt("squareroot")
-				.build();
-		OPTIONS.addOption(option);
 
-		option = Option.builder()
-				.desc("Use d as a distance weight")
-				.longOpt("linear")
-				.build();
-		OPTIONS.addOption(option);
-
-		option = Option.builder()
-				.desc("Use 1/d as a distance weight")
-				.hasArg().argName("maxdist")
-				.longOpt("inverse")
-				.build();
-		OPTIONS.addOption(option);
-
-		option = Option.builder()
-				.desc("Use 1/exp(beta*d) as a distance weight")
-				.hasArg().argName("beta")
-				.longOpt("exponent")
+		option = Option.builder("w")
+				.desc("Use a weight for distance. [none|linear|sqrt|inverse|exp|hoverd]. Default: none")
+				.longOpt("weight")
+				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
 	}
@@ -177,7 +169,7 @@ public class BroShifterOptions {
 			}
 
 			if (cmd.hasOption("posteriors")) {
-				directoryWithPosteriors = cmd.getOptionValue("posteriors");
+				posteriorFile = cmd.getOptionValue("posteriors");
 			} else {
 				System.out.println("Path to posteriors not provided");
 				run = false;
@@ -217,11 +209,13 @@ public class BroShifterOptions {
 			if (cmd.hasOption("peakextend")) {
 				try {
 					bpToExtendAnnotation = Integer.parseInt(cmd.getOptionValue("peakextend"));
+
 				} catch (NumberFormatException e) {
 					System.out.println(cmd.getOptionValue("peakextend") + " provided for peak extension is not an integer");
 					run = false;
 				}
 			}
+			this.maxAllowedDistance = bpToExtendAnnotation;
 
 			if (cmd.hasOption("trim")) {
 				trimRegions = true;
@@ -257,12 +251,23 @@ public class BroShifterOptions {
 				}
 			}
 
-			if (cmd.hasOption("squareroot")) {
-				distanceweight = DISTANCEWEIGHT.SQUAREROOT;
-			} else if (cmd.hasOption("linear")) {
-				distanceweight = DISTANCEWEIGHT.INVERSE;
-			} else {
-				distanceweight = DISTANCEWEIGHT.NONE;
+			if (cmd.hasOption("weight")) {
+				String val = cmd.getOptionValue("weight");
+
+				// none|linear|sqrt|inverse|exp
+				if (val.equals("none")) {
+					distanceweight = DISTANCEWEIGHT.NONE;
+				} else if (val.equals("linear")) {
+					distanceweight = DISTANCEWEIGHT.LINEAR;
+				} else if (val.equals("sqrt")) {
+					distanceweight = DISTANCEWEIGHT.SQUAREROOT;
+				} else if (val.equals("inverse")) {
+					distanceweight = DISTANCEWEIGHT.INVERSE;
+				} else if (val.equals("exp")) {
+					distanceweight = DISTANCEWEIGHT.EXPONENT;
+				} else if (val.equals("hoverd")) {
+					distanceweight = DISTANCEWEIGHT.HEIGHTOVERDISTANCE;
+				}
 			}
 
 			if (!run) {

@@ -2,12 +2,13 @@ package nl.harmjanwestra.broshifter;
 
 
 import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
+import nl.harmjanwestra.utilities.association.AssociationFile;
+import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.*;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.ZScores;
 
 import java.io.File;
@@ -19,6 +20,8 @@ import java.util.concurrent.Callable;
 
 /**
  * Created by hwestra on 11/17/15.
+ * Parallelize broshifting by running multiple annotations in different threads
+ * Returns: all output for a certain (combination of) annotation(s)
  */
 public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>> {
 
@@ -58,10 +61,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 			annotation2name = new File(annotation2).getName();
 		}
 
-
 		// keep track of some scores
-
-
 		// sum of overlapping posteriors overall loci
 		double sigmaSigmaPosterior = 0;
 		double[] sigmaSigmaPosteriorNull = new double[options.nrIterations];
@@ -74,9 +74,10 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		int totalNrOfOverlappingVariants = 0;
 		int totalNrOfVariants = 0;
 
-		// for each region
+		// TODO: replace this with a linkedblocking (FIFO) queue to save some memory
 		ArrayList<String> outputLines = new ArrayList<>();
 
+		// iterate all regions
 		for (int fctr = 0; fctr < regions.size(); fctr++) {
 			Feature region = regions.get(fctr);
 
@@ -86,13 +87,13 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 			String regionStr = region.toString();
 			double locusScore = 0;
 
-			// TODO: make this some kind of default format
+			// TODO: make this some kind of default format: return broshifteroutput objects in stead?
 			// ALSO: make it independent of the region format
-			String file = options.directoryWithPosteriors + regionStr + ".txt";
-			int annotation2size = 0;
-			if (Gpio.exists(file) && !region.getChromosome().equals(Chromosome.X)) {
 
-				ArrayList<SNPFeature> snps = readPosteriors(file, region);
+			int annotation2size = 0;
+			if (Gpio.exists(options.posteriorFile) && !region.getChromosome().equals(Chromosome.X)) {
+
+				ArrayList<SNPFeature> snps = readPosteriors(options.posteriorFile, region);
 
 				if (snps.size() > 0) {
 
@@ -237,7 +238,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 					outputLines.add(ln);
 				}
 			} else {
-				System.err.println("Thread " + threadNum + " | Cannot find region file: " + file);
+				System.err.println("Thread " + threadNum + " | Cannot find region file: " + options.posteriorFile);
 			}
 			if (fctr % 10 == 0) {
 				System.out.println("Thread " + threadNum + " | " + fctr + " out of " + regions.size() + " regions processed.");
@@ -274,6 +275,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		return new Pair<>(ln, outputLines);
 	}
 
+	// determine p-values from permutation results
 	private double[] getP(double[] overlapnull, double overlap) {
 
 		Double[] nullcopy = new Double[overlapnull.length];
@@ -311,6 +313,8 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	}
 
 
+	// split a region into multiple smaller regions dependent upon annotation overlap
+	// creates one region of annotation 1 that overlaps annotation2, and a region of annotation 1 without overlap with annotation 2
 	private Pair<Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>, Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>> split(Feature queryRegion,
 																																			   ArrayList<SNPFeature> snps,
 																																			   Track subsetOfAnnotation1,
@@ -412,6 +416,8 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 
 	}
 
+
+	// merge multiple smaller regions into one bigger one. rearrange SNPs and other annotations accordingly
 	private Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>> stitchRegion(Feature queryRegion,
 																					ArrayList<Pair<Feature, ArrayList<Feature>>> partsOfAnnotation1OverlappingAnnotation2,
 																					ArrayList<SNPFeature> snps) {
@@ -532,6 +538,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	private Pair<Double, Integer> getOverlap(Track subsetOfAnnotations, ArrayList<SNPFeature> snps) {
 		double sum = 0;
 		int nrOverlap = 0;
+		int maxalloweddist = options.getMaxAllowedDistance();
 		for (SNPFeature snp : snps) {
 
 			Iterable<Feature> subset = subsetOfAnnotations.getFeatures();
@@ -547,35 +554,48 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 					sum += snp.getP();
 					nrOverlap++;
 				} else {
+					// reweight distance
 					// get closest annotation
-					int maxDist = Integer.MAX_VALUE;
+					int minDist = Integer.MAX_VALUE;
 					int snpPos = snp.getStart();
-					;
+
+					PeakFeature overlapPeak = null;
 					for (Feature f : overlappingFeatures) {
 						int d = Integer.MAX_VALUE;
 						if (f instanceof PeakFeature) {
 							PeakFeature peak = (PeakFeature) f;
+							overlapPeak = peak;
 							int summit = peak.getSummit();
 							d = Math.abs(summit - snpPos);
 						} else {
 							int midpoint = (f.getStop() + f.getStart()) / 2;
 							d = Math.abs(midpoint - snpPos);
 						}
-						if (d < maxDist) {
-							d = maxDist;
+						if (d < minDist) {
+							minDist = d;
 						}
 					}
 					double weight = 1;
-					if (options.distanceweight.equals(BroShifterOptions.DISTANCEWEIGHT.SQUAREROOT)) {
-						weight = 1d / (Math.sqrt(maxDist + 1));
-					} else if (options.distanceweight.equals(BroShifterOptions.DISTANCEWEIGHT.INVERSE)) {
-						weight = 1d / maxDist;
-					} else if (options.distanceweight.equals(BroShifterOptions.DISTANCEWEIGHT.LINEAR)) {
-						weight = (1 - (1d / 500)) * maxDist;
 
+					if (minDist == 0) {
+						sum += snp.getP();
+						nrOverlap++;
+					} else if (minDist < maxalloweddist) {
+						if (options.distanceweight.equals(BroShifterOptions.DISTANCEWEIGHT.SQUAREROOT)) {
+							weight = 1d / (Math.sqrt(minDist));
+						} else if (options.distanceweight.equals(BroShifterOptions.DISTANCEWEIGHT.INVERSE)) {
+							weight = 1d / minDist;
+						} else if (options.distanceweight.equals(BroShifterOptions.DISTANCEWEIGHT.EXPONENT)) {
+							weight = 1d / minDist;
+						} else if (options.distanceweight.equals(BroShifterOptions.DISTANCEWEIGHT.HEIGHTOVERDISTANCE)) {
+							weight = minDist / overlapPeak.getSize();
+						} else if (options.distanceweight.equals(BroShifterOptions.DISTANCEWEIGHT.LINEAR)) {
+							weight = 1 - (minDist / maxalloweddist);
+
+						}
+						sum += (snp.getP() * weight);
+						nrOverlap++;
 					}
-					sum += (snp.getP() * weight);
-					nrOverlap++;
 				}
 			}
 		}
@@ -584,35 +604,23 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		return new Pair<Double, Integer>(sum, nrOverlap);
 	}
 
-
-	// TODO: replace with posteriorfile in utils
 	private ArrayList<SNPFeature> readPosteriors(String file, Feature region) throws IOException {
-		ArrayList<SNPFeature> output = new ArrayList<SNPFeature>();
 
-		TextFile tf = new TextFile(file, TextFile.R);
+		AssociationFile assocFile = new AssociationFile();
+		ArrayList<AssociationResult> results = assocFile.read(file, region);
 
-		// Chr	Pos	Id	CombinedId	Beta	Se	PVal	Posterior
-		tf.readLine();
-		String[] elems = tf.readLineElems(TextFile.tab);
-		while (elems != null) {
+		ArrayList<SNPFeature> features = new ArrayList<>(results.size());
+		for (AssociationResult r : results) {
+			Feature f = r.getSnp();
+			SNPFeature f2 = new SNPFeature();
+			f2.setChromosome(f.getChromosome());
+			f2.setStart(f.getStart());
+			f2.setStop(f.getStop());
+			f2.setName(f.getName());
 
-			SNPFeature f = new SNPFeature();
-			f.setChromosome(region.getChromosome());
-
-			Integer pos = Integer.parseInt(elems[1]);
-			f.setStart(pos);
-			f.setStop(pos);
-
-			if (region.overlaps(f)) {
-				Double posterior = Double.parseDouble(elems[7]);
-				f.setP(posterior);
-				output.add(f);
-			}
-
-			elems = tf.readLineElems(TextFile.tab);
+			f2.setP(r.getPosterior());
+			features.add(f2);
 		}
-
-		tf.close();
-		return output;
+		return features;
 	}
 }

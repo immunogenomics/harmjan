@@ -115,13 +115,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-	                                          String testVCF,
-	                                          String vcf1out,
-	                                          String vcf2out,
-	                                          String vcfmergedout,
-	                                          String separatorInMergedFile,
-	                                          String logoutfile,
-	                                          boolean keepNonOverlapping) throws IOException {
+											  String testVCF,
+											  String vcf1out,
+											  String vcf2out,
+											  String vcfmergedout,
+											  String separatorInMergedFile,
+											  String logoutfile,
+											  boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -426,7 +426,7 @@ public class VCFMerger {
 	Utility function to merge two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-	                                           String separatorInMergedFile
+											   String separatorInMergedFile
 	) {
 
 
@@ -771,6 +771,22 @@ public class VCFMerger {
 		System.out.println("Looking for " + nrBatches + " batches near " + dirInPrefix);
 		System.out.println("Out: " + outfilename);
 
+		boolean allpresent = true;
+		for (int batch = 0; batch < nrBatches; batch++) {
+			String batchvcfName = dirInPrefix + batch + ".vcf.gz";
+			if (!Gpio.exists(batchvcfName)) {
+				allpresent = false;
+				System.out.println("Could not find: " + batchvcfName);
+			}
+		}
+
+		if (!allpresent) {
+			System.exit(-1);
+		} else {
+			System.out.println("All files are there.");
+		}
+
+
 		// get a list of variants and their R-squared values
 		for (int batch = 0; batch < nrBatches; batch++) {
 			String batchvcfName = dirInPrefix + batch + ".vcf.gz";
@@ -949,7 +965,7 @@ public class VCFMerger {
 	}
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-	                                           boolean linux, String vcfsort) throws IOException {
+											   boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants

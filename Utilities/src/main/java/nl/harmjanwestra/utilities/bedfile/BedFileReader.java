@@ -12,11 +12,22 @@ import umcg.genetica.text.Strings;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 /**
  * @author Harm-Jan
  */
 public class BedFileReader {
+
+	public BedFileReader() {
+
+	}
+
+	Pattern splitpattern = Strings.whitespace;
+
+	public BedFileReader(Pattern splitpattern) {
+		this.splitpattern = splitpattern;
+	}
 
 
 	protected int nrFeatures;
@@ -37,7 +48,7 @@ public class BedFileReader {
 
 
 		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
-		String[] elems = tf.readLineElems(TextFile.tab);
+		String[] elems = tf.readLineElems(splitpattern);
 		Track track = new Track(name);
 
 		while (elems != null) {
@@ -45,7 +56,7 @@ public class BedFileReader {
 			if (f != null) {
 				track.addFeature(f);
 			}
-			elems = tf.readLineElems(TextFile.tab);
+			elems = tf.readLineElems(splitpattern);
 		}
 
 		tf.close();
@@ -60,7 +71,7 @@ public class BedFileReader {
 		TextFile tf = new TextFile(file, TextFile.R);
 
 		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
-		String[] elems = tf.readLineElems(Strings.whitespace);
+		String[] elems = tf.readLineElems(splitpattern);
 
 		ArrayList<Feature> allFeatures = new ArrayList<Feature>();
 		while (elems != null) {
@@ -68,7 +79,7 @@ public class BedFileReader {
 			if (f != null) {
 				allFeatures.add(f);
 			}
-			elems = tf.readLineElems(Strings.whitespace);
+			elems = tf.readLineElems(splitpattern);
 		}
 
 		tf.close();

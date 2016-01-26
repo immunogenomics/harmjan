@@ -79,7 +79,7 @@ public class ChromosomePlot extends DefaultGraphics {
 	public void plot(String cytobandfile, String[] gffLocusFiles, boolean onlySuggestedLoci, String sequencedRegionFile) throws IOException {
 
 		// plot the chromosomes
-		int maxChrHeight = 1500;
+		int maxChrHeight = 400;
 		int chrWidth = 30;
 		int nrRows = 2;
 
@@ -89,7 +89,7 @@ public class ChromosomePlot extends DefaultGraphics {
 		int maxSize = 0;
 		int nrChr = 0;
 
-		int betweenChrMarginX = 450;
+		int betweenChrMarginX = 250;
 		int betweenChrMarginY = 300;
 
 		int fontsize = 15;

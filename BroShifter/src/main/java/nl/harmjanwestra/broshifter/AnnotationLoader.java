@@ -7,7 +7,7 @@ import nl.harmjanwestra.utilities.features.FeatureMerger;
 import nl.harmjanwestra.utilities.features.PeakFeature;
 import nl.harmjanwestra.utilities.features.Track;
 import nl.harmjanwestra.utilities.peakfiles.XLSFile;
-
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class AnnotationLoader {
 
 		ArrayList<Feature> allAnnotations = null;
 		if (annotation1.endsWith(".xls")) {
-			XLSFile xlsFile = new nl.harmjanwestra.utilities.peakfiles.XLSFile();
+			XLSFile xlsFile = new XLSFile();
 			ArrayList<PeakFeature> pf = xlsFile.readAllPeaks(annotation1, false, 0.05);
 			allAnnotations = new ArrayList<>();
 			for (Feature p : pf) {
@@ -29,6 +29,9 @@ public class AnnotationLoader {
 			}
 		} else {
 			BedFileReader bf = new BedFileReader();
+			if (annotation1.endsWith(".csv")) {
+				bf = new BedFileReader(Strings.semicolon);
+			}
 			allAnnotations = bf.readAsList(annotation1);
 		}
 

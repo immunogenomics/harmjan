@@ -326,4 +326,8 @@ public class LRTestOptions {
 		formatter.printHelp(" ", OPTIONS);
 		System.exit(-1);
 	}
+
+	public void setMaxIter(int maxIter) {
+		this.maxIter = maxIter;
+	}
 }

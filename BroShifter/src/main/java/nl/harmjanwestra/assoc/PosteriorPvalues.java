@@ -61,9 +61,17 @@ public class PosteriorPvalues {
 		for (int i = 0; i < assoc.size(); i++) {
 			AssociationResult r = assoc.get(i);
 			String assocStr = r.toString();
-			assocStr += "\t" + r.getRegion().toString();
-			assocStr += "\t" + r.getBf();
-			assocStr += "\t" + r.getPosterior();
+			if (r.getRegion() == null) {
+				assocStr += "\t" + null;
+				assocStr += "\t" + null;
+				assocStr += "\t" + null;
+			} else {
+				assocStr += "\t" + r.getRegion().toString();
+				assocStr += "\t" + r.getBf();
+				assocStr += "\t" + r.getPosterior();
+			}
+
+
 			outf.writeln(assocStr);
 		}
 		outf.close();

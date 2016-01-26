@@ -59,8 +59,18 @@ public class ComplementaryColor implements Theme {
 	}
 
 	@Override
+	public Font getMediumFont() {
+		return null;
+	}
+
+	@Override
 	public Font getLargeFontBold() {
 		return LARGE_FONT_BOLD;
+	}
+
+	@Override
+	public Font getMediumFontBold() {
+		return null;
 	}
 
 	@Override
