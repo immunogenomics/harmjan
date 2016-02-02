@@ -35,6 +35,7 @@
         <module>Pipeliner</module>
         <module>LiftOverTools</module>
         <module>BroShifter</module>
+        <module>TXTr</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

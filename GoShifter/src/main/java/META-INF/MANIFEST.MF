@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: nl.harmjanwestra.goshifter.GoShifterJobCreator
+nl.harmjanwestra.txtr.Main-Class: nl.harmjanwestra.goshifter.GoShifterJobCreator
 

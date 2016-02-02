@@ -304,7 +304,7 @@ public class Main {
 					}
 
 					double mafthreshold = 0.0;
-					if (cmd.hasOption("t")) {
+					if (cmd.hasOption("m")) {
 						mafthreshold = Double.parseDouble(cmd.getOptionValue("m"));
 					}
 

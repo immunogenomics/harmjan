@@ -612,14 +612,16 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		ArrayList<SNPFeature> features = new ArrayList<>(results.size());
 		for (AssociationResult r : results) {
 			Feature f = r.getSnp();
-			SNPFeature f2 = new SNPFeature();
-			f2.setChromosome(f.getChromosome());
-			f2.setStart(f.getStart());
-			f2.setStop(f.getStop());
-			f2.setName(f.getName());
+			if(region.overlaps(f)) {
+				SNPFeature f2 = new SNPFeature();
+				f2.setChromosome(f.getChromosome());
+				f2.setStart(f.getStart());
+				f2.setStop(f.getStop());
+				f2.setName(f.getName());
 
-			f2.setP(r.getPosterior());
-			features.add(f2);
+				f2.setP(r.getPosterior());
+				features.add(f2);
+			}
 		}
 		return features;
 	}

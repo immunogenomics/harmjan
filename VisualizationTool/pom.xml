@@ -33,7 +33,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>hms.hwestra.visualizationtool.Main</mainClass>
+                            <mainClass>hms.hwestra.visualizationtool.nl.harmjanwestra.txtr.Main</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
