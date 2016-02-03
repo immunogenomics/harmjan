@@ -21,7 +21,7 @@ public class VCFVariant {
 	private static final Pattern pipe = Pattern.compile("\\|");
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
 	private final HashMap<String, Double> info = new HashMap<String, Double>();
-	HashSet<String> notSplittableElems = new HashSet<String>();
+	private static HashSet<String> notSplittableElems = new HashSet<String>();
 	private byte[][] genotypeAllelesNew;
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
@@ -210,6 +210,7 @@ public class VCFVariant {
 		genotypeAllelesNew = new byte[2][];
 		genotypeAllelesNew[0] = alleles1;
 		genotypeAllelesNew[1] = alleles2;
+		recalculateMAFAndCallRate();
 	}
 
 	private void parseHeader(String[] tokenArr) {
@@ -274,10 +275,10 @@ public class VCFVariant {
 								} else if (infoElems[e].equals("PR")) {
 									info.put(id, 1d);
 								} else {
-									if (!notSplittableElems.contains(infoElems[e])) {
-										System.out.println("info: " + infoElems[e] + " not splitable");
-										notSplittableElems.add(new String(infoElems[e]));
-									}
+//									if (!notSplittableElems.contains(infoElems[e])) {
+//										System.out.println("info: " + infoElems[e] + " not splitable");
+//										notSplittableElems.add(new String(infoElems[e]));
+//									}
 								}
 
 							}

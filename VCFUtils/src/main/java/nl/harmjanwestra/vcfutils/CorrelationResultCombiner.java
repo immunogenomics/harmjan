@@ -183,28 +183,50 @@ public class CorrelationResultCombiner {
 		String[] elems = tf.readLineElems(TextFile.tab);
 		while (elems != null) {
 
+
+			// var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate()
+			// + "\t" + r + "\t" + rsq + "\t" + info1.get("AR2") + "\t" + info2.get("AR2")
+//      9-34726524-rs1810820    null    G,A     0.0     0.0     null    G,A     0.0     0.0     1       22624   0.894894178229274       0.8008355902286476      null    0.4125
 //		9-34970885-rs77176551   G       G,A     0.5     A       G,A     0.0019759791583874244   1       2237    0.04873531816737055     0.002375131236874838    0.0     null
-			String variant = elems[0];
+			if (elems.length > 14) {
 
-			double maf1 = Double.parseDouble(elems[3]);
-			double maf2 = Double.parseDouble(elems[6]);
-			int nrSamples = Integer.parseInt(elems[8]);
-			double rsqPearson = Double.parseDouble(elems[10]);
-			double rsqBeagle1 = Double.parseDouble(elems[11]);
-			double rsqBeagle2 = Double.parseDouble(elems[12]);
+				CorrelationResult result = new CorrelationResult();
+				result.variant = elems[0];
+				try {
+					result.maf1 = Double.parseDouble(elems[3]);
+				} catch (NumberFormatException e) {
 
-			CorrelationResult result = new CorrelationResult();
-			result.maf1 = maf1;
-			result.maf2 = maf2;
-//			result.callrate1 = cr1;
-//			result.callrate2 = cr2;
-			result.rsqBeagle1 = rsqBeagle1;
-			result.rsqBeagle1 = rsqBeagle2;
-			result.rsqPearson = rsqPearson;
-			result.variant = variant;
-			result.nrSamples = nrSamples;
+				}
+				try {
+					result.maf2 = Double.parseDouble(elems[7]);
+				} catch (NumberFormatException e) {
 
-			output.add(result);
+				}
+				try {
+					result.nrSamples = Integer.parseInt(elems[10]);
+				} catch (NumberFormatException e) {
+
+				}
+				try {
+					result.rsqPearson = Double.parseDouble(elems[12]);
+				} catch (NumberFormatException e) {
+
+				}
+
+				try {
+					result.rsqBeagle1 = Double.parseDouble(elems[13]);
+				} catch (NumberFormatException e) {
+
+				}
+
+				try {
+					result.rsqBeagle2 = Double.parseDouble(elems[14]);
+				} catch (NumberFormatException e) {
+
+				}
+
+				output.add(result);
+			}
 
 			elems = tf.readLineElems(TextFile.tab);
 		}

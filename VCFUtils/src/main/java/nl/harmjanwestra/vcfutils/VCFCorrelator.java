@@ -26,6 +26,8 @@ public class VCFCorrelator {
 		// iterate the other dataset
 		// correlate
 
+		System.out.println("Output here: " + out);
+
 		VCFGenotypeData data1 = new VCFGenotypeData(vcf1);
 		VCFGenotypeData data2 = new VCFGenotypeData(vcf2);
 
@@ -107,7 +109,7 @@ public class VCFCorrelator {
 			VCFVariant var1 = variantMap.get(varStr);
 			if (var1 != null) {
 
-				if(var2.getTokens()!=null) {
+				if (var2.getTokens() != null) {
 					var2.parseGenotypes(var2.getTokens(), VCFVariant.PARSE.ALL);
 					var2.cleartokens();
 				} else {
@@ -149,10 +151,12 @@ public class VCFCorrelator {
 
 						double r = Correlation.correlate(x, y);
 						String ln;
-						String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
-						String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 						var1.recalculateMAFAndCallRate();
 						var2.recalculateMAFAndCallRate();
+
+						String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
+						String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
+
 						if (Double.isNaN(r)) {
 							ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
 						} else {

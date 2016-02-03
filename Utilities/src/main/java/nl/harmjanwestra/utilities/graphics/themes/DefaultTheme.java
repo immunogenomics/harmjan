@@ -28,6 +28,11 @@ public class DefaultTheme implements Theme {
 			new Color(98, 182, 177),
 			new Color(116, 156, 80),
 			new Color(124, 87, 147),
+			new Color(174, 164, 140),
+			new Color(185, 113, 65),
+			new Color(63, 93, 126),
+			new Color(79, 96, 64),
+			new Color(109, 54, 96),
 	};
 
 

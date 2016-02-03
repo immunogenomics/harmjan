@@ -87,9 +87,6 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 			String regionStr = region.toString();
 			double locusScore = 0;
 
-			// TODO: make this some kind of default format: return broshifteroutput objects in stead?
-			// ALSO: make it independent of the region format
-
 			int annotation2size = 0;
 			if (Gpio.exists(options.posteriorFile) && !region.getChromosome().equals(Chromosome.X)) {
 
@@ -104,7 +101,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 					// get subset of annotations
 					Track subsetOfAnnotation1 = annotation1Track.getSubset(region.getChromosome(), region.getStart(), region.getStop());
 
-					String ln = "";
+//					String ln = "";
 					double sigmaPosterior = 0;
 					double[] sigmaPosteriorNull = new double[options.nrIterations];
 					int nrOverlapping = 0;
@@ -191,51 +188,48 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 					totalNrOfVariants += snps.size();
 					totalNrOfOverlappingVariants += nrOverlapping;
 
+					StringBuilder builder = new StringBuilder(500);
+
 					if (nrOverlapping == 0) {
-						ln = 1
-								+ "\t" + 1
-								+ "\t" + 0
-								+ "\t" + sigmaPosterior
-								+ "\t" + JSci.maths.ArrayMath.mean(sigmaPosteriorNull)
-								+ "\t" + JSci.maths.ArrayMath.standardDeviation(sigmaPosteriorNull)
-								+ "\t" + locusScore
-								+ "\t" + regionName
-								+ "\t" + origRegion
-								+ "\t" + nrOverlapping
-								+ "\t" + snps.size()
-								+ "\t0"
-								+ "\t" + annotation1name
-								+ "\t" + subsetOfAnnotation1.getSize();
-						if (annotation2 != null) {
-							ln += "\t" + annotation2name;
-							ln += "\t" + annotation2size;
-						}
+						builder.append(1)
+								.append("\t").append(1)
+								.append("\t").append(0)
+								.append("\t").append(sigmaPosterior)
+								.append("\t").append(JSci.maths.ArrayMath.mean(sigmaPosteriorNull))
+								.append("\t").append(JSci.maths.ArrayMath.standardDeviation(sigmaPosteriorNull))
+								.append("\t").append(locusScore)
+								.append("\t").append(regionName)
+								.append("\t").append(origRegion)
+								.append("\t").append(nrOverlapping)
+								.append("\t").append(snps.size())
+								.append("\t").append(0)
+								.append("\t").append(annotation1name)
+								.append("\t").append(subsetOfAnnotation1.getSize());
 					} else {
 						sigmaLociWithAtLeastOneOverlap++;
 
 						double[] stats = getP(sigmaPosteriorNull, sigmaPosterior);
 
-						ln = stats[0]
-								+ "\t" + stats[1]
-								+ "\t" + stats[2]
-								+ "\t" + sigmaPosterior
-								+ "\t" + stats[3]
-								+ "\t" + stats[4]
-								+ "\t" + locusScore
-								+ "\t" + regionName
-								+ "\t" + origRegion
-								+ "\t" + nrOverlapping
-								+ "\t" + snps.size()
-								+ "\t" + ((double) nrOverlapping / snps.size())
-								+ "\t" + annotation1name
-								+ "\t" + subsetOfAnnotation1.getAllFeatures().size();
-
-						if (annotation2 != null) {
-							ln += "\t" + annotation2name;
-							ln += "\t" + annotation2size;
-						}
+						builder.append(stats[0])
+								.append("\t").append(stats[1])
+								.append("\t").append(stats[2])
+								.append("\t").append(sigmaPosterior)
+								.append("\t").append(stats[3])
+								.append("\t").append(stats[4])
+								.append("\t").append(locusScore)
+								.append("\t").append(regionName)
+								.append("\t").append(origRegion)
+								.append("\t").append(nrOverlapping)
+								.append("\t").append(snps.size())
+								.append("\t").append(((double) nrOverlapping / snps.size()))
+								.append("\t").append(annotation1name)
+								.append("\t").append(subsetOfAnnotation1.getAllFeatures().size());
 					}
-					outputLines.add(ln);
+					if (annotation2 != null) {
+						builder.append("\t").append(annotation2name)
+								.append("\t").append(annotation2size);
+					}
+					outputLines.add(builder.toString());
 				}
 			} else {
 				System.err.println("Thread " + threadNum + " | Cannot find region file: " + options.posteriorFile);
@@ -250,29 +244,30 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		double[] stats = getP(sigmaSigmaPosteriorNull, sigmaSigmaPosterior);
 		double[] goshifterStats = getP(sigmaLociWithAtLeastOneOverlapNull, sigmaLociWithAtLeastOneOverlap);
 
-		String ln = stats[0]
-				+ "\t" + stats[1]
-				+ "\t" + stats[2]
-				+ "\t" + sigmaSigmaPosterior
-				+ "\t" + stats[3]
-				+ "\t" + stats[4]
-				+ "\t" + goshifterStats[0]
-				+ "\t" + goshifterStats[1]
-				+ "\t" + goshifterStats[2]
-				+ "\t" + sigmaLociWithAtLeastOneOverlap
-				+ "\t" + goshifterStats[3]
-				+ "\t" + goshifterStats[4]
-				+ "\t" + totalNrOfOverlappingVariants
-				+ "\t" + totalNrOfVariants
-				+ "\t" + ((double) totalNrOfOverlappingVariants / totalNrOfVariants)
-				+ "\t" + annotation1name;
+		StringBuilder builder = new StringBuilder(500);
+		builder.append(stats[0])
+				.append("\t").append(stats[1])
+				.append("\t").append(stats[2])
+				.append("\t").append(sigmaSigmaPosterior)
+				.append("\t").append(stats[3])
+				.append("\t").append(stats[4])
+				.append("\t").append(goshifterStats[0])
+				.append("\t").append(goshifterStats[1])
+				.append("\t").append(goshifterStats[2])
+				.append("\t").append(sigmaLociWithAtLeastOneOverlap)
+				.append("\t").append(goshifterStats[3])
+				.append("\t").append(goshifterStats[4])
+				.append("\t").append(totalNrOfOverlappingVariants)
+				.append("\t").append(totalNrOfVariants)
+				.append("\t").append(((double) totalNrOfOverlappingVariants / totalNrOfVariants))
+				.append("\t").append(annotation1name);
 		if (annotation2 != null) {
-			ln += "\t" + annotation2name;
+			builder.append("\t").append(annotation2name);
 		}
 
 
 		System.out.println("Thread " + threadNum + " | done testing.");
-		return new Pair<>(ln, outputLines);
+		return new Pair<>(builder.toString(), outputLines);
 	}
 
 	// determine p-values from permutation results
@@ -612,7 +607,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		ArrayList<SNPFeature> features = new ArrayList<>(results.size());
 		for (AssociationResult r : results) {
 			Feature f = r.getSnp();
-			if(region.overlaps(f)) {
+			if (region.overlaps(f)) {
 				SNPFeature f2 = new SNPFeature();
 				f2.setChromosome(f.getChromosome());
 				f2.setStart(f.getStart());

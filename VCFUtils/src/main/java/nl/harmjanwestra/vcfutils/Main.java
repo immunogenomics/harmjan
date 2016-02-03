@@ -32,6 +32,12 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Plot correlations")
+				.longOpt("plotcor")
+				.build();
+		OPTIONS.addOption(option);
+
 
 		option = Option.builder()
 				.desc("Filter monomorphic")
@@ -313,6 +319,24 @@ public class Main {
 						bedfile = cmd.getOptionValue("b");
 					}
 					plot.plot(input, out, threshold, mafthreshold, bedfile);
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (DocumentException e) {
+					e.printStackTrace();
+				}
+
+			} else if (cmd.hasOption("plotcor")) {
+				CorrelationResultPlotter plotter = new CorrelationResultPlotter();
+
+				try {
+
+					if (cmd.hasOption("refname")) {
+						plotter.run(input, cmd.getOptionValue("refname"), out);
+					} else {
+						plotter.run(input, out);
+					}
+
+
 				} catch (IOException e) {
 					e.printStackTrace();
 				} catch (DocumentException e) {
