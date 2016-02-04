@@ -24,6 +24,12 @@ public class TXTr {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Multiple line hashtag delimited header")
+				.longOpt("multilineheader")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Merge while skipping first line of all files except 1st")
 				.longOpt("merge")
 				.build();
@@ -83,7 +89,11 @@ public class TXTr {
 				}
 			} else if (cmd.hasOption("merge")) {
 				try {
-					t.mergeSkipHeader(input, output);
+					boolean multilineheader = false;
+					if (cmd.hasOption("multilineheader")) {
+						multilineheader = true;
+					}
+					t.mergeSkipHeader(input, output, multilineheader);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -120,7 +130,8 @@ public class TXTr {
 		in.close();
 	}
 
-	public void mergeSkipHeader(String fileList, String output) throws IOException {
+
+	public void mergeSkipHeader(String fileList, String output, boolean multilinehashtagheader) throws IOException {
 
 		TextFile tf1 = new TextFile(fileList, TextFile.R);
 		String[] files = tf1.readAsArray();
@@ -133,8 +144,26 @@ public class TXTr {
 			TextFile in = new TextFile(file, TextFile.R);
 			String ln = in.readLine();
 			if (!headerwritten && ln != null) {
-				out.writeln(ln);
-				headerwritten = true;
+				if (multilinehashtagheader) {
+					if (ln.startsWith("#")) {
+						out.writeln(ln);
+						boolean linehashash = true;
+						ln = in.readLine();
+						while (ln != null && linehashash) {
+							if (ln.startsWith("#")) {
+								out.writeln(ln);
+								ln = in.readLine();
+							} else {
+								linehashash = false;
+							}
+
+						}
+					}
+				} else {
+					out.writeln(ln);
+					headerwritten = true;
+				}
+
 			}
 			if (ln != null) {
 				ln = in.readLine();

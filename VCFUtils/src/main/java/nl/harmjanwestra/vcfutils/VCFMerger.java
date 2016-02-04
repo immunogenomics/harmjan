@@ -426,8 +426,7 @@ public class VCFMerger {
 	Utility function to merge two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-											   String separatorInMergedFile
-	) {
+											   String separatorInMergedFile) {
 
 
 		String[] refAlleles = refVariant.getAlleles();
@@ -739,6 +738,7 @@ public class VCFMerger {
 
 	}
 
+	// same variants, different samples
 	public void mergeImputationBatches(String dirInPrefix, String outfilename, String variantsToTestFile, int nrBatches) throws IOException {
 
 		// make a list of variants to include
