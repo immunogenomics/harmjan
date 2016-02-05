@@ -40,8 +40,14 @@ public class Main {
 
 
 		option = Option.builder()
-				.desc("Filter monomorphic")
+				.desc("Filter variants on maf,callrate,genotypingquals and allelic depth")
 				.longOpt("filter")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Filter for bed regions")
+				.longOpt("bedfilter")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -133,6 +139,30 @@ public class Main {
 		option = Option.builder("t")
 				.desc("Threshold")
 				.argName("double")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Callrate threshold")
+				.argName("double")
+				.longOpt("callrate")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Genotype qual threshold")
+				.argName("double")
+				.longOpt("gqual")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Read depth threshold")
+				.argName("double")
+				.longOpt("readdepth")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
@@ -294,8 +324,26 @@ public class Main {
 
 				try {
 
-					FrequencyFilter filter = new FrequencyFilter();
-					filter.filter(input, out);
+					VCFFilter filter = new VCFFilter();
+					int gqual = 0;
+					int readdepth = 0;
+					double maf = 0;
+					double callrate = 0;
+
+					if (cmd.hasOption("readdepth")) {
+						readdepth = Integer.parseInt(cmd.getOptionValue("readdepth"));
+					}
+					if (cmd.hasOption("gqual")) {
+						gqual = Integer.parseInt(cmd.getOptionValue("gqual"));
+					}
+					if (cmd.hasOption("m")) {
+						maf = Double.parseDouble(cmd.getOptionValue("m"));
+					}
+
+					if (cmd.hasOption("callrate")) {
+						callrate = Double.parseDouble(cmd.getOptionValue("callrate"));
+					}
+					filter.filter(input, out, maf, readdepth, gqual, callrate);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -598,7 +646,7 @@ public class Main {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			} else if (cmd.hasOption("filter")) {
+			} else if (cmd.hasOption("bedfilter")) {
 				VCFFunctions f = new VCFFunctions();
 				if (cmd.hasOption("b")) {
 					try {

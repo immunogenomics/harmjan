@@ -20,8 +20,8 @@ public class VCFVariant {
 	private static final Pattern slash = Pattern.compile("/");
 	private static final Pattern pipe = Pattern.compile("\\|");
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
-	private final HashMap<String, Double> info = new HashMap<String, Double>();
 	private static HashSet<String> notSplittableElems = new HashSet<String>();
+	private final HashMap<String, Double> info = new HashMap<String, Double>();
 	private byte[][] genotypeAllelesNew;
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
@@ -56,6 +56,7 @@ public class VCFVariant {
 	private String[] tokens;
 	private int minimalReadDepth;
 	private int minimalGenotypeQual;
+	private boolean ignoregender;
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
@@ -66,6 +67,14 @@ public class VCFVariant {
 		this.minimalReadDepth = minimalReadDepth;
 		parse(ln, PARSE.ALL);
 	}
+
+	public VCFVariant(String ln, int minimalReadDepth, int minimalGenotypeQual, boolean ignoregender) {
+		this.minimalGenotypeQual = minimalGenotypeQual;
+		this.minimalReadDepth = minimalReadDepth;
+		this.ignoregender = ignoregender;
+		parse(ln, PARSE.ALL);
+	}
+
 
 	public VCFVariant(String ln, PARSE p) {
 		parse(ln, p);
@@ -201,15 +210,33 @@ public class VCFVariant {
 						}
 						allelicDepths[indPos] = depth;
 					}
-
 					sampleTokenCtr++;
 				}
 			}
 		}
 
+		if (minimalReadDepth > 0 && dpCol != -1) {
+			for (int i = 0; i < alleles1.length; i++) {
+				int depth = allelicDepths[i];
+				if (depth < minimalReadDepth) {
+					alleles1[i] = -1;
+					alleles2[i] = -1;
+				}
+			}
+		}
+		if (minimalGenotypeQual > 0 && gqCol != -1) {
+			for (int i = 0; i < alleles1.length; i++) {
+				int qual = genotypeQuals[i];
+				if (qual < minimalGenotypeQual) {
+					alleles1[i] = -1;
+					alleles2[i] = -1;
+				}
+			}
+		}
 		genotypeAllelesNew = new byte[2][];
 		genotypeAllelesNew[0] = alleles1;
 		genotypeAllelesNew[1] = alleles2;
+
 		recalculateMAFAndCallRate();
 	}
 
@@ -645,18 +672,18 @@ public class VCFVariant {
 
 		for (int i = 0; i < genotypeAllelesNew[0].length; i++) {
 			if (chromosome.equals(Chromosome.X)) {
-				if ((individualIsFemale != null && individualIsFemale[i] != null && individualIsFemale[i])) {
+				if (ignoregender || (individualIsFemale != null && individualIsFemale[i] != null && individualIsFemale[i])) {
 					if (genotypeAllelesNew[0][i] != -1) {
 						nrCalled++;
 						nrAllelesObservedLocal[genotypeAllelesNew[0][i]]++;
 						nrAllelesObservedLocal[genotypeAllelesNew[1][i]]++;
 					}
 				} else if (individualIsFemale == null) {
-					System.err.println("ERROR: cannot calculate chr X MAF if gender information unavailable.");
-					throw new IllegalArgumentException("blaaat");
+//					System.err.println("ERROR: cannot calculate chr X MAF if gender information unavailable.");
+					throw new IllegalArgumentException("ERROR: cannot calculate chr X MAF if gender information unavailable.");
 				}
 			} else if (chromosome.equals(Chromosome.Y)) {
-				if ((individualIsFemale != null && individualIsFemale[i] != null && !individualIsFemale[i])) {
+				if (ignoregender || (individualIsFemale != null && individualIsFemale[i] != null && !individualIsFemale[i])) {
 					if (genotypeAllelesNew[0][i] != -1) {
 						nrCalled++;
 						nrAllelesObservedLocal[genotypeAllelesNew[0][i]]++;
@@ -664,6 +691,7 @@ public class VCFVariant {
 					}
 				} else if (individualIsFemale == null) {
 					System.err.println("ERROR: cannot calculate chr Y MAF if gender information unavailable.");
+					throw new IllegalArgumentException("ERROR: cannot calculate chr X MAF if gender information unavailable.");
 				}
 			} else {
 				if (genotypeAllelesNew[0][i] != -1) {

@@ -70,10 +70,10 @@ public class TXTr {
 			}
 
 			if (cmd.hasOption("split")) {
-				int nrLines = 0;
+
 				if (cmd.hasOption("n")) {
 					try {
-						nrLines = Integer.parseInt(cmd.getOptionValue("n"));
+						int nrLines = Integer.parseInt(cmd.getOptionValue("n"));
 						try {
 							t.split(input, output, nrLines);
 						} catch (IOException e) {
@@ -108,6 +108,12 @@ public class TXTr {
 
 	}
 
+	public static void printHelp() {
+		HelpFormatter formatter = new HelpFormatter();
+		formatter.printHelp(" ", OPTIONS);
+		System.exit(-1);
+	}
+
 	public void split(String file, String fileout, int lns) throws IOException {
 
 		TextFile in = new TextFile(file, TextFile.R);
@@ -130,7 +136,6 @@ public class TXTr {
 		in.close();
 	}
 
-
 	public void mergeSkipHeader(String fileList, String output, boolean multilinehashtagheader) throws IOException {
 
 		TextFile tf1 = new TextFile(fileList, TextFile.R);
@@ -140,49 +145,38 @@ public class TXTr {
 		boolean headerwritten = false;
 
 		TextFile out = new TextFile(output, TextFile.W);
+		int fctr = 0;
 		for (String file : files) {
 			TextFile in = new TextFile(file, TextFile.R);
 			String ln = in.readLine();
-			if (!headerwritten && ln != null) {
+			int lnctr = 0;
+			while (ln != null) {
 				if (multilinehashtagheader) {
 					if (ln.startsWith("#")) {
-						out.writeln(ln);
-						boolean linehashash = true;
-						ln = in.readLine();
-						while (ln != null && linehashash) {
-							if (ln.startsWith("#")) {
-								out.writeln(ln);
-								ln = in.readLine();
-							} else {
-								linehashash = false;
-							}
-
+						if (fctr == 0) {
+							out.writeln(ln);
 						}
+					} else {
+						out.writeln(ln);
 					}
 				} else {
-					out.writeln(ln);
-					headerwritten = true;
+					if (!headerwritten && lnctr == 0) {
+						out.writeln(ln);
+						headerwritten = true;
+					} else if (lnctr > 0) {
+						out.writeln(ln);
+					}
 				}
 
-			}
-			if (ln != null) {
 				ln = in.readLine();
-				while (ln != null) {
-					out.writeln(ln);
-					ln = in.readLine();
-				}
+				lnctr++;
 			}
+
 			in.close();
+			fctr++;
 		}
 		out.close();
 
-	}
-
-
-	public static void printHelp() {
-		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp(" ", OPTIONS);
-		System.exit(-1);
 	}
 
 }
