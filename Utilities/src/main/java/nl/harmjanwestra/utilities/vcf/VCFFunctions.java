@@ -13,7 +13,6 @@ import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.HWE;
 import umcg.genetica.text.Strings;
-import umcg.genetica.util.Primitives;
 
 import java.io.File;
 import java.io.IOException;
@@ -952,7 +951,7 @@ public class VCFFunctions {
 
 				VCFVariant variant = new VCFVariant(ln, minimalReadDepth, minimalGenotypeQual);
 
-				short[] depths = variant.getAllelicDepths();
+				short[] depths = variant.getApproximateDepth();
 
 				for (int depth : depths) {
 					if (depth > readDepthDist.length - 1) {

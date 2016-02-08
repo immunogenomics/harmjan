@@ -7,7 +7,6 @@ import umcg.genetica.text.Strings;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -20,14 +19,13 @@ public class VCFVariant {
 	private static final Pattern slash = Pattern.compile("/");
 	private static final Pattern pipe = Pattern.compile("\\|");
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
-	private static HashSet<String> notSplittableElems = new HashSet<String>();
 	private final HashMap<String, Double> info = new HashMap<String, Double>();
 	private byte[][] genotypeAllelesNew;
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
 	private double[][] genotypeProbsNew;
 	private short[] genotypeQuals;
-	private short[] allelicDepths;
+	private short[] approximateDepth;
 	private boolean monomorphic;
 	private double callrate;
 	private boolean multiallelic;
@@ -57,6 +55,7 @@ public class VCFVariant {
 	private int minimalReadDepth;
 	private int minimalGenotypeQual;
 	private boolean ignoregender;
+	private short[][] allelicDepth;
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
@@ -107,7 +106,7 @@ public class VCFVariant {
 		int nrTokens = tokenArr.length;
 		byte[] alleles1 = new byte[nrTokens - nrHeaderElems];
 		byte[] alleles2 = new byte[nrTokens - nrHeaderElems];
-		allelicDepths = new short[nrTokens - nrHeaderElems];
+		approximateDepth = new short[nrTokens - nrHeaderElems];
 		genotypeQuals = new short[nrTokens - nrHeaderElems];
 
 		for (int t = 9; t < nrTokens; t++) {
@@ -163,6 +162,7 @@ public class VCFVariant {
 							}
 						}
 					} else if (s == dsCol) {
+						// dosages
 						if (p.equals(PARSE.ALL)) {
 							try {
 								genotypeDosages[indPos] = Double.parseDouble(sampleToken);
@@ -171,6 +171,7 @@ public class VCFVariant {
 							}
 						}
 					} else if (s == gpCol) {
+						// genotype probs
 						if (p.equals(PARSE.ALL)) {
 							String[] gpElems = Strings.comma.split(sampleToken);
 
@@ -188,7 +189,24 @@ public class VCFVariant {
 
 							}
 						}
+					} else if (s == adCol) {
+						// depth of sequencing per allele
+						String[] adElems = Strings.comma.split(sampleToken);
+						try {
+
+							if (allelicDepth == null) {
+								allelicDepth = new short[adElems.length][nrTokens - nrHeaderElems];
+							}
+
+							for (int g = 0; g < adElems.length; g++) {
+								allelicDepth[g][indPos] = Short.parseShort(adElems[g]);
+							}
+
+						} catch (NumberFormatException e) {
+
+						}
 					} else if (s == gqCol) {
+						// genotype quals
 						short gq = 0;
 
 						try {
@@ -200,6 +218,7 @@ public class VCFVariant {
 						genotypeQuals[indPos] = gq;
 
 					} else if (s == dpCol) {
+						// approximate depth of sequencing
 						short depth = 0;
 
 						try {
@@ -208,7 +227,7 @@ public class VCFVariant {
 							}
 						} catch (NumberFormatException e) {
 						}
-						allelicDepths[indPos] = depth;
+						approximateDepth[indPos] = depth;
 					}
 					sampleTokenCtr++;
 				}
@@ -217,7 +236,7 @@ public class VCFVariant {
 
 		if (minimalReadDepth > 0 && dpCol != -1) {
 			for (int i = 0; i < alleles1.length; i++) {
-				int depth = allelicDepths[i];
+				int depth = approximateDepth[i];
 				if (depth < minimalReadDepth) {
 					alleles1[i] = -1;
 					alleles2[i] = -1;
@@ -404,8 +423,8 @@ public class VCFVariant {
 		return genotypeQuals;
 	}
 
-	public short[] getAllelicDepths() {
-		return allelicDepths;
+	public short[] getApproximateDepth() {
+		return approximateDepth;
 	}
 
 	public double getMAF() {
