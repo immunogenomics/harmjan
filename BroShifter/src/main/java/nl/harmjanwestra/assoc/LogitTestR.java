@@ -449,7 +449,7 @@ public class LogitTestR implements Callable<Boolean> {
 							Triple<double[][], Double, Integer> recodedGenotypes = recodeGenotypes(
 									variant.getChr() + "-" + variant.getPos() + "-" + variant.getId(),
 									genotypesWithCovariatesAndDiseaseStatus,
-									variant.getGenotypeAllelesNew(),
+									variant.getGenotypeAlleles(),
 									variant.getAlleles().length,
 									kidsInTrios,
 									sampleParents,
@@ -1474,7 +1474,7 @@ public class LogitTestR implements Callable<Boolean> {
 							Triple<double[][], Double, Integer> recodedGenotypes = recodeGenotypes(
 									variant.getChr() + "-" + variant.getPos() + "-" + variant.getId(),
 									genotypesWithCovariatesAndDiseaseStatus,
-									variant.getGenotypeAllelesNew(),
+									variant.getGenotypeAlleles(),
 									variant.getAlleles().length,
 									kidsInTrios,
 									sampleParents,

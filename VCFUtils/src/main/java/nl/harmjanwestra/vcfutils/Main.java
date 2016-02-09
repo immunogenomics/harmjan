@@ -325,17 +325,23 @@ public class Main {
 				try {
 
 					VCFFilter filter = new VCFFilter();
-					int gqual = 0;
-					int readdepth = 0;
+					Integer gqual = null;
+					Integer readdepth = null;
+					Double allelicBalance = null;
 					double maf = 0;
 					double callrate = 0;
-
+					boolean onlyautosomes = false;
 					if (cmd.hasOption("readdepth")) {
 						readdepth = Integer.parseInt(cmd.getOptionValue("readdepth"));
 					}
 					if (cmd.hasOption("gqual")) {
 						gqual = Integer.parseInt(cmd.getOptionValue("gqual"));
 					}
+
+					if (cmd.hasOption("allelicBalance")) {
+						allelicBalance = Double.parseDouble("allelicBalance");
+					}
+
 					if (cmd.hasOption("m")) {
 						maf = Double.parseDouble(cmd.getOptionValue("m"));
 					}
@@ -343,7 +349,13 @@ public class Main {
 					if (cmd.hasOption("callrate")) {
 						callrate = Double.parseDouble(cmd.getOptionValue("callrate"));
 					}
-					filter.filter(input, out, maf, readdepth, gqual, callrate);
+
+					if (cmd.hasOption("autosomes")) {
+						onlyautosomes = true;
+					}
+
+
+					filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

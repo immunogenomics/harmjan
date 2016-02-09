@@ -1015,7 +1015,7 @@ public class VCFFunctions {
 
 				double maf = variant.getMAF();
 				double[] alleleFrequencies = variant.getAllelefrequencies();
-				byte[][] genotypes = variant.getGenotypeAllelesNew();
+				byte[][] genotypes = variant.getGenotypeAlleles();
 				int[] variantAllelesObserved = variant.getNrAllelesObserved();
 				int nrCalled = 0;
 				for (int i = 0; i < genotypes[0].length; i++) {
@@ -1250,7 +1250,7 @@ public class VCFFunctions {
 					// multi allelic variants complicate things..... let's just output these
 					out.writeln(var.toVCFString());
 				} else {
-					byte[][] alleles = var.getGenotypeAllelesNew();
+					byte[][] alleles = var.getGenotypeAlleles();
 					String[] allelesStr = var.getAlleles();
 					int nrErrors = 0;
 					int nrTested = 0;
@@ -1352,8 +1352,8 @@ public class VCFFunctions {
 
 									if (!allowedAlleles.contains(sampleSum)) {
 // errorrrrr
-										var.getGenotypeAllelesNew()[0][s] = -1;
-										var.getGenotypeAllelesNew()[1][s] = -1;
+										var.getGenotypeAlleles()[0][s] = -1;
+										var.getGenotypeAlleles()[1][s] = -1;
 										nrErrors++;
 										logmendel.writeln(var.getChr() + "\t" + var.getPos() + "\t" + var.getId() + "\t" + Strings.concat(allelesStr, Strings.comma)
 												+ "\t" + samples[s] + "\t" + sampleStr + "\t" + s1allele + "\t" + s2allele
@@ -2241,8 +2241,8 @@ public class VCFFunctions {
 		output.append(Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length));
 		output.append("\t.\t.\t.\tGT");
 
-		byte[][] genotypeAlleles1 = var1.getGenotypeAllelesNew();
-		byte[][] genotypeAlleles2 = var2.getGenotypeAllelesNew();
+		byte[][] genotypeAlleles1 = var1.getGenotypeAlleles();
+		byte[][] genotypeAlleles2 = var2.getGenotypeAlleles();
 		if (separator == null) {
 			separator = "/";
 		}
@@ -2297,7 +2297,7 @@ public class VCFFunctions {
 				} else {
 
 					// nrVariants = alleles.length-1
-					byte[][] genotypeAlleles = var.getGenotypeAllelesNew(); // [ind][0]/[ind][1]
+					byte[][] genotypeAlleles = var.getGenotypeAlleles(); // [ind][0]/[ind][1]
 
 
 					int nrLinesWritten = 0;

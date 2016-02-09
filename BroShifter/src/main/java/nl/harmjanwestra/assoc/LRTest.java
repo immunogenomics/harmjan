@@ -445,7 +445,7 @@ public class LRTest {
 							if (iterForVariant != null && iterForVariant <= nextIter) {
 								Triple<double[][], boolean[], Integer> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
 										genotypesWithCovariatesAndDiseaseStatus,
-										variant.getGenotypeAllelesNew(),
+										variant.getGenotypeAlleles(),
 										variant.getAlleles().length,
 										finalCovariates.length);
 								conditional.add(unfilteredGenotypeData);
@@ -460,7 +460,7 @@ public class LRTest {
 					VCFVariant variant = currentLowestVariant;
 					Triple<double[][], boolean[], Integer> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
 							genotypesWithCovariatesAndDiseaseStatus,
-							variant.getGenotypeAllelesNew(),
+							variant.getGenotypeAlleles(),
 							variant.getAlleles().length,
 							finalCovariates.length);
 					conditional.add(unfilteredGenotypeData);
@@ -656,7 +656,7 @@ public class LRTest {
 			// recode the genotypes to the same ordering as the covariate table
 			Triple<double[][], boolean[], Integer> unfilteredGenotypeData = filterAndRecodeGenotypes(
 					genotypesWithCovariatesAndDiseaseStatus,
-					variant.getGenotypeAllelesNew(),
+					variant.getGenotypeAlleles(),
 					variant.getAlleles().length,
 					finalCovariates.length);
 
@@ -694,7 +694,7 @@ public class LRTest {
 //					variants.add(variant);
 //				}
 
-				double[][] probs = variant.getGenotypeProbsNew(); // [probs][inds]
+				double[][] probs = variant.getGenotypeProbabilies(); // [probs][inds]
 				int nrAlleles = variant.getAlleles().length;
 				double[] y = genotypedata.getRight();
 				double[][] x = genotypedata.getLeft();

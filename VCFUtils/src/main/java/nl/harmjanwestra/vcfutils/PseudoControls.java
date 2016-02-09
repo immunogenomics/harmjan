@@ -228,7 +228,7 @@ public class PseudoControls {
 
 		while (data.hasNext()) {
 			VCFVariant current = data.next();
-			byte[][] alleles = current.getGenotypeAllelesNew();
+			byte[][] alleles = current.getGenotypeAlleles();
 
 
 			for (int kidId = 0; kidId < alleles[0].length; kidId++) {
@@ -365,7 +365,7 @@ public class PseudoControls {
 		while (data.hasNext()) {
 
 			VCFVariant current = data.next();
-			byte[][] alleles = current.getGenotypeAllelesNew();
+			byte[][] alleles = current.getGenotypeAlleles();
 			byte[][] finalAlleles = new byte[2][finalNrSamples];
 
 
@@ -524,7 +524,7 @@ public class PseudoControls {
 		while (data.hasNext()) {
 
 			VCFVariant current = data.next();
-			byte[][] alleles = current.getGenotypeAllelesNew();
+			byte[][] alleles = current.getGenotypeAlleles();
 			byte[][] finalAlleles = new byte[2][finalNrSamples];
 
 			for (int kidId = 0; kidId < alleles[0].length; kidId++) {

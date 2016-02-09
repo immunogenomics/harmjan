@@ -637,7 +637,7 @@ public class VCFMerger {
 					for (int i = 0; i < samples1.size(); i++) {
 						builder.append("\t").append("./.");
 					}
-					byte[][] alleles = var2.getGenotypeAllelesNew();
+					byte[][] alleles = var2.getGenotypeAlleles();
 					for (int i = 0; i < samples2.size(); i++) {
 
 						if (alleles[0][i] == -1) {
@@ -711,7 +711,7 @@ public class VCFMerger {
 					builder.append("\t").append(".");
 					builder.append("\t").append("GT");
 
-					byte[][] alleles = var1.getGenotypeAllelesNew();
+					byte[][] alleles = var1.getGenotypeAlleles();
 					for (int i = 0; i < samples1.size(); i++) {
 
 						if (alleles[0][i] == -1) {

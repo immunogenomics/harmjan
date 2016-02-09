@@ -2,9 +2,13 @@ package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.filter.AllelicDepthFilter;
+import nl.harmjanwestra.utilities.vcf.filter.GenotypeQualityFilter;
+import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by Harm-Jan on 02/04/16.
@@ -12,7 +16,7 @@ import java.io.IOException;
 public class VCFFilter {
 
 
-	public void filter(String in, String out, double mafthreshold, int readdepth, int gqual, double callratethreshold, boolean onlyAutosomes) throws IOException {
+	public void filter(String in, String out, double mafthreshold, double callratethreshold, Integer readdepth, Integer gqual, Double allelicBalance, boolean onlyAutosomes) throws IOException {
 
 		TextFile tf1 = new TextFile(in, TextFile.R);
 		TextFile tf2 = new TextFile(out, TextFile.W);
@@ -44,16 +48,35 @@ public class VCFFilter {
 		int[] gqf = new int[distlen];
 		int[] rdf = new int[distlen];
 
+		ArrayList<VCFGenotypeFilter> filters = new ArrayList<>();
+		if (gqual != null) {
+			filters.add(new GenotypeQualityFilter(gqual));
+			System.out.println("Adding genotyping filter: " + gqual);
+		}
+
+		if (allelicBalance != null) {
+			if (readdepth == null) {
+				filters.add(new AllelicDepthFilter(allelicBalance, 0));
+				System.out.println("Adding allele balance filter: ab" + allelicBalance + "\tread depth: " + 0);
+			} else {
+				filters.add(new AllelicDepthFilter(allelicBalance, readdepth));
+				System.out.println("Adding allele balance filter: ab" + allelicBalance + "\tread depth: " + readdepth);
+			}
+		} else if (readdepth != null) {
+			System.out.println("Adding read depth filter: " + readdepth);
+		}
+
+
 		while (ln != null) {
 			if (ln.startsWith("#")) {
 				tf2.writeln(ln);
 			} else {
-				VCFVariant var = new VCFVariant(ln, readdepth, gqual, true);
-				VCFVariant varnofilter = new VCFVariant(ln, 0, 0, true);
+				VCFVariant varFiltered = new VCFVariant(ln, filters, true);
+				VCFVariant varnofilter = new VCFVariant(ln, true);
 
-				if ((onlyAutosomes && !var.getChr().equals(Chromosome.X) && !var.getChr().equals(Chromosome.Y)) || !onlyAutosomes) {
-					double m = var.getMAF() * 2;
-					double c = var.getCallrate();
+				if ((onlyAutosomes && !varFiltered.getChr().equals(Chromosome.X) && !varFiltered.getChr().equals(Chromosome.Y)) || !onlyAutosomes) {
+					double m = varFiltered.getMAF() * 2;
+					double c = varFiltered.getCallrate();
 					int bin = (int) Math.floor(m * distlen);
 					if (bin >= distlen) {
 						bin = distlen - 1;
@@ -81,7 +104,7 @@ public class VCFFilter {
 					double meanDepth = 0;
 					double meanQual = 0;
 
-					short[] rd = var.getApproximateDepth();
+					short[] rd = varFiltered.getApproximateDepth();
 					for (int i = 0; i < rd.length; i++) {
 						meanDepth += rd[i];
 						if (rd[i] >= distlen) {
@@ -91,7 +114,7 @@ public class VCFFilter {
 						}
 					}
 
-					short[] gq = var.getGenotypeQuals();
+					short[] gq = varFiltered.getGenotypeQuals();
 					for (int i = 0; i < gq.length; i++) {
 						meanQual += gq[i];
 
@@ -105,25 +128,25 @@ public class VCFFilter {
 					meanDepth /= rd.length;
 					meanQual /= gq.length;
 
-					if (var.getCallrate() >= callratethreshold && var.getMAF() >= mafthreshold) {
-						tf2.writeln(var.toVCFString());
+					if (varFiltered.getCallrate() >= callratethreshold && varFiltered.getMAF() >= mafthreshold) {
+						tf2.writeln(varFiltered.toVCFString());
 					} else {
 
 
-						filterlog.writeln(var.toString()
+						filterlog.writeln(varFiltered.toString()
 								+ "\t" + varnofilter.getMAF()
-								+ "\t" + var.getMAF()
-								+ "\t" + (var.getMAF() < mafthreshold)
+								+ "\t" + varFiltered.getMAF()
+								+ "\t" + (varFiltered.getMAF() < mafthreshold)
 								+ "\t" + varnofilter.getCallrate()
-								+ "\t" + var.getCallrate()
-								+ "\t" + (var.getCallrate() < callratethreshold)
+								+ "\t" + varFiltered.getCallrate()
+								+ "\t" + (varFiltered.getCallrate() < callratethreshold)
 								+ "\t" + meanDepth
 								+ "\t" + meanQual);
 
-						if (var.getCallrate() < callratethreshold) {
+						if (varFiltered.getCallrate() < callratethreshold) {
 							lowcr++;
 						}
-						if (var.getMAF() < mafthreshold) {
+						if (varFiltered.getMAF() < mafthreshold) {
 							lowmaf++;
 						}
 
@@ -156,5 +179,17 @@ public class VCFFilter {
 		}
 		filterlog.close();
 	}
+
+	/*
+
+		// Maybe this filtering should be moved to a separate class or
+		// something?
+		if (minimalReadDepth > 0 && dpCol != -1) {
+
+		}
+		if (minimalGenotypeQual > 0 && gqCol != -1) {
+
+		}
+	 */
 
 }
