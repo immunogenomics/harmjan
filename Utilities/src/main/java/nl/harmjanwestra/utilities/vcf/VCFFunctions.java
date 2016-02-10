@@ -1749,6 +1749,11 @@ public class VCFFunctions {
 
 	public void filterVCFForBedRegions(String vcfIn, String referenceOut, String regionFile) throws IOException {
 
+		System.out.println("BED filter");
+		System.out.println("in: " + vcfIn);
+		System.out.println("out: " + referenceOut);
+		System.out.println("bed: " + regionFile);
+
 		PedAndMapFunctions fun = new PedAndMapFunctions();
 		ArrayList<Feature> set = fun.readRegionFile(regionFile);
 
@@ -1756,6 +1761,11 @@ public class VCFFunctions {
 		TextFile vcftf = new TextFile(vcfIn, TextFile.R);
 		int nrHeaderElems = 9;
 		String ln = vcftf.readLine();
+
+		int parsed = 0;
+		int saved = 0;
+
+
 		while (ln != null) {
 			if (ln.startsWith("##")) {
 				vcfoutf.writeln(ln);
@@ -1778,12 +1788,21 @@ public class VCFFunctions {
 
 				if (overlap) {
 					vcfoutf.writeln(ln);
+					saved++;
+				}
+				parsed++;
+
+				if (parsed % 1000 == 0) {
+					System.out.println(saved + "/" + parsed + " written");
 				}
 			}
+
 			ln = vcftf.readLine();
 		}
 		vcfoutf.close();
 		vcftf.close();
+
+		System.out.println(saved + "/" + parsed + " written");
 	}
 
 //	public void compareAndCorrectVCFVariants(String vcf1,

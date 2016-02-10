@@ -53,21 +53,22 @@ public class VCFSampleFilter {
 			} else {
 				if (includecol != null) {
 					elems = ln.split("\t");
-					StringBuilder sb = new StringBuilder(ln.length());
-					sb.append(elems[0]);
+					out.append(elems[0]);
 					for (int i = 1; i < elems.length; i++) {
 						if (includecol[i]) {
-							sb.append("\t").append(elems[i]);
+							out.append("\t");
+							out.append(elems[i]);
 						}
 					}
-					out.writeln(sb.toString());
+					out.append("\n");
 				}
 
 
 				lnCtr++;
 
 				if (lnCtr % 1000 == 0) {
-					lnCtr++;
+					System.out.println(lnCtr + " variants parsed");
+
 				}
 			}
 			ln = vcfin.readLine();
