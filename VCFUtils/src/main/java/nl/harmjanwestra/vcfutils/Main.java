@@ -27,6 +27,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Sample filter")
+				.longOpt("filtersample")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Plot r-squared")
 				.longOpt("plotrsq")
 				.build();
@@ -323,7 +329,21 @@ public class Main {
 
 			}
 
-			if (cmd.hasOption("filter")) {
+			if (cmd.hasOption("filtersample")) {
+				try {
+					VCFSampleFilter filter = new VCFSampleFilter();
+					String samplefile = null;
+					if (cmd.hasOption("l")) {
+						samplefile = cmd.getOptionValue("l");
+						filter.filter(input, out, samplefile);
+					} else {
+						System.out.println("Use params -i -o and -l");
+					}
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else if (cmd.hasOption("filter")) {
 
 
 				try {
