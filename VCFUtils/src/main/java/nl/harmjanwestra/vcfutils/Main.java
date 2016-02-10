@@ -118,12 +118,6 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Region filter")
-				.longOpt("filter")
-				.build();
-		OPTIONS.addOption(option);
-
-		option = Option.builder()
 				.desc("Make pseudo controls")
 				.longOpt("pseudo")
 				.build();
@@ -136,9 +130,10 @@ public class Main {
 		OPTIONS.addOption(option);
 
 
-		option = Option.builder("t")
-				.desc("Threshold")
+		option = Option.builder()
+				.desc("RSquared threshold")
 				.argName("double")
+				.longOpt("rsquared")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
@@ -167,9 +162,18 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder("m")
+		option = Option.builder()
+				.desc("Allelic balance")
+				.argName("double")
+				.longOpt("allelicbalance")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Maf threshold")
 				.argName("double")
+				.longOpt("maf")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
@@ -338,12 +342,12 @@ public class Main {
 						gqual = Integer.parseInt(cmd.getOptionValue("gqual"));
 					}
 
-					if (cmd.hasOption("allelicBalance")) {
-						allelicBalance = Double.parseDouble("allelicBalance");
+					if (cmd.hasOption("allelicbalance")) {
+						allelicBalance = Double.parseDouble("allelicbalance");
 					}
 
-					if (cmd.hasOption("m")) {
-						maf = Double.parseDouble(cmd.getOptionValue("m"));
+					if (cmd.hasOption("maf")) {
+						maf = Double.parseDouble(cmd.getOptionValue("maf"));
 					}
 
 					if (cmd.hasOption("callrate")) {
@@ -365,13 +369,13 @@ public class Main {
 				try {
 
 					double threshold = 0.8;
-					if (cmd.hasOption("t")) {
-						threshold = Double.parseDouble(cmd.getOptionValue("t"));
+					if (cmd.hasOption("rsquared")) {
+						threshold = Double.parseDouble(cmd.getOptionValue("rsquared"));
 					}
 
 					double mafthreshold = 0.0;
-					if (cmd.hasOption("m")) {
-						mafthreshold = Double.parseDouble(cmd.getOptionValue("m"));
+					if (cmd.hasOption("maf")) {
+						mafthreshold = Double.parseDouble(cmd.getOptionValue("maf"));
 					}
 
 					String bedfile = null;

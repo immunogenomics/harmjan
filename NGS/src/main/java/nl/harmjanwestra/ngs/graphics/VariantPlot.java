@@ -1,12 +1,15 @@
 package nl.harmjanwestra.ngs.graphics;
 
 import com.itextpdf.text.DocumentException;
-import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
-import nl.harmjanwestra.utilities.vcf.VCFFunctions;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.vcf.VCFFunctions;
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.filter.GenotypeQualityFilter;
+import nl.harmjanwestra.utilities.vcf.filter.ReadDepthFilter;
+import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
@@ -24,7 +27,7 @@ public class VariantPlot extends DefaultGraphics {
 
 	private int margin;
 
-	public VariantPlot(){
+	public VariantPlot() {
 
 	}
 
@@ -106,7 +109,11 @@ public class VariantPlot extends DefaultGraphics {
 			while (ln != null) {
 
 				if (!ln.startsWith("#")) {
-					VCFVariant v = new VCFVariant(ln, 10, 30, true, false);
+
+					ArrayList<VCFGenotypeFilter> filters = new ArrayList<>();
+					filters.add(new GenotypeQualityFilter(30));
+					filters.add(new ReadDepthFilter(10));
+					VCFVariant v = new VCFVariant(ln, filters, false);
 
 					Feature f = new Feature();
 
@@ -142,7 +149,10 @@ public class VariantPlot extends DefaultGraphics {
 			while (ln != null) {
 
 				if (!ln.startsWith("#")) {
-					VCFVariant v = new VCFVariant(ln, 10, 30, true, false);
+					ArrayList<VCFGenotypeFilter> filters = new ArrayList<>();
+					filters.add(new GenotypeQualityFilter(30));
+					filters.add(new ReadDepthFilter(10));
+					VCFVariant v = new VCFVariant(ln, filters, false);
 
 					Feature f = new Feature();
 
@@ -488,9 +498,6 @@ public class VariantPlot extends DefaultGraphics {
 				}
 			}
 		}
-
-
-
 
 
 		close();
@@ -1147,7 +1154,11 @@ public class VariantPlot extends DefaultGraphics {
 			while (ln != null) {
 
 				if (!ln.startsWith("#")) {
-					VCFVariant v = new VCFVariant(ln, 10, 30, true, false);
+					ArrayList<VCFGenotypeFilter> filters = new ArrayList<>();
+					filters.add(new GenotypeQualityFilter(30));
+					filters.add(new ReadDepthFilter(10));
+					VCFVariant v = new VCFVariant(ln, filters, false);
+
 
 					Feature f = new Feature();
 
@@ -1191,7 +1202,11 @@ public class VariantPlot extends DefaultGraphics {
 				while (ln != null) {
 
 					if (!ln.startsWith("#")) {
-						VCFVariant v = new VCFVariant(ln, 10, 30, true, false);
+						ArrayList<VCFGenotypeFilter> filters = new ArrayList<>();
+						filters.add(new GenotypeQualityFilter(30));
+						filters.add(new ReadDepthFilter(10));
+						VCFVariant v = new VCFVariant(ln, filters, false);
+
 
 						Feature f = new Feature();
 

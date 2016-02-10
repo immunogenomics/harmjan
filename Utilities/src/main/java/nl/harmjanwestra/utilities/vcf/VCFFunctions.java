@@ -7,6 +7,9 @@ import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
 import nl.harmjanwestra.utilities.plink.PedAndMapFunctions;
 import nl.harmjanwestra.utilities.sets.StringSets;
 import nl.harmjanwestra.utilities.shell.ProcessRunner;
+import nl.harmjanwestra.utilities.vcf.filter.GenotypeQualityFilter;
+import nl.harmjanwestra.utilities.vcf.filter.ReadDepthFilter;
+import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;
@@ -949,7 +952,15 @@ public class VCFFunctions {
 			} else {
 				nrVariants++;
 
-				VCFVariant variant = new VCFVariant(ln, minimalReadDepth, minimalGenotypeQual);
+				ArrayList<VCFGenotypeFilter> filters = new ArrayList<>();
+				if (minimalGenotypeQual > 0) {
+					filters.add(new GenotypeQualityFilter(minimalGenotypeQual));
+				}
+				if (minimalReadDepth > 0) {
+					filters.add(new ReadDepthFilter(minimalReadDepth));
+				}
+
+				VCFVariant variant = new VCFVariant(ln, filters, true);
 
 				short[] depths = variant.getApproximateDepth();
 
@@ -2377,7 +2388,7 @@ public class VCFFunctions {
 					textFiles.get(chr).writeln(ln);
 				}
 			} else {
-				VCFVariant var = new VCFVariant(ln );
+				VCFVariant var = new VCFVariant(ln);
 				Chromosome chr = Chromosome.parseChr(var.getChr());
 				TextFile tf2 = textFiles.get(chr);
 				if (tf2 != null) {
@@ -2444,8 +2455,6 @@ public class VCFFunctions {
 
 
 	}
-
-
 
 
 	public void isolateGT(String vcfIn, String vcfOut) throws IOException {

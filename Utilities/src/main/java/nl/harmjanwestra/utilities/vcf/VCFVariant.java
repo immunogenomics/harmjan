@@ -22,7 +22,7 @@ public class VCFVariant {
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
 	private final HashMap<String, Double> info = new HashMap<String, Double>();
 	private ArrayList<VCFGenotypeFilter> filters;
-	private byte[][] genotypeAlleles;
+	private byte[][] genotypeAlleles; // format [alleles][individuals] (save some memory by making only two individual-sized arrays)
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
 	private double[][] genotypeProbabilies;
@@ -186,7 +186,7 @@ public class VCFVariant {
 							try {
 
 								if (genotypeProbabilies == null) {
-									genotypeProbabilies = new double[gpElems.length][nrSamples];
+									genotypeProbabilies = new double[3][nrSamples];
 								}
 
 								for (int g = 0; g < gpElems.length; g++) {
@@ -201,9 +201,8 @@ public class VCFVariant {
 						// depth of sequencing per allele
 						String[] adElems = Strings.comma.split(sampleToken);
 						try {
-
 							if (allelicDepth == null) {
-								allelicDepth = new short[adElems.length][nrSamples];
+								allelicDepth = new short[alleles.length][nrSamples];
 							}
 
 							for (int g = 0; g < adElems.length; g++) {

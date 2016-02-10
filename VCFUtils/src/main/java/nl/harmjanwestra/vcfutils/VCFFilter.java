@@ -174,6 +174,7 @@ public class VCFFilter {
 		tf2.close();
 
 		System.out.println();
+		System.out.println("Bin\tCallRate\tMaf\tCallRateNonFiltered\tMafNonFiltered\tGQ\tReadDepth");
 		for (int i = 0; i < crf.length; i++) {
 			System.out.println(i + "\t" + crf[i] + "\t" + mff[i] + "\t" + crfnf[i] + "\t" + mffnf[i] + "\t" + gqf[i] + "\t" + rdf[i]);
 		}

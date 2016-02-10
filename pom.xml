@@ -35,6 +35,7 @@
         <module>Pipeliner</module>
         <module>LiftOverTools</module>
         <module>BroShifter</module>
+        <module>BroRunner</module>
         <module>TXTr</module>
     </modules>
     <properties>

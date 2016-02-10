@@ -1,11 +1,12 @@
 package nl.harmjanwestra.ngs;
 
-import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
 import nl.harmjanwestra.utilities.graphics.Grid;
+import nl.harmjanwestra.utilities.plink.PedAndMapFunctions;
+import nl.harmjanwestra.utilities.shell.ProcessRunner;
 import nl.harmjanwestra.utilities.vcf.VCFFunctions;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -17,10 +18,6 @@ import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by hwestra on 4/21/15.
@@ -42,6 +39,15 @@ public class PlayGround {
 //		} catch (IOException e) {
 //			e.printStackTrace();
 //		}
+
+		PlayGround pg = new PlayGround();
+		String plink = "/Data/Homozygosity/EGCUT/EGCUT";
+		String outdir = "/Data/Homozygosity/EGCUT/hg19/liftover/EGCUT";
+		try {
+			pg.liftOver(plink, outdir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		System.exit(-1);
 
@@ -1490,364 +1496,324 @@ public class PlayGround {
 //
 //	}
 
-	public void testSingleVCFFileLocalPseudoControls() {
+//	public void testSingleVCFFileLocalPseudoControls() {
+//
+//		String vcf = "/Data/tmp/pseudotest/merged-filtered.Chr7-first200.vcf";
+//		String out = "/Data/tmp/pseudotest/R/";
+//
+//
+//		String diseasestatus = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergeddisease.txt";
+//		String covariatefile = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedCovariatesWoM.txt";
+//		HashSet<String> covariatestoinclude = null;
+//		HashSet<String> snpLimit = null;
+//		String samplestoexclude = null;
+//		String famfile = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedfam.fam";
+//
+//		boolean filterimputationquality = true;
+//		double imputationqualitythreshold = 0.8;
+//		int mafthreshold = 5;
+//		int threadnum = 1;
+//
+//		LogitTestR testObj = new LogitTestR(vcf,
+//				out,
+//				diseasestatus,
+//				covariatefile,
+//				covariatestoinclude,
+//				snpLimit,
+//				samplestoexclude,
+//				null,
+//				filterimputationquality,
+//				imputationqualitythreshold,
+//				mafthreshold, threadnum);
+//
+//		out = out + "-pseudo";
+//
+//		LogitTestR testObj2 = new LogitTestR(vcf,
+//				out,
+//				diseasestatus,
+//				covariatefile,
+//				covariatestoinclude,
+//				snpLimit,
+//				samplestoexclude,
+//				famfile,
+//				filterimputationquality,
+//				imputationqualitythreshold,
+//				mafthreshold, threadnum);
+//
+//		try {
+//			testObj.call();
+////			testObj2.call();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//
+//
+//	}
 
-		String vcf = "/Data/tmp/pseudotest/merged-filtered.Chr7-first200.vcf";
-		String out = "/Data/tmp/pseudotest/R/";
-
-
-		String diseasestatus = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergeddisease.txt";
-		String covariatefile = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedCovariatesWoM.txt";
-		HashSet<String> covariatestoinclude = null;
-		HashSet<String> snpLimit = null;
-		String samplestoexclude = null;
-		String famfile = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedfam.fam";
-
-		boolean filterimputationquality = true;
-		double imputationqualitythreshold = 0.8;
-		int mafthreshold = 5;
-		int threadnum = 1;
-
-		LogitTestR testObj = new LogitTestR(vcf,
-				out,
-				diseasestatus,
-				covariatefile,
-				covariatestoinclude,
-				snpLimit,
-				samplestoexclude,
-				null,
-				filterimputationquality,
-				imputationqualitythreshold,
-				mafthreshold, threadnum);
-
-		out = out + "-pseudo";
-
-		LogitTestR testObj2 = new LogitTestR(vcf,
-				out,
-				diseasestatus,
-				covariatefile,
-				covariatestoinclude,
-				snpLimit,
-				samplestoexclude,
-				famfile,
-				filterimputationquality,
-				imputationqualitythreshold,
-				mafthreshold, threadnum);
-
-		try {
-			testObj.call();
-//			testObj2.call();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-
-	}
-
-	public void testVCFLocal(int nrThreads) throws IOException {
-		String covariatefile = "";
-		String outputdir = "/Data/tmp/pseudocontroltest/";
-		String diseasestatus = "";
-
-		HashSet<String> covariatestoinclude = null;
-		String samplestoexclude = null;
-		boolean filterimputationquality = false;
-		double imputationqualitythreshold = 0.8;
-		int mafthreshold = 5;
-
-		System.out.println("Opening threadpool for " + nrThreads + " threads.");
-		ExecutorService threadPool = Executors.newFixedThreadPool(nrThreads);
-		CompletionService<Boolean> pool = new ExecutorCompletionService<Boolean>(threadPool);
-
-		HashSet<String> snpLimit = null;
-
-		int submit = 0;
-		int start = 1;
-		int stop = 23;
-		String famfile = null;
-		for (int d = 0; d < 1; d++) {
-
-//			if (d == 0) {
-//				start = 1;
-//				stop = 23;
-//			} else {
-//				start = 1;
-//				stop = 23;
-//			}
-
-			for (int chr = start; chr < stop; chr++) {
-				String vcf = "";
-				String out = "";
-				for (int reference = 2; reference < 3; reference++) {
-					String ref = "beforeImputation";
-
-
-					if (d == 0) {
-						covariatefile = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedCovariates.txt";
-						//vcf = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationOutput/T1D/merged-filtered-Chr" + chr + ".vcf.gz";
-
-						vcf = "/Data/ImmunoChip/T1D/merged/merged-Chr" + chr + ".vcf.gz";
-						diseasestatus = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergeddisease.txt";
-						out = outputdir + "T1D/" + ref + "/";
-						famfile = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedfam.fam";
-					} else {
-						covariatefile = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergedCovariates.txt";
-						vcf = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationOutput/RA/merged-filtered-Chr" + chr + ".vcf.gz";
-						diseasestatus = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergeddisease.txt";
-						out = outputdir + "RA/" + ref + "/";
-						famfile = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergedfam.fam";
-					}
-					Gpio.createDir(out);
-
-
-					String pseudoOut = "";
-					if (d == 0) {
-						pseudoOut = out + "/pseudo/";
-						Gpio.createDir(pseudoOut);
-						pseudoOut += "Chr" + chr + "-";
-					}
-					out += "Chr" + chr + "-";
-
-					if (chr != 8 && chr != 3) {
-						if (Gpio.exists(vcf)) {
-							if (d == 0) {
-								LogitTestR testObj = new LogitTestR(vcf,
-										out,
-										diseasestatus,
-										covariatefile,
-										covariatestoinclude,
-										snpLimit,
-										samplestoexclude,
-										null,
-										filterimputationquality,
-										imputationqualitythreshold,
-										mafthreshold, submit);
-
-								pool.submit(testObj);
-								submit++;
-								testObj = new LogitTestR(vcf,
-										pseudoOut,
-										diseasestatus,
-										covariatefile,
-										covariatestoinclude,
-										snpLimit,
-										samplestoexclude,
-										famfile,
-										filterimputationquality,
-										imputationqualitythreshold,
-										mafthreshold, submit);
-
-								pool.submit(testObj);
-								submit++;
-							} else {
-								LogitTestR testObj = new LogitTestR(vcf,
-										out,
-										diseasestatus,
-										covariatefile,
-										covariatestoinclude,
-										snpLimit,
-										samplestoexclude,
-										famfile,
-										filterimputationquality,
-										imputationqualitythreshold,
-										mafthreshold, submit);
-
-								pool.submit(testObj);
-								submit++;
-							}
-
-						} else {
-							System.err.println("file does not exist: " + vcf);
-						}
-					}
-				}
-
-			}
-
-		}
-
-		int returned = 0;
-		while (returned < submit) {
-
-			try {
-
-
-				Boolean result = pool.take().get();
-
-				if (result) {
-					returned++;
-				} else {
-
-					System.exit(-1);
-				}
-
-
-				System.out.println(returned + " / " + submit + " returned");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-		}
-
-		threadPool.shutdown();
-
-	}
-
-	//	public void testVCF(int d, int reference, int nrThreads, boolean pseudo, int start, int stop) throws IOException {
-	public void testVCF(int nrThreads) throws IOException {
-
-//		String vcf = "/Data/tmp/test-matched-Chr10.vcf.gz";
-//		String covariatefile = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergedCovariates.txt";
-//		String outputdir = "/Data/tmp/";
-//		String diseasestatus = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergeddisease.txt";
+//	public void testVCFLocal(int nrThreads) throws IOException {
+//		String covariatefile = "";
+//		String outputdir = "/Data/tmp/pseudocontroltest/";
+//		String diseasestatus = "";
 //
 //		HashSet<String> covariatestoinclude = null;
 //		String samplestoexclude = null;
 //		boolean filterimputationquality = false;
 //		double imputationqualitythreshold = 0.8;
-//		double mafthreshold = 0.005;
+//		int mafthreshold = 5;
 //
-//		test.logitTest(vcf, outputdir, diseasestatus, covariatefile, covariatestoinclude, samplestoexclude, filterimputationquality, imputationqualitythreshold, mafthreshold);
-//"/Data/ImmunoChip/T1D/binary/plinkvcf/plink.vcf";
-
-		String covariatefile = "";
-		String outputdir = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/Assoc/";
-		String diseasestatus = "";
-
-		HashSet<String> covariatestoinclude = null;
-		String samplestoexclude = null;
-		boolean filterimputationquality = true;
-		double imputationqualitythreshold = 0.8;
-		int mafthreshold = 5;
-
-		System.out.println("Opening threadpool for " + nrThreads + " threads.");
-		ExecutorService threadPool = Executors.newFixedThreadPool(nrThreads);
-		CompletionService<Boolean> pool = new ExecutorCompletionService<Boolean>(threadPool);
-
-
-		String bedfile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/allLoci.bed";
-
-		BedFileReader reader = new BedFileReader();
-		ArrayList<Feature> bedregions = reader.readAsList(bedfile);
-		System.out.println(bedregions.size() + " bed regions loaded");
-
-
-		int submit = 0;
-		String famfile = null;
-//		String[] refs = new String[]{"before", "kg", "seq", "kgseq", "seqvaronly"};
-		String[] refs = new String[]{"1kg", "seq", "1kg-seq-merged"};
-//		String[] refs = new String[]{"1kg", "1kg-seq-merged"};
-
-		int endD = 2;
-//		if (pseudo) {
-//			endD = 1;
-//		}
-
-//		int[] chrs = new int[]{9};
-		for (int reference = 0; reference < refs.length; reference++) {
-
-
-			for (int d = 0; d < endD; d++) {
-
-				for (int chr = 1; chr < 23; chr++) {
-//				for (int chr : chrs) {
-					String vcf = "";
-					String out = "";
-//					for (int reference = 0; reference < refs.length; reference++) {
-					String ref = refs[reference];
-
-					if (ref.equals("before")) {
-						filterimputationquality = false;
-					} else {
-						filterimputationquality = true;
-					}
-
-//			if (d == 0) {
-//				covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergedCovariatesUK.txt";
-//				vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/T1D/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
-//				if (ref.equals("before")) {
-//					vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/T1D/merged/merged-Chr" + chr + ".vcf.gz";
-//				}
-//				diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergeddisease.txt";
-//				if (pseudo) {
-//					famfile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D.fam";
-//					out = outputdir + "T1D/" + ref + "-pseudo/";
-//				} else {
-//					out = outputdir + "T1D/" + ref + "-UK/";
-//				}
+//		System.out.println("Opening threadpool for " + nrThreads + " threads.");
+//		ExecutorService threadPool = Executors.newFixedThreadPool(nrThreads);
+//		CompletionService<Boolean> pool = new ExecutorCompletionService<Boolean>(threadPool);
 //
-//			} else {
-//				covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergedCovariates.txt";
-//				vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/RA/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
-//				diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergeddisease.txt";
-//				if (ref.equals("before")) {
-//					vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/RA/merged/merged-Chr" + chr + ".vcf.gz";
-//				}
-//				out = outputdir + "RA/" + ref + "/";
-//			}
-
-					if (d == 0) {
-						covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D-covarmerged.txtmergedCovariates-withPseudos.txt";
-						vcf = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D/imputed-merged/" + ref + "/merged-Chr" + chr + ".vcf.gz";
-						samplestoexclude = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D-parentsToExclude.txt";
-						diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D-diseaseStatus.txt";
-						famfile = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D.fam";
-						out = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D/assoc-iter/" + ref + "/";
-
-					} else {
-						covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA-covarmerged.txtmergedCovariates.txt";
-						vcf = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA/imputed-merged/" + ref + "/merged-Chr" + chr + ".vcf.gz";
-						famfile = null;
-						samplestoexclude = null;
-						diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergeddisease.txt";
-						out = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA/assoc-iter/" + ref + "/";
-					}
-					Gpio.createDir(out);
-					out += "Chr" + chr + "-";
-
-					HashSet<String> snpLimit = null;
-
-					if (chr != 8 && chr != 3) {
-						if (Gpio.exists(vcf)) {
-							LogitTestR testObj = new LogitTestR(vcf,
-									out,
-									diseasestatus,
-									covariatefile,
-									covariatestoinclude,
-									snpLimit,
-									samplestoexclude,
-									famfile,
-									filterimputationquality,
-									imputationqualitythreshold,
-									mafthreshold, submit);
-							testObj.skipMakingPseudoControls(true);
-
-
-							testObj.setRunIterative(true, getBedRegionsForChr(chr, bedregions));
-							pool.submit(testObj);
-
-							submit++;
-						}
-
-					}
-
-//				if (d == 0) {
-//					for (int set = 0; set < 2; set++) {
-//						famfile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D.fam";
-//						if (set == 0) {
-//							covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergedCovariatesUS.txt";
-//							out = outputdir + "T1D/" + ref + "-US-pseudo/";
+//		HashSet<String> snpLimit = null;
+//
+//		int submit = 0;
+//		int start = 1;
+//		int stop = 23;
+//		String famfile = null;
+//		for (int d = 0; d < 1; d++) {
+//
+////			if (d == 0) {
+////				start = 1;
+////				stop = 23;
+////			} else {
+////				start = 1;
+////				stop = 23;
+////			}
+//
+//			for (int chr = start; chr < stop; chr++) {
+//				String vcf = "";
+//				String out = "";
+//				for (int reference = 2; reference < 3; reference++) {
+//					String ref = "beforeImputation";
+//
+//
+//					if (d == 0) {
+//						covariatefile = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedCovariates.txt";
+//						//vcf = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationOutput/T1D/merged-filtered-Chr" + chr + ".vcf.gz";
+//
+//						vcf = "/Data/ImmunoChip/T1D/merged/merged-Chr" + chr + ".vcf.gz";
+//						diseasestatus = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergeddisease.txt";
+//						out = outputdir + "T1D/" + ref + "/";
+//						famfile = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedfam.fam";
+//					} else {
+//						covariatefile = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergedCovariates.txt";
+//						vcf = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/ImputationOutput/RA/merged-filtered-Chr" + chr + ".vcf.gz";
+//						diseasestatus = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergeddisease.txt";
+//						out = outputdir + "RA/" + ref + "/";
+//						famfile = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergedfam.fam";
+//					}
+//					Gpio.createDir(out);
+//
+//
+//					String pseudoOut = "";
+//					if (d == 0) {
+//						pseudoOut = out + "/pseudo/";
+//						Gpio.createDir(pseudoOut);
+//						pseudoOut += "Chr" + chr + "-";
+//					}
+//					out += "Chr" + chr + "-";
+//
+//					if (chr != 8 && chr != 3) {
+//						if (Gpio.exists(vcf)) {
+//							if (d == 0) {
+//								LogitTestR testObj = new LogitTestR(vcf,
+//										out,
+//										diseasestatus,
+//										covariatefile,
+//										covariatestoinclude,
+//										snpLimit,
+//										samplestoexclude,
+//										null,
+//										filterimputationquality,
+//										imputationqualitythreshold,
+//										mafthreshold, submit);
+//
+//								pool.submit(testObj);
+//								submit++;
+//								testObj = new LogitTestR(vcf,
+//										pseudoOut,
+//										diseasestatus,
+//										covariatefile,
+//										covariatestoinclude,
+//										snpLimit,
+//										samplestoexclude,
+//										famfile,
+//										filterimputationquality,
+//										imputationqualitythreshold,
+//										mafthreshold, submit);
+//
+//								pool.submit(testObj);
+//								submit++;
+//							} else {
+//								LogitTestR testObj = new LogitTestR(vcf,
+//										out,
+//										diseasestatus,
+//										covariatefile,
+//										covariatestoinclude,
+//										snpLimit,
+//										samplestoexclude,
+//										famfile,
+//										filterimputationquality,
+//										imputationqualitythreshold,
+//										mafthreshold, submit);
+//
+//								pool.submit(testObj);
+//								submit++;
+//							}
+//
 //						} else {
-//							covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergedCovariatesEUR.txt";
-//							out = outputdir + "T1D/" + ref + "-EUR-pseudo/";
+//							System.err.println("file does not exist: " + vcf);
 //						}
+//					}
+//				}
 //
-//						vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/T1D/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
-//						if (ref.equals("before")) {
-//							vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/T1D/merged/merged-Chr" + chr + ".vcf.gz";
-//						}
-//						diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergeddisease.txt";
+//			}
 //
+//		}
+//
+//		int returned = 0;
+//		while (returned < submit) {
+//
+//			try {
+//
+//
+//				Boolean result = pool.take().get();
+//
+//				if (result) {
+//					returned++;
+//				} else {
+//
+//					System.exit(-1);
+//				}
+//
+//
+//				System.out.println(returned + " / " + submit + " returned");
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//
+//		}
+//
+//		threadPool.shutdown();
+//
+//	}
+
+	//	public void testVCF(int d, int reference, int nrThreads, boolean pseudo, int start, int stop) throws IOException {
+//	public void testVCF(int nrThreads) throws IOException {
+//
+////		String vcf = "/Data/tmp/test-matched-Chr10.vcf.gz";
+////		String covariatefile = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergedCovariates.txt";
+////		String outputdir = "/Data/tmp/";
+////		String diseasestatus = "/Data/ImmunoChip/RA/covar/covarmerged.txtmergeddisease.txt";
+////
+////		HashSet<String> covariatestoinclude = null;
+////		String samplestoexclude = null;
+////		boolean filterimputationquality = false;
+////		double imputationqualitythreshold = 0.8;
+////		double mafthreshold = 0.005;
+////
+////		test.logitTest(vcf, outputdir, diseasestatus, covariatefile, covariatestoinclude, samplestoexclude, filterimputationquality, imputationqualitythreshold, mafthreshold);
+////"/Data/ImmunoChip/T1D/binary/plinkvcf/plink.vcf";
+//
+//		String covariatefile = "";
+//		String outputdir = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/Assoc/";
+//		String diseasestatus = "";
+//
+//		HashSet<String> covariatestoinclude = null;
+//		String samplestoexclude = null;
+//		boolean filterimputationquality = true;
+//		double imputationqualitythreshold = 0.8;
+//		int mafthreshold = 5;
+//
+//		System.out.println("Opening threadpool for " + nrThreads + " threads.");
+//		ExecutorService threadPool = Executors.newFixedThreadPool(nrThreads);
+//		CompletionService<Boolean> pool = new ExecutorCompletionService<Boolean>(threadPool);
+//
+//
+//		String bedfile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/allLoci.bed";
+//
+//		BedFileReader reader = new BedFileReader();
+//		ArrayList<Feature> bedregions = reader.readAsList(bedfile);
+//		System.out.println(bedregions.size() + " bed regions loaded");
+//
+//
+//		int submit = 0;
+//		String famfile = null;
+////		String[] refs = new String[]{"before", "kg", "seq", "kgseq", "seqvaronly"};
+//		String[] refs = new String[]{"1kg", "seq", "1kg-seq-merged"};
+////		String[] refs = new String[]{"1kg", "1kg-seq-merged"};
+//
+//		int endD = 2;
+////		if (pseudo) {
+////			endD = 1;
+////		}
+//
+////		int[] chrs = new int[]{9};
+//		for (int reference = 0; reference < refs.length; reference++) {
+//
+//
+//			for (int d = 0; d < endD; d++) {
+//
+//				for (int chr = 1; chr < 23; chr++) {
+////				for (int chr : chrs) {
+//					String vcf = "";
+//					String out = "";
+////					for (int reference = 0; reference < refs.length; reference++) {
+//					String ref = refs[reference];
+//
+//					if (ref.equals("before")) {
+//						filterimputationquality = false;
+//					} else {
+//						filterimputationquality = true;
+//					}
+//
+////			if (d == 0) {
+////				covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergedCovariatesUK.txt";
+////				vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/T1D/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
+////				if (ref.equals("before")) {
+////					vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/T1D/merged/merged-Chr" + chr + ".vcf.gz";
+////				}
+////				diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergeddisease.txt";
+////				if (pseudo) {
+////					famfile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D.fam";
+////					out = outputdir + "T1D/" + ref + "-pseudo/";
+////				} else {
+////					out = outputdir + "T1D/" + ref + "-UK/";
+////				}
+////
+////			} else {
+////				covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergedCovariates.txt";
+////				vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/RA/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
+////				diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergeddisease.txt";
+////				if (ref.equals("before")) {
+////					vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/RA/merged/merged-Chr" + chr + ".vcf.gz";
+////				}
+////				out = outputdir + "RA/" + ref + "/";
+////			}
+//
+//					if (d == 0) {
+//						covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D-covarmerged.txtmergedCovariates-withPseudos.txt";
+//						vcf = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D/imputed-merged/" + ref + "/merged-Chr" + chr + ".vcf.gz";
+//						samplestoexclude = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D-parentsToExclude.txt";
+//						diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D-diseaseStatus.txt";
+//						famfile = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D.fam";
+//						out = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D/assoc-iter/" + ref + "/";
+//
+//					} else {
+//						covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA-covarmerged.txtmergedCovariates.txt";
+//						vcf = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA/imputed-merged/" + ref + "/merged-Chr" + chr + ".vcf.gz";
+//						famfile = null;
+//						samplestoexclude = null;
+//						diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergeddisease.txt";
+//						out = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA/assoc-iter/" + ref + "/";
+//					}
+//					Gpio.createDir(out);
+//					out += "Chr" + chr + "-";
+//
+//					HashSet<String> snpLimit = null;
+//
+//					if (chr != 8 && chr != 3) {
 //						if (Gpio.exists(vcf)) {
 //							LogitTestR testObj = new LogitTestR(vcf,
 //									out,
@@ -1860,41 +1826,81 @@ public class PlayGround {
 //									filterimputationquality,
 //									imputationqualitythreshold,
 //									mafthreshold, submit);
+//							testObj.skipMakingPseudoControls(true);
+//
+//
+//							testObj.setRunIterative(true, getBedRegionsForChr(chr, bedregions));
 //							pool.submit(testObj);
+//
 //							submit++;
 //						}
+//
 //					}
+//
+////				if (d == 0) {
+////					for (int set = 0; set < 2; set++) {
+////						famfile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D.fam";
+////						if (set == 0) {
+////							covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergedCovariatesUS.txt";
+////							out = outputdir + "T1D/" + ref + "-US-pseudo/";
+////						} else {
+////							covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergedCovariatesEUR.txt";
+////							out = outputdir + "T1D/" + ref + "-EUR-pseudo/";
+////						}
+////
+////						vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/15-EverythingImputedAgain/T1D/" + ref + "/merged-filtered.Chr" + chr + ".vcf.gz";
+////						if (ref.equals("before")) {
+////							vcf = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/ImmunoChip2/T1D/merged/merged-Chr" + chr + ".vcf.gz";
+////						}
+////						diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/T1D-covarmerged.txtmergeddisease.txt";
+////
+////						if (Gpio.exists(vcf)) {
+////							LogitTestR testObj = new LogitTestR(vcf,
+////									out,
+////									diseasestatus,
+////									covariatefile,
+////									covariatestoinclude,
+////									snpLimit,
+////									samplestoexclude,
+////									famfile,
+////									filterimputationquality,
+////									imputationqualitythreshold,
+////									mafthreshold, submit);
+////							pool.submit(testObj);
+////							submit++;
+////						}
+////					}
+////				}
+//
 //				}
-
-				}
-
-			}
-		}
+//
+//			}
 //		}
-
-		int returned = 0;
-		while (returned < submit) {
-
-			try {
-				Boolean result = pool.take().get();
-				if (result) {
-					returned++;
-				} else {
-
-					System.exit(-1);
-				}
-
-				System.out.println(returned + " / " + submit + " returned");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-		}
-
-		threadPool.shutdown();
-
-
-	}
+////		}
+//
+//		int returned = 0;
+//		while (returned < submit) {
+//
+//			try {
+//				Boolean result = pool.take().get();
+//				if (result) {
+//					returned++;
+//				} else {
+//
+//					System.exit(-1);
+//				}
+//
+//				System.out.println(returned + " / " + submit + " returned");
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//
+//		}
+//
+//		threadPool.shutdown();
+//
+//
+//	}
 
 	private ArrayList<Feature> getBedRegionsForChr(int chr, ArrayList<Feature> bedregions) {
 		ArrayList<Feature> output = new ArrayList<>();
@@ -3237,8 +3243,6 @@ public class PlayGround {
 //	}
 
 
-
-
 	/*
 	reintroduceVariants(phasetmpdir + "seq-matched-sorted-shapeit.alignments." + chr.getName() + ".snp.strand.exclude",
 									phasetmpdir + "seq-matched-sorted-shapeit-" + chr.getName()+".haps",
@@ -3301,9 +3305,6 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 		Gpio.copyFile(phasedRound2File + ".sample", outfile + ".sample");
 
 	}
-
-
-
 
 
 //	public void prepareGWASDatasets() {
@@ -3462,103 +3463,133 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 //		}
 //	}
 
-//	public void liftOverAndFilterPlinkDataset(String plinkDataset, String removeFile, String outdir, String regionFile) throws IOException {
+	public void liftOver(String plinkDataset, String outfile) throws IOException {
+		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
+		VCFFunctions vcfFunctions = new VCFFunctions();
+		ProcessBuilder pb = null;
+		GenotypeTools t = new GenotypeTools();
+
+
+		String bedout = outfile + "_hg18.bed";
+		pedAndMapFunctions.rewriteMapToBed(plinkDataset + ".map", bedout);
+
+		String lifted = bedout + "-lifted.bed";
+		String unlifted = bedout + "-unlifted.bed";
 //
-//		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
-//		VCFFunctions vcfFunctions = new VCFFunctions();
-//		ProcessBuilder pb = null;
-//		GenotypeTools t = new GenotypeTools();
+		pb = new ProcessBuilder("/Data/ImmunoChip/SequencingProject/liftOver", bedout,
+				"/Data/ImmunoChip/SequencingProject/hg18ToHg19.over.chain.gz", lifted, unlifted);
+		ProcessRunner.run(pb);
+
+		String hg19map = outfile + "_hg19.map";
+		pedAndMapFunctions.convertPostLiftOverMAP(plinkDataset + ".map", hg19map, lifted);
+
+		String hg19mapupd = outfile + "_hg19_dbSNP138.map";
+		String dbsnpvcf = "/Data/Projects/2014-FR-Reseq/GATKResources/dbsnp_138.b37.vcf.gz";
+		pedAndMapFunctions.updateRSNames(dbsnpvcf, hg19map, hg19mapupd);
+
+		String hg19mapupddedup = outfile + "_hg19_dbSNP138_dedup.map";
+		pedAndMapFunctions.deduplicateMAP(hg19mapupd, hg19mapupddedup);
+	}
+
+	public void liftOverAndFilterPlinkDataset(String plinkDataset, String removeFile, String outdir, String regionFile) throws IOException {
+
+		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
+		VCFFunctions vcfFunctions = new VCFFunctions();
+		ProcessBuilder pb = null;
+		GenotypeTools t = new GenotypeTools();
+
+		String map = plinkDataset + ".map";
+		String refmap = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-RsIDsFromT1DStudy.map";
+		String chrupdate = plinkDataset + "-raciChrNames.map";
+		pedAndMapFunctions.rewriteMapFileChromosomeNames(refmap, map, chrupdate);
+
+		String rsnameref = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-RsIDsFromT1DStudy.map";
+		String rsupdate = plinkDataset + "-raciChrNames-updatedRS.map";
+		pedAndMapFunctions.updateMapFileRsIdsUsingMapFile(rsnameref, chrupdate, rsupdate);
+//		Gpio.delete(chrupdate);
+
+		String rsupdatededup = plinkDataset + "-raciChrNames-updatedRS-dedup.map";
+		pedAndMapFunctions.deduplicateMAP(rsupdate, rsupdatededup);
+//		Gpio.delete(rsupdate);
 //
-//		String map = plinkDataset + ".map";
-//		String refmap = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-RsIDsFromT1DStudy.map";
-//		String chrupdate = plinkDataset + "-raciChrNames.map";
-//		pedAndMapFunctions.rewriteMapFileChromosomeNames(refmap, map, chrupdate);
+		String bedout = plinkDataset + "-raciChrNames-dedup.bed";
+		pedAndMapFunctions.rewriteMapToBed(rsupdatededup, bedout);
 //
-//		String rsnameref = "/Data/Projects/2014-FR-Reseq/ImmunoChip/RA_US/immunochip_us_preqc/Immunochip_RACI_PhaseII_US_PreQC-RsIDsFromT1DStudy.map";
-//		String rsupdate = plinkDataset + "-raciChrNames-updatedRS.map";
-//		pedAndMapFunctions.updateMapFileRsIdsUsingMapFile(rsnameref, chrupdate, rsupdate);
-////		Gpio.delete(chrupdate);
+
+		// liftover
+		String lifted = plinkDataset + "-lifted.bed";
+		String unlifted = plinkDataset + "-unlifted.bed";
 //
-//		String rsupdatededup = plinkDataset + "-raciChrNames-updatedRS-dedup.map";
-//		pedAndMapFunctions.deduplicateMAP(rsupdate, rsupdatededup);
-////		Gpio.delete(rsupdate);
-////
-//		String bedout = plinkDataset + "-raciChrNames-dedup.bed";
-//		pedAndMapFunctions.rewriteMapToBed(rsupdatededup, bedout);
-////
-//
-//		// liftover
-//		String lifted = plinkDataset + "-lifted.bed";
-//		String unlifted = plinkDataset + "-unlifted.bed";
-////
-//		pb = new ProcessBuilder("/Data/Projects/2014-FR-Reseq/ImmunoChip/liftOver", bedout,
-//				"/Data/Projects/2014-FR-Reseq/ImmunoChip/hg18ToHg19.over.chain.gz", lifted, unlifted);
-//		t.run(pb);
-//		System.out.println("Lifted over: " + lifted + " | " + unlifted);
-////
-////
-//		String hg19map = plinkDataset + "-raciChrNames-updatedRS-dedup-hg19.map";
-//		pedAndMapFunctions.convertPostLiftOverMAP(rsupdatededup, hg19map, lifted);
-////		Gpio.delete(rsupdatededup);
-////
-//
-////		Gpio.delete(hg19map);
-////
-//		String hg19mapupd = plinkDataset + "-raciChrNames-hg19-updRS.map";
-//		String dbsnpvcf = "/Data/Projects/2014-FR-Reseq/GATKResources/dbsnp_138.b37.vcf.gz";
-//		pedAndMapFunctions.updateRSNames(dbsnpvcf, hg19map, hg19mapupd);
-////		Gpio.delete(hg19mapdedup);
-////
-//
-//		// dedup
-//		String hg19mapdedup = plinkDataset + "-raciChrNames-updatedRS-dedup-hg19-updRS-dedup.map";
-//		pedAndMapFunctions.deduplicateMAP(hg19mapupd, hg19mapdedup);
-//
-//		String variantSelect = plinkDataset + "-raciChrNames-hg19-dedup-selectVariants.txt";
-////		String regionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/loci.txt";
-//		pedAndMapFunctions.filterMap(hg19mapdedup, regionFile, variantSelect);
-////
-//		Gpio.copyFile(plinkDataset + ".map", plinkDataset + ".hg18map");
-//		Gpio.copyFile(hg19mapdedup, plinkDataset + ".map");
-//
-//		if (removeFile != null) {
-//			pb = new ProcessBuilder("/Data/Tools/plink-1.07-mac-intel/plink1.9",
-//					"--extract", variantSelect,
-//					"--file", plinkDataset,
-//					"--recode", "--out", outdir + "genotypes-filtered",
-//					"--remove", removeFile);
-//		} else {
-//			pb = new ProcessBuilder("/Data/Tools/plink-1.07-mac-intel/plink1.9",
-//					"--extract", variantSelect,
-//					"--file", plinkDataset,
-//					"--recode", "--out", outdir + "genotypes-filtered");
-//		}
-//		t.run(pb);
-//
-//		Gpio.copyFile(plinkDataset + ".hg18map", plinkDataset + ".map");
-////
-//		String ped = outdir + "genotypes-filtered";
-//		String vcf = outdir + "genotypes-filtered.vcf.gz";
-//		vcfFunctions.convertPEDToVCF(ped, vcf);
-//
-//		Gpio.delete(ped + ".ped");
-//		Gpio.delete(ped + ".map");
-//
-//		// sort
-//		String sortedvcf = outdir + "genotypes-filtered-sorted.vcf";
-//		String bashCommand = "gzcat " + vcf + " | /Data/Tools/vcftools/bin/vcf-sort > " + sortedvcf + "\nrm " + sortedvcf + ".gz\ngzip " + sortedvcf;
-//		String bashfilename = plinkDataset + "-filter-sort.sh";
-//		TextFile tf = new TextFile(bashfilename, TextFile.W);
-//		tf.writeln("#!/bin/bash\n" + bashCommand);
-//		tf.close();
-//		pb = new ProcessBuilder("bash", bashfilename);
-//		t.run(pb);
-//
-////		Gpio.delete(vcf);
-//		vcfFunctions.splitPerChromosome(sortedvcf + ".gz", outdir + "genotypes-filtered-sorted");
+		pb = new ProcessBuilder("/Data/Projects/2014-FR-Reseq/ImmunoChip/liftOver", bedout,
+				"/Data/Projects/2014-FR-Reseq/ImmunoChip/hg18ToHg19.over.chain.gz", lifted, unlifted);
+		ProcessRunner.run(pb);
+
+		System.out.println("Lifted over: " + lifted + " | " + unlifted);
 //
 //
-//	}
+		String hg19map = plinkDataset + "-raciChrNames-updatedRS-dedup-hg19.map";
+		pedAndMapFunctions.convertPostLiftOverMAP(rsupdatededup, hg19map, lifted);
+//		Gpio.delete(rsupdatededup);
+//
+
+//		Gpio.delete(hg19map);
+//
+		String hg19mapupd = plinkDataset + "-raciChrNames-hg19-updRS.map";
+		String dbsnpvcf = "/Data/Projects/2014-FR-Reseq/GATKResources/dbsnp_138.b37.vcf.gz";
+		pedAndMapFunctions.updateRSNames(dbsnpvcf, hg19map, hg19mapupd);
+//		Gpio.delete(hg19mapdedup);
+//
+
+		// dedup
+		String hg19mapdedup = plinkDataset + "-raciChrNames-updatedRS-dedup-hg19-updRS-dedup.map";
+		pedAndMapFunctions.deduplicateMAP(hg19mapupd, hg19mapdedup);
+
+		String variantSelect = plinkDataset + "-raciChrNames-hg19-dedup-selectVariants.txt";
+//		String regionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/loci.txt";
+		pedAndMapFunctions.filterMap(hg19mapdedup, regionFile, variantSelect);
+//
+		Gpio.copyFile(plinkDataset + ".map", plinkDataset + ".hg18map");
+		Gpio.copyFile(hg19mapdedup, plinkDataset + ".map");
+
+		if (removeFile != null) {
+			pb = new ProcessBuilder("/Data/Tools/plink-1.07-mac-intel/plink1.9",
+					"--extract", variantSelect,
+					"--file", plinkDataset,
+					"--recode", "--out", outdir + "genotypes-filtered",
+					"--remove", removeFile);
+		} else {
+			pb = new ProcessBuilder("/Data/Tools/plink-1.07-mac-intel/plink1.9",
+					"--extract", variantSelect,
+					"--file", plinkDataset,
+					"--recode", "--out", outdir + "genotypes-filtered");
+		}
+		ProcessRunner.run(pb);
+
+
+		Gpio.copyFile(plinkDataset + ".hg18map", plinkDataset + ".map");
+//
+		String ped = outdir + "genotypes-filtered";
+		String vcf = outdir + "genotypes-filtered.vcf.gz";
+		vcfFunctions.convertPEDToVCF(ped, vcf);
+
+		Gpio.delete(ped + ".ped");
+		Gpio.delete(ped + ".map");
+
+		// sort
+		String sortedvcf = outdir + "genotypes-filtered-sorted.vcf";
+		String bashCommand = "gzcat " + vcf + " | /Data/Tools/vcftools/bin/vcf-sort > " + sortedvcf + "\nrm " + sortedvcf + ".gz\ngzip " + sortedvcf;
+		String bashfilename = plinkDataset + "-filter-sort.sh";
+		TextFile tf = new TextFile(bashfilename, TextFile.W);
+		tf.writeln("#!/bin/bash\n" + bashCommand);
+		tf.close();
+		pb = new ProcessBuilder("bash", bashfilename);
+		ProcessRunner.run(pb);
+
+//		Gpio.delete(vcf);
+		vcfFunctions.splitPerChromosome(sortedvcf + ".gz", outdir + "genotypes-filtered-sorted");
+
+
+	}
 //
 ////	public String preparePlinkDataset(String referenceVCF) throws IOException {
 ////		outdir += "gt";
