@@ -44,6 +44,19 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Update rs names in a VCF")
+				.longOpt("updaters")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("DB SNP VCF file")
+				.longOpt("dbsnp")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
 
 		option = Option.builder()
 				.desc("Filter variants on maf,callrate,genotypingquals and allelic depth")
@@ -338,6 +351,18 @@ public class Main {
 						filter.filter(input, out, samplefile);
 					} else {
 						System.out.println("Use params -i -o and -l");
+					}
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else if (cmd.hasOption("updaters")) {
+				try {
+					VCFVariantRSNameUpdater updatr = new VCFVariantRSNameUpdater();
+					if (cmd.hasOption("dbsnp")) {
+						updatr.updateRSNames(cmd.getOptionValue("dbsnp"), input, out);
+					} else {
+						System.out.println("Use --dbsnp, -i and -o with --updaters");
 					}
 
 				} catch (IOException e) {

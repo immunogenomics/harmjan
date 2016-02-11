@@ -798,6 +798,14 @@ public class VCFVariant {
 
 	}
 
+	public int getGTCol() {
+		return gtCol;
+	}
+
+	public String getSeparator(){
+		return separator;
+	}
+
 	public enum PARSE {
 		HEADER,
 		GENOTYPES,

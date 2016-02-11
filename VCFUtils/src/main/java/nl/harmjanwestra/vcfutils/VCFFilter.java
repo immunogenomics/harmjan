@@ -6,6 +6,7 @@ import nl.harmjanwestra.utilities.vcf.filter.AllelicDepthFilter;
 import nl.harmjanwestra.utilities.vcf.filter.GenotypeQualityFilter;
 import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,7 +69,10 @@ public class VCFFilter {
 
 
 		while (ln != null) {
-			if (ln.startsWith("#")) {
+			if (ln.startsWith("##")) {
+				tf2.writeln(ln);
+			} else if (ln.startsWith("#CHROM")) {
+				tf2.writeln("##VCFGenotypeFilter=maf>" + mafthreshold + ",cr>" + callratethreshold + ",dp>" + readdepth + ",gq>" + gqual + ",ab>" + allelicBalance);
 				tf2.writeln(ln);
 			} else {
 				VCFVariant varFiltered = new VCFVariant(ln, filters, true);
@@ -129,10 +133,19 @@ public class VCFFilter {
 					meanQual /= gq.length;
 
 					if (varFiltered.getCallrate() >= callratethreshold && varFiltered.getMAF() >= mafthreshold) {
-						tf2.writeln(varFiltered.toVCFString());
+						String[] elems = ln.split("\t");
+						int gtcol = varFiltered.getGTCol();
+						String sep = varFiltered.getSeparator();
+						byte[][] alleles = varFiltered.getGenotypeAlleles();
+						// write back, keep annotations..
+						for (int i = 9; i < elems.length; i++) {
+							int indid = i - 9;
+							String[] subElems = elems[i].split(":");
+							subElems[gtcol] = alleles[0][indid] + sep + alleles[1][indid];
+							elems[i] = Strings.concat(subElems, Strings.colon);
+						}
+						tf2.writeln(Strings.concat(elems, Strings.tab));
 					} else {
-
-
 						filterlog.writeln(varFiltered.toString()
 								+ "\t" + varnofilter.getMAF()
 								+ "\t" + varFiltered.getMAF()

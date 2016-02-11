@@ -1792,7 +1792,7 @@ public class VCFFunctions {
 				}
 				parsed++;
 
-				if (parsed % 1000 == 0) {
+				if (parsed % 50000 == 0) {
 					System.out.println(saved + "/" + parsed + " written");
 				}
 			}
