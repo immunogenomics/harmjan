@@ -174,6 +174,11 @@ public class VCFFilter {
 						filtered++;
 					}
 					read++;
+
+					if (read % 1000 == 0) {
+						System.out.println(filtered + "/" + read + " filtered");
+
+					}
 				}
 			}
 			ln = tf1.readLine();

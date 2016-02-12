@@ -66,7 +66,7 @@ public class VCFVariantRSNameUpdater {
 					// System.out.println("Replacing " + elems[1] + " with rs: " + rs);
 					nrReplaced++;
 				}
-				elems[1] = rs;
+				elems[2] = rs;
 			}
 			out.writeln(Strings.concat(elems, Strings.tab));
 			elems = tf.readLineElems(TextFile.tab);
