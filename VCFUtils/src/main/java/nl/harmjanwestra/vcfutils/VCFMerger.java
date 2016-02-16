@@ -409,7 +409,7 @@ public class VCFMerger {
 
 	}
 
-	private int countIdenticalAlleles(String[] refAlleles, String[] testVariantAlleles) {
+	public int countIdenticalAlleles(String[] refAlleles, String[] testVariantAlleles) {
 		int nridenticalalleles = 0;
 		for (int i = 0; i < refAlleles.length; i++) {
 			String allele1 = refAlleles[i];

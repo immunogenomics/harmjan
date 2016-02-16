@@ -27,6 +27,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Replace sample names")
+				.longOpt("samplereplace")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Sample filter")
 				.longOpt("filtersample")
 				.build();
@@ -342,7 +348,18 @@ public class Main {
 
 			}
 
-			if (cmd.hasOption("filtersample")) {
+			if (cmd.hasOption("samplereplace")) {
+				try {
+					if (cmd.hasOption("l")) {
+						VCFSampleNameReplace vpl = new VCFSampleNameReplace();
+						vpl.replace(cmd.getOptionValue("l"), input, out);
+					} else {
+						System.out.println("Use -l with --samplereplace");
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else if (cmd.hasOption("filtersample")) {
 				try {
 					VCFSampleFilter filter = new VCFSampleFilter();
 					String samplefile = null;
