@@ -634,7 +634,7 @@ public class VCFVariant {
 	@Override
 	public String toString() {
 //		return this.chr + "-" + this.pos + ";" + this.id;
-		return this.chr + "-" + this.pos + "-" + this.id;
+		return this.chr + "-" + this.pos;
 	}
 
 	public double[] getGenotypeDosages() {

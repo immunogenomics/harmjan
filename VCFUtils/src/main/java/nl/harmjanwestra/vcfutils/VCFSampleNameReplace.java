@@ -18,7 +18,9 @@ public class VCFSampleNameReplace {
 
 		String[] elems = tf.readLineElems(TextFile.tab);
 		while (elems != null) {
-			replacements.put(elems[0], elems[1]);
+			if (elems.length >= 2) {
+				replacements.put(elems[0], elems[1]);
+			}
 			elems = tf.readLineElems(TextFile.tab);
 		}
 		tf.close();
@@ -39,7 +41,7 @@ public class VCFSampleNameReplace {
 						elemsStr[i] = replacement;
 						found++;
 					} else {
-						System.out.println("not found: "+elemsStr[i]);
+						System.out.println("not found: " + elemsStr[i]);
 					}
 				}
 				System.out.println(found + " replacements made out of " + (elemsStr.length - 9));

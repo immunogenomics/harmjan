@@ -30,20 +30,22 @@ public class Strings {
 
 	public static String concat(String[] s, Pattern t) {
 
-		return concat(s, t, null);
+		return concat(s, t, null, null);
 	}
 
-	public static String concat(String[] s, Pattern t, String replaceNull) {
+	public static String concat(String[] s, Pattern t, boolean[] includeElem, String replaceNull) {
 
 		StringBuilder output = new StringBuilder();
 		for (int i = 0; i < s.length; i++) {
-			if(s[i] == null){
-				s[i] = replaceNull;
-			}
-			if (i == 0) {
-				output.append(s[i]);
-			} else {
-				output.append(t.toString()).append(s[i]);
+			if (includeElem == null || includeElem[i]) {
+				if (s[i] == null) {
+					s[i] = replaceNull;
+				}
+				if (i == 0) {
+					output.append(s[i]);
+				} else {
+					output.append(t.toString()).append(s[i]);
+				}
 			}
 		}
 		return output.toString();
@@ -150,5 +152,10 @@ public class Strings {
 
 	public static String reverse(String str) {
 		return new StringBuffer(str).reverse().toString();
+	}
+
+	public static String concat(String[] elems, boolean[] includeelem, Pattern tab) {
+
+		return concat(elems, tab, includeelem, null);
 	}
 }

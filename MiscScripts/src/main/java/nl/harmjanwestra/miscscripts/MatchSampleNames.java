@@ -12,9 +12,17 @@ import java.util.HashSet;
 public class MatchSampleNames {
 
 	public static void main(String[] args) {
-		String f1 = "D:\\tmp\\ic.txt";
-		String f2 = "D:\\tmp\\allSamples.txt";
-		String out = "D:\\tmp\\mapout.txt";
+		MatchSampleNames n = new MatchSampleNames();
+
+
+		n.method2();
+
+	}
+
+	public void method1() {
+		String f1 = "/Data/tmp/nixup/samples/ic.txt";
+		String f2 = "/Data/tmp/nixup/samples/seq.txt";
+		String out = "/Data/tmp/nixup/samples/mapout.txt";
 
 		HashSet<String> samples1 = new HashSet<String>();
 		try {
@@ -54,10 +62,10 @@ public class MatchSampleNames {
 		}
 	}
 
-	public void match(){
-		String f1 = "C:\\Users\\Harm-Jan\\OneDrive\\RASamples.txt";
-		String f2 = "D:\\tmp\\allSamples.txt";
-		String out = "D:\\tmp\\mapout-RA.txt";
+	public void method2() {
+		String f1 = "/Sync/OneDrive/RASamples.txt";
+		String f2 = "/Data/tmp/nixup/samples/seq.txt";
+		String out = "/Data/tmp/nixup/samples/mapout-RA.txt";
 
 		HashMap<String, String> samples1 = new HashMap<String, String>();
 		try {
@@ -82,7 +90,7 @@ public class MatchSampleNames {
 						String sample = elems[1];
 						if (samples1.containsKey(sample)) {
 							System.out.println(ln + "\t" + samples1.get(sample));
-							tfout.writeln(ln + "\t" + sample);
+							tfout.writeln(ln + "\t" + samples1.get(sample));
 						}
 					}
 				}
