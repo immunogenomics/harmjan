@@ -22,7 +22,7 @@ public class Main {
 
 		option = Option.builder()
 				.desc("Batch splitter")
-				.longOpt("split")
+				.longOpt("splitbatch")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -35,6 +35,12 @@ public class Main {
 		option = Option.builder()
 				.desc("Filter overlapping variants")
 				.longOpt("filtervariantoverlap")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Concatenate variants for shared samples")
+				.longOpt("concat")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -78,13 +84,13 @@ public class Main {
 
 		option = Option.builder()
 				.desc("Filter variants on maf,callrate,genotypingquals and allelic depth")
-				.longOpt("filter")
+				.longOpt("filtergenotype")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.desc("Filter for bed regions")
-				.longOpt("bedfilter")
+				.longOpt("filterregions")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -162,7 +168,7 @@ public class Main {
 
 		option = Option.builder()
 				.desc("Combine correlation results")
-				.longOpt("combine")
+				.longOpt("combinecorrelation")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -361,7 +367,18 @@ public class Main {
 			}
 
 
-			if (cmd.hasOption("filtervariantoverlap")) {
+			if (cmd.hasOption("concat")) {
+				VCFMerger merger = new VCFMerger();
+				if (cmd.hasOption("i2")) {
+					try {
+						merger.concatenate(input, cmd.getOptionValue("i2"), out);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} else {
+					System.out.println("Use -i2 with --concat");
+				}
+			} else if (cmd.hasOption("filtervariantoverlap")) {
 				VCFRemoveOverlappingVariants t = new VCFRemoveOverlappingVariants();
 				if (cmd.hasOption("i2")) {
 					try {
@@ -422,7 +439,7 @@ public class Main {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			} else if (cmd.hasOption("filter")) {
+			} else if (cmd.hasOption("filtergenotype")) {
 
 
 				try {
@@ -577,7 +594,7 @@ public class Main {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			} else if (cmd.hasOption("combine")) {
+			} else if (cmd.hasOption("combinecorrelation")) {
 				CorrelationResultCombiner combine = new CorrelationResultCombiner();
 
 				String refname = null;
@@ -668,7 +685,7 @@ public class Main {
 					System.out.println("Please supply --vcfsort");
 					printHelp();
 				}
-			} else if (cmd.hasOption("split")) {
+			} else if (cmd.hasOption("splitbatch")) {
 
 				int n = 0;
 				String ped = null;
@@ -761,7 +778,7 @@ public class Main {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			} else if (cmd.hasOption("bedfilter")) {
+			} else if (cmd.hasOption("filterregions")) {
 				VCFFunctions f = new VCFFunctions();
 				if (cmd.hasOption("b")) {
 					try {

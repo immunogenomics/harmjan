@@ -62,6 +62,10 @@ public class VCFMerger {
 	 */
 	public void concatenate(String vcf1, String vcf2, String out) throws IOException {
 
+		System.out.println("in1: " + vcf1);
+		System.out.println("in2: " + vcf2);
+		System.out.println("out: " + out);
+
 		VCFFunctions functions = new VCFFunctions();
 		ArrayList<String> samples1 = functions.getVCFSamples(vcf1);
 		ArrayList<String> samples2 = functions.getVCFSamples(vcf2);
@@ -81,10 +85,151 @@ public class VCFMerger {
 		}
 		System.out.println(shared.size() + " shared samples");
 
+		// index the samples in both datasets..
+		int[] index1 = new int[samples1.size()];
+		int[] index2 = new int[samples2.size()];
+		for (int i = 0; i < samples1.size(); i++) {
+			Integer index = shared.get(samples1.get(i));
+			if (index == null) {
+				index = -1;
+			}
+			index1[i] = index;
 
-		VariantSampler sampler = new VariantSampler();
-		ArrayList<String> variants1 = sampler.getListOfVariants(vcf1);
-		ArrayList<String> variants2 = sampler.getListOfVariants(vcf2);
+		}
+
+		for (int i = 0; i < samples2.size(); i++) {
+			Integer index = shared.get(samples2.get(i));
+			if (index == null) {
+				index = -1;
+			}
+			index2[i] = index;
+		}
+
+
+		// get a list of variants in file 1
+		TextFile tf = new TextFile(vcf1, TextFile.R);
+		String ln = tf.readLine();
+		HashSet<String> variants1 = new HashSet<String>();
+
+		while (ln != null) {
+			if (!ln.startsWith("#")) {
+				VCFVariant v1 = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				variants1.add(v1.toString());
+			}
+
+			ln = tf.readLine();
+		}
+		tf.close();
+
+		TextFile outf = new TextFile(out, TextFile.W);
+		TextFile tf2 = new TextFile(vcf2, TextFile.R);
+
+		HashSet<String> sharedVariants = new HashSet<String>();
+
+		ln = tf2.readLine();
+		while (ln != null) {
+			if (ln.startsWith("##")) {
+				outf.writeln(ln);
+			} else if (ln.startsWith("#CHROM")) {
+				// do some header magic
+				String[] elems = ln.split("\t");
+				String header = elems[0];
+				for (int i = 1; i < 9; i++) {
+					header += "\t" + elems[i];
+				}
+				String[] remaining = new String[shared.size()];
+				for (int i = 9; i < elems.length; i++) {
+					int index = index2[i - 9];
+					if (index != -1) {
+						remaining[index] = elems[i];
+					}
+				}
+				// check whether there are nulls
+				for (int i = 0; i < remaining.length; i++) {
+					if (remaining[i] == null) {
+						System.err.println("Error: there should not be nulls here.. Are there duplicate samples?");
+						System.exit(-1);
+					}
+				}
+				outf.writeln(header + "\t" + Strings.concat(remaining, Strings.tab));
+			} else if (ln.startsWith("#")) {
+				outf.writeln(ln);
+			} else {
+
+				// variant
+				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				if (variants1.contains(variant.toString())) {
+					sharedVariants.add(variant.toString());
+				}
+
+				String[] elems = ln.split("\t");
+				String header = elems[0];
+				for (int i = 1; i < 9; i++) {
+					header += "\t" + elems[i];
+				}
+				String[] remaining = new String[shared.size()];
+				for (int i = 9; i < elems.length; i++) {
+					int index = index2[i - 9];
+					if (index != -1) {
+						remaining[index] = elems[i];
+					}
+				}
+				// check whether there are nulls
+				for (int i = 0; i < remaining.length; i++) {
+					if (remaining[i] == null) {
+						System.err.println("Error: there should not be nulls here.. Are there duplicate samples?");
+						System.exit(-1);
+					}
+				}
+				outf.writeln(header + "\t" + Strings.concat(remaining, Strings.tab));
+
+			}
+			ln = tf2.readLine();
+		}
+
+		tf2.close();
+
+		// now write the variants unique to file 1
+		TextFile tf1 = new TextFile(vcf1, TextFile.R);
+		ln = tf1.readLine();
+		while (ln != null) {
+			if (ln.startsWith("#")) {
+
+			} else {
+				// variant
+				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				if (!sharedVariants.contains(variant.toString())) {
+
+					String[] elems = ln.split("\t");
+					String header = elems[0];
+					for (int i = 1; i < 9; i++) {
+						header += "\t" + elems[i];
+					}
+					String[] remaining = new String[shared.size()];
+					for (int i = 9; i < elems.length; i++) {
+						int index = index1[i - 9];
+						if (index != -1) {
+							remaining[index] = elems[i];
+						}
+					}
+					// check whether there are nulls
+					for (int i = 0; i < remaining.length; i++) {
+						if (remaining[i] == null) {
+							System.err.println("Error: there should not be nulls here.. Are there duplicate samples?");
+							System.exit(-1);
+						}
+					}
+					outf.writeln(header + "\t" + Strings.concat(remaining, Strings.tab));
+				}
+
+			}
+			ln = tf1.readLine();
+		}
+
+		tf1.close();
+
+
+		outf.close();
 
 
 	}
@@ -115,13 +260,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-											  String testVCF,
-											  String vcf1out,
-											  String vcf2out,
-											  String vcfmergedout,
-											  String separatorInMergedFile,
-											  String logoutfile,
-											  boolean keepNonOverlapping) throws IOException {
+	                                          String testVCF,
+	                                          String vcf1out,
+	                                          String vcf2out,
+	                                          String vcfmergedout,
+	                                          String separatorInMergedFile,
+	                                          String logoutfile,
+	                                          boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -426,7 +571,7 @@ public class VCFMerger {
 	Utility function to merge two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-											   String separatorInMergedFile) {
+	                                           String separatorInMergedFile) {
 
 
 		String[] refAlleles = refVariant.getAlleles();
@@ -965,7 +1110,7 @@ public class VCFMerger {
 	}
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-											   boolean linux, String vcfsort) throws IOException {
+	                                           boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants
