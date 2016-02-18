@@ -33,6 +33,10 @@ public class Strings {
 		return concat(s, t, null, null);
 	}
 
+	public static String concat(String[] s, Pattern t, String replaceNull) {
+		return concat(s, t, null, replaceNull);
+	}
+
 	public static String concat(String[] s, Pattern t, boolean[] includeElem, String replaceNull) {
 
 		StringBuilder output = new StringBuilder();

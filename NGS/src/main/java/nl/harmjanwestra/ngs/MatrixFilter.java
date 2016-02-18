@@ -1,6 +1,7 @@
 package nl.harmjanwestra.ngs;
 
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.math.matrix.DoubleMatrixDataset;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
@@ -15,11 +16,19 @@ public class MatrixFilter {
 		try {
 
 			MatrixFilter f = new MatrixFilter();
-			f.filterRows("", "", "");
+			f.filterRows("/Data/tmp/nixup/mixups-matrix.txt.gz", "/Data/tmp/nixup/mixups-matrix-filtered.txt", "/Data/tmp/nixup/selectsamples.txt");
+			f.transpose("/Data/tmp/nixup/mixups-matrix-filtered.txt", "/Data/tmp/nixup/mixups-matrix-filtered-transposed.txt");
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void transpose(String s, String s1) throws IOException {
+		DoubleMatrixDataset<String, String> d = new DoubleMatrixDataset<String, String>(s);
+		d.transposeDataset();
+		d.save(s1);
+
 	}
 
 	private HashSet<String> loadInclude(String filteron) throws IOException {
