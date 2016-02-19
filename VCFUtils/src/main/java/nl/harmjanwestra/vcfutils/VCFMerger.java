@@ -68,7 +68,9 @@ public class VCFMerger {
 
 		VCFFunctions functions = new VCFFunctions();
 		ArrayList<String> samples1 = functions.getVCFSamples(vcf1);
+		System.out.println(samples1.size() + " samples in VCF1");
 		ArrayList<String> samples2 = functions.getVCFSamples(vcf2);
+		System.out.println(samples1.size() + " samples in VCF2");
 
 		// determine shared samples
 		HashSet<String> samples1Hash = new HashSet<String>();
@@ -84,6 +86,10 @@ public class VCFMerger {
 			}
 		}
 		System.out.println(shared.size() + " shared samples");
+		if (shared.isEmpty()) {
+			System.out.println("ERROR: no shared samples");
+			System.exit(-1);
+		}
 
 		// index the samples in both datasets..
 		int[] index1 = new int[samples1.size()];
@@ -121,12 +127,15 @@ public class VCFMerger {
 		}
 		tf.close();
 
+		System.out.println(variants1.size() + " variants in VCF1");
+
 		TextFile outf = new TextFile(out, TextFile.W);
 		TextFile tf2 = new TextFile(vcf2, TextFile.R);
 
 		HashSet<String> sharedVariants = new HashSet<String>();
 
 		ln = tf2.readLine();
+		int written = 0;
 		while (ln != null) {
 			if (ln.startsWith("##")) {
 				outf.writeln(ln);
@@ -182,15 +191,19 @@ public class VCFMerger {
 					}
 				}
 				outf.writeln(header + "\t" + Strings.concat(remaining, Strings.tab));
+				written++;
 
 			}
 			ln = tf2.readLine();
 		}
 
 		tf2.close();
+		System.out.println(written + " variants written from VCF2");
+		System.out.println(sharedVariants.size() + " shared variants");
 
 		// now write the variants unique to file 1
 		TextFile tf1 = new TextFile(vcf1, TextFile.R);
+		int written1 = 0;
 		ln = tf1.readLine();
 		while (ln != null) {
 			if (ln.startsWith("#")) {
@@ -220,6 +233,7 @@ public class VCFMerger {
 						}
 					}
 					outf.writeln(header + "\t" + Strings.concat(remaining, Strings.tab));
+					written1++;
 				}
 
 			}
@@ -231,6 +245,7 @@ public class VCFMerger {
 
 		outf.close();
 
+		System.out.println(written1 + " written from VCF1");
 
 	}
 
@@ -568,7 +583,7 @@ public class VCFMerger {
 	}
 
 	/*
-	Utility function to merge two variants with non-overlapping samples.
+	Utility function to mergecheese two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
 	                                           String separatorInMergedFile) {
@@ -588,7 +603,11 @@ public class VCFMerger {
 			complement = true;
 			String[] complementAlleles2 = gtools.convertToComplement(testVariantAlleles);
 			testVariantMinorAllele = gtools.getComplement(testVariantMinorAllele);
-			nridenticalalleles = countIdenticalAlleles(refAlleles, complementAlleles2);
+			if (testVariantMinorAllele == null) {
+				nridenticalalleles = 0;
+			} else {
+				nridenticalalleles = countIdenticalAlleles(refAlleles, complementAlleles2);
+			}
 		}
 
 		VCFFunctions t = new VCFFunctions();
@@ -622,7 +641,7 @@ public class VCFMerger {
 					logoutputln += "\t" + testVariant.getAlleles()[0] + "\t" + Strings.concat(testVariant.getAlleles(), Strings.comma, 1, testVariant.getAlleles().length);
 
 
-					// merge
+					// mergecheese
 					String mergeStr = t.mergeVariants(refVariant, testVariant, separatorInMergedFile);
 //					mergedOut.writeln(mergeStr);
 
@@ -678,7 +697,7 @@ public class VCFMerger {
 
 			logoutputln += "\t" + testVariant.getAlleles()[0] + "\t" + Strings.concat(testVariant.getAlleles(), Strings.comma, 1, testVariant.getAlleles().length);
 
-			// merge
+			// mergecheese
 			String mergeStr = t.mergeVariants(refVariant, testVariant, separatorInMergedFile);
 			logoutputln += "\tOK-MultiAllelic-AllelesRecoded";
 			return new Pair<String, String>(logoutputln, mergeStr);
@@ -696,6 +715,10 @@ public class VCFMerger {
 	Variants present in only one VCF will be given null genotypes for the samples of the other VCF
 	 */
 	public void merge(String vcf1, String vcf2, String out) throws IOException {
+
+		System.out.println("in1: " + vcf1);
+		System.out.println("in2: " + vcf2);
+		System.out.println("out: " + out);
 
 		VCFGenotypeData data1 = new VCFGenotypeData(vcf1);
 		VCFGenotypeData data2 = new VCFGenotypeData(vcf2);
@@ -811,7 +834,7 @@ public class VCFMerger {
 							+ "\t" + var2.getMAF();
 
 
-					// merge
+					// mergecheese
 					Pair<String, String> outputpair = mergeVariants(var1, var2, "/");
 					String mergeStr = outputpair.getLeft();
 					logln += mergeStr;
@@ -857,6 +880,11 @@ public class VCFMerger {
 					builder.append("\t").append("GT");
 
 					byte[][] alleles = var1.getGenotypeAlleles();
+					if (alleles[0].length != samples1.size()) {
+						System.err.println("ERROR: not enough alleles in file. Expected " + samples1.size() + " found " + alleles[0].length);
+						System.out.println(var1.toString());
+						System.exit(-1);
+					}
 					for (int i = 0; i < samples1.size(); i++) {
 
 						if (alleles[0][i] == -1) {
@@ -910,7 +938,7 @@ public class VCFMerger {
 				System.out.println("split weirdly ;)");
 			}
 			fin.close();
-			System.out.println(varsToTest.size() + " variants to merge from " + variantsToTestFile);
+			System.out.println(varsToTest.size() + " variants to mergecheese from " + variantsToTestFile);
 		}
 
 		System.out.println("Looking for " + nrBatches + " batches near " + dirInPrefix);

@@ -1,6 +1,7 @@
 package nl.harmjanwestra.vcfutils;
 
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -38,35 +39,26 @@ public class VCFSampleFilter {
 			if (ln.startsWith("##")) {
 				out.writeln(ln);
 			} else if (ln.startsWith("#CHROM")) {
-
 				elems = ln.split("\t");
 				includecol = new boolean[elems.length];
 				int samppleCtr = 0;
-				String header = elems[0];
+
 				for (int i = 0; i < elems.length; i++) {
 					if (i < 9) {
-						header += "\t" + elems[i];
 						includecol[i] = true;
 					} else if (samples.contains(elems[i])) {
 						includecol[i] = true;
-						header += "\t" + elems[i];
+
 						samppleCtr++;
 					}
 				}
 				System.out.println("After parsing header: " + samppleCtr + " samples found");
 				out.writeln("##VCFSampleFilter=" + samppleCtr + "/" + (elems.length - 9) + " samples selected using " + sampleFile);
-				out.writeln(header);
+				out.writeln(Strings.concat(elems, includecol, Strings.tab));
 			} else {
 				if (includecol != null) {
 					elems = ln.split("\t");
-					out.append(elems[0]);
-					for (int i = 1; i < elems.length; i++) {
-						if (includecol[i]) {
-							out.append("\t");
-							out.append(elems[i]);
-						}
-					}
-					out.append("\n");
+					out.writeln(Strings.concat(elems, includecol, Strings.tab));
 				}
 
 

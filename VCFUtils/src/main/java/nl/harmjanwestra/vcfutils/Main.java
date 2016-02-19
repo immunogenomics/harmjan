@@ -27,6 +27,13 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Filter for other alleles than ones containing A,C,T, or G")
+				.longOpt("filteralleles")
+				.build();
+		OPTIONS.addOption(option);
+
+
+		option = Option.builder()
 				.desc("Replace sample names")
 				.longOpt("samplereplace")
 				.build();
@@ -95,7 +102,7 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Reintroduce unimputed variants (can also be used to merge two VCF files)")
+				.desc("Reintroduce unimputed variants (can also be used to mergecheese two VCF files)")
 				.longOpt("reintroduce")
 				.build();
 		OPTIONS.addOption(option);
@@ -367,7 +374,16 @@ public class Main {
 			}
 
 
-			if (cmd.hasOption("concat")) {
+			if (cmd.hasOption("filteralleles")) {
+
+				VCFFilter filter = new VCFFilter();
+				try {
+					filter.filterNonACTGVariants(input, out);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			} else if (cmd.hasOption("concat")) {
 				VCFMerger merger = new VCFMerger();
 				if (cmd.hasOption("i2")) {
 					try {
@@ -657,6 +673,7 @@ public class Main {
 			} else if (cmd.hasOption("mergecheese")) {
 				VCFMerger merger = new VCFMerger();
 				String vcf1 = input;
+				System.out.println("Merging cheese :)");
 				if (cmd.hasOption("i2")) {
 					String vcf2 = cmd.getOptionValue("i2");
 					try {

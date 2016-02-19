@@ -597,6 +597,9 @@ public class GenotypeTools {
 	}
 
 	public String getComplement(String allele) {
+		if (allele == null) {
+			return null;
+		}
 		String out = "";
 		for (int j = 0; j < allele.length(); j++) {
 			char c = allele.charAt(j);
@@ -963,9 +966,9 @@ public class GenotypeTools {
 	}
 
 	public Pair<boolean[], boolean[]> determineAlleleFlipsAndExcludeVariants(String[] allelesPED, Pair<double[], String[]> pedMinorAlleles,
-																			 String[] allelesVCF, Pair<double[], String[]> vcfMinorAlleles,
-																			 ArrayList<String> variants, String out,
-																			 double mafThreshold, double crThreshold) throws IOException {
+	                                                                         String[] allelesVCF, Pair<double[], String[]> vcfMinorAlleles,
+	                                                                         ArrayList<String> variants, String out,
+	                                                                         double mafThreshold, double crThreshold) throws IOException {
 		boolean[] excludeVariant = new boolean[allelesPED.length];
 		boolean[] flipGenotypes = new boolean[allelesPED.length];
 
@@ -1047,12 +1050,12 @@ public class GenotypeTools {
 
 
 	public Pair<double[][], double[][]> correlateSamples(Pair<byte[][], String[]> genotypesPair1,
-														 Pair<byte[][], String[]> genotypesPair2,
-														 ArrayList<String> samples1,
-														 ArrayList<String> samples2,
-														 String s,
-														 boolean[] excludeCols,
-														 boolean[] flipAlleles) throws IOException {
+	                                                     Pair<byte[][], String[]> genotypesPair2,
+	                                                     ArrayList<String> samples1,
+	                                                     ArrayList<String> samples2,
+	                                                     String s,
+	                                                     boolean[] excludeCols,
+	                                                     boolean[] flipAlleles) throws IOException {
 
 
 		byte[][] genotypes1 = genotypesPair1.getLeft();
@@ -1094,8 +1097,8 @@ public class GenotypeTools {
 	}
 
 	public Pair<double[][], double[][]> correlateVariants(Pair<byte[][], String[]> genotypesPair1,
-														  Pair<byte[][], String[]> genotypesPair2, ArrayList<String> variants, String s,
-														  boolean[] excludeVariants, boolean[] flipAlleles, boolean[] sampleSwapped) throws IOException {
+	                                                      Pair<byte[][], String[]> genotypesPair2, ArrayList<String> variants, String s,
+	                                                      boolean[] excludeVariants, boolean[] flipAlleles, boolean[] sampleSwapped) throws IOException {
 
 		double[][] correlations = new double[variants.size()][variants.size()];
 		double[][] n = new double[variants.size()][variants.size()];
@@ -1231,9 +1234,6 @@ public class GenotypeTools {
 		}
 		out.close();
 	}
-
-
-
 
 
 }

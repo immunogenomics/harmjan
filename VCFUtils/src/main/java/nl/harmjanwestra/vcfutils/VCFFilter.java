@@ -211,4 +211,42 @@ public class VCFFilter {
 		}
 	 */
 
+	public void filterNonACTGVariants(String vcfin, String vcfout) throws IOException {
+		System.out.println("in: " + vcfin);
+		System.out.println("out: " + vcfout);
+		TextFile out = new TextFile(vcfout, TextFile.W);
+		TextFile tf = new TextFile(vcfin, TextFile.R);
+
+		int written = 0;
+		int total = 0;
+		String ln = tf.readLine();
+		while (ln != null) {
+			if (ln.startsWith("#")) {
+				out.writeln(ln);
+			} else {
+				VCFVariant var = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				String[] alleles = var.getAlleles();
+				boolean allelesok = true;
+				for (String allele : alleles) {
+					if (allele.toUpperCase().contains("A") ||
+							allele.toUpperCase().contains("C") ||
+							allele.toUpperCase().contains("T") ||
+							allele.toUpperCase().contains("G")) {
+					} else {
+						allelesok = false;
+					}
+				}
+				if (allelesok) {
+					out.writeln(ln);
+					written++;
+				}
+				total++;
+			}
+			ln = tf.readLine();
+		}
+
+		System.out.println("weird alleles: " + written + "/" + total + " written..");
+		tf.close();
+		out.close();
+	}
 }
