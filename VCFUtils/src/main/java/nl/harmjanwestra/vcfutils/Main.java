@@ -58,6 +58,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Sample filter")
+				.longOpt("filtersampleoverlap")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Detect genotyping sample mix-ups")
 				.longOpt("mixups")
 				.build();
@@ -374,7 +380,21 @@ public class Main {
 			}
 
 
-			if (cmd.hasOption("filteralleles")) {
+			if (cmd.hasOption("filtersampleoverlap")) {
+
+				VCFSampleFilter filter = new VCFSampleFilter();
+				if (cmd.hasOption("i2")) {
+
+					try {
+						filter.filteroverlapping(input, cmd.getOptionValue("i2"), out);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} else {
+					System.out.println("use -i2 with --filtersampleoverlap");
+				}
+
+			} else if (cmd.hasOption("filteralleles")) {
 
 				VCFFilter filter = new VCFFilter();
 				try {

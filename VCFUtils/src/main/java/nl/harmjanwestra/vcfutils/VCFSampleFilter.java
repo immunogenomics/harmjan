@@ -1,5 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
@@ -10,6 +11,57 @@ import java.util.HashSet;
  * Created by hwestra on 2/10/16.
  */
 public class VCFSampleFilter {
+
+	public void filteroverlapping(String toFilter, String ref, String vcfout) throws IOException {
+
+		System.out.println("Filtering: " + toFilter);
+		System.out.println("for samples present in: " + ref);
+		System.out.println("out: " + vcfout);
+
+
+		HashSet<String> samples1Hash = new HashSet<String>();
+		VCFGenotypeData data1 = new VCFGenotypeData(ref);
+		samples1Hash.addAll(data1.getSamples());
+		data1.close();
+
+		TextFile out = new TextFile(vcfout, TextFile.W);
+		TextFile in = new TextFile(toFilter, TextFile.R);
+
+		String ln = in.readLine();
+
+		boolean[] includecol = null;
+		int excluded = 0;
+		while (ln != null) {
+			if (ln.startsWith("##")) {
+				out.writeln(ln);
+			} else if (ln.startsWith("#CHROM")) {
+				String[] elems = ln.split("\t");
+
+				includecol = new boolean[elems.length];
+				for (int i = 0; i < includecol.length; i++) {
+					includecol[i] = true;
+				}
+
+				for (int i = 9; i < elems.length; i++) {
+					if (samples1Hash.contains(elems[i])) {
+						includecol[i] = false;
+						excluded++;
+					}
+				}
+
+				System.out.println(excluded + " / " + (elems.length - 9) + " samples will be removed");
+			} else {
+				String[] elems = ln.split("\t");
+				out.writeln(Strings.concat(elems, includecol, Strings.tab));
+			}
+			ln = in.readLine();
+		}
+
+		in.close();
+		out.close();
+
+
+	}
 
 	public void filter(String fileIn, String fileout, String sampleFile) throws IOException {
 
