@@ -65,7 +65,7 @@ public class BroShifterOptions {
 
 		option = Option.builder("p")
 				.hasArg()
-				.desc("Input posterior p-value file (assoc-file format)")
+				.desc("Input posterior p-value file (gwas-file format)")
 				.longOpt("posteriors")
 
 				.build();

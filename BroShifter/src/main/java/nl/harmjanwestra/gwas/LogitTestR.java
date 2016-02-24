@@ -1,4 +1,4 @@
-package nl.harmjanwestra.assoc;
+package nl.harmjanwestra.gwas;
 
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
@@ -518,8 +518,8 @@ public class LogitTestR implements Callable<Boolean> {
 						lowestP = 1;
 						Integer lowestPIndex = null;
 
-						TextFile pvalout = new TextFile(outputdir + bedRegions.get(r).toString() + "-assoc-" + iteration + ".txt", TextFile.W);
-						System.out.println("thread:\t" + threadnum + "\twriting to: " + outputdir + bedRegions.get(r).toString() + "-assoc-" + iteration + ".txt");
+						TextFile pvalout = new TextFile(outputdir + bedRegions.get(r).toString() + "-gwas-" + iteration + ".txt", TextFile.W);
+						System.out.println("thread:\t" + threadnum + "\twriting to: " + outputdir + bedRegions.get(r).toString() + "-gwas-" + iteration + ".txt");
 						String modelStr = "#model: status ~ snp + covar ";
 						if (!lowestPValGenotypes.isEmpty()) {
 //							String modelStr = "#model: status ~ snp + covar ";
@@ -1402,7 +1402,7 @@ public class LogitTestR implements Callable<Boolean> {
 
 				int varctr = 0;
 				TextFile logout = new TextFile(outputdir + "log.txt", TextFile.W);
-				TextFile pvalout = new TextFile(outputdir + "assoc.txt", TextFile.W);
+				TextFile pvalout = new TextFile(outputdir + "gwas.txt", TextFile.W);
 				if (finalCovariates[0].length == 0) {
 
 					/*

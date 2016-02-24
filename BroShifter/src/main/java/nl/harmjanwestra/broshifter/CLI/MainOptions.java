@@ -50,7 +50,7 @@ public class MainOptions {
 
 		option = Option.builder()
 				.desc("Perform association analysis")
-				.longOpt("assoc")
+				.longOpt("gwas")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -71,7 +71,7 @@ public class MainOptions {
 				mode = MODE.PLOT;
 			} else if (cmd.hasOption("posterior")) {
 				mode = MODE.POSTERIORPVAL;
-			} else if (cmd.hasOption("assoc")) {
+			} else if (cmd.hasOption("gwas")) {
 				mode = MODE.ASSOC;
 			}else {
 				HelpFormatter formatter = new HelpFormatter();

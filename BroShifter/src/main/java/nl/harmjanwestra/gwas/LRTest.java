@@ -1,7 +1,7 @@
-package nl.harmjanwestra.assoc;
+package nl.harmjanwestra.gwas;
 
 import JSci.maths.ArrayMath;
-import nl.harmjanwestra.assoc.CLI.LRTestOptions;
+import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
@@ -290,8 +290,8 @@ public class LRTest {
 					System.out.println(variants.size() + " variants in total.");
 				}
 
-				TextFile pvalout = new TextFile(options.getOutputdir() + "assoc-" + iter + ".txt", TextFile.W);
-				System.out.println("Output will be written here: " + options.getOutputdir() + "assoc-" + iter + ".txt");
+				TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
+				System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
 				pvalout.writeln(header);
 
 				data.close();

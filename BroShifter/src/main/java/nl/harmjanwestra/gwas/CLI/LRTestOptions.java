@@ -1,4 +1,4 @@
-package nl.harmjanwestra.assoc.CLI;
+package nl.harmjanwestra.gwas.CLI;
 
 import org.apache.commons.cli.*;
 
@@ -11,7 +11,7 @@ public class LRTestOptions {
 
 	static {
 		OPTIONS = new Options();
-		Option option = Option.builder().longOpt("assoc").build();
+		Option option = Option.builder().longOpt("gwas").build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()

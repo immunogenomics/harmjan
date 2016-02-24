@@ -1,4 +1,4 @@
-package nl.harmjanwestra.assoc;
+package nl.harmjanwestra.gwas;
 
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.broshifter.AnnotationLoader;
@@ -678,7 +678,7 @@ public class AssociationPlotterOld {
 				ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
 
 				for (int refId = 0; refId < refs.length; refId++) {
-					// read assoc file
+					// read gwas file
 					String ref = refs[refId];
 
 					Chromosome chr = region.getChromosome();
@@ -696,7 +696,7 @@ public class AssociationPlotterOld {
 						double maxP = -Double.MAX_VALUE;
 						double maxBayes = -Double.MAX_VALUE;
 						double maxAverageBayes = -Double.MAX_VALUE;
-						String assocFile = condiontalassocDir + "/Conditional/" + ds + "/" + ref + "/" + chr.toString() + "-" + regionStr + "-assoc-" + run + ".txt";
+						String assocFile = condiontalassocDir + "/Conditional/" + ds + "/" + ref + "/" + chr.toString() + "-" + regionStr + "-gwas-" + run + ".txt";
 
 						if (Gpio.exists(assocFile)) {
 //							String ldFile = condiontalassocDir + "/Conditional/" + ds + "/" + ref + "/" + chr.toString() + "-" + regionStr + "-ld-" + run + ".txt";

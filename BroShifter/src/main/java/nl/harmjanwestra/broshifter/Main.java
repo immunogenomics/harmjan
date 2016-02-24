@@ -2,14 +2,14 @@ package nl.harmjanwestra.broshifter;
 
 
 import com.itextpdf.text.DocumentException;
-import nl.harmjanwestra.assoc.AssociationPlotter;
-import nl.harmjanwestra.assoc.AssociationResultMerger;
-import nl.harmjanwestra.assoc.CLI.AssociationPlotterOptions;
-import nl.harmjanwestra.assoc.CLI.AssociationResultMergerOptions;
-import nl.harmjanwestra.assoc.CLI.LRTestOptions;
-import nl.harmjanwestra.assoc.CLI.PosteriorPvalueOptions;
-import nl.harmjanwestra.assoc.LRTest;
-import nl.harmjanwestra.assoc.PosteriorPvalues;
+import nl.harmjanwestra.gwas.AssociationPlotter;
+import nl.harmjanwestra.gwas.AssociationResultMerger;
+import nl.harmjanwestra.gwas.CLI.AssociationPlotterOptions;
+import nl.harmjanwestra.gwas.CLI.AssociationResultMergerOptions;
+import nl.harmjanwestra.gwas.CLI.LRTestOptions;
+import nl.harmjanwestra.gwas.CLI.PosteriorPvalueOptions;
+import nl.harmjanwestra.gwas.LRTest;
+import nl.harmjanwestra.gwas.PosteriorPvalues;
 import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import nl.harmjanwestra.broshifter.CLI.MainOptions;
 

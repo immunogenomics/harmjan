@@ -777,9 +777,9 @@ public class PlayGround {
 				if (d == 0) {
 					files = new String[]{
 							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/T1D-Onengut/hg19_gwas_ic_t1d_onengut_meta_4_18_1.tab",
-							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/T1D/before-UK/Chr" + chr + "-assoc.txt",
-							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/T1D/kg-UK/Chr" + chr + "-assoc.txt",
-							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/T1D/seq-UK/Chr" + chr + "-assoc.txt"
+							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/T1D/before-UK/Chr" + chr + "-gwas.txt",
+							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/T1D/kg-UK/Chr" + chr + "-gwas.txt",
+							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/T1D/seq-UK/Chr" + chr + "-gwas.txt"
 					};
 					names = new String[]{"Onengut", "ImmunoChip", "1000Genomes", "Sequencing"};
 					impquals = new String[]{null,
@@ -789,9 +789,9 @@ public class PlayGround {
 				} else {
 					files = new String[]{
 							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/RA-Eyre/hg19_gwas_ic_ra_eyre_4_18_0.tab",
-							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/RA/before/Chr" + chr + "-assoc.txt",
-							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/RA/kg/Chr" + chr + "-assoc.txt",
-							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/RA/seq/Chr" + chr + "-assoc.txt"
+							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/RA/before/Chr" + chr + "-gwas.txt",
+							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/RA/kg/Chr" + chr + "-gwas.txt",
+							"/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/RA/seq/Chr" + chr + "-gwas.txt"
 					};
 					names = new String[]{"Eyre", "ImmunoChip", "1000Genomes", "Sequencing"};
 					impquals = new String[]{null,
@@ -948,7 +948,7 @@ public class PlayGround {
 	private HashMap<Feature, Double> loadAssoc(String dir) throws IOException {
 		HashMap<Feature, Double> assocValues = new HashMap<Feature, Double>();
 		for (int chr = 1; chr < 23; chr++) {
-			String f = dir + "Chr" + chr + "-assoc.txt";
+			String f = dir + "Chr" + chr + "-gwas.txt";
 			if (Gpio.exists(f)) {
 
 				System.out.println("loading: " + f);
@@ -1108,8 +1108,8 @@ public class PlayGround {
 
 				tf.close();
 
-				TextFile associn = new TextFile(assoc + "Chr" + chr + "-assoc.txt", TextFile.R);
-				TextFile assocout = new TextFile(assocOut + "Chr" + chr + "-assoc.txt", TextFile.W);
+				TextFile associn = new TextFile(assoc + "Chr" + chr + "-gwas.txt", TextFile.R);
+				TextFile assocout = new TextFile(assocOut + "Chr" + chr + "-gwas.txt", TextFile.W);
 				assocout.writeln(associn.readLine());
 				String[] aselems = associn.readLineElems(TextFile.tab);
 				while (aselems != null) {
@@ -1406,10 +1406,10 @@ public class PlayGround {
 //							datasetFiles[reference] = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-04-Assoc/T1D-Onengut/hg19_gwas_ic_t1d_onengut_meta_4_18_1.tab";
 //							refNames[reference] = "Onengut et al";
 //						} else if (dataset == 1) {
-//							String afterImputation = assocInputDir + datasetStr + "/" + refStr + "-UK/" + chrin.toString() + "-assoc.txt";
+//							String afterImputation = assocInputDir + datasetStr + "/" + refStr + "-UK/" + chrin.toString() + "-gwas.txt";
 //							datasetFiles[reference] = afterImputation;
 //						} else {
-//							String afterImputation = assocInputDir + datasetStr + "/" + refStr + "/" + chrin.toString() + "-assoc.txt";
+//							String afterImputation = assocInputDir + datasetStr + "/" + refStr + "/" + chrin.toString() + "-gwas.txt";
 //							datasetFiles[reference] = afterImputation;
 //						}
 //					}
@@ -1798,7 +1798,7 @@ public class PlayGround {
 //						samplestoexclude = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D-parentsToExclude.txt";
 //						diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D-diseaseStatus.txt";
 //						famfile = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D.fam";
-//						out = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D/assoc-iter/" + ref + "/";
+//						out = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/T1D/gwas-iter/" + ref + "/";
 //
 //					} else {
 //						covariatefile = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA-covarmerged.txtmergedCovariates.txt";
@@ -1806,7 +1806,7 @@ public class PlayGround {
 //						famfile = null;
 //						samplestoexclude = null;
 //						diseasestatus = "/medpop/srlab/hwestra/fr-reseq/2015-05-19-Imputation/2015-05-30-Eur-WoMendelianErrors/RA-covarmerged.txtmergeddisease.txt";
-//						out = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA/assoc-iter/" + ref + "/";
+//						out = "/medpop/srlab/hwestra/fr-reseq/2015-09-25-WithX/RA/gwas-iter/" + ref + "/";
 //					}
 //					Gpio.createDir(out);
 //					out += "Chr" + chr + "-";

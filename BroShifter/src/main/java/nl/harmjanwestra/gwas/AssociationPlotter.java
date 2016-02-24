@@ -1,7 +1,7 @@
-package nl.harmjanwestra.assoc;
+package nl.harmjanwestra.gwas;
 
 import com.itextpdf.text.DocumentException;
-import nl.harmjanwestra.assoc.CLI.AssociationPlotterOptions;
+import nl.harmjanwestra.gwas.CLI.AssociationPlotterOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;

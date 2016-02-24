@@ -104,7 +104,7 @@ public class ApproximateBayesPosterior {
 		double sum = 0;
 		for (int i = 0; i < assocResults.size(); i++) {
 			AssociationResult r = assocResults.get(i);
-//			Double beta = Math.log(Math.abs(assoc.getMiddle()));
+//			Double beta = Math.log(Math.abs(gwas.getMiddle()));
 			double beta = Math.abs(r.getBeta()[0]);
 			double se = r.getSe()[0];
 

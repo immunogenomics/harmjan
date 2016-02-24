@@ -1,4 +1,4 @@
-package nl.harmjanwestra.assoc.CLI;
+package nl.harmjanwestra.gwas.CLI;
 
 import org.apache.commons.cli.*;
 
