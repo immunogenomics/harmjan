@@ -29,6 +29,8 @@ public class Main {
 				System.out.println("Please specify a mode");
 			} else if (options.mode.equals(MainOptions.MODE.BROSHIFTER)) {
 				new BroShifter(new BroShifterOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.ANNOTATIONOVERLAPPLOT)) {
+				new AnnotationOverlapPlot(new BroShifterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.POSTERIORPVAL)) {
 				new PosteriorPvalues(new PosteriorPvalueOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.PLOT)) {

@@ -244,6 +244,10 @@ public class Feature {
 		return (nrGC + nrAT + nrN);
 	}
 
+	public String toBedString() {
+		return getChromosome().getName() + "\t" + getStart() + "\t" + getStop();
+	}
+
 	@Override
 	public String toString() {
 		return getChromosome().getName() + "_" + getStart() + "-" + getStop();

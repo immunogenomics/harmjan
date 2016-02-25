@@ -25,11 +25,11 @@ import java.util.concurrent.Callable;
  */
 public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>> {
 
-	private final int threadNum;
+	private int threadNum;
 
-	private final String annotation1;
-	private final String annotation2;
-	private final BroShifterOptions options;
+	private String annotation1;
+	private String annotation2;
+	private BroShifterOptions options;
 	boolean DEBUG = false;
 
 
@@ -43,6 +43,10 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		this.options = options;
 	}
 
+	public BroShifterTask() {
+
+	}
+
 	public Pair<String, ArrayList<String>> call() throws IOException {
 		// load bed regions to test
 		BedFileReader bf = new BedFileReader();
@@ -52,12 +56,12 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		// load annotations
 		AnnotationLoader loader = new AnnotationLoader();
 		System.out.println("Thread " + threadNum + " | Testing: " + annotation1);
-		Track annotation1Track = loader.loadAnnotations(annotation1, options.usePeakCenter, options.bpToExtendAnnotation, true);
+		Track annotation1Track = loader.loadAnnotations(annotation1, options.usePeakCenter, options.bpToExtendAnnotation, true, regions);
 		String annotation1name = new File(annotation1).getName();
 		Track annotation2Track = null;
 		String annotation2name = null;
 		if (annotation2 != null) {
-			annotation2Track = loader.loadAnnotations(annotation2, options.usePeakCenter, options.bpToExtendAnnotation, true);
+			annotation2Track = loader.loadAnnotations(annotation2, options.usePeakCenter, options.bpToExtendAnnotation, true, regions);
 			annotation2name = new File(annotation2).getName();
 		}
 
@@ -107,6 +111,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 					int nrOverlapping = 0;
 
 					if (annotation2 != null) {
+						// perform conditional analysis
 						Track subsetOfAnnotation2 = annotation2Track.getSubset(region.getChromosome(), region.getStart(), region.getStop());
 						annotation2size = subsetOfAnnotation2.getAllFeatures().size();
 						// split up the region in Y and Y-hat
@@ -530,7 +535,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		}
 	}
 
-	private Pair<Double, Integer> getOverlap(Track subsetOfAnnotations, ArrayList<SNPFeature> snps) {
+	public Pair<Double, Integer> getOverlap(Track subsetOfAnnotations, ArrayList<SNPFeature> snps) {
 		double sum = 0;
 		int nrOverlap = 0;
 		int maxalloweddist = options.getMaxAllowedDistance();
@@ -599,7 +604,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		return new Pair<Double, Integer>(sum, nrOverlap);
 	}
 
-	private ArrayList<SNPFeature> readPosteriors(String file, Feature region) throws IOException {
+	public ArrayList<SNPFeature> readPosteriors(String file, Feature region) throws IOException {
 
 		AssociationFile assocFile = new AssociationFile();
 		ArrayList<AssociationResult> results = assocFile.read(file, region);

@@ -22,6 +22,7 @@ public class AnnotationPanel extends Panel {
 	private ArrayList<Track> annotations;
 	private ArrayList<SNPFeature> testOverlapWith;
 	int trackheight = 15;
+	int marginBetween = 5;
 
 	public AnnotationPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -33,7 +34,15 @@ public class AnnotationPanel extends Panel {
 	}
 
 	public void setOverlappingFeatures(ArrayList<SNPFeature> f) {
-		this.testOverlapWith = f;
+		testOverlapWith = f;
+	}
+
+	public int getTrackheight() {
+		return trackheight;
+	}
+
+	public int getMarginBetween() {
+		return marginBetween;
 	}
 
 	@Override
@@ -44,8 +53,6 @@ public class AnnotationPanel extends Panel {
 		int regionSize = region.getStop() - region.getStart();
 		int nrPixelsX = figureWidth - (2 * marginX);
 
-
-		int marginBetween = 5;
 
 		Color defaultLightGrey = new Color(175, 175, 175);
 		Color defaultColor = new Color(90, 90, 90);
@@ -76,15 +83,10 @@ public class AnnotationPanel extends Panel {
 
 
 			boolean[] mark = new boolean[list.size()];
-			double score = 0;
-			int nrOverlap = 0;
+
 			if (testOverlapWith != null) {
 				mark = testOverlap(list);
-				Pair<Double, Integer> scores = getOverlap(t.getSubset(region.getChromosome(), region.getStart(), region.getStop()), testOverlapWith);
-				nrOverlap = scores.getRight();
-				score = scores.getLeft();
 			}
-
 
 			for (int q = 0; q < list.size(); q++) {
 				Feature f = list.get(q);
@@ -127,14 +129,11 @@ public class AnnotationPanel extends Panel {
 			g2d.setColor(defaultColor);
 
 			// plot the name of the annotation
-			String name = t.getName();
-			File file = new File(name);
-			String filename = file.getName();
+
 			g2d.setFont(new Font("default", Font.PLAIN, 10));
 
 			int pixelStart = x0 + marginX + 5 + nrPixelsX;
-			DecimalFormat format = new DecimalFormat("#.###");
-			g2d.drawString(filename + " - " + nrOverlap + " - " + format.format(score), pixelStart, trackYpos + trackheight);
+			g2d.drawString(t.getName(), pixelStart, trackYpos + trackheight);
 
 
 		}
@@ -182,4 +181,6 @@ public class AnnotationPanel extends Panel {
 		}
 		return output;
 	}
+
+
 }

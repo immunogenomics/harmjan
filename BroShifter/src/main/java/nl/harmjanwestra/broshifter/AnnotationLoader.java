@@ -17,22 +17,43 @@ import java.util.ArrayList;
  */
 public class AnnotationLoader {
 
-	public Track loadAnnotations(String annotation1, boolean usePeakCenter, int bpToExtendAnnotation, boolean mergeoverlapping) throws IOException {
+	public Track loadAnnotations(String annotation1,
+								 boolean usePeakCenter,
+								 int bpToExtendAnnotation,
+								 boolean mergeoverlapping,
+								 ArrayList<Feature> regions) throws IOException {
 
 		ArrayList<Feature> allAnnotations = null;
 		if (annotation1.endsWith(".xls")) {
 			XLSFile xlsFile = new XLSFile();
 			ArrayList<PeakFeature> pf = xlsFile.readAllPeaks(annotation1, false, 0.05);
-			allAnnotations = new ArrayList<>();
+			allAnnotations = new ArrayList<>(10000);
 			for (Feature p : pf) {
-				allAnnotations.add(p);
+				if (regions == null) {
+					allAnnotations.add(p);
+				} else {
+					boolean overlap = false;
+					for (Feature f : regions) {
+						if (f.overlaps(p)) {
+							overlap = true;
+						}
+					}
+					if (overlap) {
+						allAnnotations.add(p);
+					}
+				}
 			}
 		} else {
 			BedFileReader bf = new BedFileReader();
+			allAnnotations = new ArrayList<>(10000);
 			if (annotation1.endsWith(".csv")) {
 				bf = new BedFileReader(Strings.semicolon);
 			}
-			allAnnotations = bf.readAsList(annotation1);
+
+			Track t = bf.readAsTrack(annotation1, annotation1);
+			for (Feature f : regions) {
+				allAnnotations.addAll(t.getFeatureSet(f));
+			}
 		}
 
 		if (usePeakCenter) {

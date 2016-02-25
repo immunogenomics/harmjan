@@ -6,6 +6,7 @@
 package nl.harmjanwestra.utilities.features;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -107,4 +108,6 @@ public class Track extends Feature {
 	public NavigableSet<Feature> getFeatureSet(Feature feat1) {
 		return getFeatureSet(feat1.getChromosome(), feat1.getStart(), feat1.getStop());
 	}
+
+
 }

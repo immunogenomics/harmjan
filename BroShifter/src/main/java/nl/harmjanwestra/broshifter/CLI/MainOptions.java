@@ -15,7 +15,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOT,
 		MERGE,
-		ASSOC, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, NA
 	}
 
 	public static final Options OPTIONS;
@@ -39,6 +39,12 @@ public class MainOptions {
 		option = Option.builder()
 				.desc("Plot association results")
 				.longOpt("plot")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Plot annotation overlap results")
+				.longOpt("plotoverlap")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -67,6 +73,8 @@ public class MainOptions {
 				mode = MODE.BROSHIFTER;
 			} else if (cmd.hasOption("merge")) {
 				mode = MODE.MERGE;
+			}else if (cmd.hasOption("plotoverlap")) {
+				mode = MODE.ANNOTATIONOVERLAPPLOT;
 			} else if (cmd.hasOption("plot")) {
 				mode = MODE.PLOT;
 			} else if (cmd.hasOption("posterior")) {

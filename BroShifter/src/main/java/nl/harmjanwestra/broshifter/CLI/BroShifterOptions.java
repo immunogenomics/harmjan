@@ -24,6 +24,7 @@ public class BroShifterOptions {
 	public double credibleSetThreshold = 0.95;
 	public DISTANCEWEIGHT distanceweight = DISTANCEWEIGHT.NONE;
 	private int maxAllowedDistance = 150;
+	private String geneAnnotationFile;
 
 
 	// TODO: allow code to determine mean + sd annotation size
@@ -31,6 +32,10 @@ public class BroShifterOptions {
 
 	public int getMaxAllowedDistance() {
 		return maxAllowedDistance;
+	}
+
+	public String getGeneAnnotationFile() {
+		return geneAnnotationFile;
 	}
 
 	public enum HEIGHTWEIGHT {
@@ -53,6 +58,8 @@ public class BroShifterOptions {
 	static {
 		OPTIONS = new Options();
 		Option option = Option.builder().longOpt("broshifter").build();
+		OPTIONS.addOption(option);
+		option = Option.builder().longOpt("plotoverlap").build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("r")
@@ -140,6 +147,12 @@ public class BroShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Gene annotation GTF")
+				.longOpt("gtf")
+				.build();
+		OPTIONS.addOption(option);
+
 
 		option = Option.builder("w")
 				.desc("Use a weight for distance. [none|linear|sqrt|inverse|exp|hoverd]. Default: none")
@@ -173,6 +186,10 @@ public class BroShifterOptions {
 			} else {
 				System.out.println("Path to posteriors not provided");
 				run = false;
+			}
+
+			if (cmd.hasOption("gtf")) {
+				geneAnnotationFile = cmd.getOptionValue("gtf");
 			}
 
 			if (cmd.hasOption("annotations")) {
