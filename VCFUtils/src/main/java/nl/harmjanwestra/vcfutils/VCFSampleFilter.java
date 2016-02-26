@@ -49,6 +49,7 @@ public class VCFSampleFilter {
 					}
 				}
 
+				out.writeln(Strings.concat(elems, includecol, Strings.tab));
 				System.out.println(excluded + " / " + (elems.length - 9) + " samples will be removed");
 			} else {
 				String[] elems = ln.split("\t");
