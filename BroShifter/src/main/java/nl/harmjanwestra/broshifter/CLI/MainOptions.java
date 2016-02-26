@@ -8,16 +8,6 @@ import org.apache.commons.cli.*;
 public class MainOptions {
 
 
-	public MODE mode = MODE.NA;
-
-	public enum MODE {
-		BROSHIFTER,
-		POSTERIORPVAL,
-		PLOT,
-		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, NA
-	}
-
 	public static final Options OPTIONS;
 
 	static {
@@ -49,6 +39,12 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Filter bed region file for significant results")
+				.longOpt("bedfilter")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Calculate posteriors")
 				.longOpt("posterior")
 				.build();
@@ -62,6 +58,7 @@ public class MainOptions {
 
 	}
 
+	public MODE mode = MODE.NA;
 
 	public MainOptions(String[] args) {
 		try {
@@ -73,15 +70,17 @@ public class MainOptions {
 				mode = MODE.BROSHIFTER;
 			} else if (cmd.hasOption("merge")) {
 				mode = MODE.MERGE;
-			}else if (cmd.hasOption("plotoverlap")) {
+			} else if (cmd.hasOption("plotoverlap")) {
 				mode = MODE.ANNOTATIONOVERLAPPLOT;
+			} else if (cmd.hasOption("bedfilter")) {
+				mode = MODE.BEDFILTER;
 			} else if (cmd.hasOption("plot")) {
 				mode = MODE.PLOT;
 			} else if (cmd.hasOption("posterior")) {
 				mode = MODE.POSTERIORPVAL;
 			} else if (cmd.hasOption("gwas")) {
 				mode = MODE.ASSOC;
-			}else {
+			} else {
 				HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp(" ", OPTIONS);
 			}
@@ -98,6 +97,14 @@ public class MainOptions {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp(" ", OPTIONS);
 		System.exit(-1);
+	}
+
+	public enum MODE {
+		BROSHIFTER,
+		POSTERIORPVAL,
+		PLOT,
+		MERGE,
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, NA
 	}
 
 }

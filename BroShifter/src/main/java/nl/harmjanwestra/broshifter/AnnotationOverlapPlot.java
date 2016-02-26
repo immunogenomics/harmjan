@@ -1,7 +1,6 @@
 package nl.harmjanwestra.broshifter;
 
 import com.itextpdf.text.DocumentException;
-import com.sun.deploy.association.Association;
 import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;

@@ -1,6 +1,5 @@
 package nl.harmjanwestra.gwas;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import nl.harmjanwestra.gwas.CLI.BedAssocFilterOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;

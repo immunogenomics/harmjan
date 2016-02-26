@@ -75,12 +75,12 @@ public class VCFVariant {
 		parse(ln, PARSE.ALL);
 	}
 
-	public short[][] getAllelicDepth() {
-		return allelicDepth;
-	}
-
 	public VCFVariant(String ln, PARSE p) {
 		parse(ln, p);
+	}
+
+	public short[][] getAllelicDepth() {
+		return allelicDepth;
 	}
 
 	private void parse(String ln, PARSE p) {
@@ -186,11 +186,13 @@ public class VCFVariant {
 							try {
 
 								if (genotypeProbabilies == null) {
-									genotypeProbabilies = new double[3][nrSamples];
+									genotypeProbabilies = new double[gpElems.length][nrSamples];
 								}
 
 								for (int g = 0; g < gpElems.length; g++) {
+
 									genotypeProbabilies[g][indPos] = Double.parseDouble(gpElems[g]);
+
 								}
 
 							} catch (NumberFormatException e) {
@@ -802,7 +804,7 @@ public class VCFVariant {
 		return gtCol;
 	}
 
-	public String getSeparator(){
+	public String getSeparator() {
 		return separator;
 	}
 

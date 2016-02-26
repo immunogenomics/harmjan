@@ -579,7 +579,7 @@ public class AssociationPlotterOld {
 		ArrayList<Track> output = new ArrayList<>();
 		AnnotationLoader loader = new AnnotationLoader();
 		for (int i = 0; i < list.length; i++) {
-			Track t = loader.loadAnnotations(list[i], usepeakcenter, bptoextendannotation, mergeverlapping);
+			Track t = loader.loadAnnotations(list[i], usepeakcenter, bptoextendannotation, mergeverlapping, null);
 			output.add(t);
 		}
 		return output;
