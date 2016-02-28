@@ -53,8 +53,9 @@ public class AssociationPlotter {
 		String[] assocFiles = associationFiles.split(",");
 		AssociationFile assocFile = new AssociationFile();
 		GTFAnnotation annotation = new GTFAnnotation(annotationfile);
-		for (Feature region : regions) {
 
+		for (Feature region : regions) {
+			boolean regionhasvariants = false;
 
 			TreeSet<Gene> genes = annotation.getGeneTree();
 			Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
@@ -109,34 +110,47 @@ public class AssociationPlotter {
 
 				for (int a = 0; a < associations.size(); a++) {
 					AssociationResult r = associations.get(a);
-					pvals.add(new Pair<>(r.getSnp().getStart(), r.getLog10Pval()));
-					if (maxP == null) {
-						maxP = r.getLog10Pval();
-					} else {
-						if (r.getLog10Pval() > maxP) {
+
+					double p = r.getLog10Pval();
+					if (!Double.isNaN(p) && !Double.isInfinite(p)) {
+						pvals.add(new Pair<>(r.getSnp().getStart(), r.getLog10Pval()));
+
+						if (maxP == null) {
+							maxP = r.getLog10Pval();
+						} else if (r.getLog10Pval() > maxP) {
 							maxP = r.getLog10Pval();
 						}
+					} else {
+						System.err.println("issue with: " + r.toString());
 					}
+
+
+				}
+
+				if (!pvals.isEmpty()) {
+					regionhasvariants = true;
 				}
 				associationPanel.setDataSingleDs(region, sequencedRegions, pvals, assocNames[i] + " Association P-values");
 				associationPanel.setMarkDifferentColor(mark);
 				associationPanel.setPlotGWASSignificance(true);
 				allPanels.add(associationPanel);
-
-				if (options.getMaxp() != null) {
-					associationPanel.setMaxPVal(options.getMaxp());
-				}
-
-
 				grid.addPanel(associationPanel, 1, i);
+			}
 
-			}
-			if (options.getMaxp() == null) {
+			if (regionhasvariants) {
 				for (AssociationPanel p : allPanels) {
-					p.setMaxPVal(maxP);
+					System.out.println("plotting: " + region.toString() + "\tmax pval: " + maxP);
+					if (options.getMaxp() != null) {
+						p.setMaxPVal(options.getMaxp());
+					} else if (maxP != null) {
+						p.setMaxPVal(maxP);
+					}
 				}
+				grid.draw(outputprefix + region.toString() + ".pdf");
+			} else {
+				System.out.println("Region not plotted: " + region.toString() + " since it has no variants.");
 			}
-			grid.draw(outputprefix + region.toString() + ".pdf");
+
 		}
 
 

@@ -44,13 +44,30 @@ public class Feature {
 		this.nrN = feature.nrN;
 	}
 
-
-	public void setParent(Feature p) {
-		this.parent = p;
+	public static Feature parseFeature(String regionStr) {
+		String[] elems = regionStr.split("\\_");
+		if (elems.length == 2) {
+			Chromosome chr = Chromosome.parseChr(elems[0]);
+			String posStr = elems[1];
+			String[] posStrElems = posStr.split("\\-");
+			if (posStrElems.length == 2) {
+				int start = Integer.parseInt(posStrElems[0]);
+				int stop = Integer.parseInt(posStrElems[1]);
+				return new Feature(chr, start, stop);
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
 	}
 
 	public Feature getParent() {
 		return parent;
+	}
+
+	public void setParent(Feature p) {
+		this.parent = p;
 	}
 
 	public Chromosome getChromosome() {
@@ -61,48 +78,36 @@ public class Feature {
 		this.chromosome = chromosome;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setStrand(Strand strand) {
-		this.strand = strand;
-	}
-
-	public void setStart(int start) {
-		this.start = start;
-	}
-
-	public void setStop(int stop) {
-		this.stop = stop;
-	}
-
-	public void setNrAT(int nrAT) {
-		this.nrAT = nrAT;
-	}
-
-	public void setNrGC(int nrGC) {
-		this.nrGC = nrGC;
-	}
-
-	public void setNrN(int nrN) {
-		this.nrN = nrN;
-	}
-
 	public String getName() {
 		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public Strand getStrand() {
 		return strand;
 	}
 
+	public void setStrand(Strand strand) {
+		this.strand = strand;
+	}
+
 	public int getStart() {
 		return start;
 	}
 
+	public void setStart(int start) {
+		this.start = start;
+	}
+
 	public int getStop() {
 		return stop;
+	}
+
+	public void setStop(int stop) {
+		this.stop = stop;
 	}
 
 	@Override
@@ -228,12 +233,24 @@ public class Feature {
 		return nrAT;
 	}
 
+	public void setNrAT(int nrAT) {
+		this.nrAT = nrAT;
+	}
+
 	public int getNrGC() {
 		return nrGC;
 	}
 
+	public void setNrGC(int nrGC) {
+		this.nrGC = nrGC;
+	}
+
 	public int getNrN() {
 		return nrN;
+	}
+
+	public void setNrN(int nrN) {
+		this.nrN = nrN;
 	}
 
 	public double getGCContent() {
@@ -253,25 +270,8 @@ public class Feature {
 		return getChromosome().getName() + "_" + getStart() + "-" + getStop();
 	}
 
+
 	public int getSize() {
 		return stop - start;
-	}
-
-	public static Feature parseFeature(String regionStr) {
-		String[] elems = regionStr.split("\\_");
-		if (elems.length == 2) {
-			Chromosome chr = Chromosome.parseChr(elems[0]);
-			String posStr = elems[1];
-			String[] posStrElems = posStr.split("\\-");
-			if (posStrElems.length == 2) {
-				int start = Integer.parseInt(posStrElems[0]);
-				int stop = Integer.parseInt(posStrElems[1]);
-				return new Feature(chr, start, stop);
-			} else {
-				return null;
-			}
-		} else {
-			return null;
-		}
 	}
 }

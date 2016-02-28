@@ -37,6 +37,7 @@
         <module>BroShifter</module>
         <module>BroRunner</module>
         <module>TXTr</module>
+        <module>chromhmmsplitter</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

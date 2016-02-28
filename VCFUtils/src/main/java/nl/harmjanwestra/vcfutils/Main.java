@@ -126,8 +126,8 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Correlate imputation output")
-				.longOpt("correlate")
+				.desc("Correlate imputation output (between two files) ")
+				.longOpt("correlatevcf")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -158,6 +158,12 @@ public class Main {
 		option = Option.builder()
 				.desc("Variant sampler")
 				.longOpt("sample")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Variant correlation matrix (within a region)")
+				.longOpt("correlatevariants")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -385,11 +391,9 @@ public class Main {
 				VCFSampleFilter filter = new VCFSampleFilter();
 				if (cmd.hasOption("i2")) {
 
-					try {
-						filter.filteroverlapping(input, cmd.getOptionValue("i2"), out);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					filter.filteroverlapping(input, cmd.getOptionValue("i2"), out);
+
 				} else {
 					System.out.println("use -i2 with --filtersampleoverlap");
 				}
@@ -397,169 +401,147 @@ public class Main {
 			} else if (cmd.hasOption("filteralleles")) {
 
 				VCFFilter filter = new VCFFilter();
-				try {
-					filter.filterNonACTGVariants(input, out);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+
+				filter.filterNonACTGVariants(input, out);
+
 
 			} else if (cmd.hasOption("concat")) {
 				VCFMerger merger = new VCFMerger();
 				if (cmd.hasOption("i2")) {
-					try {
-						merger.concatenate(input, cmd.getOptionValue("i2"), out);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					merger.concatenate(input, cmd.getOptionValue("i2"), out);
+
 				} else {
 					System.out.println("Use -i2 with --concat");
 				}
 			} else if (cmd.hasOption("filtervariantoverlap")) {
 				VCFRemoveOverlappingVariants t = new VCFRemoveOverlappingVariants();
 				if (cmd.hasOption("i2")) {
-					try {
-						t.remove(input, cmd.getOptionValue("i2"), out);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					t.remove(input, cmd.getOptionValue("i2"), out);
+
 				} else {
 					System.out.println("Use -i2 for --filtervariantoverlap");
 				}
 			} else if (cmd.hasOption("mixups")) {
 
 				MixupTest test = new MixupTest();
-				try {
-					if (cmd.hasOption("i2")) {
-						test.test(input, cmd.getOptionValue("i2"), out);
-					} else {
-						System.out.println("Use -i2 for --mixups");
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
+
+				if (cmd.hasOption("i2")) {
+					test.test(input, cmd.getOptionValue("i2"), out);
+				} else {
+					System.out.println("Use -i2 for --mixups");
 				}
+
 
 			} else if (cmd.hasOption("samplereplace")) {
-				try {
-					if (cmd.hasOption("l")) {
-						VCFSampleNameReplace vpl = new VCFSampleNameReplace();
-						vpl.replace(cmd.getOptionValue("l"), input, out);
-					} else {
-						System.out.println("Use -l with --samplereplace");
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
+
+				if (cmd.hasOption("l")) {
+					VCFSampleNameReplace vpl = new VCFSampleNameReplace();
+					vpl.replace(cmd.getOptionValue("l"), input, out);
+				} else {
+					System.out.println("Use -l with --samplereplace");
 				}
+
 			} else if (cmd.hasOption("filtersample")) {
-				try {
-					VCFSampleFilter filter = new VCFSampleFilter();
-					String samplefile = null;
-					if (cmd.hasOption("l")) {
-						samplefile = cmd.getOptionValue("l");
-						filter.filter(input, out, samplefile);
-					} else {
-						System.out.println("Use params -i -o and -l");
-					}
 
-				} catch (IOException e) {
-					e.printStackTrace();
+				VCFSampleFilter filter = new VCFSampleFilter();
+				String samplefile = null;
+				if (cmd.hasOption("l")) {
+					samplefile = cmd.getOptionValue("l");
+					filter.filter(input, out, samplefile);
+				} else {
+					System.out.println("Use params -i -o and -l");
 				}
+
+
 			} else if (cmd.hasOption("updaters")) {
-				try {
-					VCFVariantRSNameUpdater updatr = new VCFVariantRSNameUpdater();
-					if (cmd.hasOption("dbsnp")) {
-						updatr.updateRSNames(cmd.getOptionValue("dbsnp"), input, out);
-					} else {
-						System.out.println("Use --dbsnp, -i and -o with --updaters");
-					}
 
-				} catch (IOException e) {
-					e.printStackTrace();
+				VCFVariantRSNameUpdater updatr = new VCFVariantRSNameUpdater();
+				if (cmd.hasOption("dbsnp")) {
+					updatr.updateRSNames(cmd.getOptionValue("dbsnp"), input, out);
+				} else {
+					System.out.println("Use --dbsnp, -i and -o with --updaters");
 				}
+
+
 			} else if (cmd.hasOption("filtergenotype")) {
 
 
-				try {
-
-					VCFFilter filter = new VCFFilter();
-					Integer gqual = null;
-					Integer readdepth = null;
-					Double allelicBalance = null;
-					double maf = 0;
-					double callrate = 0;
-					boolean onlyautosomes = false;
-					if (cmd.hasOption("readdepth")) {
-						readdepth = Integer.parseInt(cmd.getOptionValue("readdepth"));
-					}
-					if (cmd.hasOption("gqual")) {
-						gqual = Integer.parseInt(cmd.getOptionValue("gqual"));
-					}
-
-					if (cmd.hasOption("allelicbalance")) {
-						allelicBalance = Double.parseDouble("allelicbalance");
-					}
-
-					if (cmd.hasOption("maf")) {
-						maf = Double.parseDouble(cmd.getOptionValue("maf"));
-					}
-
-					if (cmd.hasOption("callrate")) {
-						callrate = Double.parseDouble(cmd.getOptionValue("callrate"));
-					}
-
-					if (cmd.hasOption("autosomes")) {
-						onlyautosomes = true;
-					}
-
-
-					filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);
-				} catch (IOException e) {
-					e.printStackTrace();
+				VCFFilter filter = new VCFFilter();
+				Integer gqual = null;
+				Integer readdepth = null;
+				Double allelicBalance = null;
+				double maf = 0;
+				double callrate = 0;
+				boolean onlyautosomes = false;
+				if (cmd.hasOption("readdepth")) {
+					readdepth = Integer.parseInt(cmd.getOptionValue("readdepth"));
 				}
+				if (cmd.hasOption("gqual")) {
+					gqual = Integer.parseInt(cmd.getOptionValue("gqual"));
+				}
+
+				if (cmd.hasOption("allelicbalance")) {
+					allelicBalance = Double.parseDouble("allelicbalance");
+				}
+
+				if (cmd.hasOption("maf")) {
+					maf = Double.parseDouble(cmd.getOptionValue("maf"));
+				}
+
+				if (cmd.hasOption("callrate")) {
+					callrate = Double.parseDouble(cmd.getOptionValue("callrate"));
+				}
+
+				if (cmd.hasOption("autosomes")) {
+					onlyautosomes = true;
+				}
+
+
+				filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);
+
 			} else if (cmd.hasOption("plotrsq")) {
 
 				RSquaredPlot plot = new RSquaredPlot();
-				try {
 
-					double threshold = 0.8;
-					if (cmd.hasOption("rsquared")) {
-						threshold = Double.parseDouble(cmd.getOptionValue("rsquared"));
-					}
 
-					double mafthreshold = 0.0;
-					if (cmd.hasOption("maf")) {
-						mafthreshold = Double.parseDouble(cmd.getOptionValue("maf"));
-					}
-
-					String bedfile = null;
-					if (cmd.hasOption("b")) {
-						bedfile = cmd.getOptionValue("b");
-					}
-					plot.plot(input, out, threshold, mafthreshold, bedfile);
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (DocumentException e) {
-					e.printStackTrace();
+				double threshold = 0.8;
+				if (cmd.hasOption("rsquared")) {
+					threshold = Double.parseDouble(cmd.getOptionValue("rsquared"));
 				}
+
+				double mafthreshold = 0.0;
+				if (cmd.hasOption("maf")) {
+					mafthreshold = Double.parseDouble(cmd.getOptionValue("maf"));
+				}
+
+				String bedfile = null;
+				if (cmd.hasOption("b")) {
+					bedfile = cmd.getOptionValue("b");
+				}
+				plot.plot(input, out, threshold, mafthreshold, bedfile);
+
 
 			} else if (cmd.hasOption("plotcor")) {
 				CorrelationResultPlotter plotter = new CorrelationResultPlotter();
 
-				try {
 
-					if (cmd.hasOption("refname")) {
-						plotter.run(input, cmd.getOptionValue("refname"), out);
-					} else {
-						plotter.run(input, out);
-					}
-
-
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (DocumentException e) {
-					e.printStackTrace();
+				if (cmd.hasOption("refname")) {
+					plotter.run(input, cmd.getOptionValue("refname"), out);
+				} else {
+					plotter.run(input, out);
 				}
 
-			} else if (cmd.hasOption("correlate")) {
+
+			} else if (cmd.hasOption("correlatevariants")) {
+				VariantCorrelationMatrix mat = new VariantCorrelationMatrix();
+				if (cmd.hasOption("b")) {
+					mat.correlate(input, cmd.getOptionValue("b"), out);
+				} else {
+					System.out.println("Please use -b with --correlatevariants");
+				}
+			} else if (cmd.hasOption("correlatevcf")) {
 
 				String v2 = null;
 				String li = null;
@@ -567,33 +549,29 @@ public class Main {
 				if (cmd.hasOption("i2")) {
 					v2 = cmd.getOptionValue("i2");
 				} else {
-					System.err.println("Provide -i2 with --correlate");
+					System.err.println("Provide -i2 with --correlatevcf");
 					run = false;
 				}
 
 				if (cmd.hasOption("l")) {
 					li = cmd.getOptionValue("l");
 				} else {
-					System.err.println("Provide -l with --correlate");
+					System.err.println("Provide -l with --correlatevcf");
 					run = false;
 				}
 				if (run) {
 					VCFCorrelator c = new VCFCorrelator();
-					try {
-						c.run(input, v2, li, out);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					c.run(input, v2, li, out);
+
 				} else {
 					printHelp();
 				}
 			} else if (cmd.hasOption("rmc")) {
 				VCFFunctions f = new VCFFunctions();
-				try {
-					f.replaceMissingCodes(input, out);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+
+				f.replaceMissingCodes(input, out);
+
 			} else if (cmd.hasOption("reintroduce")) {
 				VCFMerger merger = new VCFMerger();
 				boolean linux = false;
@@ -606,7 +584,7 @@ public class Main {
 				if (cmd.hasOption("i2")) {
 					v2 = cmd.getOptionValue("i2");
 				} else {
-					System.err.println("Provide -i2 with --correlate");
+					System.err.println("Provide -i2 with --reintroduce");
 					run = false;
 				}
 				if (cmd.hasOption("vcfsort")) {
@@ -615,21 +593,17 @@ public class Main {
 					System.out.println("Please supply --vcfsort");
 				}
 				if (run) {
-					try {
-						merger.reintroducteNonImputedVariants(input, v2, out, linux, vcfsort);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					merger.reintroducteNonImputedVariants(input, v2, out, linux, vcfsort);
+
 				} else {
 					printHelp();
 				}
 			} else if (cmd.hasOption("dedup")) {
 				VCFFunctions f = new VCFFunctions();
-				try {
-					f.removedups(input, out);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+
+				f.removedups(input, out);
+
 			} else if (cmd.hasOption("combinecorrelation")) {
 				CorrelationResultCombiner combine = new CorrelationResultCombiner();
 
@@ -659,11 +633,9 @@ public class Main {
 				}
 
 				if (run) {
-					try {
-						combine.run(input, out, refname, nriter, nrbatches);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					combine.run(input, out, refname, nriter, nrbatches);
+
 				}
 			} else if (cmd.hasOption("merge")) {
 //				VCFMerger merger = new VCFMerger();
@@ -684,11 +656,9 @@ public class Main {
 				}
 
 				if (run) {
-					try {
-						merger.mergeImputationBatches(input, out, variantList, nrbatches);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					merger.mergeImputationBatches(input, out, variantList, nrbatches);
+
 				}
 			} else if (cmd.hasOption("mergecheese")) {
 				VCFMerger merger = new VCFMerger();
@@ -759,17 +729,14 @@ public class Main {
 
 				System.out.println(run);
 				if (run) {
-					try {
 
-						BatchSplitter f = new BatchSplitter();
-						System.out.println(input);
-						System.out.println(ped);
-						System.out.println(out);
-						System.out.println(seed);
-						f.splitVCFOverRandomBatches(input, ped, out, n, seed);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+					BatchSplitter f = new BatchSplitter();
+					System.out.println(input);
+					System.out.println(ped);
+					System.out.println(out);
+					System.out.println(seed);
+					f.splitVCFOverRandomBatches(input, ped, out, n, seed);
+
 				} else {
 					printHelp();
 				}
@@ -799,30 +766,24 @@ public class Main {
 
 
 				if (run) {
-					try {
-						VariantSampler sampler = new VariantSampler();
-						sampler.sample(input, ref, perc, out);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					VariantSampler sampler = new VariantSampler();
+					sampler.sample(input, ref, perc, out);
+
 				} else {
 					printHelp();
 				}
 			} else if (cmd.hasOption("splitchr")) {
 				VCFFunctions f = new VCFFunctions();
-				try {
-					f.splitPerChromosome(input, out);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+
+				f.splitPerChromosome(input, out);
+
 			} else if (cmd.hasOption("filterregions")) {
 				VCFFunctions f = new VCFFunctions();
 				if (cmd.hasOption("b")) {
-					try {
-						f.filterVCFForBedRegions(input, out, cmd.getOptionValue("b"));
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					f.filterVCFForBedRegions(input, out, cmd.getOptionValue("b"));
+
 				} else {
 					System.out.println("Please provide -b for --filter");
 					printHelp();
@@ -840,12 +801,9 @@ public class Main {
 					System.exit(0);
 				}
 
-				try {
-					PseudoControls c = new PseudoControls();
-					c.make(input, out, fam, out + ".fam");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+
+				PseudoControls c = new PseudoControls();
+				c.make(input, out, fam, out + ".fam");
 
 
 			} else {
@@ -855,6 +813,10 @@ public class Main {
 
 		} catch (ParseException ex) {
 			printHelp();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (DocumentException e) {
+			e.printStackTrace();
 		}
 	}
 

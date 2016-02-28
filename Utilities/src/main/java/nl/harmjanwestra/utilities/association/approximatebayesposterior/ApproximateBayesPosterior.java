@@ -99,7 +99,7 @@ public class ApproximateBayesPosterior {
 
 	public void calculatePosterior(ArrayList<AssociationResult> assocResults) {
 		double nullVariance = (Math.log(1.5) / 1.96) * (Math.log(1.5) / 1.96); // 0.4
-		ArrayList<Triple<Integer, Double, Double>> output = new ArrayList<Triple<Integer, Double, Double>>();
+
 		double[] abfs = new double[assocResults.size()];
 		double sum = 0;
 		for (int i = 0; i < assocResults.size(); i++) {

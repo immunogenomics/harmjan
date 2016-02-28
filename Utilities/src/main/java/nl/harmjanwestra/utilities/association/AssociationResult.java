@@ -165,6 +165,9 @@ public class AssociationResult {
 	}
 
 	public double getLog10Pval() {
+		if(pval == 0d || Double.isNaN(pval) || Double.isInfinite(pval)){
+			return 0;
+		}
 		return -Math.log10(pval);
 	}
 
