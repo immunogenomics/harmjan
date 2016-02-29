@@ -28,7 +28,7 @@ public class BedAssocFilter {
 		BedFileReader bf = new BedFileReader();
 		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
 
-		TextFile out = new TextFile(options.outfile, TextFile.R);
+		TextFile out = new TextFile(options.outfile, TextFile.W);
 
 		double threshold = -Math.log10(options.threshold);
 

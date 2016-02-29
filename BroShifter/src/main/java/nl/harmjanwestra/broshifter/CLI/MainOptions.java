@@ -27,6 +27,12 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("CaviarBF helper functions")
+				.longOpt("caviar")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Plot association results")
 				.longOpt("plot")
 				.build();
@@ -80,7 +86,9 @@ public class MainOptions {
 				mode = MODE.POSTERIORPVAL;
 			} else if (cmd.hasOption("gwas")) {
 				mode = MODE.ASSOC;
-			} else {
+			} else if (cmd.hasOption("caviar")) {
+				mode = MODE.CAVIAR;
+			}else {
 				HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp(" ", OPTIONS);
 			}
@@ -104,7 +112,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOT,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, NA
 	}
 
 }

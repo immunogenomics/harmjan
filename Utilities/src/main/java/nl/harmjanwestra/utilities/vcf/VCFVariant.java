@@ -466,22 +466,37 @@ public class VCFVariant {
 
 		double[][] probs = getGenotypeProbabilies();
 		int nrAlleles = getAlleles().length;
-		double[][] dosages = new double[probs[0].length][nrAlleles - 1];
-		for (int i = 0; i < probs[0].length; i++) {
-			int alctr = 0;
-			for (int a1 = 0; a1 < nrAlleles; a1++) {
-				for (int a2 = a1; a2 < nrAlleles; a2++) {
-					double dosageval = probs[alctr][i];
-					if (a1 > 0) {
-						dosages[i][a1 - 1] += dosageval;
+		double[][] dosages = null;
+		if (probs == null) {
+
+			byte[][] gt = getGenotypeAlleles();
+			dosages = new double[gt[0].length][nrAlleles - 1];
+			for (int i = 0; i < gt[0].length; i++) {
+				for (int j = 0; j < gt.length; j++) {
+					dosages[i][0] = gt[j][i];
+				}
+
+			}
+		} else {
+			dosages = new double[probs[0].length][nrAlleles - 1];
+			for (int i = 0; i < probs[0].length; i++) {
+				int alctr = 0;
+				for (int a1 = 0; a1 < nrAlleles; a1++) {
+					for (int a2 = a1; a2 < nrAlleles; a2++) {
+						double dosageval = probs[alctr][i];
+						if (a1 > 0) {
+							dosages[i][a1 - 1] += dosageval;
+						}
+						if (a2 > 0) {
+							dosages[i][a2 - 1] += dosageval;
+						}
+						alctr++;
 					}
-					if (a2 > 0) {
-						dosages[i][a2 - 1] += dosageval;
-					}
-					alctr++;
 				}
 			}
+
 		}
+
 
 		return dosages;
 	}

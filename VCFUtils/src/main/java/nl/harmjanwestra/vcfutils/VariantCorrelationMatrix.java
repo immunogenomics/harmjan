@@ -24,36 +24,52 @@ public class VariantCorrelationMatrix {
 		Chromosome chr = Chromosome.parseChr(regionelems[0]);
 		String[] poselems = regionelems[1].split("-");
 		int start = Integer.parseInt(poselems[0]);
-		int stop = Integer.parseInt(poselems[0]);
+		int stop = Integer.parseInt(poselems[1]);
 
 		region.setChromosome(chr);
 		region.setStart(start);
 		region.setStop(stop);
 
-		System.out.println("parsing: " + vcf);
+		System.out.println("parsing: " + vcf + " for region: " + region.toString());
 
-		VCFGenotypeData data = new VCFGenotypeData(vcf);
 		ArrayList<VCFVariant> variants = new ArrayList<VCFVariant>();
-		while (data.hasNext()) {
-			VCFVariant variant = data.next();
-			if (region.overlaps(variant.asFeature())) {
-				if (variant.getMAF() > 0.005 && variant.getAlleles().length == 2) {
-					variants.add(variant);
+		int ctr = 0;
+		TextFile vcfin = new TextFile(vcf, TextFile.R);
+		String ln = vcfin.readLine();
+		while (ln != null) {
+			if (!ln.startsWith("#")) {
+				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				if (region.overlaps(variant.asFeature())) {
+					variant = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
+					if (variant.getMAF() > 0.005 && variant.getAlleles().length == 2) {
+						variants.add(variant);
+					}
+				}
+				ctr++;
+				if (ctr % 1000 == 0) {
+					System.out.println(ctr + " variants parsed. " + variants.size() + " within region: " + region.toString());
 				}
 			}
+
+			ln = vcfin.readLine();
 		}
+		vcfin.close();
 
 		System.out.println(variants.size() + " variants in region " + region.toString());
 
 		double[][] matrix = new double[variants.size()][variants.size()];
+
 		for (int i = 0; i < variants.size(); i++) {
 			double[] genotypes1 = convertToDouble(variants.get(i));
 			for (int j = i + 1; j < variants.size(); j++) {
-				double[] genotypes2 = convertToDouble(variants.get(i));
+				double[] genotypes2 = convertToDouble(variants.get(j));
 				matrix[i][j] = Correlation.correlate(genotypes1, genotypes2);
 				matrix[j][i] = matrix[i][j];
 			}
 			matrix[i][i] = 1;
+			if (i % 10 == 0) {
+				System.out.println(i + " out of " + variants.size() + " variants correlated.");
+			}
 		}
 
 		savematrix(matrix, out);

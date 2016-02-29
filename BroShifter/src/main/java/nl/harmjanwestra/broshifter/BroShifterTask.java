@@ -25,18 +25,17 @@ import java.util.concurrent.Callable;
  */
 public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>> {
 
+	boolean DEBUG = false;
 	private int threadNum;
-
 	private String annotation1;
 	private String annotation2;
 	private BroShifterOptions options;
-	boolean DEBUG = false;
 
 
 	public BroShifterTask(int threadNum,
-						  String annotation1,
-						  String annotation2,
-						  BroShifterOptions options) {
+	                      String annotation1,
+	                      String annotation2,
+	                      BroShifterOptions options) {
 		this.threadNum = threadNum;
 		this.annotation1 = annotation1;
 		this.annotation2 = annotation2;
@@ -173,17 +172,18 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 						sigmaSigmaPosterior += sigmaPosterior;
 						nrOverlapping = signal.getRight();
 
-						for (int i = 0; i < options.nrIterations; i++) {
-							shift(snps, region);
-							Pair<Double, Integer> output = getOverlap(subsetOfAnnotation1, snps);
-							sigmaPosteriorNull[i] = output.getLeft();
-							sigmaSigmaPosteriorNull[i] += output.getLeft();
-							int nrNullOverlapping = output.getRight();
-							if (nrNullOverlapping > 0) {
-								sigmaLociWithAtLeastOneOverlapNull[i]++;
-								locusScore++;
+						if (nrOverlapping > 0) {
+							for (int i = 0; i < options.nrIterations; i++) {
+								shift(snps, region);
+								Pair<Double, Integer> output = getOverlap(subsetOfAnnotation1, snps);
+								sigmaPosteriorNull[i] = output.getLeft();
+								sigmaSigmaPosteriorNull[i] += output.getLeft();
+								int nrNullOverlapping = output.getRight();
+								if (nrNullOverlapping > 0) {
+									sigmaLociWithAtLeastOneOverlapNull[i]++;
+									locusScore++;
+								}
 							}
-
 						}
 					}
 
@@ -316,9 +316,9 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	// split a region into multiple smaller regions dependent upon annotation overlap
 	// creates one region of annotation 1 that overlaps annotation2, and a region of annotation 1 without overlap with annotation 2
 	private Pair<Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>, Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>> split(Feature queryRegion,
-																																			   ArrayList<SNPFeature> snps,
-																																			   Track subsetOfAnnotation1,
-																																			   Track subsetOfAnnotation2) {
+	                                                                                                                                           ArrayList<SNPFeature> snps,
+	                                                                                                                                           Track subsetOfAnnotation1,
+	                                                                                                                                           Track subsetOfAnnotation2) {
 		// make features for those regions that are not overlapping annotation 2
 		ArrayList<Feature> annotation2 = subsetOfAnnotation2.getAllFeatures();
 		Collections.sort(annotation2, new FeatureComparator(false));
@@ -419,8 +419,8 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 
 	// merge multiple smaller regions into one bigger one. rearrange SNPs and other annotations accordingly
 	private Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>> stitchRegion(Feature queryRegion,
-																					ArrayList<Pair<Feature, ArrayList<Feature>>> partsOfAnnotation1OverlappingAnnotation2,
-																					ArrayList<SNPFeature> snps) {
+	                                                                                ArrayList<Pair<Feature, ArrayList<Feature>>> partsOfAnnotation1OverlappingAnnotation2,
+	                                                                                ArrayList<SNPFeature> snps) {
 		int ywidth = 0;
 		ArrayList<Feature> annotationXWithinAnnotationY = new ArrayList<>();
 		ArrayList<SNPFeature> snpsWithinY = new ArrayList<SNPFeature>();

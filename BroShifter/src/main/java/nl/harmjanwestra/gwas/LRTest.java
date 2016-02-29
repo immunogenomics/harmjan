@@ -487,8 +487,8 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-							int iter, ArrayList<VCFVariant> variants,
-							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
+	                        int iter, ArrayList<VCFVariant> variants,
+	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -1029,11 +1029,11 @@ public class LRTest {
 		}
 
 		private AssociationResult pruneAndTest(double[][] x,
-											   double[] y,
-											   int nrAlleles,
-											   int alleleOffset,
-											   VCFVariant variant,
-											   double maf) throws REXPMismatchException, REngineException, IOException {
+		                                       double[] y,
+		                                       int nrAlleles,
+		                                       int alleleOffset,
+		                                       VCFVariant variant,
+		                                       double maf) throws REXPMismatchException, REngineException, IOException {
 			Pair<double[][], boolean[]> pruned = removeCollinearVariables(x);
 			x = pruned.getLeft(); // x is now probably shorter than original X
 			boolean[] notaliased = pruned.getRight(); // length of original X

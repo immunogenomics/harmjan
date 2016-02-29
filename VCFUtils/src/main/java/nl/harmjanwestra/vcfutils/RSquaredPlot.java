@@ -111,10 +111,18 @@ public class RSquaredPlot {
 
 		int ctr = 0;
 		String[] refNames = new String[keys.size()];
+
 		for (String key : keys) {
+
 			ArrayList<Double> d = values.get(key);
 			d = removeNaN(d);
 			Collections.sort(d, Collections.reverseOrder());
+			TextFile outtf = new TextFile(outfile + key + ".txt", TextFile.W);
+			for (double v : d) {
+				outtf.writeln("" + v);
+			}
+
+			outtf.close();
 			int nrAboveThreshold = 0;
 			for (int v = 0; v < d.size(); v++) {
 				if (v > 0) {

@@ -1104,8 +1104,12 @@ public class VCFMerger {
 			vcfout.writeln(header.toString());
 			for (int i = 0; i < variantoutput.length; i++) {
 				vcfout.writeln(variantoutputHeaders[i].toString() + variantoutput[i].toString());
+				if (i % 100 == 0) {
+					System.out.print("\rprogress: " + i + "/" + variantoutput.length + " - " + ((double) i / variantoutput.length));
+				}
 			}
 			vcfout.close();
+			System.out.println();
 
 
 			System.out.println("Testing output file: " + outfilename);

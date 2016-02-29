@@ -31,7 +31,9 @@ public class Main {
 				new PosteriorPvalues(new PosteriorPvalueOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.PLOT)) {
 				new AssociationPlotter(new AssociationPlotterOptions(args));
-			} else if (options.mode.equals(MainOptions.MODE.MERGE)) {
+			} else if (options.mode.equals(MainOptions.MODE.CAVIAR)) {
+				new Caviar(new CaviarOptions(args));
+			}else if (options.mode.equals(MainOptions.MODE.MERGE)) {
 				new AssociationResultMerger(new AssociationResultMergerOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
 				new LRTest(new LRTestOptions(args));
