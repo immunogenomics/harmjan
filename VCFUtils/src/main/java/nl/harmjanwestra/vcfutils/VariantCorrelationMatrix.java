@@ -93,7 +93,7 @@ public class VariantCorrelationMatrix {
 		tfout.close();
 	}
 
-	private double[] convertToDouble(VCFVariant vcfVariant) {
+	public double[] convertToDouble(VCFVariant vcfVariant) {
 		byte[][] alleles = vcfVariant.getGenotypeAlleles();
 		double[] output = new double[alleles[0].length];
 		for (int i = 0; i < alleles[0].length; i++) {
