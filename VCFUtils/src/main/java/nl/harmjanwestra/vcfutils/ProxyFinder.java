@@ -9,7 +9,7 @@ import umcg.genetica.math.stats.Correlation;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 
 /**
  * Created by hwestra on 2/29/16.
@@ -23,20 +23,43 @@ public class ProxyFinder {
 		TextFile tf = new TextFile(snpfile, TextFile.R);
 		String ln = tf.readLine();
 		while (ln != null) {
-
 			Feature f = Feature.parseFeature(ln);
-
 			snps.add(f);
-
 			ln = tf.readLine();
 		}
 		tf.close();
 
-		for (Feature f : snps) {
 
+		ExecutorService threadPool = Executors.newFixedThreadPool(nrthreads);
+		CompletionService<ArrayList<String>> jobHandler = new ExecutorCompletionService<>(threadPool);
+
+		int submit = 0;
+		for (Feature snp : snps) {
+			ProxyFinderTask task = new ProxyFinderTask(tabixrefprefix, windowsize, snp, threshold);
+			jobHandler.submit(task);
+			submit++;
+		}
+
+		int returned = 0;
+		TextFile outFile = new TextFile(output, TextFile.W);
+		while (returned < submit) {
+			try {
+				ArrayList<String> proxies = jobHandler.take().get();
+				if (proxies != null) {
+					for (String s : proxies) {
+						outFile.writeln(s);
+					}
+				}
+				returned++;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
 
 		}
 
+		outFile.close();
 	}
 
 	public class ProxyFinderTask implements Callable<ArrayList<String>> {
@@ -46,8 +69,11 @@ public class ProxyFinder {
 		Feature f;
 		double threshold;
 
-		public ProxyFinderTask() {
-
+		public ProxyFinderTask(String tabix, int windowsize, Feature snp, double threshold) {
+			this.tabixrefprefix = tabix;
+			this.windowsize = windowsize;
+			this.f = snp;
+			this.threshold = threshold;
 		}
 
 		@Override
