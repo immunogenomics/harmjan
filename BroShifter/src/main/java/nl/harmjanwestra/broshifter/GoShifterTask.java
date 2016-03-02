@@ -2,6 +2,7 @@ package nl.harmjanwestra.broshifter;
 
 
 import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
+import nl.harmjanwestra.broshifter.CLI.GoShifterOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
@@ -29,13 +30,13 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 	private int threadNum;
 	private String annotation1;
 	private String annotation2;
-	private BroShifterOptions options;
+	private GoShifterOptions options;
 
 
 	public GoShifterTask(int threadNum,
 						 String annotation1,
 						 String annotation2,
-						 BroShifterOptions options) {
+						 GoShifterOptions options) {
 		this.threadNum = threadNum;
 		this.annotation1 = annotation1;
 		this.annotation2 = annotation2;
@@ -58,7 +59,6 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 			annotation2Track = loader.loadAnnotations(annotation2, options.usePeakCenter, options.bpToExtendAnnotation, true, null);
 			annotation2name = new File(annotation2).getName();
 		}
-
 
 		int medianAnnotationLength = determineMedianAnnotationLength(annotation1Track);
 
@@ -272,6 +272,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 		return new Pair<>(builder.toString(), outputLines);
 	}
 
+
 	private Feature defineRegion(Pair<SNPFeature, ArrayList<SNPFeature>> snpFeature, int medianAnnotationLength) {
 		int maxPos = 0;
 		int minPos = Integer.MAX_VALUE;
@@ -309,7 +310,8 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 		return output;
 	}
 
-	private ArrayList<SNPFeature> loadSNPs(String s) throws IOException {
+
+	private ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> loadSNPs(String snpfile) {
 		return null;
 	}
 
