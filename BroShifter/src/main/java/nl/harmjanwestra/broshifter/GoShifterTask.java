@@ -227,8 +227,9 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 			}
 		}
 
-		double pval = 0;
-		int[] nrLociWithOverlap = new int[options.nrIterations];
+
+		int[] nrLociWithOverlapNull = new int[options.nrIterations];
+		double sum = 0;
 		for (int i = 0; i < options.nrIterations; i++) {
 			int nrOverlappingnull = 0;
 			for (int fctr = 0; fctr < allSNPs.size(); fctr++) {
@@ -236,12 +237,21 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 					nrOverlappingnull++;
 				}
 			}
-			nrLociWithOverlap[i] = nrOverlappingnull;
+			nrLociWithOverlapNull[i] = nrOverlappingnull;
+			sum += nrOverlappingnull;
 		}
-		Arrays.sort(nrLociWithOverlap);
+		double meanNrOfLociWithOverlapNull = sum / options.nrIterations;
+		Arrays.sort(nrLociWithOverlapNull);
 
 		// count nr of iterations with fewer nr loci of overlap
+		int nr = 0;
+		for (int i = 0; i < nrLociWithOverlapNull.length; i++) {
+			if (nrLociWithOverlapNull[i] < nrOfLociWithOverlap) {
+				nr++;
+			}
+		}
 
+		double pval = (double) nr / options.nrIterations;
 
 		System.out.println("Thread " + threadNum + " | " + regions.size() + " out of " + regions.size() + " regions processed.");
 
