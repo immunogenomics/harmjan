@@ -207,6 +207,14 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Chromosome")
+				.argName("int")
+				.longOpt("chr")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Callrate threshold")
 				.argName("double")
 				.longOpt("callrate")
@@ -371,8 +379,8 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.longOpt("linux")
-				.desc("Is machine a linux machine (default: no)")
+				.longOpt("mac")
+				.desc("Is machine a mac machine (default: no)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -638,12 +646,12 @@ public class Main {
 
 			} else if (cmd.hasOption("reintroduce")) {
 				VCFMerger merger = new VCFMerger();
-				boolean linux = false;
+				boolean linux = true;
 				String v2 = "";
 				String vcfsort = "";
 
-				if (cmd.hasOption("linux")) {
-					linux = true;
+				if (cmd.hasOption("mac")) {
+					linux = false;
 				}
 				if (cmd.hasOption("i2")) {
 					v2 = cmd.getOptionValue("i2");
@@ -702,8 +710,44 @@ public class Main {
 
 				}
 			} else if (cmd.hasOption("merge")) {
-//				VCFMerger merger = new VCFMerger();
-//				merger.mergeAndIntersect(linux,chrint,vcfsort,vcf1,vcf2,out,sep);
+				VCFMerger merger = new VCFMerger();
+				boolean linux = true;
+				if (cmd.hasOption("mac")) {
+					linux = false;
+				}
+
+				int chrint = 1;
+				if (cmd.hasOption("chr")) {
+					chrint = Integer.parseInt(cmd.getOptionValue("chr"));
+				}else {
+					System.out.println("Please use --chr with --merge");
+					run = false;
+				}
+
+				String vcfsort = null;
+				if (cmd.hasOption("vcfsort")) {
+					vcfsort = cmd.getOptionValue("vcfsort");
+				} else {
+					System.out.println("Please use --vcfsort with --merge");
+					run = false;
+				}
+
+				String vcf2 = null;
+				if (cmd.hasOption("i2")) {
+					vcf2 = cmd.getOptionValue("i2");
+				} else {
+					System.out.println("Please use -i2 with --merge");
+					run = false;
+				}
+
+				String sep = "/";
+				if (cmd.hasOption("separator")) {
+					sep = cmd.getOptionValue("separator");
+				}
+
+				if(run) {
+					merger.mergeAndIntersect(linux, chrint, vcfsort, input, vcf2, out, sep);
+				}
 			} else if (cmd.hasOption("mergeimputation")) {
 				VCFMerger merger = new VCFMerger();
 				int nrbatches = 0;
@@ -741,10 +785,10 @@ public class Main {
 				}
 			} else if (cmd.hasOption("hapsample")) {
 				HapSample s = new HapSample();
-				boolean linux = false;
+				boolean linux = true;
 
-				if (cmd.hasOption("linux")) {
-					linux = true;
+				if (cmd.hasOption("mac")) {
+					linux = false;
 				}
 				if (cmd.hasOption("vcfsort")) {
 					try {
