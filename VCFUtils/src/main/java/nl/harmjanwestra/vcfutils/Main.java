@@ -58,13 +58,13 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Sample filter")
+				.desc("Sample filter (using a list of samples)")
 				.longOpt("filtersample")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Sample filter")
+				.desc("Sample filter (overlap between two VCF files)")
 				.longOpt("filtersampleoverlap")
 				.build();
 		OPTIONS.addOption(option);

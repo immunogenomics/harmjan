@@ -24,6 +24,33 @@ public class VCFSampleFilter {
 		samples1Hash.addAll(data1.getSamples());
 		data1.close();
 
+		filter(toFilter, samples1Hash, vcfout);
+
+	}
+
+	public void filter(String fileIn, String fileout, String sampleFile) throws IOException {
+
+		System.out.println("Sample Filter");
+		System.out.println("in: " + fileIn);
+		System.out.println("out: " + fileout);
+		System.out.println("file: " + sampleFile);
+
+		TextFile tf1 = new TextFile(sampleFile, TextFile.R);
+		String[] elems = tf1.readLineElems(TextFile.tab);
+		HashSet<String> samples = new HashSet<String>();
+		while (elems != null) {
+			samples.add(elems[0]);
+			elems = tf1.readLineElems(TextFile.tab);
+		}
+		tf1.close();
+
+		System.out.println(samples.size() + " samples loaded from: " + sampleFile);
+
+		filter(fileIn, samples, fileout);
+
+	}
+
+	public void filter(String toFilter, HashSet<String> sampleHash, String vcfout) throws IOException {
 		TextFile out = new TextFile(vcfout, TextFile.W);
 		TextFile in = new TextFile(toFilter, TextFile.R);
 
@@ -43,7 +70,7 @@ public class VCFSampleFilter {
 				}
 
 				for (int i = 9; i < elems.length; i++) {
-					if (samples1Hash.contains(elems[i])) {
+					if (sampleHash.contains(elems[i])) {
 						includecol[i] = false;
 						excluded++;
 					}
@@ -60,74 +87,7 @@ public class VCFSampleFilter {
 
 		in.close();
 		out.close();
-
-
 	}
 
-	public void filter(String fileIn, String fileout, String sampleFile) throws IOException {
-
-
-		System.out.println("Sample Filter");
-		System.out.println("in: " + fileIn);
-		System.out.println("out: " + fileout);
-		System.out.println("file: " + sampleFile);
-
-		TextFile tf1 = new TextFile(sampleFile, TextFile.R);
-		String[] elems = tf1.readLineElems(TextFile.tab);
-		HashSet<String> samples = new HashSet<String>();
-		while (elems != null) {
-			samples.add(elems[0]);
-			elems = tf1.readLineElems(TextFile.tab);
-		}
-		tf1.close();
-
-		System.out.println(samples.size() + " samples loaded from: " + sampleFile);
-
-		TextFile vcfin = new TextFile(fileIn, TextFile.R);
-		TextFile out = new TextFile(fileout, TextFile.W);
-		String ln = vcfin.readLine();
-		int lnCtr = 0;
-		boolean[] includecol = null;
-		while (ln != null) {
-			if (ln.startsWith("##")) {
-				out.writeln(ln);
-			} else if (ln.startsWith("#CHROM")) {
-				elems = ln.split("\t");
-				includecol = new boolean[elems.length];
-				int samppleCtr = 0;
-
-				for (int i = 0; i < elems.length; i++) {
-					if (i < 9) {
-						includecol[i] = true;
-					} else if (samples.contains(elems[i])) {
-						includecol[i] = true;
-
-						samppleCtr++;
-					}
-				}
-				System.out.println("After parsing header: " + samppleCtr + " samples found");
-				out.writeln("##VCFSampleFilter=" + samppleCtr + "/" + (elems.length - 9) + " samples selected using " + sampleFile);
-				out.writeln(Strings.concat(elems, includecol, Strings.tab));
-			} else {
-				if (includecol != null) {
-					elems = ln.split("\t");
-					out.writeln(Strings.concat(elems, includecol, Strings.tab));
-				}
-
-
-				lnCtr++;
-
-				if (lnCtr % 1000 == 0) {
-					System.out.println(lnCtr + " variants parsed");
-
-				}
-			}
-			ln = vcfin.readLine();
-		}
-		out.close();
-		vcfin.close();
-
-
-	}
 
 }
