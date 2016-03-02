@@ -315,10 +315,10 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 
 	// split a region into multiple smaller regions dependent upon annotation overlap
 	// creates one region of annotation 1 that overlaps annotation2, and a region of annotation 1 without overlap with annotation 2
-	private Pair<Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>, Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>> split(Feature queryRegion,
-	                                                                                                                                           ArrayList<SNPFeature> snps,
-	                                                                                                                                           Track subsetOfAnnotation1,
-	                                                                                                                                           Track subsetOfAnnotation2) {
+	Pair<Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>, Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>> split(Feature queryRegion,
+																																	   ArrayList<SNPFeature> snps,
+																																	   Track subsetOfAnnotation1,
+																																	   Track subsetOfAnnotation2) {
 		// make features for those regions that are not overlapping annotation 2
 		ArrayList<Feature> annotation2 = subsetOfAnnotation2.getAllFeatures();
 		Collections.sort(annotation2, new FeatureComparator(false));
@@ -487,7 +487,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		return new Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>(yfeature, annotationXWithinAnnotationY, snpsWithinY);
 	}
 
-	private Feature trimRegion(Feature region, ArrayList<SNPFeature> snps) {
+	Feature trimRegion(Feature region, ArrayList<SNPFeature> snps) {
 		// determine region size using variants
 		int minStart = Integer.MAX_VALUE;
 		int maxStop = 0;
@@ -509,7 +509,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	}
 
 
-	private void shift(ArrayList<SNPFeature> snps, Feature region) {
+	void shift(ArrayList<SNPFeature> snps, Feature region) {
 		int start = region.getStart();
 		int stop = region.getStop();
 		int regionSize = stop - start;

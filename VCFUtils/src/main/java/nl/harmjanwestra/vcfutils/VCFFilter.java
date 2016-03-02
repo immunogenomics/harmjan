@@ -176,7 +176,7 @@ public class VCFFilter {
 					read++;
 
 					if (read % 1000 == 0) {
-						System.out.println(filtered + "/" + read + " filtered");
+						System.out.println(filtered + " filtered out / " + read + " total filtered");
 
 					}
 				}
