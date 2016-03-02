@@ -141,7 +141,11 @@ public class VCFFilter {
 						for (int i = 9; i < elems.length; i++) {
 							int indid = i - 9;
 							String[] subElems = elems[i].split(":");
-							subElems[gtcol] = alleles[0][indid] + sep + alleles[1][indid];
+							if (alleles[0][indid] == -1) {
+								subElems[gtcol] = "." + sep + ".";
+							} else {
+								subElems[gtcol] = alleles[0][indid] + sep + alleles[1][indid];
+							}
 							elems[i] = Strings.concat(subElems, Strings.colon);
 						}
 						tf2.writeln(Strings.concat(elems, Strings.tab));
