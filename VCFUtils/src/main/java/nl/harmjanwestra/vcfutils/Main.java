@@ -338,6 +338,13 @@ public class Main {
 
 		option = Option.builder()
 				.hasArg()
+				.longOpt("separator")
+				.desc("VCF Genotype allele separator")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.hasArg()
 				.longOpt("window")
 				.desc("Window size")
 				.build();
@@ -381,6 +388,12 @@ public class Main {
 		option = Option.builder()
 				.longOpt("mac")
 				.desc("Is machine a mac machine (default: no)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("keepoverlapping")
+				.desc("Keep overlapping variants (for --merge; default: no)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -719,7 +732,7 @@ public class Main {
 				int chrint = 1;
 				if (cmd.hasOption("chr")) {
 					chrint = Integer.parseInt(cmd.getOptionValue("chr"));
-				}else {
+				} else {
 					System.out.println("Please use --chr with --merge");
 					run = false;
 				}
@@ -745,8 +758,13 @@ public class Main {
 					sep = cmd.getOptionValue("separator");
 				}
 
-				if(run) {
-					merger.mergeAndIntersect(linux, chrint, vcfsort, input, vcf2, out, sep);
+				boolean keepoverlapping = false;
+				if (cmd.hasOption("keepoverlapping")) {
+					keepoverlapping = true;
+				}
+
+				if (run) {
+					merger.mergeAndIntersect(linux, chrint, vcfsort, input, vcf2, out, keepoverlapping, sep);
 				}
 			} else if (cmd.hasOption("mergeimputation")) {
 				VCFMerger merger = new VCFMerger();

@@ -22,40 +22,6 @@ import java.util.*;
  * Created by hwestra on 9/25/15.
  */
 public class VCFMerger {
-	public static void main(String[] args) {
-		try {
-
-			if (args.length < 6) {
-				System.out.println("Usage: linuxbool chr vcfsort refvcf testvcf matchedout sepstr");
-			} else {
-
-
-				String linuxStr = args[0];
-				boolean linux = Boolean.parseBoolean(linuxStr);
-				String chrStr = args[1];
-				int chr = Integer.parseInt(chrStr);
-				String vcfsort = args[2];
-				String refvcf = args[3];
-				String testvcf = args[4];
-				String matchedout = args[5];
-				String separatorStr = args[6];
-
-				String separator = "\t";
-				if (separatorStr.equals("tab")) {
-					separator = "\t";
-				} else if (separatorStr.equals("space")) {
-					separator = " ";
-				}
-
-				VCFMerger m = new VCFMerger();
-
-				m.mergeAndIntersect(linux, chr, vcfsort, refvcf, testvcf, matchedout, separator);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 
 	/*
 	Concatenate variants for samples that are present in both VCF files
@@ -252,7 +218,7 @@ public class VCFMerger {
 	/*
 	This merges samples from two VCF files if there are variants that are overlapping. Non-overlapping variants are excluded.
 	 */
-	public void mergeAndIntersect(boolean linux, int chrint, String vcfsort, String refVCF, String testVCF, String matchedPanelsOut, String separator) throws IOException {
+	public void mergeAndIntersect(boolean linux, int chrint, String vcfsort, String refVCF, String testVCF, String matchedPanelsOut, boolean keepoverlapping, String separator) throws IOException {
 		Chromosome chr = Chromosome.parseChr("" + chrint);
 
 		mergeAndIntersectVCFVariants(
@@ -263,7 +229,7 @@ public class VCFMerger {
 				matchedPanelsOut + "ref-test-merged-" + chr.getName() + ".vcf.gz",
 				separator,
 				matchedPanelsOut + "mergelog-" + chr.getName() + ".txt",
-				true);
+				keepoverlapping);
 
 		VCFFunctions t = new VCFFunctions();
 		t.sortVCF(linux, vcfsort, matchedPanelsOut + "ref-matched-" + chr.getName() + ".vcf.gz", matchedPanelsOut + "ref-matched-sorted-" + chr.getName() + ".vcf.gz", matchedPanelsOut + "ref-sort-" + chr.getName() + ".sh");
@@ -275,13 +241,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-	                                          String testVCF,
-	                                          String vcf1out,
-	                                          String vcf2out,
-	                                          String vcfmergedout,
-	                                          String separatorInMergedFile,
-	                                          String logoutfile,
-	                                          boolean keepNonOverlapping) throws IOException {
+											  String testVCF,
+											  String vcf1out,
+											  String vcf2out,
+											  String vcfmergedout,
+											  String separatorInMergedFile,
+											  String logoutfile,
+											  boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -479,9 +445,6 @@ public class VCFMerger {
 						VCFVariant refVariant = refVariants.get(x);
 
 						boolean refVariantAlreadyMerged = false;
-						if (refVariant.getPos() == 2985620) {
-							System.out.println(x + " - ref: " + Strings.concat(refVariant.getAlleles(), Strings.comma, 0, refVariant.getAlleles().length));
-						}
 
 						String logln = refVariant.getChr()
 								+ "\t" + refVariant.getPos()
@@ -498,9 +461,7 @@ public class VCFMerger {
 
 
 							VCFVariant testVariant = testVariants.get(y);
-							if (testVariant.getPos() == 2985620) {
-								System.out.println(y + " " + testVariantAlreadyWritten[y] + " test: " + Strings.concat(testVariant.getAlleles(), Strings.comma, 0, testVariant.getAlleles().length));
-							}
+
 							if (testVariantAlreadyWritten[y] || refVariantAlreadyMerged) {
 								logoutputln += "\t" + y
 										+ "\t" + testVariant.getId()
@@ -524,10 +485,6 @@ public class VCFMerger {
 									// check whether the name is equal (this may matter for positions with multiple variants).
 									logoutputln += "\t-\t-\tDifferentNames";
 								} else {
-
-									if (refVariant.getId().equals("rs2240498")) {
-										System.out.println("Got it!");
-									}
 
 									Pair<String, String> outputpair = mergeVariants(refVariant, testVariant, separatorInMergedFile);
 									if (outputpair.getRight() != null) {
@@ -586,7 +543,7 @@ public class VCFMerger {
 	Utility function to mergecheese two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-	                                           String separatorInMergedFile) {
+											   String separatorInMergedFile) {
 
 
 		String[] refAlleles = refVariant.getAlleles();
@@ -1142,7 +1099,7 @@ public class VCFMerger {
 	}
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-	                                           boolean linux, String vcfsort) throws IOException {
+											   boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants
