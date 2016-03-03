@@ -21,8 +21,8 @@ public class AnnotationPanel extends Panel {
 	private Feature region;
 	private ArrayList<Track> annotations;
 	private ArrayList<SNPFeature> testOverlapWith;
-	int trackheight = 15;
-	int marginBetween = 5;
+	int trackheight = 10;
+	int marginBetween = 2;
 
 	public AnnotationPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);

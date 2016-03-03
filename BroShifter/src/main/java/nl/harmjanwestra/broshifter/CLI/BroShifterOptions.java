@@ -10,49 +10,6 @@ import umcg.genetica.text.Strings;
  */
 public class BroShifterOptions {
 
-	public String regionFile;
-	public String posteriorFile;
-	public String listOfAnnotations;
-	public int nrIterations = 10000;
-	public String outfile;
-	public boolean conditional = false;
-	public boolean usePeakCenter = false;
-	public int bpToExtendAnnotation = 150;
-	public boolean trimRegions = false;
-	public int defaultRegionExtend = 100;
-	public int nrThreads = 1;
-	public double credibleSetThreshold = 0.95;
-	public DISTANCEWEIGHT distanceweight = DISTANCEWEIGHT.NONE;
-	private int maxAllowedDistance = 150;
-	private String geneAnnotationFile;
-
-
-	// TODO: allow code to determine mean + sd annotation size
-	// set some parameters using those stats
-
-	public int getMaxAllowedDistance() {
-		return maxAllowedDistance;
-	}
-
-	public String getGeneAnnotationFile() {
-		return geneAnnotationFile;
-	}
-
-	public enum HEIGHTWEIGHT {
-		NONE,
-		LINEAR,
-		SQUAREROOT
-	}
-
-	public enum DISTANCEWEIGHT {
-		NONE,
-		LINEAR,
-		INVERSE,
-		SQUAREROOT,
-		EXPONENT,
-		HEIGHTOVERDISTANCE
-	}
-
 	private static final Options OPTIONS;
 
 	static {
@@ -150,6 +107,7 @@ public class BroShifterOptions {
 		option = Option.builder()
 				.desc("Gene annotation GTF")
 				.longOpt("gtf")
+				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
 
@@ -162,6 +120,23 @@ public class BroShifterOptions {
 		OPTIONS.addOption(option);
 	}
 
+	public String regionFile;
+	public String posteriorFile;
+	public String listOfAnnotations;
+	public int nrIterations = 10000;
+	public String outfile;
+	public boolean conditional = false;
+	public boolean usePeakCenter = false;
+	public int bpToExtendAnnotation = 150;
+	public boolean trimRegions = false;
+	public int defaultRegionExtend = 100;
+	public int nrThreads = 1;
+	public double credibleSetThreshold = 0.95;
+	public DISTANCEWEIGHT distanceweight = DISTANCEWEIGHT.NONE;
+	public String geneAnnotationFile;
+	// TODO: allow code to determine mean + sd annotation size
+	// set some parameters using those stats
+	public int maxAllowedDistance = 150;
 
 	public BroShifterOptions(String[] args) {
 		try {
@@ -297,10 +272,27 @@ public class BroShifterOptions {
 		}
 	}
 
+	
 	public void printHelp() {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp(" ", OPTIONS);
 		System.exit(-1);
+	}
+
+
+	public enum HEIGHTWEIGHT {
+		NONE,
+		LINEAR,
+		SQUAREROOT
+	}
+
+	public enum DISTANCEWEIGHT {
+		NONE,
+		LINEAR,
+		INVERSE,
+		SQUAREROOT,
+		EXPONENT,
+		HEIGHTOVERDISTANCE
 	}
 
 }

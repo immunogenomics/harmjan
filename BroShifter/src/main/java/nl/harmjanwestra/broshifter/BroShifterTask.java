@@ -42,8 +42,12 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 		this.options = options;
 	}
 
-	public BroShifterTask() {
+	public BroShifterTask(BroShifterOptions options) {
+		this.options = options;
+	}
 
+	public BroShifterTask() {
+		options = new BroShifterOptions(new String[]{});
 	}
 
 	public Pair<String, ArrayList<String>> call() throws IOException {
@@ -316,9 +320,9 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	// split a region into multiple smaller regions dependent upon annotation overlap
 	// creates one region of annotation 1 that overlaps annotation2, and a region of annotation 1 without overlap with annotation 2
 	Pair<Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>, Triple<Feature, ArrayList<Feature>, ArrayList<SNPFeature>>> split(Feature queryRegion,
-																																	   ArrayList<SNPFeature> snps,
-																																	   Track subsetOfAnnotation1,
-																																	   Track subsetOfAnnotation2) {
+	                                                                                                                                   ArrayList<SNPFeature> snps,
+	                                                                                                                                   Track subsetOfAnnotation1,
+	                                                                                                                                   Track subsetOfAnnotation2) {
 		// make features for those regions that are not overlapping annotation 2
 		ArrayList<Feature> annotation2 = subsetOfAnnotation2.getAllFeatures();
 		Collections.sort(annotation2, new FeatureComparator(false));
@@ -538,7 +542,8 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	public Pair<Double, Integer> getOverlap(Track subsetOfAnnotations, ArrayList<SNPFeature> snps) {
 		double sum = 0;
 		int nrOverlap = 0;
-		int maxalloweddist = options.getMaxAllowedDistance();
+
+		int maxalloweddist = options.maxAllowedDistance;
 		for (SNPFeature snp : snps) {
 
 			Iterable<Feature> subset = subsetOfAnnotations.getFeatures();
