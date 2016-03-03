@@ -241,13 +241,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-											  String testVCF,
-											  String vcf1out,
-											  String vcf2out,
-											  String vcfmergedout,
-											  String separatorInMergedFile,
-											  String logoutfile,
-											  boolean keepNonOverlapping) throws IOException {
+	                                          String testVCF,
+	                                          String vcf1out,
+	                                          String vcf2out,
+	                                          String vcfmergedout,
+	                                          String separatorInMergedFile,
+	                                          String logoutfile,
+	                                          boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -543,7 +543,7 @@ public class VCFMerger {
 	Utility function to mergecheese two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-											   String separatorInMergedFile) {
+	                                           String separatorInMergedFile) {
 
 
 		String[] refAlleles = refVariant.getAlleles();
@@ -582,7 +582,12 @@ public class VCFMerger {
 //
 //				} else
 
-				if (testVariantMinorAllele.equals(refMinorAllele) || (testVariant.getMAF() > 0.45 && refVariant.getMAF() > 0.45)) {
+				if (testVariantMinorAllele == null || refMinorAllele == null) {
+					// meh
+					System.out.println(refVariant.getId() + "\t" + refMinorAllele + "\t" + testVariantMinorAllele);
+				} else if (testVariant == null) {
+					System.out.println("Test variant is null for  " + refVariant.getId());
+				} else if (testVariantMinorAllele.equals(refMinorAllele) || (testVariant.getMAF() > 0.45 && refVariant.getMAF() > 0.45)) {
 					// check whether the reference allele is equal
 					String[] tmpAlleles = testVariantAlleles;
 					if (complement) {
@@ -664,13 +669,16 @@ public class VCFMerger {
 			logoutputln += "\t-\t-\tNotOK-CantFix";
 			return new Pair<String, String>(logoutputln, null);
 		}
+		return new Pair<String, String>(logoutputln, null);
 	}
+
 
 	/*
 	For two VCF files with no overlapping samples (for now), this merges the variants.
 	Overlapping variants are merged if their characteristics are similar. Otherwise they are excluded.
 	Variants present in only one VCF will be given null genotypes for the samples of the other VCF
 	 */
+
 	public void merge(String vcf1, String vcf2, String out) throws IOException {
 
 		System.out.println("in1: " + vcf1);
@@ -1099,7 +1107,7 @@ public class VCFMerger {
 	}
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-											   boolean linux, String vcfsort) throws IOException {
+	                                           boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants

@@ -243,6 +243,8 @@ public class VCFFilter {
 				if (allelesok) {
 					out.writeln(ln);
 					written++;
+				} else {
+					System.out.println("Weird alleles: " + var.getId() + "\t" + Strings.concat(alleles, Strings.forwardslash));
 				}
 				total++;
 			}

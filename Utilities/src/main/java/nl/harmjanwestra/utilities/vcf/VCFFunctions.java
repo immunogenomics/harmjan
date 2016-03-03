@@ -2134,7 +2134,13 @@ public class VCFFunctions {
 
 		while (ln != null) {
 			if (!ln.startsWith("##") && !ln.startsWith("#CHROM")) {
-				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				VCFVariant variant = null;
+				if (loadGenotypes) {
+					variant = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
+				} else {
+					variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				}
+
 
 				Feature f = new Feature();
 				f.setChromosome(Chromosome.parseChr(variant.getChr()));

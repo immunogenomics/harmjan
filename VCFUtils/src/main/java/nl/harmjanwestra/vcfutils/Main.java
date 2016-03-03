@@ -764,7 +764,7 @@ public class Main {
 				}
 
 				if (run) {
-					merger.mergeAndIntersect(linux, chrint, vcfsort, input, vcf2, out, keepoverlapping, sep);
+					merger.mergeAndIntersect(linux, chrint, vcfsort, vcf2, input, out, keepoverlapping, sep);
 				}
 			} else if (cmd.hasOption("mergeimputation")) {
 				VCFMerger merger = new VCFMerger();
