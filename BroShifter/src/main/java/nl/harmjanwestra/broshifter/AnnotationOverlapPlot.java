@@ -34,6 +34,53 @@ public class AnnotationOverlapPlot {
 		this.plot();
 	}
 
+	private Track[] loadAnnotations(ArrayList<Feature> regions) throws IOException {
+		TextFile tf = new TextFile(options.listOfAnnotations, TextFile.R);
+
+		String[] elems = tf.readLineElems(TextFile.tab);
+		ArrayList<String> annotationFiles = new ArrayList<String>();
+		HashMap<String, String> fileToName = null;
+		while (elems != null) {
+
+			if (elems.length == 1) {
+				annotationFiles.add(elems[0]);
+			} else {
+				if (fileToName == null) {
+					fileToName = new HashMap<String, String>();
+				}
+				fileToName.put(elems[1], elems[0]);
+				annotationFiles.add(elems[1]);
+			}
+
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
+
+		Collections.sort(annotationFiles);
+		System.out.println(annotationFiles.size() + " annotation files in: " + options.listOfAnnotations);
+		tf.close();
+
+
+		// load annotations
+		Track[] allAnnotations = new Track[annotationFiles.size()];
+		AnnotationLoader loader = new AnnotationLoader();
+		for (int i = 0; i < annotationFiles.size(); i++) {
+			allAnnotations[i] = loader.loadAnnotations(annotationFiles.get(i), options.usePeakCenter, options.bpToExtendAnnotation, true, regions);
+
+			if (fileToName != null) {
+				String name = fileToName.get(annotationFiles.get(i));
+				allAnnotations[i].setName(name);
+			}
+
+//			// TODO: load in two column file with proper names
+//			String name = allAnnotations[i].getName();
+//			File file = new File(name);
+//			String filename = file.getName();
+//			allAnnotations[i].setName(name);
+		}
+		return allAnnotations;
+	}
+
 	public void plot() throws IOException, DocumentException {
 
 		if (options.geneAnnotationFile == null) {
@@ -42,28 +89,12 @@ public class AnnotationOverlapPlot {
 		}
 		GTFAnnotation geneannotation = new GTFAnnotation(options.geneAnnotationFile);
 
-		TextFile tf = new TextFile(options.listOfAnnotations, TextFile.R);
-		ArrayList<String> annotationFiles = tf.readAsArrayList();
-		Collections.sort(annotationFiles);
-		System.out.println(annotationFiles.size() + " annotation files in: " + options.listOfAnnotations);
-		tf.close();
 
 		// load bed regions to test
 		BedFileReader bf = new BedFileReader();
 		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
 
-		// load annotations
-		Track[] allAnnotations = new Track[annotationFiles.size()];
-		AnnotationLoader loader = new AnnotationLoader();
-		for (int i = 0; i < annotationFiles.size(); i++) {
-			allAnnotations[i] = loader.loadAnnotations(annotationFiles.get(i), options.usePeakCenter, options.bpToExtendAnnotation, true, regions);
-
-//			// TODO: load in two column file with proper names
-//			String name = allAnnotations[i].getName();
-//			File file = new File(name);
-//			String filename = file.getName();
-//			allAnnotations[i].setName(name);
-		}
+		Track[] allAnnotations = loadAnnotations(regions);
 
 		// load posteriors
 		BroShifterTask bs = new BroShifterTask(options);
@@ -139,7 +170,7 @@ public class AnnotationOverlapPlot {
 			}
 
 			// determine size of plot
-			AnnotationPanel annotPanel = new AnnotationPanel(annotationFiles.size(), 1);
+			AnnotationPanel annotPanel = new AnnotationPanel(allAnnotations.length, 1);
 			annotPanel.setData(region, annotationsSorted);
 			annotPanel.setOverlappingFeatures(credibleSetSNPFeatures);
 
@@ -148,9 +179,9 @@ public class AnnotationOverlapPlot {
 			int assocPanelRows = (int) Math.ceil(300 / pixelspertrack);
 
 			System.out.println(1000 + "x" + pixelspertrack + " grid");
-			System.out.println(annotationFiles.size() + genepanelrows + assocPanelRows + " rows ");
+			System.out.println(allAnnotations.length + genepanelrows + assocPanelRows + " rows ");
 
-			Grid grid = new Grid(1000, pixelspertrack, annotationFiles.size() + genepanelrows + assocPanelRows, 1, 100, 0);
+			Grid grid = new Grid(1000, pixelspertrack, allAnnotations.length + genepanelrows + assocPanelRows, 1, 100, 0);
 
 
 			TreeSet<Gene> genes = geneannotation.getGeneTree();
