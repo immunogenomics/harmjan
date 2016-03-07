@@ -435,56 +435,31 @@ public class PseudoControls {
 			sampleMap.put(vcfSamples.get(i), i);
 		}
 
-		Integer[][] momAndDad = new Integer[2][vcfSamples.size()];
-		int nrTrios = 0;
 		// boolean[] excludeSample = new boolean[vcfSamples.size()];
+		Triple<Pair<HashMap<String, Integer>, Integer[][]>, ArrayList<String>, Integer> trioDataInVCF = buildTrios(vcfOut, famData, sampleMap, vcfSamples, false);
 
-		HashMap<String, Integer> kidToPseudoControl = new HashMap<String, Integer>();
-
-		ArrayList<String> pseudoCCNames = new ArrayList<String>();
-		TextFile individualsToExclude = new TextFile(vcfOut + "-parents.txt", TextFile.W);
-		for (Pair<String, Triple<String, String, String>> family : famData) {
-			String famId = family.getLeft();
-			Triple<String, String, String> trio = family.getRight();
-			String kid = trio.getLeft();
-			String mom = trio.getMiddle();
-			String dad = trio.getRight();
-
-			Integer kidId = sampleMap.get(kid);
-			if (kidId != null) {
-
-				Integer momId = sampleMap.get(mom);
-				Integer dadId = sampleMap.get(dad);
-
-				if (momId != null) {
-					individualsToExclude.writeln(mom);
-				}
-				if (dadId != null) {
-					individualsToExclude.writeln(dad);
-				}
-				if (momId != null && dadId != null) {
-					if (kidToPseudoControl.containsKey(kid)) {
-						System.err.println("ERROR:  kid id already used: " + kid);
-					}
-					String pseudoname = kid + "-pseudo";
-					kidToPseudoControl.put(kid, nrTrios + vcfSamples.size());
-
-					pseudoCCNames.add(pseudoname);
-
-					momAndDad[0][kidId] = momId;
-					momAndDad[1][kidId] = dadId;
-					nrTrios++;
-				}
+		int nrTrios = trioDataInVCF.getRight();
+		System.out.println("Nr trios in genotypes: " + nrTrios);
+		if (nrTrios == 0) {
+			System.out.println("Trying to find trios by appending famid");
+			// retry by appending family IDs (plink output yay)
+			trioDataInVCF = buildTrios(vcfOut, famData, sampleMap, vcfSamples, true);
+			nrTrios = trioDataInVCF.getRight();
+			if (nrTrios == 0) {
+				System.out.println("No trios found in dataset. Exiting..");
+				System.exit(-1);
 			}
 		}
-		individualsToExclude.close();
+
+		Pair<HashMap<String, Integer>, Integer[][]> meh = trioDataInVCF.getLeft();
+		HashMap<String, Integer> kidToPseudoControl = meh.getLeft();
+		Integer[][] momAndDad = meh.getRight();
+		ArrayList<String> pseudoCCNames = trioDataInVCF.getMiddle();
 
 		writeFamFile(vcfSamples, sampleMap, pseudoCCNames, famfile, famfileout);
-
-		System.out.println("Nr trios: " + nrTrios);
+		System.out.println("Nr trios in genotypes: " + nrTrios);
 
 		TextFile tfOut = new TextFile(vcfOut, TextFile.W);
-
 		// write the header.. extend with pseudocontrol names
 		TextFile tfin = new TextFile(vcfIn, TextFile.R);
 		String ln = tfin.readLine();
@@ -598,6 +573,58 @@ public class PseudoControls {
 		}
 		System.out.println("Done parsing. Output is here: " + vcfOut);
 		tfOut.close();
+	}
+
+	private Triple<Pair<HashMap<String, Integer>, Integer[][]>, ArrayList<String>, Integer> buildTrios(String vcfOut,
+																									   ArrayList<Pair<String, Triple<String, String, String>>> famData,
+																									   HashMap<String, Integer> sampleMap,
+																									   ArrayList<String> vcfSamples,
+
+																									   boolean appendFamId) throws IOException {
+		int nrTrios = 0;
+		Integer[][] momAndDad = new Integer[2][vcfSamples.size()];
+		HashMap<String, Integer> kidToPseudoControl = new HashMap<>();
+		ArrayList<String> pseudoCCNames = new ArrayList<>();
+		TextFile individualsToExclude = new TextFile(vcfOut + "-parents.txt", TextFile.W);
+		for (Pair<String, Triple<String, String, String>> family : famData) {
+			String famId = family.getLeft();
+			Triple<String, String, String> trio = family.getRight();
+			String kid = trio.getLeft();
+			String mom = trio.getMiddle();
+			String dad = trio.getRight();
+
+			Integer kidId = sampleMap.get(kid);
+			if (appendFamId) {
+				kidId = sampleMap.get(famId + "_" + kid);
+			}
+			if (kidId != null) {
+
+				Integer momId = sampleMap.get(mom);
+				Integer dadId = sampleMap.get(dad);
+
+				if (momId != null) {
+					individualsToExclude.writeln(mom);
+				}
+				if (dadId != null) {
+					individualsToExclude.writeln(dad);
+				}
+				if (momId != null && dadId != null) {
+					if (kidToPseudoControl.containsKey(kid)) {
+						System.err.println("ERROR:  kid id already used: " + kid);
+					}
+					String pseudoname = kid + "-pseudo";
+					kidToPseudoControl.put(kid, nrTrios + vcfSamples.size());
+
+					pseudoCCNames.add(pseudoname);
+
+					momAndDad[0][kidId] = momId;
+					momAndDad[1][kidId] = dadId;
+					nrTrios++;
+				}
+			}
+		}
+		individualsToExclude.close();
+		return new Triple<>(new Pair<>(kidToPseudoControl, momAndDad), pseudoCCNames, nrTrios);
 	}
 
 

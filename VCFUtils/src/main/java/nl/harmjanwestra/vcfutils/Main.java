@@ -40,6 +40,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Replace sample names from plink VCF")
+				.longOpt("samplereplaceplink")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Proxy finder")
 				.longOpt("proxy")
 				.build();
@@ -526,6 +532,14 @@ public class Main {
 					vpl.replace(cmd.getOptionValue("l"), input, out);
 				} else {
 					System.out.println("Use -l with --samplereplace");
+				}
+
+			} else if (cmd.hasOption("samplereplaceplink")) {
+				if (cmd.hasOption("f")) {
+					VCFSampleNameReplace vpl = new VCFSampleNameReplace();
+					vpl.replacePlinkDups(cmd.getOptionValue("f"), input, out);
+				} else {
+					System.out.println("Use -f with --samplereplaceplink");
 				}
 
 			} else if (cmd.hasOption("filtersample")) {

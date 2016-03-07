@@ -11,6 +11,45 @@ import java.util.HashMap;
  */
 public class VCFSampleNameReplace {
 
+	public void replacePlinkDups(String famfile, String vcfIn, String vcfOut) throws IOException {
+
+		HashMap<String, String> sampleToSample = new HashMap<String, String>();
+		TextFile fam = new TextFile(famfile, TextFile.R);
+		String[] elems = fam.readLineElems(Strings.whitespace);
+		while (elems != null) {
+			sampleToSample.put(elems[0] + "_" + elems[1], elems[1]);
+			elems = fam.readLineElems(Strings.whitespace);
+		}
+		fam.close();
+
+		TextFile in = new TextFile(vcfIn, TextFile.R);
+		TextFile out = new TextFile(vcfOut, TextFile.W);
+
+		String ln = in.readLine();
+		while (ln != null) {
+			if (ln.startsWith("#CHROM")) {
+				elems = ln.split("\t");
+				int replaced = 0;
+				for (int i = 9; i < elems.length; i++) {
+					String sample = elems[i];
+					String replacement = sampleToSample.get(sample);
+					if (replacement != null) {
+						elems[i] = replacement;
+						replaced++;
+					}
+				}
+				out.writeln(Strings.concat(elems, Strings.tab));
+				System.out.println(replaced + " sample names replaced out of " + (elems.length - 9));
+			} else {
+				out.writeln(ln);
+			}
+			ln = in.readLine();
+		}
+		out.close();
+		in.close();
+
+	}
+
 	public void replace(String replacefile, String vcfin, String vcfout) throws IOException {
 
 		HashMap<String, String> replacements = new HashMap<String, String>();
