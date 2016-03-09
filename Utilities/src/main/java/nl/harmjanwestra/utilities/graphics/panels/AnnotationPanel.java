@@ -141,28 +141,6 @@ public class AnnotationPanel extends Panel {
 
 	}
 
-	private Pair<Double, Integer> getOverlap(Track subsetOfAnnotations, ArrayList<SNPFeature> snps) {
-		double sum = 0;
-
-
-		int nrOverlap = 0;
-		for (SNPFeature snp : snps) {
-			boolean overlap = false;
-			Iterable<Feature> subset = subsetOfAnnotations.getFeatures();
-			for (Feature f : subset) {
-				if (f.overlaps(snp)) {
-					overlap = true;
-				}
-			}
-			if (overlap) {
-				sum += snp.getP();
-				nrOverlap++;
-			}
-
-		}
-
-		return new Pair<Double, Integer>(sum, nrOverlap);
-	}
 
 	private boolean[] testOverlap(ArrayList<Feature> list) {
 		boolean[] output = new boolean[list.size()];

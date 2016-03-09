@@ -27,6 +27,40 @@ import java.util.*;
  */
 public class AnnotationOverlapPlot {
 
+
+	public static void main(String[] args) {
+		// debug
+
+		args = new String[11];
+		args[0] = "--plotoverlap";
+		args[1] = "--gtf";
+		args[2] = "/Data//Ref/Annotation/UCSC/genes.gtf";
+		args[3] = "-a";
+		args[4] = "/Data/tmp/2016-03-08/meh.txt";
+
+		args[5] = "-p";
+		args[6] = "/Data/tmp/2016-03-08/swisscheesebeagle41-posterior.txt";
+
+		args[7] = "-r";
+		args[8] = "/Data/tmp/2016-03-08/cd28.bed";
+
+		args[9] = "-o";
+		args[10] = "/Data/tmp/2016-03-08/tmp.pdf";
+
+
+		BroShifterOptions options = new BroShifterOptions(args);
+
+		try {
+			AnnotationOverlapPlot plot = new AnnotationOverlapPlot(options);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (DocumentException e) {
+			e.printStackTrace();
+		}
+
+
+	}
+
 	private final BroShifterOptions options;
 
 	public AnnotationOverlapPlot(BroShifterOptions options) throws IOException, DocumentException {
@@ -120,6 +154,7 @@ public class AnnotationOverlapPlot {
 				f2.setStart(f.getStart());
 				f2.setStop(f.getStop());
 				f2.setName(f.getName());
+				f2.setP(result.getPosterior());
 				credibleSetSNPFeatures.add(f2);
 				credibleSetHash.add(f2);
 			}
@@ -154,12 +189,21 @@ public class AnnotationOverlapPlot {
 			for (int i = 0; i < allAnnotations.length; i++) {
 				Track annot = allAnnotations[i].getSubset(region.getChromosome(), region.getStart(), region.getStop());
 				Pair<Double, Integer> overlap = bs.getOverlap(annot, credibleSetSNPFeatures);
-				Triple<Track, Double, Integer> t = new Triple<>(annot, overlap.getLeft(), overlap.getRight());
-				annotationsUnsorted.add(t);
+				if (overlap.getRight() > 0) {
+					Triple<Track, Double, Integer> t = new Triple<>(annot, overlap.getLeft(), overlap.getRight());
+					annotationsUnsorted.add(t);
+				}
+			}
+
+
+			System.out.println(annotationsUnsorted.size() + " annotations overlap with credible sets");
+			if (annotationsUnsorted.isEmpty()) {
+				System.out.println("No annotations to plot");
+				System.exit(0);
 			}
 
 			// sort the annotations by overlap
-//			Collections.sort(annotationsUnsorted, new AssocTripleComparator());
+			Collections.sort(annotationsUnsorted, new AssocTripleComparator());
 
 			ArrayList<Track> annotationsSorted = new ArrayList<>();
 			DecimalFormat format = new DecimalFormat("#.###");
@@ -170,7 +214,7 @@ public class AnnotationOverlapPlot {
 			}
 
 			// determine size of plot
-			AnnotationPanel annotPanel = new AnnotationPanel(allAnnotations.length, 1);
+			AnnotationPanel annotPanel = new AnnotationPanel(annotationsSorted.size(), 1);
 			annotPanel.setData(region, annotationsSorted);
 			annotPanel.setOverlappingFeatures(credibleSetSNPFeatures);
 
@@ -179,9 +223,9 @@ public class AnnotationOverlapPlot {
 			int assocPanelRows = (int) Math.ceil(300 / pixelspertrack);
 
 			System.out.println(1000 + "x" + pixelspertrack + " grid");
-			System.out.println(allAnnotations.length + genepanelrows + assocPanelRows + " rows ");
+			System.out.println(annotationsSorted.size() + genepanelrows + assocPanelRows + " rows ");
 
-			Grid grid = new Grid(1000, pixelspertrack, allAnnotations.length + genepanelrows + assocPanelRows, 1, 100, 0);
+			Grid grid = new Grid(1000, pixelspertrack, 10 + annotationsSorted.size() + genepanelrows + assocPanelRows, 1, 100, 0);
 
 
 			TreeSet<Gene> genes = geneannotation.getGeneTree();
@@ -202,10 +246,10 @@ public class AnnotationOverlapPlot {
 			assocPanel.setDataSingleDs(region, null, allPvalues, region.toString());
 
 			grid.addPanel(genePanel, 0, 0);
-			grid.addPanel(new SpacerPanel(1, 1), genepanelrows, 0);
-			grid.addPanel(assocPanel, genepanelrows + 1, 0);
-			grid.addPanel(new SpacerPanel(1, 1), genepanelrows + assocPanelRows, 0);
-			grid.addPanel(annotPanel, genepanelrows + 1 + assocPanelRows + 1, 0);
+			grid.addPanel(new SpacerPanel(5, 1), genepanelrows, 0);
+			grid.addPanel(assocPanel, genepanelrows + 5, 0);
+			grid.addPanel(new SpacerPanel(5, 1), genepanelrows + 5 + assocPanelRows, 0);
+			grid.addPanel(annotPanel, genepanelrows + 5 + assocPanelRows + 5, 0);
 
 			grid.draw(options.outfile + region.toString() + ".pdf");
 
@@ -213,22 +257,100 @@ public class AnnotationOverlapPlot {
 
 	}
 
+	public void overlapMatrix() throws IOException {
+		if (options.geneAnnotationFile == null) {
+			System.out.println("Error: provide --gtf");
+			System.exit(-1);
+		}
+
+		// load bed regions to test
+		BedFileReader bf = new BedFileReader();
+		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
+
+		Track[] allAnnotations = loadAnnotations(regions);
+
+		// load posteriors
+		BroShifterTask bs = new BroShifterTask(options);
+
+		double[][] overlapMatrix = new double[regions.size()][allAnnotations.length];
+		int[][] overlapMatrixCount = new int[regions.size()][allAnnotations.length];
+		int[] credibleSetSizePerRegion = new int[regions.size()];
+
+		for (int r = 0; r < regions.size(); r++) {
+
+			Feature region = regions.get(r);
+
+			AssociationFile assocFile = new AssociationFile();
+			ArrayList<AssociationResult> results = assocFile.read(options.posteriorFile, region);
+			ApproximateBayesPosterior ab = new ApproximateBayesPosterior();
+			ArrayList<AssociationResult> credibleSet = ab.createCredibleSet(results, options.credibleSetThreshold);
+			ArrayList<SNPFeature> snps = new ArrayList<>(results.size());
+			ArrayList<SNPFeature> credibleSetSNPFeatures = new ArrayList<>(credibleSet.size());
+			HashSet<SNPFeature> credibleSetHash = new HashSet<SNPFeature>();
+			for (AssociationResult result : credibleSet) {
+				Feature f = result.getSnp();
+				SNPFeature f2 = new SNPFeature();
+				f2.setChromosome(f.getChromosome());
+				f2.setStart(f.getStart());
+				f2.setStop(f.getStop());
+				f2.setName(f.getName());
+				f2.setP(result.getPosterior());
+				credibleSetSNPFeatures.add(f2);
+				credibleSetHash.add(f2);
+			}
+
+			credibleSetSizePerRegion[r] = credibleSet.size();
+
+			System.out.println(snps.size() + " variants loaded");
+
+			for (int i = 0; i < allAnnotations.length; i++) {
+				Track annot = allAnnotations[i].getSubset(region.getChromosome(), region.getStart(), region.getStop());
+				Pair<Double, Integer> overlap = bs.getOverlap(annot, credibleSetSNPFeatures);
+				if (overlap.getRight() > 0) {
+					overlapMatrix[r][i] = overlap.getLeft();
+					overlapMatrixCount[r][i] = overlap.getRight();
+				}
+			}
+		}
+
+		overlapMatrix = prune(overlapMatrix, allAnnotations, regions);
+
+	}
+
+	private double[][] prune(double[][] overlapMatrix, Track[] allAnnotations, ArrayList<Feature> regions) {
+		// prune the matrix
+		boolean[] includeAnnotation = new boolean[allAnnotations.length];
+		int nrToInclude = 0;
+		for (int i = 0; i < allAnnotations.length; i++) {
+			double sum = 0;
+			for (int r = 0; r < regions.size(); r++) {
+				sum += overlapMatrix[r][i];
+			}
+			if (sum > 0d) {
+				includeAnnotation[i] = true;
+				nrToInclude++;
+			}
+		}
+
+
+	}
+
 	private class AssocTripleComparator implements Comparator<Triple<Track, Double, Integer>> {
 
 		@Override
 		public int compare(Triple<Track, Double, Integer> o1, Triple<Track, Double, Integer> o2) {
-			if (o1.getMiddle() == null || Double.isNaN(o1.getMiddle()) || Double.isFinite(o1.getMiddle())) {
-				return -1;
-			}
-			if (o2.getMiddle() == null || Double.isNaN(o2.getMiddle()) || Double.isFinite(o2.getMiddle())) {
-				return 1;
-			}
 			if (o1.getMiddle() > o2.getMiddle()) {
-				return 1;
-			} else if (o1.getMiddle().equals(o2.getMiddle())) {
-				return 0;
-			} else {
 				return -1;
+			} else if (o1.getMiddle() < o2.getMiddle()) {
+				return 1;
+			} else {
+				if (o1.getRight() > o2.getRight()) {
+					return -1;
+				} else if (o1.getRight() < o2.getRight()) {
+					return 1;
+				} else {
+					return 0;
+				}
 			}
 		}
 	}

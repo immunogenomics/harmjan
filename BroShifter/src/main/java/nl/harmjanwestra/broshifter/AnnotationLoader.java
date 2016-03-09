@@ -24,7 +24,7 @@ public class AnnotationLoader {
 								 ArrayList<Feature> regions) throws IOException {
 
 		ArrayList<Feature> allAnnotations = null;
-		if (annotation1.endsWith(".xls")) {
+		if (annotation1.endsWith(".xls") || annotation1.endsWith(".xls.gz")) {
 			XLSFile xlsFile = new XLSFile();
 			ArrayList<PeakFeature> pf = xlsFile.readAllPeaks(annotation1, false, 0.05);
 			allAnnotations = new ArrayList<>(10000);

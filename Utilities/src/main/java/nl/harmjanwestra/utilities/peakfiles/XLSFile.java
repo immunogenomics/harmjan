@@ -33,9 +33,40 @@ public class XLSFile {
 		return features;
 	}
 
+	int chrcol = -1;
+	int startcol = -1;
+	int endcol = -1;
+	int summitcol = -1;
+	int pileupcol = -1;
+	int log10pcol = -1;
+	int foldenrichcol = -1;
+	int qvalcol = -1;
+
 	private PeakFeature parseLine(String ln, boolean filterfdr, double fdrthreshold) throws IOException {
 		if (ln.startsWith("chr\tstart\tend") || ln.trim().length() == 0) {
 // useless header line
+
+			String[] elems = ln.split("\t");
+			for (int i = 0; i < elems.length; i++) {
+				if (elems[i].equals("chr")) {
+					chrcol = i;
+				} else if (elems[i].equals("start")) {
+					startcol = i;
+				} else if (elems[i].equals("end")) {
+					endcol = i;
+				} else if (elems[i].equals("summit")) {
+					summitcol = i;
+				} else if (elems[i].equals("pileup")) {
+					pileupcol = i;
+				} else if (elems[i].equals("-log10(pvalue)")) {
+					log10pcol = i;
+				} else if (elems[i].equals("fold_enrichment")) {
+					foldenrichcol = i;
+				} else if (elems[i].equals("-log10(qvalue)")) {
+					qvalcol = i;
+				}
+			}
+
 			return null;
 		} else if (ln.startsWith("#")) {
 			parseHeaderLine(ln);
@@ -46,14 +77,43 @@ public class XLSFile {
 			if (elems.length < 9) {
 				throw new IOException("Error parsing line: " + ln);
 			}
-			Chromosome chr = Chromosome.parseChr(elems[0]);
-			int start = Integer.parseInt(elems[1]);
-			int stop = Integer.parseInt(elems[2]);
-			int summit = Integer.parseInt(elems[4]);
-			double pileup = Double.parseDouble(elems[5]);
-			double log10p = Double.parseDouble(elems[6]);
-			double foldenrich = Double.parseDouble(elems[7]);
-			double qval = Double.parseDouble(elems[8]);
+
+
+			Chromosome chr = Chromosome.NA;
+			if (chrcol != -1) {
+				chr = Chromosome.parseChr(elems[chrcol]);
+			}
+
+			int start = -1;
+			if (startcol != -1) {
+				start = Integer.parseInt(elems[startcol]);
+			}
+			int stop = -1;
+			if (endcol != -1) {
+				stop = Integer.parseInt(elems[endcol]);
+			}
+			int summit = -1;
+			if (summitcol != -1) {
+				Integer.parseInt(elems[summitcol]);
+			}
+
+			double pileup = 0;
+			if (pileupcol != -1) {
+				pileup = Double.parseDouble(elems[pileupcol]);
+			}
+
+			double log10p = 0;
+			if (log10pcol != -1) {
+				log10p = Double.parseDouble(elems[log10pcol]);
+			}
+			double foldenrich = 1;
+			if (foldenrichcol != -1) {
+				Double.parseDouble(elems[foldenrichcol]);
+			}
+			double qval = 1;
+			if (qvalcol != -1) {
+				qval = Double.parseDouble(elems[qvalcol]);
+			}
 			if (filterfdr) {
 				if (qval > fdrthreshold) {
 					PeakFeature f = new PeakFeature(chr, start, stop, summit, pileup, log10p, foldenrich, qval);
