@@ -201,6 +201,10 @@ public class BroShifterOptions {
 				conditional = true;
 			}
 
+			if(cmd.hasOption("matrix")){
+				overlapmatrix = true;
+			}
+
 			if (cmd.hasOption("summit")) {
 				usePeakCenter = true;
 			}
