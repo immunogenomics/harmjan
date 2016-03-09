@@ -65,7 +65,12 @@ public class AnnotationOverlapPlot {
 
 	public AnnotationOverlapPlot(BroShifterOptions options) throws IOException, DocumentException {
 		this.options = options;
-		this.plot();
+		if (options.overlapmatrix) {
+			this.overlapMatrix();
+		} else {
+			this.plot();
+		}
+
 	}
 
 	private Track[] loadAnnotations(ArrayList<Feature> regions) throws IOException {
@@ -313,14 +318,34 @@ public class AnnotationOverlapPlot {
 			}
 		}
 
-		overlapMatrix = prune(overlapMatrix, allAnnotations, regions);
+		// remove annotations with zero overlap
+		Pair<double[][], ArrayList<String>> pruned = prune(overlapMatrix, allAnnotations, regions);
+		overlapMatrix = pruned.getLeft();
+
+		String header = "-";
+		TextFile out = new TextFile(options.outfile, TextFile.W);
+		for (int r = 0; r < regions.size(); r++) {
+			header += "\t" + regions.get(r).toString();
+		}
+		out.writeln(header);
+		for (int i = 0; i < pruned.getRight().size(); i++) {
+			String ln = pruned.getRight().get(i);
+			for (int r = 0; r < regions.size(); r++) {
+				ln += "\t" + overlapMatrix[r][i];
+			}
+			out.writeln(ln);
+		}
+		out.close();
+
 
 	}
 
-	private double[][] prune(double[][] overlapMatrix, Track[] allAnnotations, ArrayList<Feature> regions) {
+	private Pair<double[][], ArrayList<String>> prune(double[][] overlapMatrix, Track[]
+			allAnnotations, ArrayList<Feature> regions) {
 		// prune the matrix
 		boolean[] includeAnnotation = new boolean[allAnnotations.length];
 		int nrToInclude = 0;
+		ArrayList<String> colNames = new ArrayList<>();
 		for (int i = 0; i < allAnnotations.length; i++) {
 			double sum = 0;
 			for (int r = 0; r < regions.size(); r++) {
@@ -328,11 +353,23 @@ public class AnnotationOverlapPlot {
 			}
 			if (sum > 0d) {
 				includeAnnotation[i] = true;
+				colNames.add(allAnnotations[i].getName());
 				nrToInclude++;
 			}
 		}
 
+		double[][] output = new double[overlapMatrix.length][nrToInclude];
 
+		for (int r = 0; r < regions.size(); r++) {
+			int ctr = 0;
+			for (int i = 0; i < allAnnotations.length; i++) {
+				if (includeAnnotation[i]) {
+					output[r][ctr] = overlapMatrix[r][i];
+					ctr++;
+				}
+			}
+		}
+		return new Pair<>(output, colNames);
 	}
 
 	private class AssocTripleComparator implements Comparator<Triple<Track, Double, Integer>> {

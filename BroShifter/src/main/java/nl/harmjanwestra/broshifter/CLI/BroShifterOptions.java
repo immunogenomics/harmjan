@@ -111,6 +111,12 @@ public class BroShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Make overlap matrix")
+				.longOpt("matrix")
+				.build();
+		OPTIONS.addOption(option);
+
 
 		option = Option.builder("w")
 				.desc("Use a weight for distance. [none|linear|sqrt|inverse|exp|hoverd]. Default: none")
@@ -137,6 +143,7 @@ public class BroShifterOptions {
 	// TODO: allow code to determine mean + sd annotation size
 	// set some parameters using those stats
 	public int maxAllowedDistance = 150;
+	public boolean overlapmatrix;
 
 	public BroShifterOptions(String[] args) {
 		try {
@@ -272,7 +279,7 @@ public class BroShifterOptions {
 		}
 	}
 
-	
+
 	public void printHelp() {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp(" ", OPTIONS);
