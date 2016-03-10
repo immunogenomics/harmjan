@@ -218,7 +218,14 @@ public class VCFMerger {
 	/*
 	This merges samples from two VCF files if there are variants that are overlapping. Non-overlapping variants are excluded.
 	 */
-	public void mergeAndIntersect(boolean linux, int chrint, String vcfsort, String refVCF, String testVCF, String matchedPanelsOut, boolean keepoverlapping, String separator) throws IOException {
+	public void mergeAndIntersect(boolean linux,
+								  int chrint,
+								  String vcfsort,
+								  String refVCF,
+								  String testVCF,
+								  String matchedPanelsOut,
+								  boolean keepoverlapping,
+								  String separator) throws IOException {
 		Chromosome chr = Chromosome.parseChr("" + chrint);
 
 		mergeAndIntersectVCFVariants(

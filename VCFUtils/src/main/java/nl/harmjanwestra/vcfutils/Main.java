@@ -138,6 +138,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Match variants to reference VCF")
+				.longOpt("match")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Correlate imputation output (between two files) ")
 				.longOpt("correlatevcf")
 				.build();
@@ -779,6 +785,45 @@ public class Main {
 
 				if (run) {
 					merger.mergeAndIntersect(linux, chrint, vcfsort, vcf2, input, out, keepoverlapping, sep);
+				}
+			} else if (cmd.hasOption("match")) {
+				boolean linux = true;
+				if (cmd.hasOption("mac")) {
+					linux = false;
+				}
+
+//				int chrint = 1;
+//				if (cmd.hasOption("chr")) {
+//					chrint = Integer.parseInt(cmd.getOptionValue("chr"));
+//				} else {
+//					System.out.println("Please use --chr with --match");
+//					run = false;
+//				}
+
+				String vcfsort = null;
+				if (cmd.hasOption("vcfsort")) {
+					vcfsort = cmd.getOptionValue("vcfsort");
+				} else {
+					System.out.println("Please use --vcfsort with --match");
+					run = false;
+				}
+
+				String vcf2 = null;
+				if (cmd.hasOption("i2")) {
+					vcf2 = cmd.getOptionValue("i2");
+				} else {
+					System.out.println("Please use -i2 with --march");
+					run = false;
+				}
+
+				String sep = "/";
+				if (cmd.hasOption("separator")) {
+					sep = cmd.getOptionValue("separator");
+				}
+
+				if (run) {
+					VCFMatcher matcher = new VCFMatcher();
+					matcher.run(vcf2, input, out, linux, vcfsort);
 				}
 			} else if (cmd.hasOption("mergeimputation")) {
 				VCFMerger merger = new VCFMerger();
