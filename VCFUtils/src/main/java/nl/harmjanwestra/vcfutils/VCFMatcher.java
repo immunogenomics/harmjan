@@ -42,30 +42,32 @@ public class VCFMatcher {
 
 
 		// pos --> Feature / Alleles / minor allele
-		HashMap<Feature, ArrayList<Triple<String[], String, Double>>> refData = new HashMap<>();
+		HashMap<Feature, ArrayList<Triple<String[], String, Double>>> refData = new HashMap<>(1000000);
 
 		// reload the variants, get the positions with multiple variants at that position
 		VCFGenotypeData iterator = new VCFGenotypeData(refVCF);
-		HashSet<Chromosome> referenceChromosomes = new HashSet<Chromosome>();
-		HashSet<Feature> referenceVariantFeatures = new HashSet<Feature>();
+
+
+		int nrLoaded = 0;
 		System.out.println("Inventorizing variants in: " + refVCF);
 		while (iterator.hasNext()) {
 			VCFVariant f = iterator.next();
 			Triple<String[], String, Double> data = new Triple<String[], String, Double>(f.getAlleles(), f.getMinorAllele(), f.getMAF());
 			ArrayList<Triple<String[], String, Double>> siteData = refData.get(f.asFeature());
-			if (siteData != null) {
+			if (siteData == null) {
 				siteData = new ArrayList<>();
 			}
 			siteData.add(data);
 			refData.put(f.asFeature(), siteData);
+			nrLoaded++;
+			if (nrLoaded % 10000 == 0) {
+				System.out.println(nrLoaded + " loaded so far");
+			}
 		}
 
-		System.out.println(referenceVariantFeatures.size() + " features after loading ref vcf");
+		System.out.println(refData.size() + " features after loading ref vcf");
 		iterator.close();
 
-		ArrayList<Feature> referenceFeatureArr = new ArrayList<Feature>();
-		referenceFeatureArr.addAll(referenceVariantFeatures);
-		Collections.sort(referenceFeatureArr, new FeatureComparator(false));
 
 		TextFile logOut = new TextFile(logoutfile, TextFile.W);
 		logOut.writeln("chr\t" +
@@ -102,8 +104,11 @@ public class VCFMatcher {
 		headerin.close();
 
 		VCFGenotypeData iterator2 = new VCFGenotypeData(testVCF);
-		boolean variantAlreadyWritten = false;
+
+		int nrWritten = 0;
+		int nrNotWritten = 0;
 		while (iterator2.hasNext()) {
+			boolean variantAlreadyWritten = false;
 			VCFVariant testVar = iterator2.next();
 			ArrayList<Triple<String[], String, Double>> referenceData = refData.get(testVar.asFeature());
 			if (referenceData == null) {
@@ -231,8 +236,14 @@ public class VCFMatcher {
 					logOut.writeln(logoutputln);
 				}
 			}
+			if (variantAlreadyWritten) {
+				nrWritten++;
+			} else {
+				nrNotWritten++;
+			}
 		}
 
+		System.out.println(nrWritten + " written (" + ((double) nrWritten / (nrWritten + nrNotWritten)) + ") \t" + nrNotWritten + " not written\t" + (nrWritten + nrNotWritten) + " total");
 		uniqueTest.close();
 		outvcf.close();
 		logOut.close();
