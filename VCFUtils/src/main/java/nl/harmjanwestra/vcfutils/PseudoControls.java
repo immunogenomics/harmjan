@@ -21,38 +21,36 @@ public class PseudoControls {
 	public static void main(String[] args) {
 		PseudoControls c = new PseudoControls();
 		try {
-			for (int i = 0; i < 24; i++) {
-
-				String vcfin = "/Data/ImmunoChip/T1D/merged/merged-Chr" + i + ".vcf.gz";
-				String vcfout = "/Data/ImmunoChip/T1D/merged/merged-Chr" + i + "-pseudoCC.vcf.gz";
-				String famfileout = "/Data/ImmunoChip/T1D/binary/T1D-Chr" + i + ".fam";
-
-				if (i == 24) {
-					vcfin = "/Data/ImmunoChip/T1D/merged/merged-ChrX.vcf.gz";
-					vcfout = "/Data/ImmunoChip/T1D/merged/merged-ChrX-pseudoCC.vcf.gz";
-					famfileout = "/Data/ImmunoChip/T1D/binary/T1D-ChrX.fam";
-				}
-
-				String famfile = "/Data/ImmunoChip/T1D/binary/T1D.fam";
-
-
-				if (Gpio.exists(vcfin)) {
-					c.make(vcfin, vcfout, famfile, famfileout);
-					///	c.check(vcfout, famfile);
-				}
-				if (i == 24) {
-					// make males homozygous
-					//	c.makeMalesHomozygous(vcfin, famfile);
-				}
-				System.out.println();
-			}
+//			for (int i = 0; i < 24; i++) {
+//
+//				String vcfin = "/Data/ImmunoChip/T1D/merged/merged-Chr" + i + ".vcf.gz";
+//				String vcfout = "/Data/ImmunoChip/T1D/merged/merged-Chr" + i + "-pseudoCC.vcf.gz";
+//				String famfileout = "/Data/ImmunoChip/T1D/binary/T1D-Chr" + i + ".fam";
+//
+//				if (i == 24) {
+//					vcfin = "/Data/ImmunoChip/T1D/merged/merged-ChrX.vcf.gz";
+//					vcfout = "/Data/ImmunoChip/T1D/merged/merged-ChrX-pseudoCC.vcf.gz";
+//					famfileout = "/Data/ImmunoChip/T1D/binary/T1D-ChrX.fam";
+//				}
+//
+//				String famfile = "/Data/ImmunoChip/T1D/binary/T1D.fam";
+//
+//
+//				if (Gpio.exists(vcfin)) {
+//					c.make(vcfin, vcfout, famfile, famfileout);
+//					///	c.check(vcfout, famfile);
+//				}
+//				if (i == 24) {
+//					// make males homozygous
+//					//	c.makeMalesHomozygous(vcfin, famfile);
+//				}
+//				System.out.println();
+//			}
 
 			String covariates = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedCovariates.txt";
-			String famfile = "/Data/ImmunoChip/T1D/binary/T1D-Chr1.fam";
-			String output = "/Data/ImmunoChip/T1D/binary/covarmerged.txtmergedCovariates-withPseudos.txt";
+			String famfile = "/Data/tmp/2016-03-11/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz.fam";
+			String output = "/Data/tmp/2016-03-11/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt";
 			c.makeNewCovariateFile(covariates, famfile, output);
-
-
 			c.makeNewDiseaseStatusFile(famfile, famfile + "-diseaseStatus.txt");
 
 		} catch (IOException e) {

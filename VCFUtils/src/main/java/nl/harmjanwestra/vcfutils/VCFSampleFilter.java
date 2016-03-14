@@ -12,7 +12,7 @@ import java.util.HashSet;
  */
 public class VCFSampleFilter {
 
-	public void filteroverlapping(String toFilter, String ref, String vcfout) throws IOException {
+	public void filteroverlapping(String toFilter, String ref, String vcfout, boolean keep) throws IOException {
 
 		System.out.println("Filtering: " + toFilter);
 		System.out.println("for samples present in: " + ref);
@@ -24,11 +24,11 @@ public class VCFSampleFilter {
 		samples1Hash.addAll(data1.getSamples());
 		data1.close();
 
-		filter(toFilter, samples1Hash, vcfout);
+		filter(toFilter, samples1Hash, vcfout, keep);
 
 	}
 
-	public void filter(String fileIn, String fileout, String sampleFile) throws IOException {
+	public void filter(String fileIn, String fileout, String sampleFile, boolean keep) throws IOException {
 
 		System.out.println("Sample Filter");
 		System.out.println("in: " + fileIn);
@@ -46,11 +46,11 @@ public class VCFSampleFilter {
 
 		System.out.println(samples.size() + " samples loaded from: " + sampleFile);
 
-		filter(fileIn, samples, fileout);
+		filter(fileIn, samples, fileout, keep);
 
 	}
 
-	public void filter(String toFilter, HashSet<String> sampleHash, String vcfout) throws IOException {
+	public void filter(String toFilter, HashSet<String> sampleHash, String vcfout, boolean keep) throws IOException {
 		TextFile out = new TextFile(vcfout, TextFile.W);
 		TextFile in = new TextFile(toFilter, TextFile.R);
 
@@ -66,12 +66,19 @@ public class VCFSampleFilter {
 
 				includecol = new boolean[elems.length];
 				for (int i = 0; i < includecol.length; i++) {
-					includecol[i] = true;
+					if (!keep) {
+						includecol[i] = true;
+					}
+
 				}
 
 				for (int i = 9; i < elems.length; i++) {
 					if (sampleHash.contains(elems[i])) {
-						includecol[i] = false;
+						if (keep) {
+							includecol[i] = true;
+						} else {
+							includecol[i] = false;
+						}
 						excluded++;
 					}
 				}

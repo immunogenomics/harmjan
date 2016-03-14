@@ -405,7 +405,7 @@ public class Main {
 
 		option = Option.builder()
 				.longOpt("keepoverlapping")
-				.desc("Keep overlapping variants (for --merge; default: no)")
+				.desc("Keep overlapping variants or samples (for --merge or --filtersample; default: no)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -489,7 +489,12 @@ public class Main {
 				if (cmd.hasOption("i2")) {
 
 
-					filter.filteroverlapping(input, cmd.getOptionValue("i2"), out);
+					boolean keep = false;
+					if (cmd.hasOption("keepoverlapping")) {
+						keep = true;
+					}
+
+					filter.filteroverlapping(input, cmd.getOptionValue("i2"), out, keep);
 
 				} else {
 					System.out.println("use -i2 with --filtersampleoverlap");
@@ -554,7 +559,11 @@ public class Main {
 				String samplefile = null;
 				if (cmd.hasOption("l")) {
 					samplefile = cmd.getOptionValue("l");
-					filter.filter(input, out, samplefile);
+					boolean keep = false;
+					if (cmd.hasOption("keepoverlapping")) {
+						keep = true;
+					}
+					filter.filter(input, out, samplefile, keep);
 				} else {
 					System.out.println("Use params -i -o and -l");
 				}
