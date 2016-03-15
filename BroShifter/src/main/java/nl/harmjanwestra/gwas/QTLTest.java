@@ -7,6 +7,8 @@ import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
+import org.apache.logging.log4j.core.appender.SyslogAppender;
+import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.matrix2.DoubleMatrixDataset;
@@ -92,7 +94,7 @@ public class QTLTest {
 		ArrayList<String> expressionSamples = exp.getRowObjects();
 
 		if (expressionSamples.isEmpty()) {
-			System.err.println("Error: no samples remain. Probably a sample linking issue.");
+			System.err.println("Error: no samples remain after loading expression data. Probably a sample linking issue.");
 			System.exit(-1);
 		}
 		expressionSamplesToLoad = new HashSet<String>();
@@ -112,7 +114,7 @@ public class QTLTest {
 			String genotypeSample = genotypeSamples.get(i);
 			String expressionSample = genotypeSample;
 			if (genotypeToExpression != null) {
-				genotypeToExpression.get(genotypeSample);
+				expressionSample = genotypeToExpression.get(genotypeSample);
 			}
 			if (expressionSamplesToLoad.contains(expressionSample)) {
 				includeGenotypeSample[i] = true;
@@ -145,7 +147,11 @@ public class QTLTest {
 			}
 		}
 
-
+		if (geneToExpGene.isEmpty()) {
+			System.err.println("Error: no genes found. Probably a mismatch between annotation and gene expression file");
+			System.exit(-1);
+		}
+		System.out.println(geneToExpGene.size() + " genes with annotation found in gene expression data");
 		// rank the gene expression data -- save for later
 
 		// for each chromosome
@@ -181,12 +187,15 @@ public class QTLTest {
 		}
 		genotypeVCF.close();
 
+		if (allGenotypes.isEmpty()) {
+			System.err.println("No variants overlap with available genes. Probably a problem with the variant annotation?");
+			System.exit(-1);
+		}
 
-		// for each gene
-		// double[][] olsX = new double[nrCalled][2];
+		// prepare a matrix for the genotypes/covariates
 		double[][] x = null;
 		if (cov != null) {
-			x = new double[newSampleOrder.size()][cov.columns() + 1]; // genotype + covariates
+			x = new double[newSampleOrder.size()][cov.columns() + 1]; // [sample][genotype + covariates]
 
 			// assume covariates are loaded as [sample][covariate]
 			for (int i = 0; i < cov.rows(); i++) {
@@ -203,16 +212,22 @@ public class QTLTest {
 		cern.jet.random.tdouble.engine.DoubleRandomEngine randomEngine = null;
 		cern.jet.random.tdouble.StudentT tDistColt = null;
 
+		// output files
 		TextFile outAll = new TextFile(outfile + "-all.txt", TextFile.W);
-		String header = "Gene\tHugo\tChr\tStart\tStop\tStrand\tSNP\tPos\tBeta\tSe\tZ\tP";
-		outAll.writeln(header);
 		TextFile outTop = new TextFile(outfile + "-top.txt", TextFile.W);
-		outTop.writeln(header + "\tPermutationP");
+		String header = "Gene\tHugo\tChr\tStart\tStop\tStrand\tSNP\tPos\tBeta\tSe\tZ\tP\tPermutationP";
+		outAll.writeln(header);
+		outTop.writeln(header);
 
+		System.out.println("Starting calculations...");
+
+		// iterate the available genes
+		ProgressBar pb = new ProgressBar(finalGeneSet.size());
 		for (Gene g : finalGeneSet) {
 			// get expression ID
 			Integer expressionId = geneToExpGene.get(g.getGeneId());
 			if (expressionId == null) {
+				// all genes in the finalGeneSet should have at least one expression gene id
 				System.out.println("Something weird is going on");
 				System.exit(-1);
 			} else {
@@ -334,8 +349,6 @@ public class QTLTest {
 
 					for (int f = 0; f < overlappingVariantsArr.length; f++) {
 						// write the result (if it is not null)
-
-
 						VCFVariant variant = allGenotypes.get(overlappingVariantsArr[f]);
 						StringBuilder snpBuilder = new StringBuilder();
 						snpBuilder.append(variant.getId());
@@ -394,13 +407,11 @@ public class QTLTest {
 //						outTop.append("\n");
 //					}
 				}
-
 			}
+			pb.iterate();
 		}
-
 		outAll.close();
 		outTop.close();
-
 	}
 
 	private final Pair<Double, Double> NAN_PAIR = new Pair<Double, Double>(Double.NaN, Double.NaN);
