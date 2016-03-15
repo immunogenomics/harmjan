@@ -27,6 +27,12 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("QTL analysis")
+				.longOpt("qtl")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("CaviarBF helper functions")
 				.longOpt("caviar")
 				.build();
@@ -88,7 +94,9 @@ public class MainOptions {
 				mode = MODE.ASSOC;
 			} else if (cmd.hasOption("caviar")) {
 				mode = MODE.CAVIAR;
-			}else {
+			} else if (cmd.hasOption("qtl")) {
+				mode = MODE.QTL;
+			} else {
 				HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp(" ", OPTIONS);
 			}
@@ -112,7 +120,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOT,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, NA
 	}
 
 }

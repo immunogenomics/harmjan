@@ -22,7 +22,7 @@ public class EidRename {
 
 		String key = "D:\\tmp\\2016-02-28\\bro\\ra\\EIDlegend.txt";
 		String file = "D:\\tmp\\2016-02-28\\bro\\ra\\ChromHMM-summit150bp-Overall.txt";
-		String out = "D:\\tmp\\2016-02-28\\bro\\ra\\ChromHMM-summit150bp-Overall-rewrite.txt";
+		String out = "D:\\tmp\\2016-02-28\\bro\\ra\\ChromHMM-summit150bp-Overall-rewriteMDSMatrix.txt";
 
 		int col = 15;
 
@@ -69,7 +69,7 @@ public class EidRename {
 	public void chromhmmfilerename() {
 		String list = "/Data/Epigenetics/chromhmm/allChromHMM.txt";
 		String key = "/Data/Epigenetics/chromhmm/EIDlegend.txt";
-		String out = "/Data/Epigenetics/chromhmm/allChromHMM-rewrite.txt";
+		String out = "/Data/Epigenetics/chromhmm/allChromHMM-rewriteMDSMatrix.txt";
 		String path = "/medpop/srlab/external-data/ENCODE/ChromHMM/imputed12marks/jointModel/final/split/";
 		String removethis = "_25_imputed12marks_mnemonics-";
 

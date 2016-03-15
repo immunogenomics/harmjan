@@ -1,13 +1,13 @@
 package nl.harmjanwestra.gwas;
 
 import cern.jet.random.tdouble.StudentT;
+import nl.harmjanwestra.gwas.CLI.QTLTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
-import org.apache.logging.log4j.core.appender.SyslogAppender;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
@@ -23,27 +23,35 @@ import java.util.*;
  */
 public class QTLTest {
 
+	private final QTLTestOptions options;
+
+	public QTLTest(QTLTestOptions options) throws IOException {
+		this.options = options;
+		this.run();
+	}
+
 
 	// TODO: this code does not assume missing genotypes!!!
 
 	public void run() throws IOException {
 
-		String outfile = "";
-		String gtfAnnotationFile = "";
-		String expDataFile = "";
-		String covDataFile = "";
-		String genotypeDataFile = "";
-		String genotypeToExpressionCouplingFile = null;
-		String geneLimitFile = "";
-		String variantLimitFile = "";
-		String covariateLimitFile = "";
+		String outfile = options.out;
+		String gtfAnnotationFile = options.annotation;
+		String expDataFile = options.expression;
+		String covDataFile = options.covariates;
+		String genotypeDataFile = options.genotype;
+		String genotypeToExpressionCouplingFile = options.genotypeToExpression;
+		String geneLimitFile = options.genelimit;
+		String variantLimitFile = options.variantlimit;
+		String covariateLimitFile = options.covariatelimit;
+		double imputationqualthreshold = options.impqualthreshold;
 
-		int cisWindow = 1000000;
+		int cisWindow = options.ciswindow;
 		Random random = new Random();
 		Long permutationSeedNumber = random.nextLong(); // To think about: do we want a fixed order in our permutations? if so, each permutation should get a unique seed, shared between each gene
-		double mafThreshold = 0.01;
-		double callrateThreshold = 0.95;
-		int nrPermutationsPerVariant = 1000;
+		double mafThreshold = options.mafthreshold;
+		double callrateThreshold = options.callratethreshold;
+		int nrPermutationsPerVariant = options.nrpermutationspergene;
 
 		HashSet<String> limitGenes = null;
 		HashSet<String> limitVariants = null;
@@ -53,6 +61,7 @@ public class QTLTest {
 		// load links between genotype and gene expression if any
 		HashMap<String, String> genotypeToExpression = null;
 		if (genotypeToExpressionCouplingFile != null) {
+			System.out.println("Loading GTE: " + genotypeToExpressionCouplingFile);
 			genotypeToExpression = new HashMap<String, String>();
 			TextFile tf = new TextFile(genotypeToExpressionCouplingFile, TextFile.R);
 			String[] elems = tf.readLineElems(TextFile.tab);
@@ -63,11 +72,15 @@ public class QTLTest {
 				elems = tf.readLineElems(TextFile.tab);
 			}
 			tf.close();
+			System.out.println(genotypeToExpression.size() + " sample couplings loaded");
 		}
 
 		// initialize genotype reader
+
+		System.out.println("Initializing VCF reader: " + genotypeDataFile);
 		VCFGenotypeData genotypeVCF = new VCFGenotypeData(genotypeDataFile);
 		ArrayList<String> genotypeSamples = genotypeVCF.getSamples();
+		System.out.println(genotypeSamples.size());
 		HashSet<String> expressionSamplesToLoad = new HashSet<String>();
 		for (int i = 0; i < genotypeSamples.size(); i++) {
 			if (genotypeToExpression == null) {
@@ -79,30 +92,36 @@ public class QTLTest {
 				}
 			}
 		}
+		System.out.println(genotypeSamples.size() + " genotype samples, " + expressionSamplesToLoad.size() + " defined by limits");
 
 		// load covariates .. limit to samples present in genotype data
 		DoubleMatrixDataset<String, String> cov = null;
 		if (covDataFile != null) {
-			DoubleMatrixDataset.loadSubsetOfTextDoubleData(covDataFile, "\t", expressionSamplesToLoad, limitCovarariates);
+			System.out.println("Loading covariate data: " + covDataFile);
+			cov = DoubleMatrixDataset.loadSubsetOfTextDoubleData(covDataFile, "\t", limitCovarariates, expressionSamplesToLoad);
 			ArrayList<String> covariateSamples = cov.getColObjects();
 			expressionSamplesToLoad = new HashSet<String>();
 			expressionSamplesToLoad.addAll(covariateSamples);
+			System.out.println(expressionSamplesToLoad.size() + " samples with covariate and genotype data.");
 		}
 
 		// load gene expression data .. limit to samples present in both covariate and gene expression data
-		DoubleMatrixDataset<String, String> exp = DoubleMatrixDataset.loadSubsetOfTextDoubleData(expDataFile, "\t", expressionSamplesToLoad, limitGenes);
-		ArrayList<String> expressionSamples = exp.getRowObjects();
+		System.out.println("Loading expression data: " + expDataFile);
+		DoubleMatrixDataset<String, String> exp = DoubleMatrixDataset.loadSubsetOfTextDoubleData(expDataFile, "\t", limitGenes, expressionSamplesToLoad);
+		ArrayList<String> expressionSamples = exp.getColObjects();
 
 		if (expressionSamples.isEmpty()) {
 			System.err.println("Error: no samples remain after loading expression data. Probably a sample linking issue.");
 			System.exit(-1);
+		} else {
+			System.out.println(expressionSamplesToLoad.size() + " samples with covariate, genotype data, and expression data.");
 		}
 		expressionSamplesToLoad = new HashSet<String>();
 		expressionSamplesToLoad.addAll(expressionSamples);
 
 		// now we need to prune the covariate data with the gene expression samples. Quickest way is to just reload.
 		if (covDataFile != null) {
-			cov = DoubleMatrixDataset.loadSubsetOfTextDoubleData(covDataFile, "\t", expressionSamplesToLoad, null);
+			cov = DoubleMatrixDataset.loadSubsetOfTextDoubleData(covDataFile, "\t", limitCovarariates, expressionSamplesToLoad);
 		}
 
 		// put expression data in same order as expression data:
@@ -132,20 +151,39 @@ public class QTLTest {
 
 		// load the gene annotation
 		GTFAnnotation geneAnnotation = new GTFAnnotation(gtfAnnotationFile);
-		TreeSet<Gene> allGenes = geneAnnotation.getGeneTree();
+		Collection<Gene> allGenes = geneAnnotation.getGenes();
 
-		TreeSet<Gene> finalGeneSet = new TreeSet<>();
+
+		ArrayList<Gene> finalGeneSetArr = new ArrayList<>();
 		LinkedHashMap<String, Integer> expGeneHash = exp.getHashRows();
 		LinkedHashMap<Gene, Integer> geneToExpGene = new LinkedHashMap<Gene, Integer>();
 
+		HashSet<String> geneNamesFound = new HashSet<>();
 		for (Gene gene : allGenes) {
 			String name = gene.getGeneId();
+			if (name.contains("ENSG00000238009")) {
+				System.out.println("found it: ENSG00000238009.2");
+			}
 			if (expGeneHash.containsKey(name)) {
 				Integer id = expGeneHash.get(name);
-				finalGeneSet.add(gene);
+
+				finalGeneSetArr.add(gene);
 				geneToExpGene.put(gene, id);
+				geneNamesFound.add(name);
 			}
 		}
+
+		TreeSet<Gene> finalGeneSet = new TreeSet<>(new FeatureComparator(false));
+		finalGeneSet.addAll(finalGeneSetArr);
+
+		TextFile notfound = new TextFile(outfile + "-expressionNotFound.txt", TextFile.W);
+		ArrayList<String> expgenes = exp.getRowObjects();
+		for (String gene : expgenes) {
+			if (!geneNamesFound.contains(gene)) {
+				notfound.writeln(gene);
+			}
+		}
+		notfound.close();
 
 		if (geneToExpGene.isEmpty()) {
 			System.err.println("Error: no genes found. Probably a mismatch between annotation and gene expression file");
@@ -159,32 +197,46 @@ public class QTLTest {
 		// put the variants in a treemap
 		TreeSet<Feature> variantSet = new TreeSet<Feature>(new FeatureComparator(false));
 		LinkedHashMap<Feature, VCFVariant> allGenotypes = new LinkedHashMap<>();
+		System.out.println("Loading variants");
+		HashSet<Gene> genesOverlappingVariants = new HashSet<Gene>();
+		int variantctr = 0;
 		while (genotypeVCF.hasNext()) {
 			VCFVariant variant = genotypeVCF.next();
-			if (variant.getAlleles().length == 2
-					&& variant.getMAF() > mafThreshold
-					&& variant.getCallrate() > callrateThreshold) {
-				int minPosition = variant.getPos() - cisWindow;
-				if (minPosition < 0) {
-					minPosition = 0;
-				}
-				int maxPosition = variant.getPos() + cisWindow;
-				if (maxPosition > Integer.MAX_VALUE) {
-					maxPosition = Integer.MAX_VALUE;
-				}
+			Double impqual = variant.getInfo().get("AR2");
+			if (impqual == null || impqual > imputationqualthreshold) {
+				if (variant.getAlleles().length == 2
+						&& variant.getMAF() > mafThreshold
+						&& variant.getCallrate() > callrateThreshold) {
+					int minPosition = variant.getPos() - cisWindow;
+					if (minPosition < 0) {
+						minPosition = 0;
+					}
+					int maxPosition = variant.getPos() + cisWindow;
+					if (maxPosition > Integer.MAX_VALUE) {
+						maxPosition = Integer.MAX_VALUE;
+					}
 
-				// load only variants near genes
-				Chromosome chr = Chromosome.parseChr(variant.getChr());
-				Gene geneStart = new Gene("", chr, Strand.POS, minPosition, minPosition);
-				Gene geneStop = new Gene("", chr, Strand.POS, maxPosition, maxPosition);
-				SortedSet<Gene> overlappingGenes = finalGeneSet.subSet(geneStart, true, geneStop, true);
+					// load only variants near genes
+					Chromosome chr = Chromosome.parseChr(variant.getChr());
+					Gene geneStart = new Gene("", chr, Strand.POS, minPosition, minPosition);
+					Gene geneStop = new Gene("", chr, Strand.POS, maxPosition, maxPosition);
+					SortedSet<Gene> overlappingGenes = finalGeneSet.subSet(geneStart, true, geneStop, true);
 
-				if (!overlappingGenes.isEmpty()) {
-					variantSet.add(variant.asFeature());
-					allGenotypes.put(variant.asFeature(), variant);
+					if (!overlappingGenes.isEmpty()) {
+						genesOverlappingVariants.addAll(overlappingGenes);
+						variantSet.add(variant.asFeature());
+						allGenotypes.put(variant.asFeature(), variant);
+					}
 				}
 			}
+
+			variantctr++;
+			if (variantctr % 1000 == 0) {
+				System.out.print("\r" + variantctr + " variants parsed. " + allGenotypes.size() + " in memory");
+			}
 		}
+		System.out.println();
+		System.out.println("Done loading genotypes");
 		genotypeVCF.close();
 
 		if (allGenotypes.isEmpty()) {
@@ -195,17 +247,20 @@ public class QTLTest {
 		// prepare a matrix for the genotypes/covariates
 		double[][] x = null;
 		if (cov != null) {
-			x = new double[newSampleOrder.size()][cov.columns() + 1]; // [sample][genotype + covariates]
+			x = new double[newSampleOrder.size()][cov.rows() + 1]; // [sample][genotype + covariates]
 
-			// assume covariates are loaded as [sample][covariate]
+
+			// assume covariates are loaded as [covariate][sample]
 			for (int i = 0; i < cov.rows(); i++) {
 				for (int j = 0; j < cov.columns(); j++) {
-					x[i][j + 1] = cov.getElement(i, j);
+					x[j][i + 1] = cov.getElement(i, j);
 				}
 			}
 		} else {
 			x = new double[newSampleOrder.size()][1];
 		}
+
+		System.out.println("Size of X: " + x.length + "x" + x[0].length);
 
 		// some libs for the regression...
 		OLSMultipleLinearRegression ols = new OLSMultipleLinearRegression();
@@ -220,33 +275,42 @@ public class QTLTest {
 		outTop.writeln(header);
 
 		System.out.println("Starting calculations...");
+		if (tDistColt == null) {
+			randomEngine = new cern.jet.random.tdouble.engine.DRand();
+			int df = x.length - (x[0].length + 1);
+			System.out.println("Creating new tDist with " + df + " degrees of freedom..");
+			tDistColt = new cern.jet.random.tdouble.StudentT(df, randomEngine); // df: nrsamples - nr parameters to estimate (== nr covariates + intercept)
+		}
+
+		ArrayList<Gene> tmpGeneList = new ArrayList<>();
+		for (Gene g : finalGeneSetArr) {
+			if (genesOverlappingVariants.contains(g)) {
+				tmpGeneList.add(g);
+			}
+		}
+		finalGeneSetArr = tmpGeneList;
 
 		// iterate the available genes
-		ProgressBar pb = new ProgressBar(finalGeneSet.size());
-		for (Gene g : finalGeneSet) {
+		ProgressBar pb = new ProgressBar(finalGeneSetArr.size());
+		int genectr = 0;
+		for (Gene g : finalGeneSetArr) {
 			// get expression ID
-			Integer expressionId = geneToExpGene.get(g.getGeneId());
+			Integer expressionId = geneToExpGene.get(g);
 			if (expressionId == null) {
 				// all genes in the finalGeneSet should have at least one expression gene id
-				System.out.println("Something weird is going on");
+				System.out.println("Something weird is going on: " + g.getGeneId() + " not found in expression data");
 				System.exit(-1);
 			} else {
 
 				StringBuilder geneHeader = new StringBuilder();
 				geneHeader.append(g.getGeneId());
 				geneHeader.append("\t").append(g.getName());
-				geneHeader.append("\t").append(g.getName());
 				geneHeader.append("\t").append(g.getChromosome().getName());
 				geneHeader.append("\t").append(g.getStart());
 				geneHeader.append("\t").append(g.getStop());
 				geneHeader.append("\t").append(g.getStrand().getName());
 
-
 				double[] y = exp.getMatrix().viewRow(expressionId).toArray();
-				if (tDistColt == null) {
-					randomEngine = new cern.jet.random.tdouble.engine.DRand();
-					tDistColt = new cern.jet.random.tdouble.StudentT(y.length - (x[0].length + 1), randomEngine); // df: nrsamples - nr parameters to estimate (== nr covariates + intercept)
-				}
 
 				// -- get a list of variants within 1mb
 				Strand strand = g.getStrand();
@@ -267,6 +331,7 @@ public class QTLTest {
 				}
 				SortedSet<Feature> overlappingVariants = variantSet.subSet(featureStart, true, featureStop, true);
 
+				System.out.println(genectr + "/" + finalGeneSetArr.size() + "\t" + g.getGeneId() + "\t" + overlappingVariants.size());
 				if (!overlappingVariants.isEmpty()) {
 					Feature[] overlappingVariantsArr = new Feature[overlappingVariants.size()];
 					int fctr = 0;
@@ -282,6 +347,7 @@ public class QTLTest {
 					// iterate the variants within the region
 					VCFVariant topSNP = null;
 //					double[] topEffectsPerPermutation = new double[nrPermutationsPerVariant];
+
 
 					for (int permutation = -1; permutation < nrPermutationsPerVariant; permutation++) {
 						double minP = 1;
@@ -317,25 +383,34 @@ public class QTLTest {
 							double seSNP = regressionStandardErrors[1];
 
 							Pair<Double, Double> pair = convertBetaToP(betaSNP, seSNP, tDistColt);
-							double pSNP = pair.getLeft();
+							if (!pair.equals(NAN_PAIR)) {
+								double pSNP = pair.getLeft();
 
-							// create a result object
-							if (permutation == -1) {
-								results[f] = new AssociationResult();
-								results[f].setBeta(new double[]{betaSNP});
-								results[f].setSe(new double[]{seSNP});
-								results[f].setPval(pSNP);
-							}
-
-							// -- keep lowest pval, because meh
-							if (pSNP < minP) {
+								// create a result object
 								if (permutation == -1) {
-									topSNP = variant;
+									results[f] = new AssociationResult();
+									results[f].setBeta(new double[]{betaSNP});
+									results[f].setSe(new double[]{seSNP});
+									results[f].setPval(pSNP);
 								}
+
+								// -- keep lowest pval, because meh
+								if (pSNP < minP) {
+									if (permutation == -1) {
+										topSNP = variant;
+									}
 //								else {
 //									topEffectsPerPermutation[permutation] = minP;
 //								}
-								minP = pSNP;
+									minP = pSNP;
+								}
+							} else {
+								if (permutation == -1) {
+									results[f] = new AssociationResult();
+									results[f].setBeta(new double[]{betaSNP});
+									results[f].setSe(new double[]{seSNP});
+									results[f].setPval(1);
+								}
 							}
 						}
 
@@ -345,7 +420,9 @@ public class QTLTest {
 								nrPValsLowerInPermutation[f]++;
 							}
 						}
+						System.out.print("\rPermutation: " + permutation);
 					}
+					System.out.println();
 
 					for (int f = 0; f < overlappingVariantsArr.length; f++) {
 						// write the result (if it is not null)
@@ -409,7 +486,9 @@ public class QTLTest {
 				}
 			}
 			pb.iterate();
+			genectr++;
 		}
+		pb.close();
 		outAll.close();
 		outTop.close();
 	}
@@ -452,7 +531,8 @@ public class QTLTest {
 					System.err.println("ERROR: this method does currently not work with missing genotypes. Please impute the data.");
 					System.exit(-1);
 				}
-				x[ctr][i] = dosages[i][0];
+				double dosage = dosages[i][0];
+				x[ctr][0] = dosage; // x has structure [samples][covariates]
 				ctr++;
 			}
 		}
