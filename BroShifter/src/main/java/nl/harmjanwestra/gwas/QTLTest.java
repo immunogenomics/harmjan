@@ -290,7 +290,7 @@ public class QTLTest {
 		CompletionService<QTLOutput> jobHandler = new ExecutorCompletionService<QTLOutput>(threadPool);
 
 		// iterate the available genes
-		System.out.println(finalGeneSetArr + " genes near SNPs for this VCF...");
+		System.out.println(finalGeneSetArr.size() + " genes near SNPs for this VCF...");
 		int submitted = 0;
 		for (Gene g : finalGeneSetArr) {
 			QTLTask task = new QTLTask(options, g, geneToExpGene, exp, variantSet, includeGenotypeSample, x, allGenotypes, tDistColt, permutationSeedNumber);
@@ -341,7 +341,7 @@ public class QTLTest {
 							}
 						}
 						if (output.getTopOut() != null) {
-							outTop.writeln(output.getTopOut());
+							outTop.write(output.getTopOut());
 						}
 
 						updateDist(genomeWideNull, output.getGeneWideNull());
@@ -349,7 +349,7 @@ public class QTLTest {
 						updateDist(topNull, output.getTopNull());
 						updateDist(topReal, output.getTopReal());
 					}
-					pb.iterate();
+					pb.set(received);
 				}
 
 			} catch (InterruptedException e) {
@@ -367,10 +367,19 @@ public class QTLTest {
 		double[] genomewideFDR = calculateFDR(genomeWideReal, genomeWideNull);
 		double[] topFDR = calculateFDR(topReal, topNull);
 
-		TextFile distOut = new TextFile(outfile + "-dists.txt", TextFile.W);
+		TextFile distOut = new TextFile(outfile + "-dists.txt.gz", TextFile.W);
 		distOut.writeln("Bin\tPval\tNReal\tNPerm\tFDR\tNRealTop\tNPermTop\tFDRTop");
+
 		for (int i = 0; i < genomeWideReal.length; i++) {
-			distOut.writeln(i + "\t" + 0
+			double p = Math.pow(10, -((double) i / 10000));
+			if (i == 0) {
+				p = 1;
+			}
+			if (i == genomeWideReal.length - 1) {
+				p = 0;
+			}
+
+			distOut.writeln(i + "\t" + p
 					+ "\t" + genomeWideReal[i]
 					+ "\t" + genomeWideNull[i]
 					+ "\t" + genomewideFDR[i]
@@ -380,6 +389,29 @@ public class QTLTest {
 		}
 		distOut.close();
 
+		int binTop = 0;
+		int binGW = 0;
+		for (int i = genomeWideReal.length - 1; i > -1; i--) {
+			if (genomewideFDR[i] >= 0.05) {
+				binGW = i;
+				break;
+			}
+		}
+		for (int i = genomeWideReal.length - 1; i > -1; i--) {
+			if (topFDR[i] >= 0.05) {
+				binTop = i;
+				break;
+			}
+		}
+
+		System.out.println("Thresholds using per gene FDR: " + binToP(binTop));
+		System.out.println("Thresholds using GW FDR: " + binToP(binGW));
+
+	}
+
+	private double binToP(int bin) {
+		double p = Math.pow(10, -((double) bin / 10000));
+		return p;
 	}
 
 	private void updateDist(int[] distIn, int[] update) {
@@ -750,7 +782,11 @@ public class QTLTest {
 
 		double[] fdr = new double[options.distsize];
 		for (int i = options.distsize - 1; i > -1; i--) {
-			fdr[i] = (double) cumulativeNull[i] / cumulativeReal[i];
+			if (cumulativeReal[i] > 0 && cumulativeNull[i] > 0) {
+				fdr[i] = ((double) cumulativeNull[i] / options.nrpermutationspergene) / cumulativeReal[i];
+			} else if (cumulativeReal[i] > 0 && cumulativeNull[i] == 0) {
+				fdr[i] = 0;
+			}
 		}
 
 		return fdr;
