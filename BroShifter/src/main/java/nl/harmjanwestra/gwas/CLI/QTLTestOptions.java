@@ -100,14 +100,21 @@ public class QTLTestOptions {
 
 		option = Option.builder()
 				.longOpt("impqual")
-				.desc("Imputation quality (AR2) threshold [default 0.3]")
+				.desc("Imputation quality (AR2) threshold [default: 0.3]")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("perm")
-				.desc("Number of permutations per gene [default 1000]")
+				.desc("Number of permutations per gene [default: 1000]")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("threads")
+				.desc("Number of threads to use [default: 1]")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
@@ -127,6 +134,8 @@ public class QTLTestOptions {
 	public double callratethreshold = 0.95;
 	public int nrpermutationspergene = 1000;
 	public double impqualthreshold = 0.3;
+	public int nrThreads = 1;
+	public int distsize = 1000000;
 
 
 	public QTLTestOptions(String[] args) {
@@ -200,6 +209,10 @@ public class QTLTestOptions {
 
 			if (cmd.hasOption("perm")) {
 				this.nrpermutationspergene = Integer.parseInt(cmd.getOptionValue("perm"));
+			}
+
+			if (cmd.hasOption("threads")) {
+				this.nrThreads = Integer.parseInt(cmd.getOptionValue("threads"));
 			}
 
 

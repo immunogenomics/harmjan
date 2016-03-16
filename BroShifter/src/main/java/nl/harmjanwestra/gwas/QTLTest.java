@@ -10,6 +10,7 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
+import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.matrix2.DoubleMatrixDataset;
 import umcg.genetica.math.stats.ZScores;
@@ -17,6 +18,7 @@ import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Created by hwestra on 3/14/16.
@@ -48,7 +50,12 @@ public class QTLTest {
 
 		int cisWindow = options.ciswindow;
 		Random random = new Random();
-		Long permutationSeedNumber = random.nextLong(); // To think about: do we want a fixed order in our permutations? if so, each permutation should get a unique seed, shared between each gene
+		long[] permutationSeedNumber = new long[options.nrpermutationspergene];
+		for (int i = 0; i < permutationSeedNumber.length; i++) {
+			permutationSeedNumber[i] = random.nextLong(); // To think about: do we want a fixed order in our permutations? if so, each permutation should get a unique seed, shared between each gene
+		}
+
+
 		double mafThreshold = options.mafthreshold;
 		double callrateThreshold = options.callratethreshold;
 		int nrPermutationsPerVariant = options.nrpermutationspergene;
@@ -161,9 +168,6 @@ public class QTLTest {
 		HashSet<String> geneNamesFound = new HashSet<>();
 		for (Gene gene : allGenes) {
 			String name = gene.getGeneId();
-			if (name.contains("ENSG00000238009")) {
-				System.out.println("found it: ENSG00000238009.2");
-			}
 			if (expGeneHash.containsKey(name)) {
 				Integer id = expGeneHash.get(name);
 
@@ -248,8 +252,6 @@ public class QTLTest {
 		double[][] x = null;
 		if (cov != null) {
 			x = new double[newSampleOrder.size()][cov.rows() + 1]; // [sample][genotype + covariates]
-
-
 			// assume covariates are loaded as [covariate][sample]
 			for (int i = 0; i < cov.rows(); i++) {
 				for (int j = 0; j < cov.columns(); j++) {
@@ -263,16 +265,9 @@ public class QTLTest {
 		System.out.println("Size of X: " + x.length + "x" + x[0].length);
 
 		// some libs for the regression...
-		OLSMultipleLinearRegression ols = new OLSMultipleLinearRegression();
 		cern.jet.random.tdouble.engine.DoubleRandomEngine randomEngine = null;
 		cern.jet.random.tdouble.StudentT tDistColt = null;
 
-		// output files
-		TextFile outAll = new TextFile(outfile + "-all.txt", TextFile.W);
-		TextFile outTop = new TextFile(outfile + "-top.txt", TextFile.W);
-		String header = "Gene\tHugo\tChr\tStart\tStop\tStrand\tSNP\tPos\tBeta\tSe\tZ\tP\tPermutationP";
-		outAll.writeln(header);
-		outTop.writeln(header);
 
 		System.out.println("Starting calculations...");
 		if (tDistColt == null) {
@@ -290,10 +285,233 @@ public class QTLTest {
 		}
 		finalGeneSetArr = tmpGeneList;
 
+		// threadpool
+		ExecutorService threadPool = Executors.newFixedThreadPool(options.nrThreads);
+		CompletionService<QTLOutput> jobHandler = new ExecutorCompletionService<QTLOutput>(threadPool);
+
 		// iterate the available genes
-		ProgressBar pb = new ProgressBar(finalGeneSetArr.size());
-		int genectr = 0;
+		System.out.println(finalGeneSetArr + " genes near SNPs for this VCF...");
+		int submitted = 0;
 		for (Gene g : finalGeneSetArr) {
+			QTLTask task = new QTLTask(options, g, geneToExpGene, exp, variantSet, includeGenotypeSample, x, allGenotypes, tDistColt, permutationSeedNumber);
+			jobHandler.submit(task);
+			submitted++;
+		}
+
+
+		int[] genomeWideNull = new int[options.distsize];
+		int[] genomeWideReal = new int[options.distsize];
+		int[] topNull = new int[options.distsize];
+		int[] topReal = new int[options.distsize];
+
+		// output files
+		TextFile outAll = new TextFile(outfile + "-all.txt.gz", TextFile.W);
+		TextFile outTop = new TextFile(outfile + "-top.txt.gz", TextFile.W);
+		String header = "GeneId" +
+				"\tGeneSymbol" +
+				"\tChr" +
+				"\tStart" +
+				"\tStop" +
+				"\tStrand" +
+				"\tSNP" +
+				"\tPos" +
+				"\tBeta" +
+				"\tSe" +
+				"\tZ" +
+				"\tP" +
+				"\tFractionLowerPvalObservedInPermForSNP" +
+				"\tFractionPvalLowerThanLowestPermutedP" +
+				"\tWithinGeneFDR";
+		outAll.writeln(header);
+		outTop.writeln(header);
+
+		int received = 0;
+		ProgressBar pb = new ProgressBar(submitted, "Running tasks with " + options.nrThreads + " threads");
+		while (received < submitted) {
+			try {
+				Future<QTLOutput> future = jobHandler.take();
+				if (future != null) {
+					QTLOutput output = future.get();
+					received++;
+					if (output != null) {
+						String[] textOut = output.getOutput();
+						for (int i = 0; i < textOut.length; i++) {
+							if (textOut[i] != null) {
+								outAll.write(textOut[i]);
+							}
+						}
+						if (output.getTopOut() != null) {
+							outTop.writeln(output.getTopOut());
+						}
+
+						updateDist(genomeWideNull, output.getGeneWideNull());
+						updateDist(genomeWideReal, output.getGeneWideReal());
+						updateDist(topNull, output.getTopNull());
+						updateDist(topReal, output.getTopReal());
+					}
+					pb.iterate();
+				}
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		pb.close();
+		outAll.close();
+		outTop.close();
+
+		threadPool.shutdown();
+
+		double[] genomewideFDR = calculateFDR(genomeWideReal, genomeWideNull);
+		double[] topFDR = calculateFDR(topReal, topNull);
+
+		TextFile distOut = new TextFile(outfile + "-dists.txt", TextFile.W);
+		distOut.writeln("Bin\tPval\tNReal\tNPerm\tFDR\tNRealTop\tNPermTop\tFDRTop");
+		for (int i = 0; i < genomeWideReal.length; i++) {
+			distOut.writeln(i + "\t" + 0
+					+ "\t" + genomeWideReal[i]
+					+ "\t" + genomeWideNull[i]
+					+ "\t" + genomewideFDR[i]
+					+ "\t" + topReal[i]
+					+ "\t" + topNull[i]
+					+ "\t" + topFDR[i]);
+		}
+		distOut.close();
+
+	}
+
+	private void updateDist(int[] distIn, int[] update) {
+		for (int i = 0; i < distIn.length; i++) {
+			distIn[i] += update[i];
+		}
+	}
+
+	private final Pair<Double, Double> NAN_PAIR = new Pair<Double, Double>(Double.NaN, Double.NaN);
+
+	private Pair<Double, Double> convertBetaToP(double beta, double se, StudentT tDistColt) {
+
+		if (Double.isNaN(beta)) {
+			return NAN_PAIR;
+		}
+
+		double t = beta / se;
+		double p = 1;
+		double z = 0;
+		if (t < 0) {
+			p = tDistColt.cdf(t);
+			if (p < 2.0E-323) {
+				p = 2.0E-323;
+
+			}
+			z = cern.jet.stat.Probability.normalInverse(p);
+		} else {
+			p = tDistColt.cdf(-t);
+			if (p < 2.0E-323) {
+				p = 2.0E-323;
+
+			}
+			z = -cern.jet.stat.Probability.normalInverse(p);
+		}
+		return new Pair<Double, Double>(p, z);
+	}
+
+
+	class QTLOutput {
+
+		private int[] geneWideReal;
+		private int[] geneWideNull;
+
+		private String[] output;
+
+		private String topOut;
+
+		private int[] topReal;
+		private int[] topNull;
+
+		public QTLOutput(int[] geneWideReal, int[] geneWideNull, String[] output, String topOut, int[] topReal, int[] topNull) {
+			this.geneWideReal = geneWideReal;
+			this.geneWideNull = geneWideNull;
+			this.output = output;
+			this.topOut = topOut;
+			this.topReal = topReal;
+			this.topNull = topNull;
+		}
+
+		public int[] getGeneWideReal() {
+			return geneWideReal;
+		}
+
+		public int[] getGeneWideNull() {
+			return geneWideNull;
+		}
+
+		public String[] getOutput() {
+			return output;
+		}
+
+		public String getTopOut() {
+			return topOut;
+		}
+
+		public int[] getTopReal() {
+			return topReal;
+		}
+
+		public int[] getTopNull() {
+			return topNull;
+		}
+	}
+
+	class QTLTask implements Callable<QTLOutput> {
+
+
+		private final QTLTestOptions options;
+		private final Gene g;
+		private final HashMap<Gene, Integer> geneToExpGene;
+		private final DoubleMatrixDataset<String, String> exp;
+		private final TreeSet<Feature> variantSet;
+		private final boolean[] includeGenotypeSample;
+		private final double[][] xOrig;
+		private final LinkedHashMap<Feature, VCFVariant> allGenotypes;
+		private final cern.jet.random.tdouble.StudentT tDistColt;
+
+		private final long[] permutationSeedNumber;
+
+		public QTLTask(QTLTestOptions options,
+					   Gene g,
+					   HashMap<Gene, Integer> geneToExpGene,
+					   DoubleMatrixDataset<String, String> exp,
+					   TreeSet<Feature> variantSet,
+					   boolean[] includeGenotypeSample,
+					   double[][] x,
+					   LinkedHashMap<Feature, VCFVariant> allGenotypes,
+					   cern.jet.random.tdouble.StudentT tDistColt,
+					   long[] permutationSeedNumber) {
+			this.options = options;
+			this.g = g;
+			this.geneToExpGene = geneToExpGene;
+			this.exp = exp;
+			this.variantSet = variantSet;
+			this.includeGenotypeSample = includeGenotypeSample;
+			this.xOrig = x;
+			this.allGenotypes = allGenotypes;
+			this.tDistColt = tDistColt;
+			this.permutationSeedNumber = permutationSeedNumber;
+		}
+
+		@Override
+		public QTLOutput call() throws Exception {
+
+			int cisWindow = options.ciswindow;
+			int nrPermutationsPerVariant = options.nrpermutationspergene;
+
+			int[] geneWideReal = new int[options.distsize];
+			int[] geneWideNull = new int[options.distsize];
+			int[] topNull = new int[options.distsize];
+			int[] topReal = new int[options.distsize];
+
 			// get expression ID
 			Integer expressionId = geneToExpGene.get(g);
 			if (expressionId == null) {
@@ -331,8 +549,20 @@ public class QTLTest {
 				}
 				SortedSet<Feature> overlappingVariants = variantSet.subSet(featureStart, true, featureStop, true);
 
-				System.out.println(genectr + "/" + finalGeneSetArr.size() + "\t" + g.getGeneId() + "\t" + overlappingVariants.size());
 				if (!overlappingVariants.isEmpty()) {
+
+					String[] output = new String[overlappingVariants.size()];
+					String topOut = null;
+
+					// copy x
+					double[][] x = new double[xOrig.length][xOrig[0].length];
+					for (int i = 0; i < x.length; i++) {
+						for (int j = 0; j < x[0].length; j++) {
+							x[i][j] = xOrig[i][j];
+						}
+					}
+
+
 					Feature[] overlappingVariantsArr = new Feature[overlappingVariants.size()];
 					int fctr = 0;
 					for (Feature f : overlappingVariants) {
@@ -340,15 +570,13 @@ public class QTLTest {
 						fctr++;
 					}
 
+					int[] numberOfTimesPvalueLowerThanLowestPermutedPval = new int[overlappingVariantsArr.length];
+					int[] numberOfTimesPvalueLowerThanSNPPermutedPval = new int[overlappingVariantsArr.length];
 
-					int[] nrPValsLowerInPermutation = new int[overlappingVariantsArr.length];
 					AssociationResult[] results = new AssociationResult[overlappingVariantsArr.length];
-
 					// iterate the variants within the region
 					VCFVariant topSNP = null;
-//					double[] topEffectsPerPermutation = new double[nrPermutationsPerVariant];
-
-
+					OLSMultipleLinearRegression ols = new OLSMultipleLinearRegression();
 					for (int permutation = -1; permutation < nrPermutationsPerVariant; permutation++) {
 						double minP = 1;
 
@@ -359,7 +587,7 @@ public class QTLTest {
 							for (int i = 0; i < y.length; i++) {
 								tmp.add(y[i]);
 							}
-							Collections.shuffle(tmp, new Random(permutationSeedNumber)); // we can fix the seed per permutation
+							Collections.shuffle(tmp, new Random(permutationSeedNumber[permutation])); // we can fix the seed per permutation
 							y = Primitives.toPrimitiveArr(tmp.toArray(new Double[0]));
 						}
 
@@ -386,12 +614,21 @@ public class QTLTest {
 							if (!pair.equals(NAN_PAIR)) {
 								double pSNP = pair.getLeft();
 
-								// create a result object
+								int bin = getBin(pSNP);
+
+
 								if (permutation == -1) {
 									results[f] = new AssociationResult();
 									results[f].setBeta(new double[]{betaSNP});
 									results[f].setSe(new double[]{seSNP});
 									results[f].setPval(pSNP);
+									geneWideReal[bin]++;
+								} else {
+									double realP = results[f].getPval();
+									if (realP < pSNP) {
+										numberOfTimesPvalueLowerThanSNPPermutedPval[f]++;
+									}
+									geneWideNull[bin]++;
 								}
 
 								// -- keep lowest pval, because meh
@@ -399,9 +636,6 @@ public class QTLTest {
 									if (permutation == -1) {
 										topSNP = variant;
 									}
-//								else {
-//									topEffectsPerPermutation[permutation] = minP;
-//								}
 									minP = pSNP;
 								}
 							} else {
@@ -417,12 +651,20 @@ public class QTLTest {
 						for (int f = 0; f < overlappingVariantsArr.length; f++) {
 							double p = results[f].getPval();
 							if (p < minP) {
-								nrPValsLowerInPermutation[f]++;
+								numberOfTimesPvalueLowerThanLowestPermutedPval[f]++;
 							}
 						}
-						System.out.print("\rPermutation: " + permutation);
+
+						int topBin = getBin(minP);
+						if (permutation > -1) {
+							topNull[topBin]++;
+						} else {
+							topReal[topBin]++;
+						}
 					}
-					System.out.println();
+
+
+					double[] fdr = calculateFDR(geneWideReal, geneWideNull);
 
 					for (int f = 0; f < overlappingVariantsArr.length; f++) {
 						// write the result (if it is not null)
@@ -438,105 +680,102 @@ public class QTLTest {
 						snpBuilder.append("\t").append(results[f].getSe()[0]);
 						snpBuilder.append("\t").append(z);
 						snpBuilder.append("\t").append(results[f].getPval());
-						double permutationP = (double) nrPValsLowerInPermutation[f] / nrPermutationsPerVariant;
+						double permutationP = (double) numberOfTimesPvalueLowerThanSNPPermutedPval[f] / nrPermutationsPerVariant;
 						snpBuilder.append("\t").append(permutationP);
-						outAll.append(geneHeader);
-						outAll.append("\t");
-						outAll.append(snpBuilder);
-						outAll.append("\n");
+
+						permutationP = (double) numberOfTimesPvalueLowerThanLowestPermutedPval[f] / nrPermutationsPerVariant;
+						snpBuilder.append("\t").append(permutationP);
+
+						int bin = getBin(results[f].getPval());
+						snpBuilder.append("\t").append(fdr[bin]);
+
+						StringBuilder outBuilder = new StringBuilder();
+						output[f] = outBuilder.append(geneHeader).append("\t").append(snpBuilder).append("\n").toString();
 
 						if (variant.equals(topSNP)) {
-							outTop.append(geneHeader);
-							outTop.append("\t");
-							outTop.append(snpBuilder);
-							outTop.append("\n");
+							topOut = output[f];
 						}
 					}
-
-//					// write the top effect if there is any
-//					if (topSNP != null) {
-//						// permutations are done.
-//						// determine likelihood of lowest pval
-//						Arrays.sort(topEffectsPerPermutation);
-//						int nrLower = 0;
-//						for (int i = 0; i < nrPermutationsPerVariant; i++) {
-//							if (topResult.getPval() < topEffectsPerPermutation[i]) {
-//								nrLower++;
-//							} else {
-//								break;
-//							}
-//						}
-//						double permutationP = (double) nrLower / nrPermutationsPerVariant;
-//
-//						// output top effect for this gene.
-//						StringBuilder snpBuilder = new StringBuilder();
-//						snpBuilder.append(topSNP.getId());
-//						snpBuilder.append("\t").append(topSNP.getPos());
-//						snpBuilder.append("\t").append(topResult.getBeta());
-//						snpBuilder.append("\t").append(topResult.getSe());
-//						snpBuilder.append("\t").append(ZScores.pToZ(topResult.getPval()));
-//						snpBuilder.append("\t").append(topResult.getPval());
-//						snpBuilder.append("\t").append(permutationP);
-//
-//						outTop.append(geneHeader);
-//						outTop.append("\t");
-//						outTop.append(snpBuilder);
-//						outTop.append("\n");
-//					}
+					return new QTLOutput(geneWideReal, geneWideNull, output, topOut, topReal, topNull);
 				}
 			}
-			pb.iterate();
-			genectr++;
+			return null;
 		}
-		pb.close();
-		outAll.close();
-		outTop.close();
+
+
+		private void updateX(double[][] x, VCFVariant variant, boolean[] includeGenotypeSample) {
+			double[][] dosages = variant.getImputedDosages(); // [samples][alleles]
+			int ctr = 0;
+			for (int i = 0; i < dosages.length; i++) {
+				if (includeGenotypeSample[i]) {
+					if (dosages[i][0] == -1) {
+						System.err.println("ERROR: this method does currently not work with missing genotypes. Please impute the data.");
+						System.exit(-1);
+					}
+					double dosage = dosages[i][0];
+					x[ctr][0] = dosage; // x has structure [samples][covariates]
+					ctr++;
+				}
+			}
+
+		}
 	}
 
-	private final Pair<Double, Double> NAN_PAIR = new Pair<Double, Double>(Double.NaN, Double.NaN);
+	private double[] calculateFDR(int[] realDist, int[] nullDist) {
+		// determine gene-wide FDR
+		int[] cumulativeReal = new int[options.distsize];
+		int sumReal = 0;
+		int[] cumulativeNull = new int[options.distsize];
+		int sumNull = 0;
 
-	private Pair<Double, Double> convertBetaToP(double beta, double se, StudentT tDistColt) {
+		// these distributions are inverted..
+		for (int i = options.distsize - 1; i > -1; i--) {
+			if (i == options.distsize - 1) {
+				cumulativeReal[i] = realDist[i];
+				cumulativeNull[i] = nullDist[i];
+			} else {
+				cumulativeReal[i] = cumulativeReal[i + 1] + realDist[i];
+				sumReal += realDist[i];
+				cumulativeNull[i] = cumulativeNull[i + 1] + nullDist[i];
+				sumNull += nullDist[i];
+			}
 
-		if (Double.isNaN(beta)) {
-			return NAN_PAIR;
 		}
 
-		double t = beta / se;
-		double p = 1;
-		double z = 0;
-		if (t < 0) {
-			p = tDistColt.cdf(t);
-			if (p < 2.0E-323) {
-				p = 2.0E-323;
+		// check whether the same number of tests have been performed
+		if (sumNull / options.nrpermutationspergene != sumReal) {
+			System.err.println("Error counting tests: " + sumNull + " null " + sumReal + " real");
+			System.exit(-1);
+		}
 
-			}
-			z = cern.jet.stat.Probability.normalInverse(p);
+		double[] fdr = new double[options.distsize];
+		for (int i = options.distsize - 1; i > -1; i--) {
+			fdr[i] = (double) cumulativeNull[i] / cumulativeReal[i];
+		}
+
+		return fdr;
+
+	}
+
+	private int getBin(double pSNP) {
+		int bin = 0;
+		if (pSNP == 1) {
+			bin = 0;
+		} else if (pSNP == 0) {
+			bin = options.distsize - 1;
 		} else {
-			p = tDistColt.cdf(-t);
-			if (p < 2.0E-323) {
-				p = 2.0E-323;
-
+			double log10p = -Math.log10(pSNP);
+			if (log10p > 100) {
+				log10p = 100;
 			}
-			z = -cern.jet.stat.Probability.normalInverse(p);
-		}
-		return new Pair<Double, Double>(p, z);
-	}
-
-	private void updateX(double[][] x, VCFVariant variant, boolean[] includeGenotypeSample) {
-		double[][] dosages = variant.getImputedDosages(); // [samples][alleles]
-		int ctr = 0;
-		for (int i = 0; i < dosages.length; i++) {
-			if (includeGenotypeSample[i]) {
-				if (dosages[i][0] == -1) {
-					System.err.println("ERROR: this method does currently not work with missing genotypes. Please impute the data.");
-					System.exit(-1);
-				}
-				double dosage = dosages[i][0];
-				x[ctr][0] = dosage; // x has structure [samples][covariates]
-				ctr++;
+			bin = (int) Math.ceil(log10p * 10000);
+			if (bin >= options.distsize) {
+				bin = options.distsize - 1;
+			} else if (bin < 0) {
+				bin = 0;
 			}
 		}
-
+		return bin;
 	}
 
 
