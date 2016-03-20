@@ -567,8 +567,8 @@ public class VCFFunctions {
 	}
 
 	public Pair<byte[][], String[]> loadVCFGenotypes(String vcf,
-	                                                 HashMap<String, Integer> sampleMap,
-	                                                 HashMap<Feature, Integer> variantMap) throws IOException {
+													 HashMap<String, Integer> sampleMap,
+													 HashMap<Feature, Integer> variantMap) throws IOException {
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -869,12 +869,12 @@ public class VCFFunctions {
 
 
 	public void filterLowFrequencyVariants(String sequencingVCF,
-	                                       String outputdir,
-	                                       String famfile, boolean filterGT,
-	                                       int minimalReadDepth,
-	                                       int minimalGenotypeQual,
-	                                       double callratethreshold,
-	                                       int minObservationsPerAllele) throws IOException {
+										   String outputdir,
+										   String famfile, boolean filterGT,
+										   int minimalReadDepth,
+										   int minimalGenotypeQual,
+										   double callratethreshold,
+										   int minObservationsPerAllele) throws IOException {
 
 
 		PedAndMapFunctions pm = new PedAndMapFunctions();
@@ -1758,6 +1758,7 @@ public class VCFFunctions {
 		ArrayList<Feature> set = fun.readRegionFile(regionFile);
 
 		TextFile vcfoutf = new TextFile(referenceOut, TextFile.W);
+		TextFile vcfoutf2 = new TextFile(referenceOut + "-filterdOutVariants.txt", TextFile.W);
 		TextFile vcftf = new TextFile(vcfIn, TextFile.R);
 		int nrHeaderElems = 9;
 		String ln = vcftf.readLine();
@@ -1789,6 +1790,8 @@ public class VCFFunctions {
 				if (overlap) {
 					vcfoutf.writeln(ln);
 					saved++;
+				} else {
+					vcfoutf2.writeln(Strings.concat(elems, Strings.tab, 0, 9));
 				}
 				parsed++;
 
@@ -1799,7 +1802,9 @@ public class VCFFunctions {
 
 			ln = vcftf.readLine();
 		}
+
 		vcfoutf.close();
+		vcfoutf2.close();
 		vcftf.close();
 
 		System.out.println(saved + "/" + parsed + " written");
