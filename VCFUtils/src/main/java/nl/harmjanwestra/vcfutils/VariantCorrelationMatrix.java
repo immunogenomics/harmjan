@@ -2,21 +2,22 @@ package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Correlation;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Created by Harm-Jan on 02/27/16.
  */
 public class VariantCorrelationMatrix {
 
-	public void correlate(String vcf, String bedregion, String out) throws IOException {
+	public void correlate(String vcf, String bedregion, String out, boolean printheaders) throws IOException {
 
 
 		Feature region = new Feature();
@@ -55,10 +56,15 @@ public class VariantCorrelationMatrix {
 		}
 		vcfin.close();
 
+		// sort variants by position
+		Collections.sort(variants, new VCFVariantComparator());
+
 		System.out.println(variants.size() + " variants in region " + region.toString());
 
-		double[][] matrix = new double[variants.size()][variants.size()];
+		System.out.println("Sorting variants");
+		Collections.sort(variants, new VCFVariantComparator());
 
+		double[][] matrix = new double[variants.size()][variants.size()];
 		for (int i = 0; i < variants.size(); i++) {
 			double[] genotypes1 = convertToDouble(variants.get(i));
 			for (int j = i + 1; j < variants.size(); j++) {
@@ -72,10 +78,11 @@ public class VariantCorrelationMatrix {
 			}
 		}
 
-		savematrix(matrix, out);
+		savematrix(matrix, variants, printheaders, out);
 		savelist(variants, out);
 
 	}
+
 
 	private void savelist(ArrayList<VCFVariant> variants, String out) throws IOException {
 		TextFile tfout = new TextFile(out + "-variantlist.txt", TextFile.W);
@@ -85,10 +92,21 @@ public class VariantCorrelationMatrix {
 		tfout.close();
 	}
 
-	private void savematrix(double[][] matrix, String out) throws IOException {
+	private void savematrix(double[][] matrix, ArrayList<VCFVariant> variants, boolean printheaders, String out) throws IOException {
 		TextFile tfout = new TextFile(out, TextFile.W);
+		if (printheaders) {
+			String header = "-";
+			for (int i = 0; i < variants.size(); i++) {
+				header += "\t" + variants.get(i).toString() + "-" + variants.get(i).getId();
+			}
+			tfout.writeln(header);
+		}
 		for (int row = 0; row < matrix.length; row++) {
-			tfout.writeln(Strings.concat(matrix[row], Strings.tab));
+			String header = "";
+			if (printheaders) {
+				header = variants.get(row).toString() + "-" + variants.get(row).getId();
+			}
+			tfout.writeln(header + "\t" + Strings.concat(matrix[row], Strings.tab));
 		}
 		tfout.close();
 	}

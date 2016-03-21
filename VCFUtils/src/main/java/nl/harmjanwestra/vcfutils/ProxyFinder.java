@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 /**
  * Created by hwestra on 2/29/16.
  */
-public class ProxyFinder {
+public class  ProxyFinder {
 
 	public void find(String tabixrefprefix, int windowsize, double threshold, String snpfile, String output, int nrthreads) throws IOException {
 
