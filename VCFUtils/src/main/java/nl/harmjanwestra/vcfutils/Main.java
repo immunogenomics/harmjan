@@ -356,6 +356,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("printheader")
+				.desc("Print header (for correlation matrix)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.hasArg()
 				.longOpt("window")
 				.desc("Window size")
@@ -646,12 +652,14 @@ public class Main {
 				} else {
 					plotter.run(input, out);
 				}
-
-
 			} else if (cmd.hasOption("correlatevariants")) {
 				VariantCorrelationMatrix mat = new VariantCorrelationMatrix();
 				if (cmd.hasOption("b")) {
-					mat.correlate(input, cmd.getOptionValue("b"), out);
+					if (cmd.hasOption("printheader")) {
+						mat.correlate(input, cmd.getOptionValue("b"), out, true);
+					} else {
+						mat.correlate(input, cmd.getOptionValue("b"), out, false);
+					}
 				} else {
 					System.out.println("Please use -b with --correlatevariants");
 				}
