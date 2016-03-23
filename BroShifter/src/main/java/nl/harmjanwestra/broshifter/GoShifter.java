@@ -1,7 +1,5 @@
 package nl.harmjanwestra.broshifter;
 
-
-import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import nl.harmjanwestra.broshifter.CLI.GoShifterOptions;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
