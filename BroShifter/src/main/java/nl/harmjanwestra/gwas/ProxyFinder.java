@@ -29,7 +29,6 @@ public class ProxyFinder {
 		}
 		tf.close();
 
-
 		ExecutorService threadPool = Executors.newFixedThreadPool(options.nrthreads);
 		CompletionService<ArrayList<String>> jobHandler = new ExecutorCompletionService<>(threadPool);
 
@@ -116,10 +115,11 @@ public class ProxyFinder {
 						double[] genotypes2 = convertToDouble(variant);
 						double corr = Correlation.correlate(genotypes1, genotypes2);
 						corr *= corr;
+
+						// TODO: should replace with actual linkage
 						if (corr >= threshold) {
 							output.add(f.getName() + "\t" + variant.getId() + "\t" + variant.getPos() + "\t" + (Math.abs(f.getStart() - variant.getPos())) + "\t" + corr);
 						}
-
 					}
 				}
 				next = window.next();
