@@ -4,7 +4,6 @@ import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.gwas.CLI.ProxyFinderOptions;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Correlation;
 
@@ -65,13 +64,13 @@ public class ProxyFinder {
 
 		String tabixrefprefix;
 		int windowsize;
-		Feature f;
+		Feature queryVariantFeature;
 		double threshold;
 
 		public ProxyFinderTask(String tabix, int windowsize, Feature snp, double threshold) {
 			this.tabixrefprefix = tabix;
 			this.windowsize = windowsize;
-			this.f = snp;
+			this.queryVariantFeature = snp;
 			this.threshold = threshold;
 		}
 
@@ -79,19 +78,19 @@ public class ProxyFinder {
 		public ArrayList<String> call() throws Exception {
 
 			ArrayList<String> output = new ArrayList<>();
-			output.add(f.getName() + "\t" + f.getName() + "\t" + f.getStart() + "\t" + 0 + "\t" + 1);
-			TabixReader reader = new TabixReader(tabixrefprefix + f.getChromosome().getNumber());
+			output.add(queryVariantFeature.getName() + "\t" + queryVariantFeature.getName() + "\t" + queryVariantFeature.getStart() + "\t" + 0 + "\t" + 1);
+			TabixReader reader = new TabixReader(tabixrefprefix + queryVariantFeature.getChromosome().getNumber());
 
 
-			TabixReader.Iterator inputSNPiter = reader.query(f.getChromosome().toString(), f.getStart() - 1, f.getStart() + 1);
+			TabixReader.Iterator inputSNPiter = reader.query(queryVariantFeature.getChromosome().toString(), queryVariantFeature.getStart() - 1, queryVariantFeature.getStart() + 1);
 
 			String snpStr = inputSNPiter.next();
 			VCFVariant testSNPObj = null;
-			System.out.println("Query: " + f.getName());
+			System.out.println("Query: " + queryVariantFeature.getName());
 			while (snpStr != null) {
 				VCFVariant variant = new VCFVariant(snpStr);
-				if (variant.asFeature().overlaps(f)) {
-					if (variant.getId().equals(f.getName())) {
+				if (variant.asFeature().overlaps(queryVariantFeature)) {
+					if (variant.getId().equals(queryVariantFeature.getName())) {
 						testSNPObj = variant;
 					}
 				}
@@ -99,12 +98,12 @@ public class ProxyFinder {
 			}
 
 			if (testSNPObj == null) {
-				System.out.println("Query: " + f.getName() + " not in reference");
+				System.out.println("Query: " + queryVariantFeature.getName() + " not in reference");
 				return output;
 			}
 
 			double[] genotypes1 = convertToDouble(testSNPObj);
-			TabixReader.Iterator window = reader.query(f.getChromosome().toString(), f.getStart() - windowsize, f.getStart() + windowsize);
+			TabixReader.Iterator window = reader.query(queryVariantFeature.getChromosome().toString(), queryVariantFeature.getStart() - windowsize, queryVariantFeature.getStart() + windowsize);
 			String next = window.next();
 			while (next != null) {
 				// correlate
@@ -118,7 +117,14 @@ public class ProxyFinder {
 
 						// TODO: should replace with actual linkage
 						if (corr >= threshold) {
-							output.add(f.getName() + "\t" + variant.getId() + "\t" + variant.getPos() + "\t" + (Math.abs(f.getStart() - variant.getPos())) + "\t" + corr);
+							output.add(queryVariantFeature.getChromosome().toString()
+									+ "\t" + queryVariantFeature.getStart()
+									+ "\t" + queryVariantFeature.getName()
+									+ "\t" + variant.asFeature().getChromosome().toString()
+									+ "\t" + variant.asFeature().getStart()
+									+ "\t" + variant.asFeature().getName()
+									+ "\t" + (Math.abs(queryVariantFeature.getStart() - variant.getPos()))
+									+ "\t" + corr);
 						}
 					}
 				}

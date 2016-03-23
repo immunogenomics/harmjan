@@ -34,8 +34,8 @@ public class AssociationPlotterOld {
 		AssociationPlotterOld p = new AssociationPlotterOld();
 		try {
 
-//			Feature f = new Feature(Chromosome.TWO, 60462160, 62303311);
-//			p.bedgraphfilter(f, "/Data/Projects/2015-cd4timelinepilot/BedGraphsSeqProj/samples.txt");
+//			Feature queryVariantFeature = new Feature(Chromosome.TWO, 60462160, 62303311);
+//			p.bedgraphfilter(queryVariantFeature, "/Data/Projects/2015-cd4timelinepilot/BedGraphsSeqProj/samples.txt");
 //			p.makePlotSpecificRegion();
 
 			Feature feat = new Feature(Chromosome.SIX, 32627241 - 5000, 32634466 + 5000);
@@ -404,12 +404,12 @@ public class AssociationPlotterOld {
 //				ArrayList<Feature> overlappingSequencedRegions = getOverlappingRegions(region, zoomregions);
 //				int max = 0;
 //				int min = Integer.MAX_VALUE;
-//				for (Feature f : overlappingSequencedRegions) {
-//					if (f.getStart() < min) {
-//						min = f.getStart();
+//				for (Feature queryVariantFeature : overlappingSequencedRegions) {
+//					if (queryVariantFeature.getStart() < min) {
+//						min = queryVariantFeature.getStart();
 //					}
-//					if (f.getStop() > max) {
-//						max = f.getStop();
+//					if (queryVariantFeature.getStop() > max) {
+//						max = queryVariantFeature.getStop();
 //					}
 //				}
 

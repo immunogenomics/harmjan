@@ -1,22 +1,18 @@
 package nl.harmjanwestra.broshifter;
 
-
-import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import nl.harmjanwestra.broshifter.CLI.GoShifterOptions;
-import nl.harmjanwestra.utilities.association.AssociationFile;
-import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.*;
+import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.SNPFeature;
+import nl.harmjanwestra.utilities.features.Track;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.math.stats.ZScores;
+import umcg.genetica.io.text.TextFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
@@ -48,6 +44,8 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 	}
 
 	public Pair<String, ArrayList<String>> call() throws IOException {
+
+
 		// load annotations
 		AnnotationLoader loader = new AnnotationLoader();
 		System.out.println("Thread " + threadNum + " | Testing: " + annotation1);
@@ -311,12 +309,71 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 	}
 
 
-	private ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> loadSNPs(String snpfile) {
-		return null;
+	// load variants snp --> list of proxies
+	// assume ProxyFinder output
+	private ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> loadSNPs(String snpfile) throws IOException {
+		TextFile in = new TextFile(snpfile, TextFile.R);
+		String[] elems = in.readLineElems(TextFile.tab);
+
+
+		HashMap<SNPFeature, HashSet<SNPFeature>> tmp = new HashMap<>();
+
+		while (elems != null) {
+
+			Chromosome chr = Chromosome.parseChr(elems[0]);
+			Integer start = Integer.parseInt(elems[1]);
+			String name = elems[2];
+
+			SNPFeature feat1 = new SNPFeature();
+			feat1.setChromosome(chr);
+			feat1.setStart(start);
+			feat1.setStop(start);
+			feat1.setName(name);
+
+			Chromosome chr2 = Chromosome.parseChr(elems[3]);
+			Integer start2 = Integer.parseInt(elems[4]);
+			String name2 = elems[5];
+
+			SNPFeature feat2 = new SNPFeature();
+			feat2.setChromosome(chr2);
+			feat2.setStart(start2);
+			feat2.setStop(start2);
+			feat2.setName(name2);
+
+
+			HashSet<SNPFeature> set = tmp.get(feat1);
+			if (set == null) {
+				set = new HashSet<>();
+			}
+			set.add(feat2);
+			tmp.put(feat1, set);
+
+			elems = in.readLineElems(TextFile.tab);
+		}
+		in.close();
+
+		ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> output = new ArrayList<>();
+		Set<SNPFeature> keyset = tmp.keySet();
+		for (SNPFeature f : keyset) {
+			HashSet<SNPFeature> data = tmp.get(f);
+			ArrayList<SNPFeature> dataArr = new ArrayList<>();
+			dataArr.addAll(data);
+			output.add(new Pair<>(f, dataArr));
+		}
+		return output;
 	}
 
 	private int determineMedianAnnotationLength(Track annotation1Track) {
-		return 0;
+
+		ArrayList<Feature> all = annotation1Track.getAllFeatures();
+		int[] lengths = new int[all.size()];
+		for (int i = 0; i < all.size(); i++) {
+			Feature f = all.get(i);
+			lengths[i] = f.getStop() - f.getStart();
+		}
+
+		return JSci.maths.ArrayMath.median(lengths);
+
 	}
 
 }
