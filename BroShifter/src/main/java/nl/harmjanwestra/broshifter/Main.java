@@ -39,6 +39,8 @@ public class Main {
 				new QTLTest(new QTLTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
 				new LRTest(new LRTestOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.PROXYFINDER)) {
+				new ProxyFinder(new ProxyFinderOptions(args));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

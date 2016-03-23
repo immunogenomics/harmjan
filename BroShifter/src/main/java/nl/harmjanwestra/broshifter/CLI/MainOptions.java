@@ -68,6 +68,12 @@ public class MainOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Find LD partners of variants given a VCF file")
+				.longOpt("proxy")
+				.build();
+		OPTIONS.addOption(option);
+
 	}
 
 	public MODE mode = MODE.NA;
@@ -94,6 +100,8 @@ public class MainOptions {
 				mode = MODE.ASSOC;
 			} else if (cmd.hasOption("caviar")) {
 				mode = MODE.CAVIAR;
+			} else if (cmd.hasOption("proxy")) {
+				mode = MODE.PROXYFINDER;
 			} else if (cmd.hasOption("qtl")) {
 				mode = MODE.QTL;
 			} else {
@@ -120,7 +128,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOT,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, NA
 	}
 
 }

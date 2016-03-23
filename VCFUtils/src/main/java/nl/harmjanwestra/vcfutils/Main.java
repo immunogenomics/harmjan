@@ -457,39 +457,40 @@ public class Main {
 
 			}
 
-			if (cmd.hasOption("proxy")) {
-
-				ProxyFinder finder = new ProxyFinder();
-
-				String tabix = null;
-				int windowsize = 1000000;
-				double threshold = 0.8;
-				int nrthreads = 1;
-
-
-				if (cmd.hasOption("rsquared")) {
-					threshold = Double.parseDouble(cmd.getOptionValue("rsquared"));
-				}
-
-				if (cmd.hasOption("window")) {
-					windowsize = Integer.parseInt(cmd.getOptionValue("window"));
-				}
-
-				if (cmd.hasOption("threads")) {
-					nrthreads = Integer.parseInt(cmd.getOptionValue("threads"));
-				}
-
-				if (cmd.hasOption("tabix")) {
-					tabix = cmd.getOptionValue("tabix");
-				} else {
-					run = false;
-				}
-
-				if (run) {
-					finder.find(tabix, windowsize, threshold, input, out, nrthreads);
-				}
-
-			} else if (cmd.hasOption("filtersampleoverlap")) {
+//			if (cmd.hasOption("proxy")) {
+//
+//				ProxyFinder finder = new ProxyFinder();
+//
+//				String tabix = null;
+//				int windowsize = 1000000;
+//				double threshold = 0.8;
+//				int nrthreads = 1;
+//
+//
+//				if (cmd.hasOption("rsquared")) {
+//					threshold = Double.parseDouble(cmd.getOptionValue("rsquared"));
+//				}
+//
+//				if (cmd.hasOption("window")) {
+//					windowsize = Integer.parseInt(cmd.getOptionValue("window"));
+//				}
+//
+//				if (cmd.hasOption("threads")) {
+//					nrthreads = Integer.parseInt(cmd.getOptionValue("threads"));
+//				}
+//
+//				if (cmd.hasOption("tabix")) {
+//					tabix = cmd.getOptionValue("tabix");
+//				} else {
+//					run = false;
+//				}
+//
+//				if (run) {
+//					finder.find(tabix, windowsize, threshold, input, out, nrthreads);
+//				}
+//
+//			} else
+			if (cmd.hasOption("filtersampleoverlap")) {
 
 				VCFSampleFilter filter = new VCFSampleFilter();
 				if (cmd.hasOption("i2")) {

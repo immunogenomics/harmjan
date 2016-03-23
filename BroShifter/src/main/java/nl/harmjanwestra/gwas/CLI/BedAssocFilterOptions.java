@@ -26,6 +26,11 @@ public class BedAssocFilterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder("p")
+				.desc("Print top associations per region")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("i")
 				.hasArg()
 				.desc("Association file")
@@ -45,6 +50,8 @@ public class BedAssocFilterOptions {
 		OPTIONS.addOption(option);
 	}
 
+	public boolean printTopAssocPerRegion;
+
 	public BedAssocFilterOptions(String[] args) {
 
 		boolean run = true;
@@ -63,6 +70,9 @@ public class BedAssocFilterOptions {
 				this.assocFile = cmd.getOptionValue("i");
 			} else {
 				run = false;
+			}
+			if (cmd.hasOption("p")) {
+				printTopAssocPerRegion = true;
 			}
 
 			if (cmd.hasOption("t")) {

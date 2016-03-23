@@ -15,14 +15,9 @@ import java.util.ArrayList;
  */
 public class BedAssocFilter {
 
-	private final BedAssocFilterOptions options;
 
 	public BedAssocFilter(BedAssocFilterOptions options) throws IOException {
-		this.options = options;
-		this.run();
-	}
 
-	public void run() throws IOException {
 
 		// load bed regions to test
 		BedFileReader bf = new BedFileReader();
@@ -32,6 +27,7 @@ public class BedAssocFilter {
 
 		double threshold = -Math.log10(options.threshold);
 
+		ArrayList<Feature> regionsAfterFilter = new ArrayList<>();
 		for (int i = 0; i < regions.size(); i++) {
 			Feature region = regions.get(i);
 			AssociationFile assocFile = new AssociationFile();
@@ -42,13 +38,43 @@ public class BedAssocFilter {
 				AssociationResult result = results.get(j);
 				if (result.getLog10Pval() > threshold) {
 					out.writeln(region.toBedString());
+					regionsAfterFilter.add(region);
 					written = true;
 				}
 			}
 
+
 		}
 		out.close();
 
+
+		if (options.printTopAssocPerRegion) {
+			// now also get the top association per region
+			TextFile tfout = new TextFile(options.outfile + "-topAssociations.txt", TextFile.W);
+			for (int i = 0; i < regionsAfterFilter.size(); i++) {
+				Feature region = regionsAfterFilter.get(i);
+				AssociationFile assocFile = new AssociationFile();
+				ArrayList<AssociationResult> results = assocFile.read(options.assocFile, region);
+
+				double maxP = 0;
+				AssociationResult maxResult = null;
+				for (int j = 0; j < results.size(); j++) {
+					AssociationResult result = results.get(j);
+					if (result.getLog10Pval() > maxP) {
+						maxP = result.getLog10Pval();
+						maxResult = result;
+					}
+				}
+
+				// write the top result
+				if (maxResult != null) {
+					tfout.writeln(region.toString() + "\t" + maxResult.toString());
+				}
+
+			}
+			tfout.close();
+
+		}
 
 	}
 }

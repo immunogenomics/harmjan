@@ -1,6 +1,7 @@
-package nl.harmjanwestra.vcfutils;
+package nl.harmjanwestra.gwas;
 
 import htsjdk.tribble.readers.TabixReader;
+import nl.harmjanwestra.gwas.CLI.ProxyFinderOptions;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
@@ -14,13 +15,12 @@ import java.util.concurrent.*;
 /**
  * Created by hwestra on 2/29/16.
  */
-public class  ProxyFinder {
+public class ProxyFinder {
 
-	public void find(String tabixrefprefix, int windowsize, double threshold, String snpfile, String output, int nrthreads) throws IOException {
-
+	public ProxyFinder(ProxyFinderOptions options) throws IOException {
 
 		ArrayList<Feature> snps = new ArrayList<Feature>();
-		TextFile tf = new TextFile(snpfile, TextFile.R);
+		TextFile tf = new TextFile(options.snpfile, TextFile.R);
 		String ln = tf.readLine();
 		while (ln != null) {
 			Feature f = Feature.parseFeature(ln);
@@ -30,18 +30,18 @@ public class  ProxyFinder {
 		tf.close();
 
 
-		ExecutorService threadPool = Executors.newFixedThreadPool(nrthreads);
+		ExecutorService threadPool = Executors.newFixedThreadPool(options.nrthreads);
 		CompletionService<ArrayList<String>> jobHandler = new ExecutorCompletionService<>(threadPool);
 
 		int submit = 0;
 		for (Feature snp : snps) {
-			ProxyFinderTask task = new ProxyFinderTask(tabixrefprefix, windowsize, snp, threshold);
+			ProxyFinderTask task = new ProxyFinderTask(options.tabixrefprefix, options.windowsize, snp, options.threshold);
 			jobHandler.submit(task);
 			submit++;
 		}
 
 		int returned = 0;
-		TextFile outFile = new TextFile(output, TextFile.W);
+		TextFile outFile = new TextFile(options.output, TextFile.W);
 		while (returned < submit) {
 			try {
 				ArrayList<String> proxies = jobHandler.take().get();
@@ -104,9 +104,7 @@ public class  ProxyFinder {
 				return output;
 			}
 
-			VariantCorrelationMatrix correlator2 = new VariantCorrelationMatrix();
-			double[] genotypes1 = correlator2.convertToDouble(testSNPObj);
-
+			double[] genotypes1 = convertToDouble(testSNPObj);
 			TabixReader.Iterator window = reader.query(f.getChromosome().toString(), f.getStart() - windowsize, f.getStart() + windowsize);
 			String next = window.next();
 			while (next != null) {
@@ -115,7 +113,7 @@ public class  ProxyFinder {
 				if (!variant.equals(testSNPObj)) {
 					// correlate
 					if (variant.getMAF() > 0.005 && variant.getAlleles().length == 2) {
-						double[] genotypes2 = correlator2.convertToDouble(variant);
+						double[] genotypes2 = convertToDouble(variant);
 						double corr = Correlation.correlate(genotypes1, genotypes2);
 						corr *= corr;
 						if (corr >= threshold) {
@@ -130,4 +128,17 @@ public class  ProxyFinder {
 		}
 	}
 
+	public double[] convertToDouble(VCFVariant vcfVariant) {
+		byte[][] alleles = vcfVariant.getGenotypeAlleles();
+		double[] output = new double[alleles[0].length];
+		for (int i = 0; i < alleles[0].length; i++) {
+			if (alleles[0][i] == -1) {
+				output[i] = -1;
+			} else {
+				output[i] = (alleles[0][i] + alleles[1][i]);
+			}
+		}
+
+		return output;
+	}
 }
