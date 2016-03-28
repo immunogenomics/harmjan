@@ -3,6 +3,7 @@ package nl.harmjanwestra.broshifter;
 
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
+import nl.harmjanwestra.broshifter.CLI.GoShifterOptions;
 import nl.harmjanwestra.broshifter.CLI.MainOptions;
 import nl.harmjanwestra.gwas.*;
 import nl.harmjanwestra.gwas.CLI.*;
@@ -23,6 +24,8 @@ public class Main {
 				System.out.println("Please specify a mode");
 			} else if (options.mode.equals(MainOptions.MODE.BROSHIFTER)) {
 				new BroShifter(new BroShifterOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.GOSHIFTER)) {
+				new GoShifter(new GoShifterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.BEDFILTER)) {
 				new BedAssocFilter(new BedAssocFilterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ANNOTATIONOVERLAPPLOT)) {

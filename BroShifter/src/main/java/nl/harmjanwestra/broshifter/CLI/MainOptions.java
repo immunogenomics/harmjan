@@ -21,6 +21,12 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Run goshifter - enrichment analysis")
+				.longOpt("goshifter")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Merge association files")
 				.longOpt("merge")
 				.build();
@@ -84,7 +90,6 @@ public class MainOptions {
 			final CommandLine cmd = parser.parse(OPTIONS, args, true);
 
 			if (cmd.hasOption("broshifter")) {
-				System.out.println("About to run broshifter");
 				mode = MODE.BROSHIFTER;
 			} else if (cmd.hasOption("merge")) {
 				mode = MODE.MERGE;
@@ -96,6 +101,8 @@ public class MainOptions {
 				mode = MODE.PLOT;
 			} else if (cmd.hasOption("posterior")) {
 				mode = MODE.POSTERIORPVAL;
+			} else if (cmd.hasOption("goshifter")) {
+				mode = MODE.GOSHIFTER;
 			} else if (cmd.hasOption("gwas")) {
 				mode = MODE.ASSOC;
 			} else if (cmd.hasOption("caviar")) {
@@ -128,7 +135,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOT,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, NA
 	}
 
 }

@@ -6,7 +6,6 @@
 package nl.harmjanwestra.utilities.features;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -99,9 +98,7 @@ public class Track extends Feature {
 	}
 
 	public void addFeatures(ArrayList<Feature> features) {
-		for (Feature f : features) {
-			this.features.add(f);
-		}
+		this.features.addAll(features);
 		allFeatures.addAll(features);
 	}
 
@@ -109,5 +106,11 @@ public class Track extends Feature {
 		return getFeatureSet(feat1.getChromosome(), feat1.getStart(), feat1.getStop());
 	}
 
-
+	@Override
+	public String toString() {
+		return "Track{" +
+				"features=" + features.size() +
+				", allFeatures=" + allFeatures.size() +
+				'}';
+	}
 }

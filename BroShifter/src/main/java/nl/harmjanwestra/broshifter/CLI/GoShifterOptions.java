@@ -10,8 +10,6 @@ import umcg.genetica.text.Strings;
  */
 public class GoShifterOptions {
 
-	public String regionFile;
-	public String posteriorFile;
 	public String listOfAnnotations;
 	public int nrIterations = 10000;
 	public String outfile;
@@ -21,7 +19,6 @@ public class GoShifterOptions {
 	public boolean trimRegions = false;
 	public int defaultRegionExtend = 100;
 	public int nrThreads = 1;
-	public double credibleSetThreshold = 0.95;
 	public DISTANCEWEIGHT distanceweight = DISTANCEWEIGHT.NONE;
 	private int maxAllowedDistance = 150;
 	private String geneAnnotationFile;
@@ -58,8 +55,9 @@ public class GoShifterOptions {
 
 	static {
 		OPTIONS = new Options();
-		Option option = Option.builder().longOpt("broshifter").build();
+		Option option = Option.builder().longOpt("goshifter").build();
 		OPTIONS.addOption(option);
+
 		option = Option.builder().longOpt("plotoverlap").build();
 		OPTIONS.addOption(option);
 
@@ -71,11 +69,10 @@ public class GoShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder("p")
+		option = Option.builder("i")
 				.hasArg()
-				.desc("Input posterior p-value file (gwas-file format)")
-				.longOpt("posteriors")
-
+				.desc("Input SNP file (with proxies: --proxy format)")
+				.longOpt("snps")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -83,11 +80,10 @@ public class GoShifterOptions {
 				.hasArg()
 				.desc("List of annotations to test. One line per annotation file. Annotations can be in .xls or .bed file, and may be gzipped")
 				.longOpt("annotations")
-
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder("i")
+		option = Option.builder("p")
 				.hasArg()
 				.desc("Number of permutations to run [default = 10000]")
 				.longOpt("iterations")
@@ -110,7 +106,7 @@ public class GoShifterOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder("s")
-				.desc("Use peak centers to test for enrichment")
+				.desc("Use annotation centers to test for enrichment")
 				.longOpt("summit")
 				.build();
 		OPTIONS.addOption(option);
@@ -122,18 +118,6 @@ public class GoShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder()
-				.desc("Trim regions to fit around variants. [default = false]")
-				.longOpt("trim")
-				.build();
-		OPTIONS.addOption(option);
-
-		option = Option.builder("x")
-				.hasArg()
-				.desc("After trimming, extend the region with a fixed number of basepairs [default = 100]")
-				.longOpt("regionextend")
-				.build();
-		OPTIONS.addOption(option);
 
 		option = Option.builder("t")
 				.hasArg()
@@ -148,19 +132,7 @@ public class GoShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder()
-				.desc("Gene annotation GTF")
-				.longOpt("gtf")
-				.build();
-		OPTIONS.addOption(option);
 
-
-		option = Option.builder("w")
-				.desc("Use a weight for distance. [none|linear|sqrt|inverse|exp|hoverd]. Default: none")
-				.longOpt("weight")
-				.hasArg()
-				.build();
-		OPTIONS.addOption(option);
 	}
 
 
@@ -175,28 +147,18 @@ public class GoShifterOptions {
 
 			boolean run = true;
 
-			if (cmd.hasOption("regions")) {
-				regionFile = cmd.getOptionValue("regions");
-			} else {
-				System.out.println("Path to regions file not provided");
-				run = false;
-			}
-
-			if (cmd.hasOption("posteriors")) {
-				posteriorFile = cmd.getOptionValue("posteriors");
-			} else {
-				System.out.println("Path to posteriors not provided");
-				run = false;
-			}
-
-			if (cmd.hasOption("gtf")) {
-				geneAnnotationFile = cmd.getOptionValue("gtf");
-			}
 
 			if (cmd.hasOption("annotations")) {
 				listOfAnnotations = cmd.getOptionValue("annotations");
 			} else {
 				System.out.println("Path to annotations file not provided");
+				run = false;
+			}
+
+			if (cmd.hasOption("snps")) {
+				snpfile = cmd.getOptionValue("snps");
+			} else {
+				System.out.println("Provide -i or --snps");
 				run = false;
 			}
 

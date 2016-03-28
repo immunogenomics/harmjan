@@ -27,7 +27,7 @@ public class BroShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder("p")
+		option = Option.builder("i")
 				.hasArg()
 				.desc("Input posterior p-value file (gwas-file format)")
 				.longOpt("posteriors")
@@ -43,7 +43,7 @@ public class BroShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder("i")
+		option = Option.builder("p")
 				.hasArg()
 				.desc("Number of permutations to run [default = 10000]")
 				.longOpt("iterations")
@@ -201,7 +201,7 @@ public class BroShifterOptions {
 				conditional = true;
 			}
 
-			if(cmd.hasOption("matrix")){
+			if (cmd.hasOption("matrix")) {
 				overlapmatrix = true;
 			}
 
@@ -281,6 +281,10 @@ public class BroShifterOptions {
 			;
 			printHelp();
 		}
+	}
+
+	public BroShifterOptions() {
+
 	}
 
 

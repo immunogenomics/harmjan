@@ -1,7 +1,6 @@
 package nl.harmjanwestra.broshifter;
 
 import nl.harmjanwestra.broshifter.CLI.GoShifterOptions;
-import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
@@ -9,6 +8,7 @@ import nl.harmjanwestra.utilities.features.Track;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.util.Primitives;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
  * Returns: all output for a certain (combination of) annotation(s)
  */
 public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> {
+
 
 	boolean DEBUG = false;
 	private int threadNum;
@@ -58,9 +59,9 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 			annotation2name = new File(annotation2).getName();
 		}
 
-		int medianAnnotationLength = determineMedianAnnotationLength(annotation1Track);
+		int medianAnnotationLength = (int) Math.ceil(determineMedianAnnotationLength(annotation1Track));
 
-		BedFileReader bf = new BedFileReader();
+		System.out.println("Median annotation length: " + medianAnnotationLength);
 
 		// load snp data
 		ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> allSNPs = loadSNPs(options.snpfile);
@@ -94,6 +95,10 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 		for (int fctr = 0; fctr < allSNPs.size(); fctr++) {
 			Feature region = regions.get(fctr);
 
+			if (region.toString().equals("Chr2_191958656-191970120")) {
+				System.out.println("got it");
+			}
+
 			String origRegion = region.toString();
 
 			// read posteriors
@@ -112,7 +117,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 
 				// get subset of annotations
 				Track subsetOfAnnotation1 = annotation1Track.getSubset(region.getChromosome(), region.getStart(), region.getStop());
-
+				int annotation1size = subsetOfAnnotation1.getAllFeatures().size();
 				int nrOverlapping = 0;
 
 				if (annotation2 != null) {
@@ -202,7 +207,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 							.append("\t").append(snps.size())
 							.append("\t").append(0)
 							.append("\t").append(annotation1name)
-							.append("\t").append(subsetOfAnnotation1.getSize());
+							.append("\t").append(annotation1size);
 				} else {
 					builder.append(locusScore)
 							.append("\t").append(regionName)
@@ -211,7 +216,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 							.append("\t").append(snps.size())
 							.append("\t").append(((double) nrOverlapping / snps.size()))
 							.append("\t").append(annotation1name)
-							.append("\t").append(subsetOfAnnotation1.getAllFeatures().size());
+							.append("\t").append(annotation1size);
 				}
 				if (annotation2 != null) {
 					builder.append("\t").append(annotation2name)
@@ -363,16 +368,27 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 		return output;
 	}
 
-	private int determineMedianAnnotationLength(Track annotation1Track) {
+	private double determineMedianAnnotationLength(Track annotation1Track) {
 
-		ArrayList<Feature> all = annotation1Track.getAllFeatures();
-		int[] lengths = new int[all.size()];
-		for (int i = 0; i < all.size(); i++) {
-			Feature f = all.get(i);
-			lengths[i] = f.getStop() - f.getStart();
+
+		Iterable<Feature> iterator = annotation1Track.getFeatures();
+		ArrayList<Integer> lengths = new ArrayList<>();
+		for (Feature f : iterator) {
+			lengths.add(f.getStop() - f.getStart());
 		}
 
-		return JSci.maths.ArrayMath.median(lengths);
+		if (lengths.isEmpty()) {
+			System.out.println("lenghts == 0");
+			return 0;
+		}
+
+		int[] lengtharr = Primitives.toPrimitiveArr(lengths.toArray(new Integer[0]));
+
+
+		double median = JSci.maths.ArrayMath.median(lengtharr);
+
+		System.out.println("median annotation length: " + median + " for annotation: " + annotation1Track.getName());
+		return median;
 
 	}
 

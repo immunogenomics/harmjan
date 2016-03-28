@@ -24,36 +24,30 @@ public class AnnotationLoader {
 								 ArrayList<Feature> regions) throws IOException {
 
 		ArrayList<Feature> allAnnotations = null;
+		ArrayList<Feature> tmpFeatures = null;
 		if (annotation1.endsWith(".xls") || annotation1.endsWith(".xls.gz")) {
 			XLSFile xlsFile = new XLSFile();
 			ArrayList<PeakFeature> pf = xlsFile.readAllPeaks(annotation1, false, 0.05);
-			allAnnotations = new ArrayList<>(10000);
-			for (Feature p : pf) {
-				if (regions == null) {
-					allAnnotations.add(p);
-				} else {
-					boolean overlap = false;
-					for (Feature f : regions) {
-						if (f.overlaps(p)) {
-							overlap = true;
-						}
-					}
-					if (overlap) {
-						allAnnotations.add(p);
-					}
-				}
-			}
+			tmpFeatures = new ArrayList<>();
+			tmpFeatures.addAll(pf);
 		} else {
 			BedFileReader bf = new BedFileReader();
 			allAnnotations = new ArrayList<>(10000);
 			if (annotation1.endsWith(".csv")) {
 				bf = new BedFileReader(Strings.semicolon);
 			}
+			tmpFeatures = bf.readAsList(annotation1);
+		}
 
-			Track t = bf.readAsTrack(annotation1, annotation1);
+		// filter if regions set
+		if (regions != null) {
+			Track t = new Track("tmp");
+			t.addFeatures(tmpFeatures);
 			for (Feature f : regions) {
 				allAnnotations.addAll(t.getFeatureSet(f));
 			}
+		} else {
+			allAnnotations = tmpFeatures;
 		}
 
 		if (usePeakCenter) {
@@ -64,6 +58,7 @@ public class AnnotationLoader {
 		if (mergeoverlapping) {
 			allAnnotations = FeatureMerger.merge(allAnnotations, true);
 		}
+
 		Track t = new Track(annotation1);
 		t.addFeatures(allAnnotations);
 		return t;

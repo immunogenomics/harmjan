@@ -16,6 +16,22 @@ public class GoShifter {
 
 	boolean DEBUG = false;
 
+	public static void main(String[] args) {
+
+		String[] arguments = new String[]{
+				"-a", "/Data/tmp/2016-03-25/annot.txt",
+				"-i", "/Data/tmp/2016-03-25/RA-proxies",
+				"-o", "/Data/tmp/2016-03-25/RA-goshifter2"
+		};
+
+		try {
+			GoShifter shiftah = new GoShifter(new GoShifterOptions(arguments));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
 	public GoShifter(GoShifterOptions options) throws IOException {
 		this.options = options;
 		run();

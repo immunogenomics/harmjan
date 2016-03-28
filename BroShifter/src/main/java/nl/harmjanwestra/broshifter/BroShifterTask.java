@@ -47,7 +47,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	}
 
 	public BroShifterTask() {
-		options = new BroShifterOptions(new String[]{});
+		options = new BroShifterOptions();
 	}
 
 	public Pair<String, ArrayList<String>> call() throws IOException {
