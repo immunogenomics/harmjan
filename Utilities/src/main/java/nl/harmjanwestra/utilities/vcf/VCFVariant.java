@@ -87,12 +87,14 @@ public class VCFVariant {
 		String[] tokenArr = Strings.tab.split(ln);//tokens.toArray(new String[0]);
 		// count number of alleles with certain readAsTrack depth
 		parseHeader(tokenArr);
-		if (p.equals(PARSE.ALL) || p.equals(PARSE.GENOTYPES)) {
-			parseGenotypes(tokenArr, p);
-			recalculateMAFAndCallRate();
-		} else {
-			// save for future use...
-			tokens = tokenArr;
+		if (tokenArr.length > 9) {
+			if (p.equals(PARSE.ALL) || p.equals(PARSE.GENOTYPES)) {
+				parseGenotypes(tokenArr, p);
+				recalculateMAFAndCallRate();
+			} else {
+				// save for future use...
+				tokens = tokenArr;
+			}
 		}
 	}
 
@@ -262,107 +264,110 @@ public class VCFVariant {
 		String ref = "";
 		int nrTokens = tokenArr.length;
 		for (int t = 0; t < 9; t++) {
-			String token = tokenArr[t];
+			if (t < tokenArr.length) {
+				String token = tokenArr[t];
 
-			switch (t) {
-				case 0:
-					this.chr = new String(token).intern();
-					break;
-				case 1:
-					pos = Integer.parseInt(token);
-					break;
-				case 2:
-					id = new String(token);
-					break;
-				case 3:
-					ref = token;
-					break;
-				case 4:
-					String alt = token;
-					String[] alternateAlleles = alt.split(",");
-					alleles = new String[1 + alternateAlleles.length];
-					alleles[0] = new String(ref).intern();
-					for (int i = 0; i < alternateAlleles.length; i++) {
-						alleles[1 + i] = new String(alternateAlleles[i]).intern();
-					}
-					nrAllelesObserved = new int[alternateAlleles.length + 1];
-					break;
-				case 5:
-					String qualStr = token;
-					try {
-						qual = Integer.parseInt(qualStr);
-					} catch (NumberFormatException e) {
+				switch (t) {
+					case 0:
+						this.chr = new String(token).intern();
+						break;
+					case 1:
+						pos = Integer.parseInt(token);
+						break;
+					case 2:
+						id = new String(token);
+						break;
+					case 3:
+						ref = token;
+						break;
+					case 4:
+						String alt = token;
+						String[] alternateAlleles = alt.split(",");
+						alleles = new String[1 + alternateAlleles.length];
+						alleles[0] = new String(ref).intern();
+						for (int i = 0; i < alternateAlleles.length; i++) {
+							alleles[1 + i] = new String(alternateAlleles[i]).intern();
+						}
+						nrAllelesObserved = new int[alternateAlleles.length + 1];
+						break;
+					case 5:
+						String qualStr = token;
+						try {
+							qual = Integer.parseInt(qualStr);
+						} catch (NumberFormatException e) {
 
-					}
-					break;
-				case 6:
-					filter = new String(token).intern();
-					break;
-				case 7:
-					String infoStr = token;
-					String[] infoElems = Strings.semicolon.split(infoStr);
+						}
+						break;
+					case 6:
+						filter = new String(token).intern();
+						break;
+					case 7:
+						String infoStr = token;
+						String[] infoElems = Strings.semicolon.split(infoStr);
 
-					if (!infoStr.equals(".")) {
-						for (int e = 0; e < infoElems.length; e++) {
-							String[] infoElemElems = Strings.equalssign.split(infoElems[e]);
-							String id = new String(infoElemElems[0]).intern();
-							if (infoElemElems.length > 1) {
-								try {
-									Double val = Double.parseDouble(infoElemElems[1]);
-									info.put(id, val);
-								} catch (NumberFormatException ex) {
+						if (!infoStr.equals(".")) {
+							for (int e = 0; e < infoElems.length; e++) {
+								String[] infoElemElems = Strings.equalssign.split(infoElems[e]);
+								String id = new String(infoElemElems[0]).intern();
+								if (infoElemElems.length > 1) {
+									try {
+										Double val = Double.parseDouble(infoElemElems[1]);
+										info.put(id, val);
+									} catch (NumberFormatException ex) {
 
-								}
-							} else {
-								if (infoElems[e].equals("DB")) {
-									info.put(id, 1d);
-								} else if (infoElems[e].equals("PR")) {
-									info.put(id, 1d);
+									}
 								} else {
+									if (infoElems[e].equals("DB")) {
+										info.put(id, 1d);
+									} else if (infoElems[e].equals("PR")) {
+										info.put(id, 1d);
+									} else {
 //									if (!notSplittableElems.contains(infoElems[e])) {
 //										System.out.println("info: " + infoElems[e] + " not splitable");
 //										notSplittableElems.add(new String(infoElems[e]));
 //									}
-								}
+									}
 
+								}
 							}
 						}
-					}
-					break;
-				case 8:
-					String[] format = Strings.colon.split(token);
+						break;
+					case 8:
+						String[] format = Strings.colon.split(token);
 
-					for (int c = 0; c < format.length; c++) {
-						if (format[c].equals("GT")) {
-							gtCol = c;
-						} else if (format[c].equals("AD")) {
-							adCol = c;
-						} else if (format[c].equals("AB")) {
-							abCol = c;
-						} else if (format[c].equals("DP")) {
-							dpCol = c;
-						} else if (format[c].equals("GQ")) {
-							gqCol = c;
-						} else if (format[c].equals("PL")) {
-							plCol = c;
-						} else if (format[c].equals("PGT")) {
-							pgtCol = c;
-						} else if (format[c].equals("PID")) {
-							pidCol = c;
-						} else if (format[c].equals("DS")) {
-							dsCol = c;
-						} else if (format[c].equals("GP")) {
-							gpCol = c;
+						for (int c = 0; c < format.length; c++) {
+							if (format[c].equals("GT")) {
+								gtCol = c;
+							} else if (format[c].equals("AD")) {
+								adCol = c;
+							} else if (format[c].equals("AB")) {
+								abCol = c;
+							} else if (format[c].equals("DP")) {
+								dpCol = c;
+							} else if (format[c].equals("GQ")) {
+								gqCol = c;
+							} else if (format[c].equals("PL")) {
+								plCol = c;
+							} else if (format[c].equals("PGT")) {
+								pgtCol = c;
+							} else if (format[c].equals("PID")) {
+								pidCol = c;
+							} else if (format[c].equals("DS")) {
+								dsCol = c;
+							} else if (format[c].equals("GP")) {
+								gpCol = c;
+							}
+							// GT:AD:DP:GQ:PGT:PID:PL
 						}
-						// GT:AD:DP:GQ:PGT:PID:PL
-					}
 
-					if (gtCol == -1) {
-						System.out.println("No GT COL: " + token);
-						System.exit(-1);
-					}
-					break;
+						if (gtCol == -1) {
+							System.out.println("No GT COL: " + token);
+							System.exit(-1);
+						}
+						break;
+				}
 			}
+
 		}
 	}
 
