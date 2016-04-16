@@ -64,6 +64,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Concatenate variants for shared samples for a list of files")
+				.longOpt("concatlist")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Sample filter (using a list of samples)")
 				.longOpt("filtersample")
 				.build();
@@ -523,6 +529,11 @@ public class Main {
 				} else {
 					System.out.println("Use -i2 with --concat");
 				}
+			} else if (cmd.hasOption("concatlist")) {
+				VCFMerger merger = new VCFMerger();
+
+				merger.concatenate(input, out);
+
 			} else if (cmd.hasOption("filtervariantoverlap")) {
 				VCFRemoveOverlappingVariants t = new VCFRemoveOverlappingVariants();
 				if (cmd.hasOption("i2")) {

@@ -23,6 +23,30 @@ import java.util.*;
  */
 public class VCFMerger {
 
+
+	public void concatenate(String listFile, String out) throws IOException {
+
+		TextFile tf = new TextFile(listFile, TextFile.R);
+		String[] list = tf.readAsArray();
+		tf.close();
+
+
+		String tmp = out + "_tmp1.vcf.gz";
+		concatenate(list[0], list[1], tmp);
+
+		String tmp2 = out + "_tmp2.vcf.gz";
+		for (int i = 2; i < list.length; i++) {
+			concatenate(list[i], tmp, tmp2);
+			Gpio.moveFile(tmp2, tmp);
+		}
+
+		if (Gpio.exists(tmp)) {
+			Gpio.delete(tmp);
+		}
+		Gpio.moveFile(tmp, out);
+
+	}
+
 	/*
 	Concatenate variants for samples that are present in both VCF files
 	 */
@@ -219,13 +243,13 @@ public class VCFMerger {
 	This merges samples from two VCF files if there are variants that are overlapping. Non-overlapping variants are excluded.
 	 */
 	public void mergeAndIntersect(boolean linux,
-								  int chrint,
-								  String vcfsort,
-								  String refVCF,
-								  String testVCF,
-								  String matchedPanelsOut,
-								  boolean keepoverlapping,
-								  String separator) throws IOException {
+	                              int chrint,
+	                              String vcfsort,
+	                              String refVCF,
+	                              String testVCF,
+	                              String matchedPanelsOut,
+	                              boolean keepoverlapping,
+	                              String separator) throws IOException {
 		Chromosome chr = Chromosome.parseChr("" + chrint);
 
 		mergeAndIntersectVCFVariants(
