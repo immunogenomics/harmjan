@@ -106,6 +106,16 @@ public class VCFVariant {
 		return tokens;
 	}
 
+	public Double getImputationQualityScore() {
+		// BEAGLE VCF qual score
+		Double output = info.get("AR2");
+		if (output == null) {
+			// PBWT / Impute2
+			output = info.get("INFO");
+		}
+		return output;
+	}
+
 	public void parseGenotypes(String[] tokenArr, PARSE p) {
 
 		// parse actual genotypes.

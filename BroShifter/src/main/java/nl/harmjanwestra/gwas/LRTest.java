@@ -39,6 +39,7 @@ public class LRTest {
 	private VCFVariant currentLowestVariant;
 	private double highestLog10PProbs;
 	private int nrTested;
+	private int maxNrOfResultsInBuffer = 10000;
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
@@ -138,7 +139,7 @@ public class LRTest {
 		}
 
 		// index the final list of samples
-		ArrayList<String> samplesIntersect = new ArrayList<String>();
+		ArrayList<String> samplesIntersect = new ArrayList<>();
 		for (String sample : vcfSamples) {
 			if (covariateSampleHash.containsKey(sample) || alternatecovariateSamples.contains(sample)) {
 				sampleToIntGenotypes.put(sample, ctr);
@@ -329,7 +330,7 @@ public class LRTest {
 					String name = variant.getId();
 					if (snpLimit == null || snpLimit.contains(name)) {
 
-						Double imputationqualityscore = variant.getInfo().get("AR2");
+						Double imputationqualityscore = variant.getImputationQualityScore();
 						if (imputationqualityscore == null) {
 							imputationqualityscore = Double.NaN;
 						}
@@ -418,7 +419,7 @@ public class LRTest {
 				} // end data.hasnext
 
 
-				if (submitted % 250 == 0) {
+				if (submitted % maxNrOfResultsInBuffer == 0) {
 					clearQueue(logout, pvalout, iter, variants, jobHandler);
 				}
 
@@ -487,8 +488,8 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-	                        int iter, ArrayList<VCFVariant> variants,
-	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
+							int iter, ArrayList<VCFVariant> variants,
+							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -1029,11 +1030,11 @@ public class LRTest {
 		}
 
 		private AssociationResult pruneAndTest(double[][] x,
-		                                       double[] y,
-		                                       int nrAlleles,
-		                                       int alleleOffset,
-		                                       VCFVariant variant,
-		                                       double maf) throws REXPMismatchException, REngineException, IOException {
+											   double[] y,
+											   int nrAlleles,
+											   int alleleOffset,
+											   VCFVariant variant,
+											   double maf) throws REXPMismatchException, REngineException, IOException {
 			Pair<double[][], boolean[]> pruned = removeCollinearVariables(x);
 			x = pruned.getLeft(); // x is now probably shorter than original X
 			boolean[] notaliased = pruned.getRight(); // length of original X
@@ -1074,7 +1075,7 @@ public class LRTest {
 			result.setN(x.length);
 			result.setMaf(maf);
 
-			Double imputationqualityscore = variant.getInfo().get("AR2");
+			Double imputationqualityscore = variant.getImputationQualityScore();
 			result.setImputationQualScore(imputationqualityscore);
 
 			if (nrRemaining > 0) {
