@@ -60,8 +60,8 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 		}
 
 		int medianAnnotationLength = (int) Math.ceil(determineMedianAnnotationLength(annotation1Track));
-
-		System.out.println("Median annotation length: " + medianAnnotationLength);
+		medianAnnotationLength *= 2;
+		System.out.println("Expanding regions with " + medianAnnotationLength + "bp on both sides.");
 
 		// load snp data
 		ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> allSNPs = loadSNPs(options.snpfile);
@@ -106,6 +106,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 			int annotation2size = 0;
 
 			Pair<SNPFeature, ArrayList<SNPFeature>> proxies = allSNPs.get(fctr);
+			SNPFeature querySNP = proxies.getLeft();
 			ArrayList<SNPFeature> snps = proxies.getRight();
 
 
@@ -192,6 +193,10 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 
 				locusScore /= options.nrIterations;
 
+				if (nrOverlapping == 0) {
+					locusScore = 0;
+				}
+
 				String regionName = region.toString();
 				totalNrOfVariants += snps.size();
 				totalNrOfOverlappingVariants += nrOverlapping;
@@ -200,6 +205,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 
 				if (nrOverlapping == 0) {
 					builder.append(locusScore)
+							.append("\t").append(querySNP.getName())
 							.append("\t").append(regionName)
 							.append("\t").append(origRegion)
 							.append("\t").append(nrOverlapping)
@@ -209,6 +215,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 							.append("\t").append(annotation1size);
 				} else {
 					builder.append(locusScore)
+							.append("\t").append(querySNP.getName())
 							.append("\t").append(regionName)
 							.append("\t").append(origRegion)
 							.append("\t").append(nrOverlapping)
@@ -230,8 +237,13 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 		}
 
 
+		// determine number of loci that have overlap in real data
+		double enrichment = (double) nrOfLociWithOverlap / allSNPs.size();
+
 		int[] nrLociWithOverlapNull = new int[options.nrIterations];
 		double sum = 0;
+		int nrOfPermutationsWithBetterScore = 0;
+		TextFile tmpOut = new TextFile("/Data/tmp/2016-03-25/RA-goshifter2.nperm100000.enrich", TextFile.W);
 		for (int i = 0; i < options.nrIterations; i++) {
 			int nrOverlappingnull = 0;
 			for (int fctr = 0; fctr < allSNPs.size(); fctr++) {
@@ -241,25 +253,26 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 			}
 			nrLociWithOverlapNull[i] = nrOverlappingnull;
 			sum += nrOverlappingnull;
+			if (nrOverlappingnull >= nrOfLociWithOverlap) {
+				nrOfPermutationsWithBetterScore++;
+			}
+
+			tmpOut.writeln(i + "\t" + ((double) nrOverlappingnull / allSNPs.size()));
 		}
+		tmpOut.close();
+
+		System.out.println("real enrichment: " + enrichment);
 		double meanNrOfLociWithOverlapNull = sum / options.nrIterations;
 		Arrays.sort(nrLociWithOverlapNull);
 
-		// count nr of iterations with fewer nr loci of overlap
-		int nr = 0;
-		for (int i = 0; i < nrLociWithOverlapNull.length; i++) {
-			if (nrLociWithOverlapNull[i] < nrOfLociWithOverlap) {
-				nr++;
-			}
-		}
-
-		double pval = (double) nr / options.nrIterations;
+		double pval = (double) nrOfPermutationsWithBetterScore / options.nrIterations;
 
 		System.out.println("Thread " + threadNum + " | " + regions.size() + " out of " + regions.size() + " regions processed.");
 
 		StringBuilder builder = new StringBuilder(500);
 		builder.append(pval).
 				append("\t").append(nrOfLociWithOverlap).
+				append("\t").append(enrichment).
 				append("\t").append(meanNrOfLociWithOverlapNull).
 				append("\t").append(totalNrOfOverlappingVariants).
 				append("\t").append(totalNrOfVariants).

@@ -11,7 +11,7 @@ import umcg.genetica.text.Strings;
 public class GoShifterOptions {
 
 	public String listOfAnnotations;
-	public int nrIterations = 10000;
+	public int nrIterations = 100000;
 	public String outfile;
 	public boolean conditional = false;
 	public boolean usePeakCenter = false;

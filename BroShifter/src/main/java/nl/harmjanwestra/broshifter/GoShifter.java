@@ -20,7 +20,7 @@ public class GoShifter {
 
 		String[] arguments = new String[]{
 				"-a", "/Data/tmp/2016-03-25/annot.txt",
-				"-i", "/Data/tmp/2016-03-25/RA-proxies",
+				"-i", "/Data/tmp/2016-03-25/oldProxies-broshifter.txt",
 				"-o", "/Data/tmp/2016-03-25/RA-goshifter2"
 		};
 
@@ -62,6 +62,7 @@ public class GoShifter {
 
 		String headerOverall = "P"
 				+ "\tNrOfLociWithOverlap"
+				+ "\tEnrichment"
 				+ "\tMeanNrOfLociWithOverlapNull"
 				+ "\ttotalNrOfOverlappingVariants"
 				+ "\tTotalNrOfVariants"
@@ -72,6 +73,7 @@ public class GoShifter {
 		}
 
 		String headerLocus = "LocusScore"
+				+ "\tQuerySNP "
 				+ "\tRegionName"
 				+ "\tOriginalRegion"
 				+ "\tNrOverlapping"
@@ -139,8 +141,6 @@ public class GoShifter {
 		System.out.println();
 
 		threadPool.shutdown();
-
-
 	}
 
 	int returned = 0;
@@ -160,7 +160,7 @@ public class GoShifter {
 					}
 					outOverall.flush();
 					outLocus.flush();
-					if (returned % 10 == 0) {
+					if (returned % 10 == 0 && returned > 0) {
 						System.out.println("\nMain: " + returned + " out of " + submitted + " jobs completed\n");
 					}
 				}
