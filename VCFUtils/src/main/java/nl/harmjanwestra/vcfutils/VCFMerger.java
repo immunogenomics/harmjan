@@ -36,13 +36,10 @@ public class VCFMerger {
 
 		String tmp2 = out + "_tmp2.vcf.gz";
 		for (int i = 2; i < list.length; i++) {
-			concatenate(list[i], tmp, tmp2);
+			concatenate(tmp, list[i], tmp2);
 			Gpio.moveFile(tmp2, tmp);
 		}
 
-		if (Gpio.exists(tmp)) {
-			Gpio.delete(tmp);
-		}
 		Gpio.moveFile(tmp, out);
 
 	}
