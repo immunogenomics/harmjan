@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
 
 /**
  * Created by hwestra on 11/17/15.
- * Parallelize broshifting by running multiple annotations in different threads
+ * Parallelize goshifting by running multiple annotations in different threads
  * Returns: all output for a certain (combination of) annotation(s)
  */
 public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> {
@@ -173,7 +173,6 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 					}
 				} else {
 					// run unconditional analysis
-					// determine sigmaPosterior
 					Pair<Double, Integer> signal = broshifter.getOverlap(subsetOfAnnotation1, snps);
 					nrOverlapping = signal.getRight();
 					if (nrOverlapping > 0) {
