@@ -195,7 +195,6 @@ public class LRTest {
 		if (sampleToIntGenotypes.size() == 0) {
 			System.out.println("Problem with matching samples...");
 		} else {
-
 			double[] finalDiseaseStatus = new double[sampleToIntGenotypes.size()];
 			double[][] finalCovariates = new double[sampleToIntGenotypes.size()][covariates.columns()];
 
@@ -279,11 +278,14 @@ public class LRTest {
 			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
 			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
 
+
 			while (iter < options.getMaxIter()) {
 				TextFile logout = null;
 				if (iter == 0) {
 					System.out.println("Iteration " + iter + " starting. Model: y ~ SNP + covar.");
 					logout = new TextFile(options.getOutputdir() + "log-iter" + iter + ".txt", TextFile.W);
+					String logoutheader = "SNP\tChr\tPos\tImputationQual\tMAF\tOverlapOK\tMAFOk\tImpQualOK";
+					logout.writeln(logoutheader);
 					System.out.println("Log will be written here: " + options.getOutputdir() + "log-iter" + iter + ".txt");
 				} else {
 					System.out.println("Iteration " + iter + " starting. Model: y ~ " + Strings.concat(conditionalVariantIds, Strings.semicolon)
@@ -345,7 +347,15 @@ public class LRTest {
 							System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
 							System.err.println("In file: " + options.getVcf());
 							if (iter == 0) {
-								logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
+//								SNP	Chr	Pos	ImputationQual	MAF	Region	OverlapOK	MAFOk	ImpQualOK
+								logout.writeln(variant.getId()
+										+ "\t" + variant.getChr()
+										+ "\t" + variant.getPos()
+										+ "\t" + imputationqualityscore
+										+ "\t" + null
+										+ "\t" + null
+										+ "\t" + null
+										+ "\t" + false);
 							}
 						}
 
@@ -376,18 +386,19 @@ public class LRTest {
 
 						if (!impqualscoreOK || !overlap) {
 							if (iter == 0) {
-								logout.writeln("rsq OK?: " + impqualscoreOK + "\timpq:" + imputationqualityscore
-										+ "\t" + variant.getId()
+//								SNP	Chr	Pos	ImputationQual	MAF	Region	OverlapOK	MAFOk	ImpQualOK
+								logout.writeln(variant.getId()
 										+ "\t" + variant.getChr()
 										+ "\t" + variant.getPos()
-										+ "\t" + variant.getMAF()
-										+ "\toverlap?: " + overlap
-								);
+										+ "\t" + imputationqualityscore
+										+ "\t" + null
+										+ "\t" + overlap
+										+ "\t" + null
+										+ "\t" + false);
 							}
 						} else {
 
 							// throw into a thread
-
 							// TODO: conditional on dosages is separate from conditional on genotypes.. ?
 							LRTestTask task = new LRTestTask(variant,
 									iter,
@@ -402,7 +413,7 @@ public class LRTest {
 							jobHandler.submit(task);
 							submitted++;
 
-							if (submitted % 250 == 0) {
+							if (submitted % 1000 == 0) {
 								clearQueue(logout, pvalout, iter, variants, jobHandler);
 							}
 						}
@@ -488,8 +499,8 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-							int iter, ArrayList<VCFVariant> variants,
-							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
+	                        int iter, ArrayList<VCFVariant> variants,
+	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -676,13 +687,16 @@ public class LRTest {
 			double maf = summary.getLeft();
 			if (maf < options.getMafthresholdD()) {
 				if (iter == 0) {
-
-					String output = "variant skipped maf: " + maf + " below threshold " +
-							variant.getId()
+//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
+					String output = variant.getId()
 							+ "\t" + variant.getChr()
 							+ "\t" + variant.getPos()
-							+ "\t" + variant.getMAF()
-							+ "\timpqual: " + variant.getInfo().get("AR2");
+							+ "\t" + variant.getImputationQualityScore()
+							+ "\t" + true
+							+ "\t" + true
+							+ "\t" + false
+							+ "\t" + true;
+
 					return new Triple<>(output, null, null);
 //					logout.writeln(
 					//);
@@ -712,7 +726,16 @@ public class LRTest {
 
 				}
 //				nrTested++;
-				return new Triple<>(null, result, variant);
+				//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
+				String output = variant.getId()
+						+ "\t" + variant.getChr()
+						+ "\t" + variant.getPos()
+						+ "\t" + variant.getImputationQualityScore()
+						+ "\t" + true
+						+ "\t" + true
+						+ "\t" + true
+						+ "\t" + true;
+				return new Triple<>(output, result, variant);
 			} // end maf > threshold
 		}
 
@@ -1030,11 +1053,11 @@ public class LRTest {
 		}
 
 		private AssociationResult pruneAndTest(double[][] x,
-											   double[] y,
-											   int nrAlleles,
-											   int alleleOffset,
-											   VCFVariant variant,
-											   double maf) throws REXPMismatchException, REngineException, IOException {
+		                                       double[] y,
+		                                       int nrAlleles,
+		                                       int alleleOffset,
+		                                       VCFVariant variant,
+		                                       double maf) throws REXPMismatchException, REngineException, IOException {
 			Pair<double[][], boolean[]> pruned = removeCollinearVariables(x);
 			x = pruned.getLeft(); // x is now probably shorter than original X
 			boolean[] notaliased = pruned.getRight(); // length of original X
