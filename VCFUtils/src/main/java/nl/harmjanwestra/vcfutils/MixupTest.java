@@ -178,6 +178,7 @@ public class MixupTest {
 		ds.save(out + "-matrix.txt.gz");
 
 		TextFile outf = new TextFile(out + "samples1vs2.txt", TextFile.W);
+		outf.writeln("Sample\tCorrSelf\tBestMatch\tBestMatchCorr\tIdenticalSample");
 		// get highest absolute correlation per individual
 		for (int i = 0; i < samples1Reordered.size(); i++) {
 			double maxCorr = 0;
@@ -188,8 +189,23 @@ public class MixupTest {
 					jmax = j;
 				}
 			}
-			outf.writeln(samples1Reordered.get(i) + "\t" + samples2Reordered.get(jmax) + "\t" + maxCorr);
 
+			String sample = samples1Reordered.get(i);
+			if (overlapSampleMap.containsKey(sample)) {
+				outf.writeln(samples1Reordered.get(i)
+						+ "\t" + corrmat[i][i]
+						+ "\t" + samples2Reordered.get(jmax)
+						+ "\t" + maxCorr
+						+ "\t" + (samples1Reordered.get(i).equals(samples2Reordered.get(jmax)))
+				);
+			} else {
+				outf.writeln(samples1Reordered.get(i)
+						+ "\t" + null
+						+ "\t" + samples2Reordered.get(jmax)
+						+ "\t" + maxCorr
+						+ "\t" + (samples1Reordered.get(i).equals(samples2Reordered.get(jmax)))
+				);
+			}
 		}
 
 		outf.close();
@@ -205,6 +221,23 @@ public class MixupTest {
 					maxCorr = corrmat[j][i];
 					jmax = j;
 				}
+			}
+
+			String sample = samples2Reordered.get(i);
+			if (overlapSampleMap.containsKey(sample)) {
+				outf.writeln(samples2Reordered.get(i)
+						+ "\t" + corrmat[i][i]
+						+ "\t" + samples1Reordered.get(jmax)
+						+ "\t" + maxCorr
+						+ "\t" + (samples1Reordered.get(i).equals(samples2Reordered.get(jmax)))
+				);
+			} else {
+				outf.writeln(samples2Reordered.get(i)
+						+ "\t" + null
+						+ "\t" + samples1Reordered.get(jmax)
+						+ "\t" + maxCorr
+						+ "\t" + (samples1Reordered.get(i).equals(samples2Reordered.get(jmax)))
+				);
 			}
 			outf.writeln(samples2Reordered.get(i) + "\t" + samples1Reordered.get(jmax) + "\t" + maxCorr);
 
