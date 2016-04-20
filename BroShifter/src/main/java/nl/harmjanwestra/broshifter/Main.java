@@ -44,6 +44,8 @@ public class Main {
 				new LRTest(new LRTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.PROXYFINDER)) {
 				new ProxyFinder(new ProxyFinderOptions(args));
+			}  else if (options.mode.equals(MainOptions.MODE.COUNTVARIANTS)) {
+				new CountVariants(new CountVariantsOptions(args));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -80,6 +80,12 @@ public class MainOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Parse GWAS logs to determine number of tested variants")
+				.longOpt("countvariants")
+				.build();
+		OPTIONS.addOption(option);
+
 	}
 
 	public MODE mode = MODE.NA;
@@ -111,6 +117,8 @@ public class MainOptions {
 				mode = MODE.PROXYFINDER;
 			} else if (cmd.hasOption("qtl")) {
 				mode = MODE.QTL;
+			} else if (cmd.hasOption("countvariants")) {
+				mode = MODE.COUNTVARIANTS;
 			} else {
 				HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp(" ", OPTIONS);
@@ -135,7 +143,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOT,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, NA
 	}
 
 }
