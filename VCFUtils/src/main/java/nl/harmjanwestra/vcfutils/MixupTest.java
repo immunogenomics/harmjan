@@ -129,8 +129,11 @@ public class MixupTest {
 											+ "\t" + Strings.concat(alleles2, Strings.forwardslash) + "\t" + minorAllele2);
 
 								}
-								variantsOverlap1.add(variant1);
-								variantsOverlap2.add(variant2);
+
+								if(variant1.getMAF() > 0.05 && variant2.getMAF() > 0.05) {
+									variantsOverlap1.add(variant1);
+									variantsOverlap2.add(variant2);
+								}
 							}
 						} else {
 							System.out.println("Incompatible alleles:\t\t" + Strings.concat(alleles1, Strings.forwardslash) + "\t" + minorAllele1
