@@ -476,7 +476,10 @@ public class LRTest {
 					conditional.add(unfilteredGenotypeData);
 					conditionalDosages.add(dosages);
 					conditionalVariantIds.add(variant.getId());
-					System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + "\tHighest P-val: " + highestLog10PProbs + "\tBy variant: " + variant.getId());
+					System.out.println("Iteration: " + iter
+							+ "\tNr variants: " + variantCtr
+							+ "\tHighest P-val: " + highestLog10PProbs
+							+ "\tBy variant: " + variant.getId());
 
 				}
 

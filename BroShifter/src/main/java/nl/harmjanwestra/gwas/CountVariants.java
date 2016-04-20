@@ -45,7 +45,7 @@ public class CountVariants {
 				// rs77716349      1       197752167       0.0     null    true    null    false
 				Boolean overlapok = false;
 				Boolean mafOK = Boolean.parseBoolean(elems[6]);
-				Boolean impQualOK = Boolean.parseBoolean(elems[6]);
+				Boolean impQualOK = Boolean.parseBoolean(elems[7]);
 
 				Feature f = new Feature();
 				f.setChromosome(Chromosome.parseChr(elems[1]));
@@ -62,7 +62,7 @@ public class CountVariants {
 
 				nrVariantsTotal++;
 				if (overlapok) {
-					nrVariantsTotal++;
+					nrVariantsInRegions++;
 					if (impQualOK) {
 						nrVariantsInRegionsWithProperImpQual++;
 						if (mafOK) {
@@ -83,5 +83,7 @@ public class CountVariants {
 		System.out.println(nrVariantsInRegionsWithProperImpQual + "\tVariants with proper impqual");
 		System.out.println(nrVariantsInRegionsWithProperMAF + "\tVariant with proper impqual and maf");
 	}
+
+	
 
 }

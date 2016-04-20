@@ -14,6 +14,12 @@ public class CountVariantsOptions {
 		Option option = Option.builder().longOpt("gwas").build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("countvariants")
+				.desc("Count variants")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("i")
 				.hasArg()
 				.desc("A list of log files to parse")
