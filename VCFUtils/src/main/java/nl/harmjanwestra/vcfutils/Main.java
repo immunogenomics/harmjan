@@ -355,6 +355,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("listsamples")
+				.desc("List samples in VCF")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.hasArg()
 				.longOpt("separator")
 				.desc("VCF Genotype allele separator")
@@ -447,6 +453,8 @@ public class Main {
 			}
 
 
+
+
 			if (!cmd.hasOption("i")) {
 				run = false;
 				System.out.println("Please provide input vcf");
@@ -454,6 +462,11 @@ public class Main {
 				input = cmd.getOptionValue("i");
 			}
 
+			if(cmd.hasOption("listsamples") && run){
+				VCFListSamples s = new VCFListSamples();
+				s.run(input);
+				System.exit(-1);
+			}
 
 			if (!cmd.hasOption("o")) {
 				System.out.println("Please provide output prefix");

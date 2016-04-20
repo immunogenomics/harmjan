@@ -84,6 +84,6 @@ public class CountVariants {
 		System.out.println(nrVariantsInRegionsWithProperMAF + "\tVariant with proper impqual and maf");
 	}
 
-	
+
 
 }
