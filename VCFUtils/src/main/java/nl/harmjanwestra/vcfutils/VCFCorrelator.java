@@ -1,5 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
+import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
@@ -81,12 +82,16 @@ public class VCFCorrelator {
 		int ctr1 = 0;
 		while (data1.hasNext()) {
 			VCFVariant var = data1.nextLoadHeader();
-			String varStr = var.toString();
-			if (varsToTest == null || varsToTest.contains(varStr)) {
-				if (var.getTokens() != null) {
-					var.parseGenotypes(var.getTokens(), VCFVariant.PARSE.ALL);
-					var.cleartokens();
-					variantMap.put(var.toString(), var);
+			Chromosome chr = Chromosome.parseChr(var.getChr());
+
+			if (!chr.equals(Chromosome.X)) {
+				String varStr = var.toString();
+				if (varsToTest == null || varsToTest.contains(varStr)) {
+					if (var.getTokens() != null) {
+						var.parseGenotypes(var.getTokens(), VCFVariant.PARSE.ALL);
+						var.cleartokens();
+						variantMap.put(var.toString(), var);
+					}
 				}
 			}
 			ctr1++;
@@ -104,6 +109,7 @@ public class VCFCorrelator {
 		int ctr2 = 0;
 		while (data2.hasNext()) {
 			VCFVariant var2 = data2.nextLoadHeader();
+
 			String varStr = var2.toString();
 
 			VCFVariant var1 = variantMap.get(varStr);

@@ -702,10 +702,11 @@ public class Main {
 
 				if (cmd.hasOption("l")) {
 					li = cmd.getOptionValue("l");
-				} else {
-					System.err.println("Provide -l with --correlatevcf");
-					run = false;
 				}
+//				else {
+//					System.err.println("Provide -l with --correlatevcf");
+//					run = false;
+//				}
 				if (run) {
 					VCFCorrelator c = new VCFCorrelator();
 

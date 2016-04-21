@@ -18,8 +18,6 @@ import java.util.Collections;
 public class VariantCorrelationMatrix {
 
 	public void correlate(String vcf, String bedregion, String out, boolean printheaders) throws IOException {
-
-
 		Feature region = new Feature();
 		String[] regionelems = bedregion.split(":");
 		Chromosome chr = Chromosome.parseChr(regionelems[0]);
