@@ -232,14 +232,14 @@ public class MixupTest {
 						+ "\t" + corrmat[i][i]
 						+ "\t" + samples1Reordered.get(jmax)
 						+ "\t" + maxCorr
-						+ "\t" + (samples1Reordered.get(i).equals(samples2Reordered.get(jmax)))
+						+ "\t" + (samples2Reordered.get(i).equals(samples2Reordered.get(jmax)))
 				);
 			} else {
 				outf.writeln(samples2Reordered.get(i)
 						+ "\t" + null
 						+ "\t" + samples1Reordered.get(jmax)
 						+ "\t" + maxCorr
-						+ "\t" + (samples1Reordered.get(i).equals(samples2Reordered.get(jmax)))
+						+ "\t" + (samples2Reordered.get(i).equals(samples2Reordered.get(jmax)))
 				);
 			}
 			outf.writeln(samples2Reordered.get(i) + "\t" + samples1Reordered.get(jmax) + "\t" + maxCorr);
