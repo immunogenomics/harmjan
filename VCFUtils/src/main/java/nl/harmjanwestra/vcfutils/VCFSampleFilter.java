@@ -64,11 +64,11 @@ public class VCFSampleFilter {
 			} else if (ln.startsWith("#CHROM")) {
 				String[] elems = ln.split("\t");
 
+				includecol = new boolean[elems.length];
+
 				for (int i = 0; i < 9; i++) {
 					includecol[i] = true;
 				}
-
-				includecol = new boolean[elems.length];
 				if (!keep) {
 					for (int i = 0; i < includecol.length; i++) {
 						includecol[i] = true;
