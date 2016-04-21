@@ -43,7 +43,6 @@ public class ProxyFinderOptions {
 
 		option = Option.builder()
 				.longOpt("pairwise")
-				.hasArg()
 				.desc("Perform Pairwise LD calculation (format Chr_pos_rsid)")
 				.build();
 		OPTIONS.addOption(option);

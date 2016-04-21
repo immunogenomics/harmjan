@@ -18,38 +18,54 @@ public class DetermineBestAssocPerLocus {
 	public static void main(String[] args) {
 		DetermineBestAssocPerLocus d = new DetermineBestAssocPerLocus();
 		try {
-			String t1d = "D:\\upload\\ic\\ImmunoChip\\hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab";
-			String ra = "D:\\upload\\ic\\ImmunoChip\\hg19_gwas_ic_ra_eyre_4_19_1.tab";
-			String bedfile = "D:\\tmp\\2016-04-21\\AllICLoci.bed";
-			String outt1d = "D:\\tmp\\2016-04-21\\topt1deffects.txt";
-			String outra = "D:\\tmp\\2016-04-21\\topraeffects.txt";
+//			String t1d = "D:\\upload\\ic\\ImmunoChip\\hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab";
+//			String ra = "D:\\upload\\ic\\ImmunoChip\\hg19_gwas_ic_ra_eyre_4_19_1.tab";
+//			String bedfile = "D:\\tmp\\2016-04-21\\AllICLoci.bed";
+//			String outt1d = "D:\\tmp\\2016-04-21\\topt1deffects.txt";
+//			String outra = "D:\\tmp\\2016-04-21\\topraeffects.txt";
 
-//			d.run(bedfile, t1d, outt1d);
-//			d.run(bedfile, ra, outra);
+			String t1d = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab";
+			String ra = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ic_ra_eyre_4_19_1.tab";
+			String bedfile = "/Data/tmp/2016-04-21/AllICLoci.bed";
+			String outt1d = "/Data/tmp/2016-04-21/onengut-topt1deffects.txt";
+			String outra = "/Data/tmp/2016-04-21/eyre-topraeffects.txt";
+
+			d.getSignificantLociForICStudies(bedfile, t1d, outt1d, true);
+
+			d.getSignificantLociForICStudies(bedfile, ra, outra, true);
+
+//			d.merge("/Data/tmp/2016-04-21/RA-assoc0.3-eur-merged.txt",
+//					outt1d,
+//					"/Data/tmp/2016-04-21/RA-assoc0.3-eur-merged.txt");
 
 
-			d.merge("D:\\tmp\\2016-04-21\\T1D-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations.txt",
-					outt1d,
-					"D:\\tmp\\2016-04-21\\T1D-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations-snppairs.txt");
+//			d.merge("D:\\tmp\\2016-04-21\\T1D-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations.txt",
+//					outt1d,
+//					"D:\\tmp\\2016-04-21\\T1D-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations-snppairs.txt");
+//
+//			d.merge("D:\\tmp\\2016-04-21\\T1D-assoc0.3-eur-merged-significantloci-3.23E-7.bed-topAssociations.txt",
+//					outt1d,
+//					"D:\\tmp\\2016-04-21\\T1D-assoc0.3-eur-merged-significantloci-3.23E-7.bed-topAssociations-snppairs.txt");
+//
+//			d.merge("D:\\tmp\\2016-04-21\\RA-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations.txt",
+//					outra,
+//					"D:\\tmp\\2016-04-21\\RA-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations-snppairs.txt");
+//
+//			d.merge("D:\\tmp\\2016-04-21\\RA-assoc0.3-eur-merged-significantloci-3.23E-7.bed-topAssociations.txt",
+//					outra,
+//					"D:\\tmp\\2016-04-21\\RA-assoc0.3-eur-merged-significantloci-3.23E-7.bed-topAssociations-snppairs.txt");
 
-			d.merge("D:\\tmp\\2016-04-21\\T1D-assoc0.3-eur-merged-significantloci-3.23E-7.bed-topAssociations.txt",
-					outt1d,
-					"D:\\tmp\\2016-04-21\\T1D-assoc0.3-eur-merged-significantloci-3.23E-7.bed-topAssociations-snppairs.txt");
-
-			d.merge("D:\\tmp\\2016-04-21\\RA-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations.txt",
-					outra,
-					"D:\\tmp\\2016-04-21\\RA-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations-snppairs.txt");
-
-			d.merge("D:\\tmp\\2016-04-21\\RA-assoc0.3-eur-merged-significantloci-3.23E-7.bed-topAssociations.txt",
-					outra,
-					"D:\\tmp\\2016-04-21\\RA-assoc0.3-eur-merged-significantloci-3.23E-7.bed-topAssociations-snppairs.txt");
+//			String file1 = "/Data/tmp/2016-04-21/RA-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations.txt";
+//			String file2 = "/Data/tmp/2016-04-21/T1D-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations.txt";
+//			String out = "/Data/tmp/2016-04-21/overlappingregions-cosmo.txt";
+//			d.overlapRegions(file1, file2, out);
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void run(String bedfile, String tabfile, String out) throws IOException {
+	public void getSignificantLociForICStudies(String bedfile, String tabfile, String out, boolean onlysignificantloci) throws IOException {
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedfile);
@@ -108,7 +124,9 @@ public class DetermineBestAssocPerLocus {
 			if (d != null) {
 				Feature snp = d.getLeft();
 
-				outf.writeln(f.toString() + "\t" + snp.getName() + "\t" + snp.getChromosome().toString() + "\t" + snp.getStart() + "\t" + d.getRight() + "\t" + (d.getRight() > t));
+				if (!onlysignificantloci || (d.getRight() > t)) {
+					outf.writeln(f.toString() + "\t" + snp.getName() + "\t" + snp.getChromosome().toString() + "\t" + snp.getStart() + "\t" + d.getRight() + "\t" + (d.getRight() > t));
+				}
 			}
 		}
 		outf.close();
@@ -142,6 +160,46 @@ public class DetermineBestAssocPerLocus {
 			if (regionToSNP.containsKey(region)) {
 				outf.writeln(regionToSNP.get(region) + "\t" + snp + "\t" + regionToP.get(region) + "\t" + elems[4]);
 			}
+			elems = in2.readLineElems(TextFile.tab);
+
+		}
+		in1.close();
+		outf.close();
+
+
+	}
+
+	public void overlapRegions(String file1, String file2, String out) throws IOException {
+		TextFile in1 = new TextFile(file1, TextFile.R);
+		String[] elems = in1.readLineElems(TextFile.tab);
+		HashMap<String, String> regionToSNP = new HashMap<>();
+		HashMap<String, String> regionToP = new HashMap<>();
+		while (elems != null) {
+
+			String region = elems[0];
+			String snp = elems[1] + "_" + elems[2] + "_" + elems[3];
+			regionToSNP.put(region, snp);
+			regionToP.put(region, elems[elems.length - 1]);
+
+			elems = in1.readLineElems(TextFile.tab);
+
+		}
+		in1.close();
+
+
+		TextFile outf = new TextFile(out, TextFile.W);
+		TextFile in2 = new TextFile(file2, TextFile.R);
+		elems = in2.readLineElems(TextFile.tab);
+
+		while (elems != null) {
+
+			String region = elems[0];
+			String snp = elems[1] + "_" + elems[2] + "_" + elems[3];
+
+			if (regionToSNP.containsKey(region)) {
+				outf.writeln(regionToSNP.get(region) + "\t" + snp);
+			}
+
 			elems = in2.readLineElems(TextFile.tab);
 
 		}

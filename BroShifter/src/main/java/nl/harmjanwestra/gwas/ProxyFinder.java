@@ -151,7 +151,7 @@ public class ProxyFinder {
 		}
 
 		TextFile out = new TextFile(options.output, TextFile.W);
-
+		int nr = 0;
 		for (Pair<String, String> p : pairs) {
 
 			String snp1 = p.getLeft();
@@ -180,15 +180,49 @@ public class ProxyFinder {
 
 			if (variant1 != null && variant2 != null) {
 				double[] genotypes1 = convertToDouble(variant1);
-				double[] genotypes2 = convertToDouble(variant1);
-				double corr = Correlation.correlate(genotypes1, genotypes2);
+				double[] genotypes2 = convertToDouble(variant2);
+				Pair<double[], double[]> filtered = stripmissing(genotypes1, genotypes2);
+				double corr = Correlation.correlate(filtered.getLeft(), filtered.getRight());
 
-				out.writeln(snp1 + "\t" + snp2 + "\t" + (corr * corr));
+				double rsq = (corr * corr);
+				out.writeln(snp1 + "\t" + snp2 + "\t" + rsq);
+
+				if (rsq > options.threshold) {
+					nr++;
+				}
 
 			}
 		}
 		out.close();
 
+		System.out.println(nr + " of " + pairs.size() + " have rsq>" + options.threshold);
+	}
+
+	private Pair<double[], double[]> stripmissing(double[] a, double[] b) {
+		boolean[] missing = new boolean[a.length];
+		int nrmissing = 0;
+		for (int i = 0; i < a.length; i++) {
+			if (a[i] == -1 || b[i] == -1) {
+				missing[i] = true;
+				nrmissing++;
+			}
+		}
+		if (nrmissing == 0) {
+			return new Pair<double[], double[]>(a, b);
+		} else {
+			double[] tmpa = new double[a.length - nrmissing];
+			double[] tmpb = new double[a.length - nrmissing];
+			int ctr = 0;
+			for (int i = 0; i < a.length; i++) {
+				if (!missing[i]) {
+					tmpa[ctr] = a[i];
+					tmpb[ctr] = b[i];
+					ctr++;
+				}
+			}
+
+			return new Pair<double[], double[]>(tmpa, tmpb);
+		}
 	}
 
 	private synchronized VCFVariant getSNP(Feature snp) throws IOException {
@@ -197,7 +231,7 @@ public class ProxyFinder {
 		TabixReader.Iterator inputSNPiter = reader.query(snp.getChromosome().getNumber() + ":" + (snp.getStart() - 1) + "-" + (snp.getStart() + 1));
 		String snpStr = inputSNPiter.next();
 		VCFVariant testSNPObj1 = null;
-		System.out.println("Query: " + snp.toString());
+//		System.out.println("Query: " + snp.toString());
 		while (snpStr != null) {
 			VCFVariant variant = new VCFVariant(snpStr);
 			if (variant.asFeature().overlaps(snp)) {
@@ -276,7 +310,9 @@ public class ProxyFinder {
 					// correlate
 					if (variant.getMAF() > 0.005 && variant.getAlleles().length == 2) {
 						double[] genotypes2 = convertToDouble(variant);
-						double corr = Correlation.correlate(genotypes1, genotypes2);
+
+						Pair<double[], double[]> filtered = stripmissing(genotypes1, genotypes2);
+						double corr = Correlation.correlate(filtered.getLeft(), filtered.getRight());
 						corr *= corr;
 
 						// TODO: should replace with actual linkage

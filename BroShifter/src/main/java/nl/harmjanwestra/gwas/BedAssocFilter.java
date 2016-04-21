@@ -26,13 +26,11 @@ public class BedAssocFilter {
 		TextFile out = new TextFile(options.outfile, TextFile.W);
 
 		double threshold = -Math.log10(options.threshold);
-
+		AssociationFile assocFile = new AssociationFile();
 		ArrayList<Feature> regionsAfterFilter = new ArrayList<>();
 		for (int i = 0; i < regions.size(); i++) {
 			Feature region = regions.get(i);
-			AssociationFile assocFile = new AssociationFile();
 			ArrayList<AssociationResult> results = assocFile.read(options.assocFile, region);
-
 			boolean written = false;
 			for (int j = 0; j < results.size() && !written; j++) {
 				AssociationResult result = results.get(j);
@@ -53,7 +51,6 @@ public class BedAssocFilter {
 			TextFile tfout = new TextFile(options.outfile + "-topAssociations.txt", TextFile.W);
 			for (int i = 0; i < regionsAfterFilter.size(); i++) {
 				Feature region = regionsAfterFilter.get(i);
-				AssociationFile assocFile = new AssociationFile();
 				ArrayList<AssociationResult> results = assocFile.read(options.assocFile, region);
 
 				double maxP = 0;
