@@ -5,6 +5,7 @@ import nl.harmjanwestra.gwas.CLI.ProxyFinderOptions;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Correlation;
@@ -18,8 +19,20 @@ import java.util.concurrent.*;
  */
 public class ProxyFinder {
 
-	public ProxyFinder(ProxyFinderOptions options) throws IOException {
+	ProxyFinderOptions options;
 
+	public ProxyFinder(ProxyFinderOptions options) throws IOException {
+		this.options = options;
+
+		if (options.pairwise) {
+			pairwiseLD();
+		} else {
+			findProxies();
+		}
+
+	}
+
+	public void findProxies() throws IOException {
 		ArrayList<Feature> snps = new ArrayList<Feature>();
 		TextFile tf = new TextFile(options.snpfile, TextFile.R);
 		String ln = tf.readLine();
@@ -86,11 +99,117 @@ public class ProxyFinder {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
-
 		}
 
 		outFile.close();
 		threadPool.shutdown();
+	}
+
+	public void pairwiseLD() throws IOException {
+		ArrayList<Pair<String, String>> pairs = new ArrayList<>();
+		TextFile tf = new TextFile(options.snpfile, TextFile.R);
+		String[] elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+			if (elems.length >= 2) {
+				pairs.add(new Pair(elems[0], elems[1]));
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
+
+		// check if all VCF files are there
+		if (pairs.isEmpty()) {
+			System.err.println("Error: no snp pairs in " + options.snpfile);
+			System.exit(-1);
+		} else {
+			// check whether the reference VCFs are here..
+
+			boolean allfilespresent = true;
+			for (Pair<String, String> p : pairs) {
+				String snp1 = p.getLeft();
+				String snp2 = p.getRight();
+				String[] snp1elems = snp1.split("_");
+				Chromosome chr1 = Chromosome.parseChr(snp1elems[0]);
+				String[] snp2elems = snp2.split("_");
+				Chromosome chr2 = Chromosome.parseChr(snp2elems[0]);
+
+				if (!Gpio.exists(options.tabixrefprefix + chr1.getNumber() + ".vcf.gz")) {
+					System.out.println("Could not find required file: " + options.tabixrefprefix + chr1.getNumber() + ".vcf.gz");
+					allfilespresent = false;
+				}
+
+				if (!Gpio.exists(options.tabixrefprefix + chr2.getNumber() + ".vcf.gz")) {
+					System.out.println("Could not find required file: " + options.tabixrefprefix + chr2.getNumber() + ".vcf.gz");
+					allfilespresent = false;
+				}
+			}
+
+			if (!allfilespresent) {
+				System.out.println("Some VCF files are missing");
+				System.exit(-1);
+			}
+		}
+
+		TextFile out = new TextFile(options.output, TextFile.W);
+
+		for (Pair<String, String> p : pairs) {
+
+			String snp1 = p.getLeft();
+			String snp2 = p.getRight();
+			String[] snp1elems = snp1.split("_");
+			Integer snp1pos = Integer.parseInt(snp1elems[1]);
+			Chromosome chr1 = Chromosome.parseChr(snp1elems[0]);
+			String[] snp2elems = snp2.split("_");
+			Chromosome chr2 = Chromosome.parseChr(snp2elems[0]);
+			Integer snp2pos = Integer.parseInt(snp2elems[1]);
+
+			Feature snpfeature1 = new Feature();
+			snpfeature1.setChromosome(chr1);
+			snpfeature1.setStart(snp1pos);
+			snpfeature1.setStart(snp1pos);
+			snpfeature1.setName(snp1elems[2]);
+
+			Feature snpfeature2 = new Feature();
+			snpfeature2.setChromosome(chr2);
+			snpfeature2.setStart(snp2pos);
+			snpfeature2.setStart(snp2pos);
+			snpfeature2.setName(snp2elems[2]);
+
+			VCFVariant variant1 = getSNP(snpfeature1);
+			VCFVariant variant2 = getSNP(snpfeature2);
+
+			if (variant1 != null && variant2 != null) {
+				double[] genotypes1 = convertToDouble(variant1);
+				double[] genotypes2 = convertToDouble(variant1);
+				double corr = Correlation.correlate(genotypes1, genotypes2);
+
+				out.writeln(snp1 + "\t" + snp2 + "\t" + (corr * corr));
+
+			}
+		}
+		out.close();
+
+	}
+
+	private synchronized VCFVariant getSNP(Feature snp) throws IOException {
+		String tabixfile = options.tabixrefprefix + snp.getChromosome().getNumber() + ".vcf.gz";
+		TabixReader reader = new TabixReader(tabixfile);
+		TabixReader.Iterator inputSNPiter = reader.query(snp.getChromosome().getNumber() + ":" + (snp.getStart() - 1) + "-" + (snp.getStart() + 1));
+		String snpStr = inputSNPiter.next();
+		VCFVariant testSNPObj1 = null;
+		System.out.println("Query: " + snp.toString());
+		while (snpStr != null) {
+			VCFVariant variant = new VCFVariant(snpStr);
+			if (variant.asFeature().overlaps(snp)) {
+				if (variant.getId().equals(snp.getName())) {
+					testSNPObj1 = variant;
+				}
+			}
+
+			snpStr = inputSNPiter.next();
+		}
+		reader.close();
+		return testSNPObj1;
 	}
 
 	public double[] convertToDouble(VCFVariant vcfVariant) {
@@ -134,35 +253,18 @@ public class ProxyFinder {
 					+ "\t" + 0
 					+ "\t" + 1;
 
-
-			String tabixfile = tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz";
-			TabixReader reader = new TabixReader(tabixfile);
-
-			TabixReader.Iterator inputSNPiter = reader.query(queryVariantFeature.getChromosome().getNumber() + ":" + (queryVariantFeature.getStart() - 1) + "-" + (queryVariantFeature.getStart() + 1));
-
-			String snpStr = inputSNPiter.next();
-			VCFVariant testSNPObj = null;
-			System.out.println("Query: " + queryVariantFeature.getName());
-			int nr = 0;
-			while (snpStr != null) {
-				VCFVariant variant = new VCFVariant(snpStr);
-				if (variant.asFeature().overlaps(queryVariantFeature)) {
-					if (variant.getId().equals(queryVariantFeature.getName())) {
-						testSNPObj = variant;
-					}
-				}
-				nr++;
-				snpStr = inputSNPiter.next();
-			}
+			VCFVariant testSNPObj = getSNP(queryVariantFeature);
 
 			if (testSNPObj == null) {
-				System.out.println("Query: " + queryVariantFeature.getName() + " not in reference. " + nr + " lines " + queryVariantFeature.getChromosome().getNumber() + ":" + (queryVariantFeature.getStart() - 1) + "-" + (queryVariantFeature.getStart() + 1));
+				System.out.println("Query: " + queryVariantFeature.getName() + " not in reference. " + queryVariantFeature.getChromosome().getNumber() + ":" + (queryVariantFeature.getStart() - 1) + "-" + (queryVariantFeature.getStart() + 1));
 				if (output.isEmpty()) {
 					output.add(selfStr);
 				}
 				return output;
 			}
 
+			String tabixfile = tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz";
+			TabixReader reader = new TabixReader(tabixfile);
 			double[] genotypes1 = convertToDouble(testSNPObj);
 			TabixReader.Iterator window = reader.query(queryVariantFeature.getChromosome().getNumber() + ":" + (queryVariantFeature.getStart() - windowsize) + "-" + (queryVariantFeature.getStart() + windowsize));
 			String next = window.next();
@@ -192,6 +294,7 @@ public class ProxyFinder {
 				}
 				next = window.next();
 			}
+			reader.close();
 			if (output.isEmpty()) {
 				output.add(selfStr);
 			}

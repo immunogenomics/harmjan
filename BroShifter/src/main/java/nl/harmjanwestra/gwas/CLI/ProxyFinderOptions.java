@@ -6,13 +6,6 @@ import org.apache.commons.cli.*;
  * Created by hwestra on 3/22/16.
  */
 public class ProxyFinderOptions {
-	public String tabixrefprefix;
-	public int windowsize = 1000000;
-	public double threshold = 0.8;
-	public String snpfile;
-	public String output;
-	public int nrthreads = 1;
-
 	private static final Options OPTIONS;
 
 	static {
@@ -48,6 +41,13 @@ public class ProxyFinderOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("pairwise")
+				.hasArg()
+				.desc("Perform Pairwise LD calculation (format Chr_pos_rsid)")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("o")
 				.longOpt("out")
 				.hasArg()
@@ -64,13 +64,21 @@ public class ProxyFinderOptions {
 
 	}
 
+	public String tabixrefprefix;
+	public int windowsize = 1000000;
+	public double threshold = 0.8;
+	public String snpfile;
+	public String output;
+	public int nrthreads = 1;
+	public boolean pairwise;
+
+
 	public ProxyFinderOptions(String[] args) {
 
 		boolean run = true;
 		try {
 			CommandLineParser parser = new DefaultParser();
 			final CommandLine cmd = parser.parse(OPTIONS, args, false);
-
 
 			if (cmd.hasOption("r")) {
 				tabixrefprefix = cmd.getOptionValue("r");
@@ -81,6 +89,10 @@ public class ProxyFinderOptions {
 
 			if (cmd.hasOption("w")) {
 				windowsize = Integer.parseInt(cmd.getOptionValue("w"));
+			}
+
+			if (cmd.hasOption("pairwise")) {
+				pairwise = true;
 			}
 
 			if (cmd.hasOption("t")) {

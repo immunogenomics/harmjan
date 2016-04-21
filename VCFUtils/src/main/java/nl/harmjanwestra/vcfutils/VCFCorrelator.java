@@ -95,7 +95,7 @@ public class VCFCorrelator {
 				}
 			}
 			ctr1++;
-			if (ctr1 % 100 == 0) {
+			if (ctr1 % 1000 == 0) {
 				System.out.println(ctr1 + " variants parsed from vcf1");
 			}
 		}
@@ -181,7 +181,7 @@ public class VCFCorrelator {
 				}
 			}
 			ctr2++;
-			if (ctr2 % 100 == 0) {
+			if (ctr2 % 1000 == 0) {
 				System.out.println(ctr2 + " variants parsed from vcf2");
 			}
 		}
