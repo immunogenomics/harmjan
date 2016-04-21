@@ -176,7 +176,7 @@ public class VCFCorrelator {
 					// ?
 				}
 			} else {
-				if (varsToTest == null || varsToTest.contains(varStr)) {
+				if (varsToTest != null && varsToTest.contains(varStr)) {
 					variantMap2.put(varStr, var2);
 				}
 			}
