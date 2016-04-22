@@ -1017,10 +1017,17 @@ public class Main {
 				f.splitPerChromosome(input, out);
 
 			} else if (cmd.hasOption("filterregions")) {
-				VCFFunctions f = new VCFFunctions();
+
 				if (cmd.hasOption("b")) {
 
-					f.filterVCFForBedRegions(input, out, cmd.getOptionValue("b"));
+					String chr = null;
+
+					if (cmd.hasOption("chr")) {
+						chr = cmd.getOptionValue("chr");
+					}
+
+					VCFBedFilter f = new VCFBedFilter();
+					f.filterVCFForBedRegions(input, out, cmd.getOptionValue("b"), chr);
 
 				} else {
 					System.out.println("Please provide -b for --filter");
