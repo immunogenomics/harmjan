@@ -34,9 +34,21 @@ public class DetermineBestAssocPerLocus {
 
 			d.getSignificantLociForICStudies(bedfile, ra, outra, true);
 
-//			d.merge("/Data/tmp/2016-04-21/RA-assoc0.3-eur-merged.txt",
-//					outt1d,
-//					"/Data/tmp/2016-04-21/RA-assoc0.3-eur-merged.txt");
+			d.merge("/Data/tmp/2016-04-21/RA-assoc0.3-eur-merged-topvariantperlocus.bed-topAssociations.txt",
+					outra,
+					"/Data/tmp/2016-04-21/RA-assoc0.3-eur-merged-topvariantperlocus.bed-topAssociations-snppairs.txt");
+
+			d.merge("/Data/tmp/2016-04-21/RA-assoc0.3-merged-topvariantperlocus.bed-topAssociations.txt",
+					outra,
+					"/Data/tmp/2016-04-21/RA-assoc0.3-merged-topvariantperlocus.bed-topAssociations-snppairs.txt");
+
+			d.merge("/Data/tmp/2016-04-21/T1D-assoc0.3-eur-merged-topvariantperlocus.bed-topAssociations.txt",
+					outt1d,
+					"/Data/tmp/2016-04-21/T1D-assoc0.3-eur-merged-topvariantperlocus.bed-topAssociations-snppairs.txt");
+
+			d.merge("/Data/tmp/2016-04-21/T1D-assoc0.3-merged-topvariantperlocus.bed-topAssociations.txt",
+					outt1d,
+					"/Data/tmp/2016-04-21/T1D-assoc0.3-merged-topvariantperlocus.bed-topAssociations-snppairs.txt");
 
 
 //			d.merge("D:\\tmp\\2016-04-21\\T1D-assoc0.3-merged-significantloci-3.23E-7.bed-topAssociations.txt",
@@ -159,6 +171,8 @@ public class DetermineBestAssocPerLocus {
 			String snp = elems[2] + "_" + elems[3] + "_" + elems[1];
 			if (regionToSNP.containsKey(region)) {
 				outf.writeln(regionToSNP.get(region) + "\t" + snp + "\t" + regionToP.get(region) + "\t" + elems[4]);
+			} else {
+				System.out.println(region.toString() + " not found?");
 			}
 			elems = in2.readLineElems(TextFile.tab);
 

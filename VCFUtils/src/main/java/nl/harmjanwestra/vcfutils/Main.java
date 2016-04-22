@@ -64,6 +64,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Concatenate correlation files")
+				.longOpt("concatcorrelation")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Concatenate variants for shared samples for a list of files")
 				.longOpt("concatlist")
 				.build();
@@ -453,8 +459,6 @@ public class Main {
 			}
 
 
-
-
 			if (!cmd.hasOption("i")) {
 				run = false;
 				System.out.println("Please provide input vcf");
@@ -462,7 +466,7 @@ public class Main {
 				input = cmd.getOptionValue("i");
 			}
 
-			if(cmd.hasOption("listsamples") && run){
+			if (cmd.hasOption("listsamples") && run) {
 				VCFListSamples s = new VCFListSamples();
 				s.run(input);
 				System.exit(-1);
@@ -525,6 +529,12 @@ public class Main {
 				} else {
 					System.out.println("use -i2 with --filtersampleoverlap");
 				}
+
+			} else if (cmd.hasOption("concatcorrelation")) {
+
+				CorrelationResultCombiner combiner = new CorrelationResultCombiner();
+				String[] files = input.split(",");
+				combiner.concat(files, out);
 
 			} else if (cmd.hasOption("filteralleles")) {
 

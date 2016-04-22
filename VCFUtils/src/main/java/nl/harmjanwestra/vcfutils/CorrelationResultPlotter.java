@@ -25,7 +25,6 @@ public class CorrelationResultPlotter {
 		Grid grid = new Grid(400, 400, 2, 4, 100, 100);
 
 		// make panel with maf1 vs maf2
-
 		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.maf2, "Maf1", "Maf2"), 0, 0);
 		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqb1, "Maf1", "Beagle R-square"), 0, 1);
 		grid.addPanel(makePanel(data, CorrelationResult.TYPE.maf1, CorrelationResult.TYPE.rsqp, "Maf1", "Pearson R-square"), 0, 2);
@@ -51,12 +50,21 @@ public class CorrelationResultPlotter {
 		HashSet<String> allVariants = new HashSet<String>();
 		for (int i = 0; i < files.length; i++) {
 			System.out.println("Reading: " + files[i]);
+			HashSet<String> variantsInDs = new HashSet<String>();
 			ArrayList<CorrelationResult> data = c.getData(files[i]);
 			alldata.add(data);
 			for (CorrelationResult r : data) {
+
+				if (variantsInDs.contains(r.variant)) {
+					System.out.println("already found variant: " + r.variant);
+				}
+				variantsInDs.add(r.variant);
+
 				allVariants.add(r.variant);
 			}
 		}
+
+		System.out.println(allVariants.size() + " variants in total.");
 
 		Grid grid = new Grid(400, 300, 1, 1, 100, 100);
 
@@ -66,20 +74,20 @@ public class CorrelationResultPlotter {
 		double[][] y = new double[files.length][allVariants.size()];
 
 		Range dataRange = new Range(0, 0, 1, 1);
-
-
 		int ctr = 0;
 		String[] refNames = new String[names.length];
 		for (int i = 0; i < files.length; i++) {
 
 			ArrayList<CorrelationResult> data = alldata.get(i);
 			ArrayList<Double> d = new ArrayList<>();
+
 			for (CorrelationResult r : data) {
 				Double p = r.rsqPearson;
 				if (p != null && !Double.isInfinite(p) && !Double.isNaN(p)) {
 					d.add(p);
 				}
 			}
+
 			Collections.sort(d, Collections.reverseOrder());
 			int nrAboveThreshold = 0;
 			for (int v = 0; v < d.size(); v++) {
