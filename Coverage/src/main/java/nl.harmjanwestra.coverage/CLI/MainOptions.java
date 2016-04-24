@@ -180,6 +180,8 @@ public class MainOptions {
 					System.out.println("Please provide outdir and inputfile");
 					run = false;
 				}
+			} else {
+				run = false;
 			}
 
 			if (!run) {

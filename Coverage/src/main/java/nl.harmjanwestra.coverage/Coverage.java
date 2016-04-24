@@ -62,6 +62,8 @@ public class Coverage {
 
 
 	public void bamToBedWithinRegionsForList(String listFile, String outdir, String targetregions, boolean outputcoverageperregion, int threads) throws IOException {
+
+		System.out.println("Loading file list from: " + listFile);
 		TextFile lf = new TextFile(listFile, TextFile.R);
 		ArrayList<String> samples = new ArrayList<String>();
 		ArrayList<String> files = new ArrayList<String>();
@@ -76,6 +78,12 @@ public class Coverage {
 		}
 
 		lf.close();
+
+		if (samples.isEmpty() || files.isEmpty()) {
+			System.out.println("Expecting two columns in your input list");
+			System.out.println("Found " + samples.size() + " samples and " + files.size() + " files");
+			System.exit(-1);
+		}
 
 
 		int filectr = 0;
@@ -115,6 +123,7 @@ public class Coverage {
 			filectr++;
 		}
 
+		System.out.println(filectr + " jobs submtted");
 
 		int returned = 0;
 		while (returned < files.size()) {
@@ -123,6 +132,7 @@ public class Coverage {
 				Boolean result = pool.take().get();
 				if (result) {
 					returned++;
+					System.out.println(returned + " jobs returned");
 				}
 
 				System.out.println(returned + " / " + files.size() + " returned");
