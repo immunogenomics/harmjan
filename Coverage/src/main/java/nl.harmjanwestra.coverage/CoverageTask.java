@@ -111,7 +111,7 @@ public class CoverageTask implements Callable<Boolean> {
 		for (int i = 0; i < samples.length; i++) {
 			String[] samplenameelems = samples[i].split("/");
 			String sampleName = samplenameelems[samplenameelems.length - 1];
-			bedout[i] = new TextFile(outdir + sampleName + "-regions.bedGraph", TextFile.W);
+			bedout[i] = new TextFile(outdir + sampleName + "-regions.bedGraph.gz", TextFile.W);
 		}
 
 

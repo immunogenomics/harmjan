@@ -117,7 +117,7 @@ public class Coverage {
 			Gpio.createDir(sampleOutDir);
 
 
-			CoverageTask t = new CoverageTask(file, sampleOutDir, features, outputcoverageperregion);
+			CoverageTask t = new CoverageTask(file, sampleOutDir, features, true);
 			pool.submit(t);
 
 			filectr++;
