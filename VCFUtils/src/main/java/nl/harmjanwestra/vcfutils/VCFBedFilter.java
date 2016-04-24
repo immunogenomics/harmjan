@@ -42,9 +42,11 @@ public class VCFBedFilter {
 
 			int submitted = 0;
 			for (String[] f : listArr) {
-				VCFBedFilterTask task = new VCFBedFilterTask(f[0], f[1], regionFile, f[2]);
-				jobHandler.submit(task);
-				submitted++;
+				if(f.length == 3) {
+					VCFBedFilterTask task = new VCFBedFilterTask(f[0], f[1], regionFile, f[2]);
+					jobHandler.submit(task);
+					submitted++;
+				}
 			}
 
 			System.out.println("Submitted " + submitted + " jobs");
