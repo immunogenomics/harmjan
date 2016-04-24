@@ -367,6 +367,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("list")
+				.desc("Specify that input is a list.")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.hasArg()
 				.longOpt("separator")
 				.desc("VCF Genotype allele separator")
@@ -1021,13 +1027,17 @@ public class Main {
 				if (cmd.hasOption("b")) {
 
 					String chr = null;
-
 					if (cmd.hasOption("chr")) {
 						chr = cmd.getOptionValue("chr");
 					}
 
+					boolean list = false;
+					if (cmd.hasOption("list")) {
+						list = true;
+					}
+
 					VCFBedFilter f = new VCFBedFilter();
-					f.filterVCFForBedRegions(input, out, cmd.getOptionValue("b"), chr);
+					f.filter(input, out, cmd.getOptionValue("b"), chr, list);
 
 				} else {
 					System.out.println("Please provide -b for --filter");
