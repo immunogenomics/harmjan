@@ -38,6 +38,7 @@
         <module>BroRunner</module>
         <module>TXTr</module>
         <module>chromhmmsplitter</module>
+        <module>Coverage</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
