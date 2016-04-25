@@ -6,9 +6,13 @@ import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.bedfile.BedGraphReader;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
-import nl.harmjanwestra.utilities.graphics.panels.*;
+import nl.harmjanwestra.utilities.graphics.panels.AnnotationPanel;
+import nl.harmjanwestra.utilities.graphics.panels.AssociationPanel;
+import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
+import nl.harmjanwestra.utilities.graphics.panels.SpacerPanel;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -333,6 +337,18 @@ public class AnnotationOverlapPlot {
 				}
 				ctr++;
 
+			}
+
+
+			// load bedgraphs
+			BedGraphReader bedGraphReader = new BedGraphReader();
+			ArrayList<ArrayList<BedGraphFeature>> bedGraphData = new ArrayList<>();
+
+			ArrayList<Feature> regionTmp = new ArrayList<>();
+			regionTmp.add(region);
+
+			for (int i = 0; i < annotationFiles.size(); i++) {
+				bedGraphData.add(bedGraphReader.read(annotationFiles.get(i), true, regionTmp));
 			}
 
 
