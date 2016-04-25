@@ -10,7 +10,7 @@ public class AssociationPlotterOptions {
 
 	static {
 		OPTIONS = new Options();
-		Option option = Option.builder().longOpt("plot").build();
+		Option option = Option.builder().longOpt("plotBinaryTrait").build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("i")

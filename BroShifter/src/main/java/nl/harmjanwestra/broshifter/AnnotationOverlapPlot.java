@@ -8,16 +8,12 @@ import nl.harmjanwestra.utilities.association.approximatebayesposterior.Approxim
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
-import nl.harmjanwestra.utilities.graphics.panels.AnnotationPanel;
-import nl.harmjanwestra.utilities.graphics.panels.AssociationPanel;
-import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
-import nl.harmjanwestra.utilities.graphics.panels.SpacerPanel;
+import nl.harmjanwestra.utilities.graphics.panels.*;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -27,6 +23,18 @@ import java.util.*;
  */
 public class AnnotationOverlapPlot {
 
+
+	private final BroShifterOptions options;
+
+	public AnnotationOverlapPlot(BroShifterOptions options) throws IOException, DocumentException {
+		this.options = options;
+		if (options.overlapmatrix) {
+			this.overlapMatrix();
+		} else {
+			this.plotBinaryTrait();
+		}
+
+	}
 
 	public static void main(String[] args) {
 		// debug
@@ -61,18 +69,6 @@ public class AnnotationOverlapPlot {
 
 	}
 
-	private final BroShifterOptions options;
-
-	public AnnotationOverlapPlot(BroShifterOptions options) throws IOException, DocumentException {
-		this.options = options;
-		if (options.overlapmatrix) {
-			this.overlapMatrix();
-		} else {
-			this.plot();
-		}
-
-	}
-
 	private Track[] loadAnnotations(ArrayList<Feature> regions) throws IOException {
 		TextFile tf = new TextFile(options.listOfAnnotations, TextFile.R);
 
@@ -80,7 +76,6 @@ public class AnnotationOverlapPlot {
 		ArrayList<String> annotationFiles = new ArrayList<String>();
 		HashMap<String, String> fileToName = null;
 		while (elems != null) {
-
 			if (elems.length == 1) {
 				annotationFiles.add(elems[0]);
 			} else {
@@ -90,7 +85,6 @@ public class AnnotationOverlapPlot {
 				fileToName.put(elems[1], elems[0]);
 				annotationFiles.add(elems[1]);
 			}
-
 			elems = tf.readLineElems(TextFile.tab);
 		}
 
@@ -111,16 +105,11 @@ public class AnnotationOverlapPlot {
 				allAnnotations[i].setName(name);
 			}
 
-//			// TODO: load in two column file with proper names
-//			String name = allAnnotations[i].getName();
-//			File file = new File(name);
-//			String filename = file.getName();
-//			allAnnotations[i].setName(name);
 		}
 		return allAnnotations;
 	}
 
-	public void plot() throws IOException, DocumentException {
+	public void plotBinaryTrait() throws IOException, DocumentException {
 
 		if (options.geneAnnotationFile == null) {
 			System.out.println("Error: provide --gtf");
@@ -203,7 +192,7 @@ public class AnnotationOverlapPlot {
 
 			System.out.println(annotationsUnsorted.size() + " annotations overlap with credible sets");
 			if (annotationsUnsorted.isEmpty()) {
-				System.out.println("No annotations to plot");
+				System.out.println("No annotations to plotBinaryTrait");
 				System.exit(0);
 			}
 
@@ -218,7 +207,7 @@ public class AnnotationOverlapPlot {
 				annotationsSorted.add(t.getLeft());
 			}
 
-			// determine size of plot
+			// determine size of plotBinaryTrait
 			AnnotationPanel annotPanel = new AnnotationPanel(annotationsSorted.size(), 1);
 			annotPanel.setData(region, annotationsSorted);
 			annotPanel.setOverlappingFeatures(credibleSetSNPFeatures);
@@ -244,7 +233,6 @@ public class AnnotationOverlapPlot {
 			GenePanel genePanel = new GenePanel(genepanelrows, 1);
 			genePanel.setData(region, overlappingGenesList);
 
-
 			AssociationPanel assocPanel = new AssociationPanel(assocPanelRows, 1);
 			assocPanel.setMarkDifferentColor(mark);
 
@@ -257,6 +245,131 @@ public class AnnotationOverlapPlot {
 			grid.addPanel(annotPanel, genepanelrows + 5 + assocPanelRows + 5, 0);
 
 			grid.draw(options.outfile + region.toString() + ".pdf");
+
+		}
+
+	}
+
+	// TODO: ugh duplicate code...
+	public void plotContinuousTrait() throws IOException, DocumentException {
+
+		if (options.geneAnnotationFile == null) {
+			System.out.println("Error: provide --gtf");
+			System.exit(-1);
+		}
+		GTFAnnotation geneannotation = new GTFAnnotation(options.geneAnnotationFile);
+
+
+		// load bed regions to test
+		BedFileReader bf = new BedFileReader();
+		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
+
+
+		TextFile tf = new TextFile(options.listOfAnnotations, TextFile.R);
+
+		String[] elems = tf.readLineElems(TextFile.tab);
+		ArrayList<String> annotationFiles = new ArrayList<String>();
+		HashMap<String, String> fileToName = null;
+		while (elems != null) {
+			if (elems.length == 1) {
+				annotationFiles.add(elems[0]);
+			} else {
+				if (fileToName == null) {
+					fileToName = new HashMap<String, String>();
+				}
+				fileToName.put(elems[1], elems[0]);
+				annotationFiles.add(elems[1]);
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
+
+		// load posteriors
+		BroShifterTask bs = new BroShifterTask(options);
+
+
+		System.out.println("All annotations loaded. Now iterating " + regions.size() + " loci");
+		// iterate regions
+		for (int r = 0; r < regions.size(); r++) {
+
+			Feature region = regions.get(r);
+			AssociationFile assocFile = new AssociationFile();
+			ArrayList<AssociationResult> results = assocFile.read(options.posteriorFile, region);
+			ApproximateBayesPosterior ab = new ApproximateBayesPosterior();
+			ArrayList<AssociationResult> credibleSet = ab.createCredibleSet(results, options.credibleSetThreshold);
+			ArrayList<SNPFeature> snps = new ArrayList<>(results.size());
+			ArrayList<SNPFeature> credibleSetSNPFeatures = new ArrayList<>(credibleSet.size());
+			HashSet<SNPFeature> credibleSetHash = new HashSet<SNPFeature>();
+			for (AssociationResult result : credibleSet) {
+				Feature f = result.getSnp();
+				SNPFeature f2 = new SNPFeature();
+				f2.setChromosome(f.getChromosome());
+				f2.setStart(f.getStart());
+				f2.setStop(f.getStop());
+				f2.setName(f.getName());
+				f2.setP(result.getPosterior());
+				credibleSetSNPFeatures.add(f2);
+				credibleSetHash.add(f2);
+			}
+
+
+			ArrayList<Pair<Integer, Double>> allPvalues = new ArrayList<>();
+			boolean[] mark = new boolean[results.size()];
+			int ctr = 0;
+			for (AssociationResult result : results) {
+				Feature f = result.getSnp();
+
+				SNPFeature f2 = new SNPFeature();
+				f2.setChromosome(f.getChromosome());
+				f2.setStart(f.getStart());
+				f2.setStop(f.getStop());
+				f2.setName(f.getName());
+
+				f2.setP(result.getPosterior());
+				allPvalues.add(new Pair<Integer, Double>(f.getStart(), result.getLog10Pval()));
+				snps.add(f2);
+				if (credibleSetHash.contains(f2)) {
+					mark[ctr] = true;
+				}
+				ctr++;
+
+			}
+
+
+			// determine size of plotBinaryTrait
+//			int pixelspertrack = annotPanel.getTrackheight() + annotPanel.getMarginBetween();
+//			int genepanelrows = (int) Math.ceil(100 / pixelspertrack);
+//			int assocPanelRows = (int) Math.ceil(300 / pixelspertrack);
+//
+//			System.out.println(1000 + "x" + pixelspertrack + " grid");
+//			System.out.println(annotationsSorted.size() + genepanelrows + assocPanelRows + " rows ");
+//
+//			Grid grid = new Grid(1000, pixelspertrack, 10 + annotationsSorted.size() + genepanelrows + assocPanelRows, 1, 100, 0);
+//
+//
+//			TreeSet<Gene> genes = geneannotation.getGeneTree();
+//			Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
+//			Gene geneStop = new Gene("", region.getChromosome(), Strand.POS, region.getStop(), region.getStop());
+//			SortedSet<Gene> overlappingGenes = genes.subSet(geneStart, true, geneStop, true);
+//
+//			ArrayList<Gene> overlappingGenesList = new ArrayList<>();
+//			overlappingGenesList.addAll(overlappingGenes);
+//
+//			GenePanel genePanel = new GenePanel(genepanelrows, 1);
+//			genePanel.setData(region, overlappingGenesList);
+//
+//			AssociationPanel assocPanel = new AssociationPanel(assocPanelRows, 1);
+//			assocPanel.setMarkDifferentColor(mark);
+//
+//			assocPanel.setDataSingleDs(region, null, allPvalues, region.toString());
+//
+//			grid.addPanel(genePanel, 0, 0);
+//			grid.addPanel(new SpacerPanel(5, 1), genepanelrows, 0);
+//			grid.addPanel(assocPanel, genepanelrows + 5, 0);
+//			grid.addPanel(new SpacerPanel(5, 1), genepanelrows + 5 + assocPanelRows, 0);
+//			grid.addPanel(annotPanel, genepanelrows + 5 + assocPanelRows + 5, 0);
+//
+//			grid.draw(options.outfile + region.toString() + ".pdf");
 
 		}
 

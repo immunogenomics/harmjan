@@ -8,6 +8,7 @@ import nl.harmjanwestra.utilities.bamfile.filters.MappingQualityUnavailableFilte
 import nl.harmjanwestra.utilities.bamfile.filters.UnmappedReadFilter;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.Strand;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 
@@ -31,12 +32,14 @@ public class CoverageTask implements Callable<Boolean> {
 	private final String outdir;
 	private final ArrayList<Feature> regions;
 	private final boolean outputcoverageperregion;
+	private final boolean stranded;
 
-	public CoverageTask(String bamfile, String outdir, ArrayList<Feature> regions, boolean outputcoverageperregion) {
+	public CoverageTask(String bamfile, String outdir, ArrayList<Feature> regions, boolean outputcoverageperregion, boolean stranded) {
 		this.bamfile = bamfile;
 		this.outdir = outdir;
 		this.regions = regions;
 		this.outputcoverageperregion = outputcoverageperregion;
+		this.stranded = stranded;
 	}
 
 	public CoverageTask() {
@@ -44,6 +47,7 @@ public class CoverageTask implements Callable<Boolean> {
 		outdir = null;
 		regions = null;
 		outputcoverageperregion = false;
+		stranded = false;
 	}
 
 	public void bamToBedWithinRegions(String bamfile, String outdir, boolean outputcoverageperregion) throws IOException {
@@ -130,6 +134,11 @@ public class CoverageTask implements Callable<Boolean> {
 				int windowSize = stop - start;
 				int[][] tmpCoverage = new int[samples.length][stop - start];
 
+				int[][][] tmpCoveragestranded = null;
+				if (stranded) {
+					tmpCoveragestranded = new int[2][samples.length][stop - start];
+				}
+
 				if (it.hasNext()) {
 //					SAMRecord record = it.next();
 
@@ -141,6 +150,8 @@ public class CoverageTask implements Callable<Boolean> {
 							if (samples.length == 1) {
 								sampleId = 0;
 							}
+
+							boolean negativestrand = false;
 
 							if ((record.getAlignmentStart() >= start && record.getAlignmentEnd() <= stop) ||
 									(record.getAlignmentStart() <= start && record.getAlignmentEnd() >= start) ||
@@ -154,6 +165,10 @@ public class CoverageTask implements Callable<Boolean> {
 								if (record.getReadPairedFlag() && record.getFirstOfPairFlag()) {
 // 2
 									data[sampleId][1]++;
+								}
+
+								if (record.getReadNegativeStrandFlag()) {
+									negativestrand = true;
 								}
 
 								if (record.getReadPairedFlag() && record.getMateNegativeStrandFlag()) {
@@ -295,8 +310,18 @@ public class CoverageTask implements Callable<Boolean> {
 														}
 													}
 
+
 													if (properbase) {
-														tmpCoverage[sampleId][windowRelativePosition]++;
+														if (stranded) {
+															if (negativestrand) {
+																tmpCoveragestranded[Strand.NEG.getNumber()][sampleId][windowRelativePosition]++;
+															} else {
+																tmpCoveragestranded[Strand.POS.getNumber()][sampleId][windowRelativePosition]++;
+															}
+															tmpCoverage[sampleId][windowRelativePosition]++;
+														} else {
+															tmpCoverage[sampleId][windowRelativePosition]++;
+														}
 													}
 													windowRelativePosition++;
 												} // if pos < readpositio4n
@@ -337,7 +362,13 @@ public class CoverageTask implements Callable<Boolean> {
 					for (int s = 0; s < samples.length; s++) {
 						for (int i = 0; i < windowSize; i++) {
 							if (tmpCoverage[s][i] > 0) {
-								bedout[s].writeln(f.getChromosome().getName() + "\t" + (f.getStart() + i) + "\t" + (f.getStart() + i) + "\t" + tmpCoverage[s][i]);
+								String bedString = f.getChromosome().getName() + "\t" + (f.getStart() + i) + "\t" + (f.getStart() + i) + "\t" + tmpCoverage[s][i];
+
+								if (stranded) {
+									bedString += "\t" + tmpCoveragestranded[Strand.POS.getNumber()][s][i] + "\t" + tmpCoveragestranded[Strand.NEG.getNumber()][s][i];
+								}
+								bedout[s].writeln(bedString);
+
 							}
 						}
 
@@ -386,7 +417,7 @@ public class CoverageTask implements Callable<Boolean> {
 			}
 			fctr++;
 			int perc = (int) Math.ceil(((double) fctr / regions.size()) * 100);
-			if (perc % 10 == 0 && perc> lastperc) {
+			if (perc % 10 == 0 && perc > lastperc) {
 				System.out.println(reader.getFile().getName() + "\t" + perc + "% done " + fctr + "\t" + regions.size());
 				lastperc = perc;
 			}

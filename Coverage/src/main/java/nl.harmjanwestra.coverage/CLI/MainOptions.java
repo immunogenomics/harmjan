@@ -50,6 +50,13 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Provide stranded output in bedgraph")
+				.longOpt("stranded")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Outdir")
 				.longOpt("out")
 				.hasArg()
@@ -109,6 +116,7 @@ public class MainOptions {
 	public String inputdir;
 	public int posshift = 0;
 	public int negshift = 0;
+	public boolean stranded = false;
 
 	public MODE mode = MODE.NA;
 
@@ -151,6 +159,9 @@ public class MainOptions {
 				negshift = Integer.parseInt(cmd.getOptionValue("shiftneg"));
 			}
 
+			if (cmd.hasOption("stranded")) {
+				stranded = true;
+			}
 
 
 			boolean run = true;
@@ -176,7 +187,7 @@ public class MainOptions {
 				}
 			} else if (cmd.hasOption("coverageperchr")) {
 				mode = MODE.COVERAGEPERCHR;
-				if (bamfile == null || outdir == null ) {
+				if (bamfile == null || outdir == null) {
 					System.out.println("Please provide outdir and inputfile");
 					run = false;
 				}

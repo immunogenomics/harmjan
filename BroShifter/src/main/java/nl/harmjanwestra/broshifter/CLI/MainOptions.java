@@ -46,7 +46,7 @@ public class MainOptions {
 
 		option = Option.builder()
 				.desc("Plot association results")
-				.longOpt("plot")
+				.longOpt("plotBinaryTrait")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -103,7 +103,7 @@ public class MainOptions {
 				mode = MODE.ANNOTATIONOVERLAPPLOT;
 			} else if (cmd.hasOption("bedfilter")) {
 				mode = MODE.BEDFILTER;
-			} else if (cmd.hasOption("plot")) {
+			} else if (cmd.hasOption("plotBinaryTrait")) {
 				mode = MODE.PLOT;
 			} else if (cmd.hasOption("posterior")) {
 				mode = MODE.POSTERIORPVAL;

@@ -46,7 +46,7 @@ public class Coverage {
 			if (options.mode.equals(MainOptions.MODE.BAMTOBED)) {
 				c.bamToBed(options.bamfile, options.outdir);
 			} else if (options.mode.equals(MainOptions.MODE.BAMTOBEDREGIONS)) {
-				c.bamToBedWithinRegionsForList(options.list, options.outdir, options.targetregions, options.outputcoverageperregion, options.threads);
+				c.bamToBedWithinRegionsForList(options.list, options.outdir, options.targetregions, options.outputcoverageperregion, options.threads, options.stranded);
 			} else if (options.mode.equals(MainOptions.MODE.CORRELATEBAMS)) {
 				c.correlateCoverageWithinRegionFiles(options.targetregions, options.inputdir, options.outdir);
 			} else if (options.mode.equals(MainOptions.MODE.COVERAGEPERCHR)) {
@@ -61,7 +61,7 @@ public class Coverage {
 	}
 
 
-	public void bamToBedWithinRegionsForList(String listFile, String outdir, String targetregions, boolean outputcoverageperregion, int threads) throws IOException {
+	public void bamToBedWithinRegionsForList(String listFile, String outdir, String targetregions, boolean outputcoverageperregion, int threads, boolean stranded) throws IOException {
 
 		System.out.println("Loading file list from: " + listFile);
 		TextFile lf = new TextFile(listFile, TextFile.R);
@@ -117,7 +117,7 @@ public class Coverage {
 			Gpio.createDir(sampleOutDir);
 
 
-			CoverageTask t = new CoverageTask(file, sampleOutDir, features, true);
+			CoverageTask t = new CoverageTask(file, sampleOutDir, features, true, stranded);
 			pool.submit(t);
 
 			filectr++;

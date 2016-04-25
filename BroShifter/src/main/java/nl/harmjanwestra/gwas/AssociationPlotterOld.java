@@ -40,10 +40,10 @@ public class AssociationPlotterOld {
 
 			Feature feat = new Feature(Chromosome.SIX, 32627241 - 5000, 32634466 + 5000);
 
-//			String out = "/Data/tmp/dqb1/rna/plot-atac.pdf";
+//			String out = "/Data/tmp/dqb1/rna/plotBinaryTrait-atac.pdf";
 //			String bg = "/Data/tmp/dqb1/atac/allbedfiles.txt";
 
-			String out = "/Data/tmp/dqb1/rna/plot.pdf";
+			String out = "/Data/tmp/dqb1/rna/plotBinaryTrait.pdf";
 			String bg = "/Data/tmp/dqb1/rna/allfiles.txt";
 			String gtf = "/Data/Ref/Annotation/UCSC/genes.gtf";
 //			String gtf = "/Data/Ref/Annotation/Gencode/gencode.v19.annotation.gtf.gz";
@@ -118,7 +118,7 @@ public class AssociationPlotterOld {
 		String[] bfiles = tf.readAsArray();
 		tf.close();
 
-		// plot gene annotations
+		// plotBinaryTrait gene annotations
 		GenePanel genePanel = new GenePanel(1, 1);
 		genePanel.setData(region, overlappingGenesList);
 		grid.addPanel(genePanel, 0, 0);
@@ -186,7 +186,7 @@ public class AssociationPlotterOld {
 		// get the subregions that overlap with this region
 		// make a subplot for the zoomregion
 
-		// plot gene annotations
+		// plotBinaryTrait gene annotations
 		GenePanel genePanel = new GenePanel(1, 1);
 		genePanel.setData(region, overlappingGenesList);
 		grid.addPanel(genePanel, 0, 0);
@@ -244,7 +244,7 @@ public class AssociationPlotterOld {
 		}
 
 
-		// plot pvalues and posteriors
+		// plotBinaryTrait pvalues and posteriors
 		Pair<boolean[], ArrayList<AssociationResult>> filtered = filterAssoc(region, assoc, mark);
 		mark = filtered.getLeft();
 		assoc = filtered.getRight();
@@ -325,10 +325,10 @@ public class AssociationPlotterOld {
 
 
 			// load posteriors and association p-vals
-			// plot  [ p-values | posteriors ]
+			// plotBinaryTrait  [ p-values | posteriors ]
 
 			// load annotations
-			// plot annotations underneath
+			// plotBinaryTrait annotations underneath
 
 			BedFileReader bf = new BedFileReader();
 			ArrayList<Feature> regions = bf.readAsList(regionfile);
@@ -343,10 +343,10 @@ public class AssociationPlotterOld {
 
 			ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
 
-			// produce a plot for each region
+			// produce a plotBinaryTrait for each region
 			for (Feature region : regions) {
 
-				// make a plot for the whole region
+				// make a plotBinaryTrait for the whole region
 				PosteriorPValFile assocfile = new PosteriorPValFile();
 				String pvalfile = assocdir + region.toString() + ".txt";
 				if (!Gpio.exists(pvalfile)) {
@@ -505,13 +505,13 @@ public class AssociationPlotterOld {
 		// get the subregions that overlap with this region
 		// make a subplot for the zoomregion
 
-		// plot gene annotations
+		// plotBinaryTrait gene annotations
 		GenePanel genePanel = new GenePanel(1, 1);
 		genePanel.setData(region, overlappingGenesList);
 		grid.addPanel(genePanel, 0, 0);
 		grid.addPanel(genePanel, 0, 1);
 
-		// plot pvalues and posteriors
+		// plotBinaryTrait pvalues and posteriors
 		AssociationPanel pvalpanel = new AssociationPanel(1, 1);
 		pvalpanel.setTitle("Pvalues");
 		pvalpanel.setDataSingleDs(region, zoomregionhash, pvals, "Pvalues");
@@ -777,7 +777,7 @@ public class AssociationPlotterOld {
 							pvalgrid.addPanel(pvalpanel, run + 1, refId);
 
 
-							// plot rsquared and maf
+							// plotBinaryTrait rsquared and maf
 							if (run == 0) {
 								grid.addPanel(pvalpanel, 1, refId);
 
