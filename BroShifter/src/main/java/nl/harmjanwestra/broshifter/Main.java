@@ -32,8 +32,8 @@ public class Main {
 				new AnnotationOverlapPlot(new BroShifterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.POSTERIORPVAL)) {
 				new PosteriorPvalues(new PosteriorPvalueOptions(args));
-			} else if (options.mode.equals(MainOptions.MODE.PLOT)) {
-				new AssociationPlotter(new AssociationPlotterOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.PLOTPOSTERIORS)) {
+				new AssociationPosteriorPlotter(new AssociationPlotterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.CAVIAR)) {
 				new Caviar(new CaviarOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.MERGE)) {

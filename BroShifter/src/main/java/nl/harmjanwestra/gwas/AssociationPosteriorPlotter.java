@@ -24,16 +24,16 @@ import java.util.TreeSet;
 /**
  * Created by Harm-Jan on 01/13/16.
  */
-public class AssociationPlotter {
+public class AssociationPosteriorPlotter {
 
 	AssociationPlotterOptions options;
 
-	public AssociationPlotter(AssociationPlotterOptions options) throws IOException, DocumentException {
+	public AssociationPosteriorPlotter(AssociationPlotterOptions options) throws IOException, DocumentException {
 		this.options = options;
-		plot();
+		plotAssociationsAndPosteriors();
 	}
 
-	public void plot() throws IOException, DocumentException {
+	public void plotAssociationsAndPosteriors() throws IOException, DocumentException {
 
 		String associationFiles = options.getAssociationFiles();
 		String associationFileNames = options.getAssociationFileNames();
@@ -64,7 +64,6 @@ public class AssociationPlotter {
 
 			ArrayList<Gene> overlappingGenesList = new ArrayList<>();
 			overlappingGenesList.addAll(overlappingGenes);
-
 
 			Grid grid = new Grid(400, 300, 2, assocFiles.length, 100, 100);
 			if (plotPosteriors) {

@@ -10,18 +10,18 @@ public class AssociationPlotterOptions {
 
 	static {
 		OPTIONS = new Options();
-		Option option = Option.builder().longOpt("plotBinaryTrait").build();
+		Option option = Option.builder().longOpt("plotposteriors").build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("i")
 				.hasArg()
-				.desc("Input VCF (or comma separated list)")
+				.desc("Input files (or comma separated list)")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("n")
 				.hasArg()
-				.desc("Input VCF names (comma separated list)")
+				.desc("Input file names (comma separated list)")
 				.build();
 		OPTIONS.addOption(option);
 

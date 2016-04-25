@@ -19,6 +19,7 @@ public class GraphAnnotationPanel extends Panel {
 	double maxHeight = 100;
 	int trackheight = 50;
 	private Range range;
+	private int marginBetween;
 
 	public GraphAnnotationPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -167,4 +168,11 @@ public class GraphAnnotationPanel extends Panel {
 	}
 
 
+	public int getTrackheight() {
+		return trackheight;
+	}
+
+	public int getMarginBetween() {
+		return marginBetween;
+	}
 }

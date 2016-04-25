@@ -52,7 +52,6 @@ public class MainOptions {
 		option = Option.builder()
 				.desc("Provide stranded output in bedgraph")
 				.longOpt("stranded")
-				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
 

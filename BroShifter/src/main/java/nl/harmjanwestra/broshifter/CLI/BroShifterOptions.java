@@ -112,6 +112,12 @@ public class BroShifterOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Annotation to plot is a continuous trait (bedgraph).")
+				.longOpt("continuous")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Make overlap matrix")
 				.longOpt("matrix")
 				.build();
@@ -144,6 +150,7 @@ public class BroShifterOptions {
 	// set some parameters using those stats
 	public int maxAllowedDistance = 150;
 	public boolean overlapmatrix;
+	public boolean continuous = false;
 
 	public BroShifterOptions(String[] args) {
 		try {
@@ -172,6 +179,10 @@ public class BroShifterOptions {
 
 			if (cmd.hasOption("gtf")) {
 				geneAnnotationFile = cmd.getOptionValue("gtf");
+			}
+
+			if (cmd.hasOption("continuous")) {
+				continuous = true;
 			}
 
 			if (cmd.hasOption("annotations")) {

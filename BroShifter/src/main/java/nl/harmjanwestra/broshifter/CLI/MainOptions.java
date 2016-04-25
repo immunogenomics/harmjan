@@ -46,7 +46,7 @@ public class MainOptions {
 
 		option = Option.builder()
 				.desc("Plot association results")
-				.longOpt("plotBinaryTrait")
+				.longOpt("plotposteriors")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -103,8 +103,8 @@ public class MainOptions {
 				mode = MODE.ANNOTATIONOVERLAPPLOT;
 			} else if (cmd.hasOption("bedfilter")) {
 				mode = MODE.BEDFILTER;
-			} else if (cmd.hasOption("plotBinaryTrait")) {
-				mode = MODE.PLOT;
+			} else if (cmd.hasOption("plotposteriors")) {
+				mode = MODE.PLOTPOSTERIORS;
 			} else if (cmd.hasOption("posterior")) {
 				mode = MODE.POSTERIORPVAL;
 			} else if (cmd.hasOption("goshifter")) {
@@ -141,7 +141,7 @@ public class MainOptions {
 	public enum MODE {
 		BROSHIFTER,
 		POSTERIORPVAL,
-		PLOT,
+		PLOTPOSTERIORS,
 		MERGE,
 		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, NA
 	}
