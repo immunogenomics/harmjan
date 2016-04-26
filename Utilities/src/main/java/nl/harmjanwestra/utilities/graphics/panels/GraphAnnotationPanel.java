@@ -58,13 +58,6 @@ public class GraphAnnotationPanel extends Panel {
 
 		for (int i = 0; i < data.size(); i++) {
 
-			int trackYpos = marginY + y0 + (i * trackheight) + (i * marginBetween);
-
-			int startX = x0 + marginX;
-			g2d.setColor(defaultLightGrey);
-			g2d.drawLine(startX, trackYpos + trackheight, startX + width, trackYpos + trackheight);
-			g2d.setColor(defaultColor);
-
 			// get subset within region
 			ArrayList<BedGraphFeature> t = data.get(i);
 
@@ -77,6 +70,32 @@ public class GraphAnnotationPanel extends Panel {
 				}
 			}
 
+			int trackYpos = marginY + y0 + (i * trackheight) + (i * marginBetween);
+
+			int startX = x0 + marginX;
+			g2d.setColor(defaultLightGrey);
+
+			if (!isStranded) {
+				g2d.drawLine(startX, trackYpos + trackheight, startX + width, trackYpos + trackheight);
+			} else {
+				g2d.drawLine(startX, trackYpos + (trackheight / 2), startX + width, trackYpos + (trackheight / 2));
+			}
+			g2d.setColor(defaultColor);
+
+			// plot the name of the annotation
+			String name = filenames[i];
+			File file = new File(name);
+			String filename = file.getName();
+			g2d.setFont(new Font("default", Font.BOLD, 8));
+
+			int namePixelStart = x0 + marginX + 5 + nrPixelsX;
+			if (!isStranded) {
+				g2d.drawString(filename, namePixelStart, trackYpos + trackheight);
+			} else {
+				g2d.drawString(filename, namePixelStart, trackYpos + (trackheight / 2));
+			}
+
+			// plot the annotations
 			for (int q = 0; q < t.size(); q++) {
 				BedGraphFeature f = t.get(q);
 				int start = f.getStart();
@@ -106,32 +125,31 @@ public class GraphAnnotationPanel extends Panel {
 					}
 
 					if (isStranded) {
-						double posValue = f.getPos();
-						double v = f.getValue();
-						int boxHeight = 0;
 
-						if (v > range.getMaxY()) {
-							v = range.getMaxY();
+						double halfTrackHeight = (double) trackheight / 2;
+						double halfMaxY = range.getMaxY() / 2;
+						double posVal = f.getPos();
+						double negVal = f.getNeg();
+
+
+						if (posVal > halfMaxY) {
+							posVal = halfMaxY;
+						}
+						if (negVal > halfMaxY) {
+							negVal = halfMaxY;
 						}
 
-						if (v == range.getMaxY()) {
-							int y1 = trackYpos;
-							boxHeight = (int) ((Math.ceil((v / range.getMaxY()) * trackheight)));
-							g2d.fillRect(pixelStart, y1 + trackheight - boxHeight, boxwidth, boxHeight);
-						} else {
-							int y1 = trackYpos;
-							double halfmaxY = range.getMaxY() / 2;
-							int halfbox = (int) Math.ceil((double) trackheight / 2);
+						double percPos = posVal / halfMaxY;
+						double percNeg = negVal / halfMaxY;
 
-							if (posValue > halfmaxY) {
-								posValue = halfmaxY;
-							}
+						double nrPixelsPos = percPos * halfTrackHeight;
+						double nrPixelsNeg = percNeg * halfTrackHeight;
 
-							int boxPosHeight = (int) ((Math.ceil((posValue / halfbox) * trackheight)));
-							int startYPos = y1 + trackheight - halfbox - boxPosHeight;
-							boxHeight = (int) ((Math.ceil((v / range.getMaxY()) * trackheight)));
-							g2d.fillRect(pixelStart, startYPos, boxwidth, boxHeight);
-						}
+						int boxHeight = (int) Math.ceil(nrPixelsPos + nrPixelsNeg);
+
+						int yStartPos = (int) Math.ceil(trackYpos + (trackheight / 2) - nrPixelsPos);
+
+						g2d.fillRect(pixelStart, yStartPos, boxwidth, boxHeight);
 
 					} else {
 						int y1 = trackYpos;
@@ -148,19 +166,6 @@ public class GraphAnnotationPanel extends Panel {
 			}
 
 			g2d.setColor(defaultColor);
-
-			// plot the name of the annotation
-			String name = filenames[i];
-			File file = new File(name);
-			String filename = file.getName();
-			g2d.setFont(new Font("default", Font.BOLD, 8));
-
-			if (isStranded) {
-				// draw line around 0
-			}
-
-			int pixelStart = x0 + marginX + 5 + nrPixelsX;
-			g2d.drawString(filename, pixelStart, trackYpos + trackheight);
 
 
 		}

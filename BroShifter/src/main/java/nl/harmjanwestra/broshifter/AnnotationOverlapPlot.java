@@ -349,7 +349,13 @@ public class AnnotationOverlapPlot {
 
 			GraphAnnotationPanel graphAnnotationPanel = new GraphAnnotationPanel(annotationFiles.size(), 1);
 			ArrayList<ArrayList<BedGraphFeature>> dataForRegion = filterBedGraphData(bedGraphData, region);
-			graphAnnotationPanel.setData(region, dataForRegion, sampleNames.toArray(new String[0]));
+
+
+			if (sampleNames == null) {
+				graphAnnotationPanel.setData(region, dataForRegion, sampleNames.toArray(new String[0]));
+			} else {
+				graphAnnotationPanel.setData(region, dataForRegion, annotationFiles.toArray(new String[0]));
+			}
 
 			// determine size of plotBinaryTrait
 			int pixelspertrack = graphAnnotationPanel.getTrackheight() + graphAnnotationPanel.getMarginBetween();

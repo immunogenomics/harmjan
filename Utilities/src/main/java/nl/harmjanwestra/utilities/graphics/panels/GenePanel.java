@@ -155,7 +155,10 @@ public class GenePanel extends Panel {
 
 		g2d.drawString("Genes", x0, y0 - 10);
 
+
 		for (Gene gene : genes) {
+
+
 			Integer geneYlevel = ylevels.get(gene);
 			if (geneYlevel == null) {
 				System.out.println(gene.getGeneId() + " not mapped to y-level?");
@@ -167,6 +170,66 @@ public class GenePanel extends Panel {
 			for (Transcript t : transcripts) {
 				exons.addAll(t.getExons());
 			}
+
+			g2d.setColor(theme.getDarkGrey());
+			Pair<Integer, Integer> pixelPair = getGenePlotPositions(gene, region, regionWidth, plotWidth);
+			int pixelStart = pixelPair.getLeft();
+			int pixelStop = pixelPair.getRight();
+
+			int startX = x0 + marginX + pixelStart;
+			int stopX = x0 + marginX + pixelStop;
+			if (stopX > x0 + marginX + plotWidth) {
+				stopX = x0 + marginX + plotWidth;
+			}
+
+			// draw little arrows for direction of transcription
+			if (gene.getStrand() != null && !gene.getStrand().equals(Strand.NA)) {
+				g2d.setColor(theme.getLightGrey());
+
+				int geneMidY = y1 + 5;
+				int arrowsize = 6;
+
+
+				int y00 = geneMidY + 3;
+				int y01 = geneMidY;
+				int y02 = geneMidY - 3;
+
+				if (gene.getStrand().equals(Strand.NEG)) {
+					// a little arrow pointing backwards at the end of the gene
+					int curPos = stopX;
+					while (curPos > startX) {
+						int x01 = curPos;
+						int x02 = curPos - 6;
+						Polygon poly = new Polygon(
+								new int[]{x01, x02, x01},
+								new int[]{y00, y01, y02},
+								3);
+						g2d.fill(poly);
+						curPos -= arrowsize;
+					}
+
+
+				} else {
+					int curPos = startX;
+					while (curPos < stopX) {
+						int x01 = curPos;
+						int x02 = curPos + 6;
+						Polygon poly = new Polygon(
+								new int[]{x01, x02, x01},
+								new int[]{y00, y01, y02},
+								3);
+						g2d.fill(poly);
+						curPos += arrowsize;
+					}
+				}
+				g2d.setColor(theme.getDarkGrey());
+			}
+
+			// draw line for gene middle
+			g2d.drawLine(startX, y1 + 5, stopX, y1 + 5);
+			// draw gene name
+			g2d.drawString(gene.getGeneId(), stopX + marginXBetweenGenes, y1 + 10);
+
 
 			for (Exon f : exons) {
 				if (region.overlaps(f)) {
@@ -187,8 +250,8 @@ public class GenePanel extends Panel {
 
 					double percStop = (double) relativeStop / regionWidth;
 
-					int pixelStart = (int) Math.ceil(percStart * plotWidth);
-					int pixelStop = (int) Math.ceil(percStop * plotWidth);
+					pixelStart = (int) Math.ceil(percStart * plotWidth);
+					pixelStop = (int) Math.ceil(percStop * plotWidth);
 
 					int exonwidth = pixelStop - pixelStart;
 					if (pixelStop - pixelStart <= 0) {
@@ -199,19 +262,8 @@ public class GenePanel extends Panel {
 				}
 			}
 
-			Pair<Integer, Integer> pixelPair = getGenePlotPositions(gene, region, regionWidth, plotWidth);
-			int pixelStart = pixelPair.getLeft();
-			int pixelStop = pixelPair.getRight();
+//
 
-			
-			int stop = x0 + marginX + pixelStop;
-			if (x0 + marginX + pixelStop > x0 + marginX + plotWidth) {
-				stop = x0 + marginX + plotWidth;
-			}
-
-
-			g2d.drawLine(x0 + marginX + pixelStart, y1 + 5, stop, y1 + 5);
-			g2d.drawString(gene.getGeneId(), stop + marginXBetweenGenes, y1 + 10);
 		}
 	}
 
