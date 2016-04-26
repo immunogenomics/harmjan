@@ -439,6 +439,11 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("updateimputationquals")
+				.desc("Correlate imputation probs with best guesses as a measure for imputation quality.")
+				.build();
+		OPTIONS.addOption(option);
 
 	}
 
@@ -483,7 +488,6 @@ public class Main {
 				run = false;
 			} else {
 				out = cmd.getOptionValue("o");
-
 			}
 
 //			if (cmd.hasOption("proxy")) {
@@ -519,7 +523,11 @@ public class Main {
 //				}
 //
 //			} else
-			if (cmd.hasOption("filtersampleoverlap")) {
+			if (cmd.hasOption("updateimputationquals")) {
+
+				VCFCorrelator correlator = new VCFCorrelator();
+				correlator.updateVCFInfoScore(input,out);
+			} else if (cmd.hasOption("filtersampleoverlap")) {
 
 				VCFSampleFilter filter = new VCFSampleFilter();
 				if (cmd.hasOption("i2")) {

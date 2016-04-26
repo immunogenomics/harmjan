@@ -39,7 +39,15 @@ public class Strings {
 
 	public static String concat(String[] s, Pattern t, boolean[] includeElem, String replaceNull) {
 
-		StringBuilder output = new StringBuilder();
+		int approximateFinalStrLen = 0;
+		for (int i = 0; i < s.length; i++) {
+			if (includeElem != null && includeElem[i]) {
+				approximateFinalStrLen += s[i].length();
+			}
+		}
+		approximateFinalStrLen += s.length;
+
+		StringBuilder output = new StringBuilder(approximateFinalStrLen);
 		for (int i = 0; i < s.length; i++) {
 			if (includeElem == null || includeElem[i]) {
 				if (s[i] == null) {

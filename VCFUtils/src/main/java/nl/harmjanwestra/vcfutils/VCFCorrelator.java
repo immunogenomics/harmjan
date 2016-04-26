@@ -12,11 +12,128 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.*;
 
 /**
  * Created by hwestra on 12/8/15.
  */
 public class VCFCorrelator {
+
+	public void updateVCFInfoScore(String vcfin, String vcfOut) throws IOException {
+		TextFile tf = new TextFile(vcfin, TextFile.R);
+		TextFile out = new TextFile(vcfOut, TextFile.W);
+		String ln = tf.readLine();
+		int submitted = 0;
+
+		int cores = Runtime.getRuntime().availableProcessors();
+		System.out.println("Detected " + cores + " Processors ");
+		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
+		CompletionService<String> jobHandler = new ExecutorCompletionService<>(threadPool);
+
+		while (ln != null) {
+			if (ln.startsWith("#")) {
+				out.writeln(ln);
+			} else {
+				VCFVariantInfoUpdater task = new VCFVariantInfoUpdater(ln);
+				jobHandler.submit(task);
+				submitted++;
+				if (submitted % 10000 == 0) {
+					int returned = 0;
+					while (returned < submitted) {
+						Future<String> future = null;
+						try {
+							future = jobHandler.take();
+							if (future != null) {
+								String outStr = future.get();
+								out.writeln(outStr);
+								returned++;
+							}
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							e.printStackTrace();
+						}
+					}
+					submitted = 0;
+				}
+			}
+		}
+
+
+		int returned = 0;
+		while (returned < submitted) {
+			Future<String> future = null;
+			try {
+				future = jobHandler.take();
+				if (future != null) {
+					String outStr = future.get();
+					out.writeln(outStr);
+					returned++;
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+		submitted = 0;
+
+		out.close();
+		tf.close();
+	}
+
+	public class VCFVariantInfoUpdater implements Callable<String> {
+
+		private String in = null;
+
+		public VCFVariantInfoUpdater(String in) {
+			this.in = in;
+		}
+
+		@Override
+		public String call() throws Exception {
+
+			VCFVariant variant = new VCFVariant(in);
+			int nrAlleles = variant.getAlleles().length;
+			double rsq = 0;
+			if (nrAlleles == 2) {
+				double[] probabilies = convertToProbsToDouble(variant);
+				double[] bestguess = convertGenotypesToDouble(variant);
+				double r = Correlation.correlate(bestguess, probabilies);
+				rsq = r * r;
+			}
+
+			String[] elems = in.split("\t");
+			elems[7] = "INFO=" + rsq;
+
+			return Strings.concat(elems, Strings.tab);
+		}
+
+		private double[] convertToProbsToDouble(VCFVariant vcfVariant) {
+			double[][] dosages = vcfVariant.getImputedDosages(); // [samples][alleles];
+			double[] output = new double[dosages.length];
+			for (int i = 0; i < output.length; i++) {
+				output[i] = dosages[i][0];
+			}
+			return output;
+		}
+
+		private double[] convertGenotypesToDouble(VCFVariant vcfVariant) {
+			byte[][] alleles = vcfVariant.getGenotypeAlleles();
+			double[] output = new double[alleles[0].length];
+			for (int i = 0; i < alleles[0].length; i++) {
+				if (alleles[0][i] == -1) {
+					output[i] = -1;
+				} else {
+					output[i] = (alleles[0][i] + alleles[1][i]);
+				}
+			}
+
+			return output;
+		}
+
+
+	}
 
 	public void run(String vcf1, String vcf2, String variantsToTestFile, String out) throws IOException {
 
