@@ -20,6 +20,9 @@ import java.util.concurrent.*;
 public class VCFCorrelator {
 
 	public void updateVCFInfoScore(String vcfin, String vcfOut) throws IOException {
+		System.out.println("Will replace imputation quals.");
+		System.out.println("In: " + vcfin);
+		System.out.println("Out: " + vcfOut);
 		TextFile tf = new TextFile(vcfin, TextFile.R);
 		TextFile out = new TextFile(vcfOut, TextFile.W);
 		String ln = tf.readLine();
@@ -30,6 +33,8 @@ public class VCFCorrelator {
 		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
 		CompletionService<String> jobHandler = new ExecutorCompletionService<>(threadPool);
 
+		int nrRead = 0;
+
 		while (ln != null) {
 			if (ln.startsWith("#")) {
 				out.writeln(ln);
@@ -37,6 +42,7 @@ public class VCFCorrelator {
 				VCFVariantInfoUpdater task = new VCFVariantInfoUpdater(ln);
 				jobHandler.submit(task);
 				submitted++;
+				nrRead++;
 				if (submitted % 10000 == 0) {
 					int returned = 0;
 					while (returned < submitted) {
@@ -55,10 +61,11 @@ public class VCFCorrelator {
 						}
 					}
 					submitted = 0;
+					System.out.println(nrRead + " variants read");
 				}
 			}
+			ln = tf.readLine();
 		}
-
 
 		int returned = 0;
 		while (returned < submitted) {
@@ -78,8 +85,10 @@ public class VCFCorrelator {
 		}
 		submitted = 0;
 
+		System.out.println(nrRead + " variants total.");
 		out.close();
 		tf.close();
+		threadPool.shutdown();
 	}
 
 	public class VCFVariantInfoUpdater implements Callable<String> {
