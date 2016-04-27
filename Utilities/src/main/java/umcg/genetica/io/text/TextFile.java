@@ -4,7 +4,6 @@
  */
 package umcg.genetica.io.text;
 
-import org.anarres.parallelgzip.ParallelGZIPOutputStream;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.text.Strings;
@@ -81,13 +80,13 @@ public class TextFile implements Iterable<String> {
 			if (writeable) {
 				if (gzipped) {
 					this.buffersize = 500 * 1024;
-					if (parallel) {
-						ParallelGZIPOutputStream gzipOutputStream = new ParallelGZIPOutputStream(new FileOutputStream(file));
-						out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
-					} else {
-						GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(file));
-						out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
-					}
+//					if (parallel) {
+//						ParallelGZIPOutputStream gzipOutputStream = new ParallelGZIPOutputStream(new FileOutputStream(file));
+//						out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
+//					} else {
+					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(file));
+					out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
+//					}
 				} else {
 					out = new BufferedWriter(new FileWriter(file), buffersize);
 				}

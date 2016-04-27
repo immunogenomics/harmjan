@@ -6,6 +6,7 @@ import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.Strand;
 import nl.harmjanwestra.utilities.graphics.themes.ComplementaryColor;
+import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 import umcg.genetica.io.text.TextFile;
 
 import java.awt.*;
@@ -116,6 +117,7 @@ public class ChromosomePlot extends DefaultGraphics {
 
 
 		int nrPerRow = nrChr / nrRows;
+
 		Color[] colors = new Color[]{new Color(70, 67, 58), new Color(174, 164, 140)};
 
 
@@ -238,12 +240,17 @@ public class ChromosomePlot extends DefaultGraphics {
 							if (feature.getChromosome() == null) {
 								System.err.println(feature.getName() + " null chr");
 							}
+							if (feature.getName().equals("ACOXL")) {
+								System.out.println("found it");
+							}
 							if (feature.getChromosome().equals(chr)) {
 								if (sequencedRegions != null) {
 									boolean includeregion = false;
 									for (Feature seqregion : sequencedRegions) {
-										if (feature.overlaps(seqregion)) {
-											includeregion = true;
+										if (seqregion.getChromosome().equals(chr)) {
+											if (feature.overlaps(seqregion)) {
+												includeregion = true;
+											}
 										}
 									}
 									if (includeregion) {
@@ -253,7 +260,6 @@ public class ChromosomePlot extends DefaultGraphics {
 									lociOnChr.add(feature);
 								}
 							}
-
 						}
 
 						// assign pixel locations
@@ -268,6 +274,7 @@ public class ChromosomePlot extends DefaultGraphics {
 							feature.setStop(geneY2);
 
 						}
+
 
 						System.out.println(lociOnChr.size() + " loci on chr " + chr.getName());
 						Collections.sort(lociOnChr, new FeatureComparator(false));
@@ -300,6 +307,26 @@ public class ChromosomePlot extends DefaultGraphics {
 								g2d.drawLine(startx - 5, f2.getStart() - 5, startx - 30, start - 5);
 
 								g2d.drawString(f2.getName(), geneStartX - geneStrwidth, start);
+							}
+						}
+					}
+
+					DefaultTheme theme = new DefaultTheme();
+
+					if (sequencedRegions != null) {
+						// plot the regions as well
+						for (Feature feature : sequencedRegions) {
+							if (feature.getChromosome().equals(chr)) {
+								starty = margin + (maxChrHeight * row) + (betweenChrMarginY * row);
+								int geneY1 = starty + (int) Math.ceil(feature.getStart() * pixelsPerBp);
+								int geneY2 = starty + (int) Math.ceil(feature.getStop() * pixelsPerBp);
+								int height = (geneY2 - geneY1);
+								if (height < 2) {
+									height = 2;
+								}
+
+								g2d.setColor(theme.getColor(1));
+								g2d.fillRect(startx, geneY1 - 5, chrWidth, height);
 							}
 						}
 					}
@@ -466,7 +493,8 @@ public class ChromosomePlot extends DefaultGraphics {
 		int circlesize = fontsize;
 
 		int nrPerRow = nrChr / nrRows;
-		Color[] colors = new Color[]{new Color(70, 67, 58), new Color(174, 164, 140)};
+		DefaultTheme t = new DefaultTheme();
+		Color[] colors = new Color[]{t.getColor(0), t.getColor(1)};
 
 
 		g2d.setFont(new Font("Helvetica", Font.PLAIN, fontsize));
@@ -597,7 +625,7 @@ public class ChromosomePlot extends DefaultGraphics {
 				f.setChromosome(chr);
 				f.setStrand(Strand.NEG);
 				f.setStart(start);
-				f.setStart(stop);
+				f.setStop(stop);
 				for (int i = 0; i < infoElems.length; i++) {
 					if (infoElems[i].startsWith("is_candidate")) {
 						String[] data = infoElems[i].split("=");
@@ -610,8 +638,12 @@ public class ChromosomePlot extends DefaultGraphics {
 					}
 				}
 
+
 				if (onlySuggestedLoci) {
 					if (isCandidate) {
+						if (f.getName().equals("ACOXL")) {
+							System.out.println("found it");
+						}
 						output.add(f);
 					}
 				} else {

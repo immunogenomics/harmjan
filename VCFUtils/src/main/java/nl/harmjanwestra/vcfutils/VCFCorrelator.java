@@ -110,6 +110,8 @@ public class VCFCorrelator {
 		ArrayList<String> samples2 = data2.getSamples();
 		System.out.println(samples2.size() + " samples in " + vcf2);
 
+		data2.close();
+
 		HashSet<String> samples1Hash = new HashSet<String>();
 		for (int i = 0; i < samples1.size(); i++) {
 			samples1Hash.add(samples1.get(i));
@@ -172,6 +174,7 @@ public class VCFCorrelator {
 				System.out.println(ctr1 + " variants parsed from vcf1");
 			}
 		}
+		data1.close();
 
 		System.out.println(variantMap.size() + " variants loaded from " + vcf1);
 		TextFile tfot = new TextFile(out, TextFile.W);
@@ -180,84 +183,100 @@ public class VCFCorrelator {
 		HashMap<String, VCFVariant> variantMap2 = new HashMap<>();
 		HashSet<String> writtenVariants = new HashSet<String>();
 		int ctr2 = 0;
-		while (data2.hasNext()) {
-			VCFVariant var2 = data2.nextLoadHeader();
+		TextFile tfVCF2 = new TextFile(vcf2, TextFile.R);
+		String ln = tfVCF2.readLine();
 
-			String varStr = var2.toString();
+		while (ln != null) {
+			if (!ln.startsWith("#")) {
 
-			VCFVariant var1 = variantMap.get(varStr);
-			if (var1 != null) {
-
-				if (var2.getTokens() != null) {
-					var2.parseGenotypes(var2.getTokens(), VCFVariant.PARSE.ALL);
-					var2.cleartokens();
-				} else {
-					System.out.println(var2.toString());
+				int strlen = ln.length();
+				int substrlen = 500;
+				if (strlen < substrlen) {
+					substrlen = strlen;
 				}
+				String lnheader = ln.substring(0, substrlen);
+				String[] lnheaderelems = lnheader.split("\t");
 
-				double[][] gprobs1 = null;
-				HashMap<String, Double> info1 = var1.getInfo();
-				HashMap<String, Double> info2 = var2.getInfo();
-				if (var1.hasImputationProbs()) {
-					gprobs1 = var1.getImputedDosages();
-				} else {
-					gprobs1 = var1.getDosages();
-				}
+				// return this.chr + "_" + this.pos + "_" + this.id;
+				String varStr = lnheaderelems[0] + "_" + lnheaderelems[1] + "_" + lnheaderelems[2];
 
-				double[][] gprobs2 = null;
-				if (var2.hasImputationProbs()) {
-					gprobs2 = var2.getImputedDosages(); // format [samples][alleles]
-				} else {
-					gprobs2 = var2.getDosages();
-				}
+				VCFVariant var1 = variantMap.get(varStr);
+				if (var1 != null) {
+					VCFVariant var2 = new VCFVariant(ln);
+
+//					if (var2.getTokens() != null) {
+//						var2.parseGenotypes(var2.getTokens(), VCFVariant.PARSE.ALL);
+//						var2.cleartokens();
+//					} else {
+//						System.out.println(var2.toString());
+//					}
+
+					double[][] gprobs1 = null;
+					HashMap<String, Double> info1 = var1.getInfo();
+					HashMap<String, Double> info2 = var2.getInfo();
+					if (var1.hasImputationProbs()) {
+						gprobs1 = var1.getImputedDosages();
+					} else {
+						gprobs1 = var1.getDosages();
+					}
+
+					double[][] gprobs2 = null;
+					if (var2.hasImputationProbs()) {
+						gprobs2 = var2.getImputedDosages(); // format [samples][alleles]
+					} else {
+						gprobs2 = var2.getDosages();
+					}
 
 
-				// check if variants have the same number of alleles
-				if (gprobs1[0].length == gprobs2[0].length) {
+					// check if variants have the same number of alleles
+					if (gprobs1[0].length == gprobs2[0].length) {
 
-					// recode: make sure sample ordering is identical
+						// recode: make sure sample ordering is identical
 
-					gprobs1 = reorder(gprobs1, samples1, sharedSamplesIndex, sharedSamples.size());
-					gprobs2 = reorder(gprobs2, samples2, sharedSamplesIndex, sharedSamples.size());
+						gprobs1 = reorder(gprobs1, samples1, sharedSamplesIndex, sharedSamples.size());
+						gprobs2 = reorder(gprobs2, samples2, sharedSamplesIndex, sharedSamples.size());
 
-					// remove missing genotypes
-					Pair<double[][], double[][]> data = removeNulls(gprobs1, gprobs2);
+						// remove missing genotypes
+						Pair<double[][], double[][]> data = removeNulls(gprobs1, gprobs2);
 
-					for (int a = 0; a < gprobs1[0].length; a++) {
-						// do some remapping here
-						double[] x = toArr(data.getLeft(), a);
-						double[] y = toArr(data.getRight(), a);
+						for (int a = 0; a < gprobs1[0].length; a++) {
+							// do some remapping here
+							double[] x = toArr(data.getLeft(), a);
+							double[] y = toArr(data.getRight(), a);
 
-						double r = JSci.maths.ArrayMath.correlation(x, y);
-						String ln;
-						var1.recalculateMAFAndCallRate();
-						var2.recalculateMAFAndCallRate();
+							double r = JSci.maths.ArrayMath.correlation(x, y);
+							var1.recalculateMAFAndCallRate();
+							var2.recalculateMAFAndCallRate();
 
-						String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
-						String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
+							String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
+							String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 
-						if (Double.isNaN(r)) {
-							ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
-						} else {
-							double rsq = r * r;
-							ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
+							if (Double.isNaN(r)) {
+								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
+							} else {
+								double rsq = r * r;
+								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
+							}
+							tfot.writeln(ln);
+							writtenVariants.add(varStr);
 						}
-						tfot.writeln(ln);
-						writtenVariants.add(varStr);
+					} else {
+						// ?
 					}
 				} else {
-					// ?
+					if (varsToTest != null && varsToTest.contains(varStr)) {
+						VCFVariant var2 = new VCFVariant(ln);
+						variantMap2.put(varStr, var2);
+					}
 				}
-			} else {
-				if (varsToTest != null && varsToTest.contains(varStr)) {
-					variantMap2.put(varStr, var2);
+				ctr2++;
+				if (ctr2 % 1000 == 0) {
+					System.out.println(ctr2 + " variants parsed from vcf2");
 				}
 			}
-			ctr2++;
-			if (ctr2 % 1000 == 0) {
-				System.out.println(ctr2 + " variants parsed from vcf2");
-			}
+			ln = tfVCF2.readLine();
 		}
+		tfVCF2.close();
 
 		// write variants that are not in variantlist
 		if (varsToTest != null) {
@@ -290,7 +309,7 @@ public class VCFCorrelator {
 							var1Str = null + "\t" + null + "\t" + 0;
 							var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 						}
-						String ln = varstr + "\t" + var1Str + "\t" + var2Str + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + infoStr1 + "\t" + infoStr2;
+						ln = varstr + "\t" + var1Str + "\t" + var2Str + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + infoStr1 + "\t" + infoStr2;
 						tfot.writeln(ln);
 					}
 				}

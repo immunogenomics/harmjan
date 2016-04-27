@@ -8,7 +8,6 @@ import umcg.genetica.text.Strings;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 
 /**
  * Created by hwestra on 8/26/15.
@@ -59,10 +58,29 @@ public class ChrPlot {
 					"/Data/ImmunoBase/IB//Hs_GRCh38-VIT-assoc_genesGFF"
 			};
 
+//			gfffiles = new String[]{
+//					"/Data/tmp/tb-edit.txt"};
+//			String sequencedRegionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/2015-03-30-allRegionsWith50PercentOfSamplesAbove20x.bed";
+//			plot.plot(cytoband, gfffiles, false, null);
+
+
+			plot = new ChromosomePlot("/Data/tmp/2016-04-26/ra-t1d.pdf", 1200, 1200);
+			plot.setMargin(200);
 			gfffiles = new String[]{
-					"/Data/tmp/tb-edit.txt"};
-			String sequencedRegionFile = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-04-07-Analysis/2015-03-30-allRegionsWith50PercentOfSamplesAbove20x.bed";
-			plot.plot(cytoband, gfffiles, false, null);
+					"/Data/Ref/ImmunoBase/ImmunoBase/Hs_GRCh37-RA-assoc_genesGFF",
+					"/Data/Ref/ImmunoBase/ImmunoBase/Hs_GRCh37-T1D-assoc_genesGFF"
+			};
+			plot.plot(cytoband, gfffiles, true, null);
+
+			plot = new ChromosomePlot("/Data/tmp/2016-04-26/ra-t1d-IC.pdf", 1200, 1200);
+			plot.setMargin(200);
+			gfffiles = new String[]{
+					"/Data/Ref/ImmunoBase/ImmunoBase/Hs_GRCh37-RA-assoc_genesGFF",
+					"/Data/Ref/ImmunoBase/ImmunoBase/Hs_GRCh37-T1D-assoc_genesGFF"
+			};
+			String sequencedRegionFile = "/Data/tmp/2016-04-21/AllICLoci.bed";
+			plot.plot(cytoband, gfffiles, true, sequencedRegionFile);
+
 //			plot.heatmap(gfffiles, true);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
