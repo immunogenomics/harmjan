@@ -4,6 +4,7 @@
  */
 package umcg.genetica.io.text;
 
+import org.anarres.parallelgzip.ParallelGZIPOutputStream;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.text.Strings;
@@ -26,26 +27,32 @@ public class TextFile implements Iterable<String> {
 	public static final Pattern colon = Strings.colon;
 	public static final Pattern semicolon = Strings.semicolon;
 	public static final Pattern comma = Strings.comma;
-	protected BufferedReader in;
-	protected File file;
 	public static final boolean W = true;
 	public static final boolean R = false;
+	protected static final String ENCODING = "ISO-8859-1";
+	protected BufferedReader in;
+	protected File file;
 	protected BufferedWriter out;
 	protected boolean writeable;
-	protected static final String ENCODING = "ISO-8859-1";
 	private boolean gzipped;
 	private int buffersize;
+	private boolean parallel = false;
 
 	public TextFile(String file, boolean mode) throws IOException {
-		this(new File(file), mode, DEFAULT_BUFFER_SIZE);
+		this(new File(file), mode, DEFAULT_BUFFER_SIZE, false);
 	}
 
 	public TextFile(File file, boolean mode) throws IOException {
-		this(file, mode, DEFAULT_BUFFER_SIZE);
+		this(file, mode, DEFAULT_BUFFER_SIZE, false);
 	}
 
-	public TextFile(File file, boolean mode, int buffersize) throws IOException {
+	public TextFile(File file, boolean mode, boolean parallel) throws IOException {
+		this(file, mode, DEFAULT_BUFFER_SIZE, parallel);
+	}
 
+	public TextFile(File file, boolean mode, int buffersize, boolean parallel) throws IOException {
+
+		this.parallel = parallel;
 		this.buffersize = buffersize;
 		this.file = file;
 
@@ -63,7 +70,7 @@ public class TextFile implements Iterable<String> {
 	}
 
 	public TextFile(String file, boolean mode, int buffersize) throws IOException {
-		this(new File(file), mode, buffersize);
+		this(new File(file), mode, buffersize, false);
 	}
 
 	public final void open() throws IOException {
@@ -74,8 +81,13 @@ public class TextFile implements Iterable<String> {
 			if (writeable) {
 				if (gzipped) {
 					this.buffersize = 500 * 1024;
-					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(file));
-					out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
+					if (parallel) {
+						ParallelGZIPOutputStream gzipOutputStream = new ParallelGZIPOutputStream(new FileOutputStream(file));
+						out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
+					} else {
+						GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(file));
+						out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
+					}
 				} else {
 					out = new BufferedWriter(new FileWriter(file), buffersize);
 				}

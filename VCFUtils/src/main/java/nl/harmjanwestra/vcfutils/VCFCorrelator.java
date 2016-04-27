@@ -8,6 +8,7 @@ import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Correlation;
 import umcg.genetica.text.Strings;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public class VCFCorrelator {
 		System.out.println("In: " + vcfin);
 		System.out.println("Out: " + vcfOut);
 		TextFile tf = new TextFile(vcfin, TextFile.R);
-		TextFile out = new TextFile(vcfOut, TextFile.W);
+		TextFile out = new TextFile(new File(vcfOut), TextFile.W, true);
 		String ln = tf.readLine();
 		int submitted = 0;
 
@@ -89,59 +90,6 @@ public class VCFCorrelator {
 		out.close();
 		tf.close();
 		threadPool.shutdown();
-	}
-
-	public class VCFVariantInfoUpdater implements Callable<String> {
-
-		private String in = null;
-
-		public VCFVariantInfoUpdater(String in) {
-			this.in = in;
-		}
-
-		@Override
-		public String call() throws Exception {
-
-			VCFVariant variant = new VCFVariant(in);
-			int nrAlleles = variant.getAlleles().length;
-			double rsq = 0;
-			if (nrAlleles == 2) {
-				double[] probabilies = convertToProbsToDouble(variant);
-				double[] bestguess = convertGenotypesToDouble(variant);
-				double r = Correlation.correlate(bestguess, probabilies);
-				rsq = r * r;
-			}
-
-			String[] elems = in.split("\t");
-			elems[7] = "INFO=" + rsq;
-
-			return Strings.concat(elems, Strings.tab);
-		}
-
-		private double[] convertToProbsToDouble(VCFVariant vcfVariant) {
-			double[][] dosages = vcfVariant.getImputedDosages(); // [samples][alleles];
-			double[] output = new double[dosages.length];
-			for (int i = 0; i < output.length; i++) {
-				output[i] = dosages[i][0];
-			}
-			return output;
-		}
-
-		private double[] convertGenotypesToDouble(VCFVariant vcfVariant) {
-			byte[][] alleles = vcfVariant.getGenotypeAlleles();
-			double[] output = new double[alleles[0].length];
-			for (int i = 0; i < alleles[0].length; i++) {
-				if (alleles[0][i] == -1) {
-					output[i] = -1;
-				} else {
-					output[i] = (alleles[0][i] + alleles[1][i]);
-				}
-			}
-
-			return output;
-		}
-
-
 	}
 
 	public void run(String vcf1, String vcf2, String variantsToTestFile, String out) throws IOException {
@@ -355,7 +303,6 @@ public class VCFCorrelator {
 		tfot.close();
 	}
 
-
 	private Pair<double[][], double[][]> removeNulls(double[][] gprobs1, double[][] gprobs2) {
 
 		int nrNull = 0;
@@ -425,6 +372,59 @@ public class VCFCorrelator {
 			arr[i] = x[i][q];
 		}
 		return arr;
+	}
+
+	public class VCFVariantInfoUpdater implements Callable<String> {
+
+		private String in = null;
+
+		public VCFVariantInfoUpdater(String in) {
+			this.in = in;
+		}
+
+		@Override
+		public String call() throws Exception {
+
+			VCFVariant variant = new VCFVariant(in);
+			int nrAlleles = variant.getAlleles().length;
+			double rsq = 0;
+			if (nrAlleles == 2) {
+				double[] probabilies = convertToProbsToDouble(variant);
+				double[] bestguess = convertGenotypesToDouble(variant);
+				double r = Correlation.correlate(bestguess, probabilies);
+				rsq = r * r;
+			}
+
+			String[] elems = in.split("\t");
+			elems[7] = "INFO=" + rsq;
+
+			return Strings.concat(elems, Strings.tab);
+		}
+
+		private double[] convertToProbsToDouble(VCFVariant vcfVariant) {
+			double[][] dosages = vcfVariant.getImputedDosages(); // [samples][alleles];
+			double[] output = new double[dosages.length];
+			for (int i = 0; i < output.length; i++) {
+				output[i] = dosages[i][0];
+			}
+			return output;
+		}
+
+		private double[] convertGenotypesToDouble(VCFVariant vcfVariant) {
+			byte[][] alleles = vcfVariant.getGenotypeAlleles();
+			double[] output = new double[alleles[0].length];
+			for (int i = 0; i < alleles[0].length; i++) {
+				if (alleles[0][i] == -1) {
+					output[i] = -1;
+				} else {
+					output[i] = (alleles[0][i] + alleles[1][i]);
+				}
+			}
+
+			return output;
+		}
+
+
 	}
 
 }

@@ -9,6 +9,7 @@ import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 
@@ -41,13 +42,22 @@ public class RSquaredPlot {
 		int submitted = 0;
 		int cores = Runtime.getRuntime().availableProcessors();
 		ExecutorService executor = Executors.newFixedThreadPool(cores);
-		ExecutorCompletionService<Triple<String, ArrayList<Double>, ArrayList<String>>> completionService = new ExecutorCompletionService<>(executor);
+		ExecutorCompletionService<Triple<String, Pair<ArrayList<Double>, ArrayList<Double>>, ArrayList<String>>> completionService = new ExecutorCompletionService<>(executor);
 
+		HashMap<String, Integer> refHash = new HashMap<String, Integer>();
+		ArrayList<String> refsList = new ArrayList<String>();
+		int refctr = 0;
 		while (elems != null) {
 
 			if (elems.length >= 2) {
 				String ref = elems[0];
 				String file = elems[1];
+
+				if (refHash.containsKey(ref)) {
+					refHash.put(ref, refsList.size());
+					refsList.add(ref);
+				}
+
 
 				LoadTask task = new LoadTask(file, ref, mafThreshold, bedfile);
 				completionService.submit(task);
@@ -67,11 +77,20 @@ public class RSquaredPlot {
 
 		int returned = 0;
 
+		System.out.println(refsList.size() + " references");
+		TextFile[] tfout = new TextFile[refsList.size()];
+		for (int i = 0; i < refsList.size(); i++) {
+			tfout[i] = new TextFile(outfile + "-" + refsList.get(i) + "-values.txt", TextFile.W);
+			tfout[i].writeln("Variant\tMAF\tImpQual");
+		}
+
 		while (returned < submitted) {
 			try {
-				Triple<String, ArrayList<Double>, ArrayList<String>> result = completionService.take().get();
+				Triple<String, Pair<ArrayList<Double>, ArrayList<Double>>, ArrayList<String>> result = completionService.take().get();
 				String ref = result.getLeft();
-				ArrayList<Double> rsquareds = result.getMiddle();
+				Pair<ArrayList<Double>, ArrayList<Double>> rsqdata = result.getMiddle();
+				ArrayList<Double> rsquareds = rsqdata.getLeft();
+				ArrayList<Double> mafs = rsqdata.getRight();
 				ArrayList<String> vars = result.getRight();
 
 				ArrayList<Double> vals = values.get(ref);
@@ -81,6 +100,13 @@ public class RSquaredPlot {
 					vals.addAll(rsquareds);
 				}
 				allVariants.addAll(vars);
+
+				Integer refid = refHash.get(ref);
+
+				for (int i = 0; i < vars.size(); i++) {
+					tfout[refid].writeln(vars.get(i) + "\t" + mafs.get(i) + "\t" + rsquareds.get(i));
+				}
+
 				returned++;
 				System.out.println(returned + "/" + submitted + " files returned..");
 			} catch (InterruptedException e) {
@@ -88,6 +114,10 @@ public class RSquaredPlot {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
+		}
+
+		for (int i = 0; i < refsList.size(); i++) {
+			tfout[i].close();
 		}
 
 		System.out.println("Done loading.");
@@ -172,7 +202,7 @@ public class RSquaredPlot {
 		return output;
 	}
 
-	class LoadTask implements Callable<Triple<String, ArrayList<Double>, ArrayList<String>>> {
+	class LoadTask implements Callable<Triple<String, Pair<ArrayList<Double>, ArrayList<Double>>, ArrayList<String>>> {
 
 		String file;
 		String ref;
@@ -187,7 +217,7 @@ public class RSquaredPlot {
 		}
 
 		@Override
-		public Triple<String, ArrayList<Double>, ArrayList<String>> call() throws Exception {
+		public Triple<String, Pair<ArrayList<Double>, ArrayList<Double>>, ArrayList<String>> call() throws Exception {
 
 			BedFileReader reader = new BedFileReader();
 			ArrayList<Feature> bedregions = null;
@@ -199,6 +229,7 @@ public class RSquaredPlot {
 
 			TextFile tf2 = new TextFile(file, TextFile.R);
 			ArrayList<Double> refVals = new ArrayList<Double>();
+			ArrayList<Double> refMAFVals = new ArrayList<Double>();
 			ArrayList<String> allVariants = new ArrayList<String>();
 			System.out.println("Ref: " + ref + " file: " + file);
 			String line = tf2.readLine();
@@ -235,8 +266,9 @@ public class RSquaredPlot {
 					if (bedregions == null || overlaps) {
 						VCFVariant vcfVariant = new VCFVariant(line, VCFVariant.PARSE.GENOTYPES);
 						if (vcfVariant.getMAF() > threshold) {
-							Double Rsq = vcfVariant.getInfo().get("AR2");
+							Double Rsq = vcfVariant.getImputationQualityScore();
 							refVals.add(Rsq);
+							refMAFVals.add(vcfVariant.getMAF());
 							String variant = tokens[0] + "_" + tokens[1] + "_" + tokens[2];
 							allVariants.add(variant);
 						}
@@ -253,7 +285,7 @@ public class RSquaredPlot {
 			System.out.println(allVariants.size() + " variants loaded from: " + file);
 			tf2.close();
 
-			return new Triple<>(ref, refVals, allVariants);
+			return new Triple<>(ref, new Pair<ArrayList<Double>, ArrayList<Double>>(refVals, refMAFVals), allVariants);
 		}
 	}
 
