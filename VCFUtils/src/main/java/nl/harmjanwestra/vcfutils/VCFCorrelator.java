@@ -5,7 +5,6 @@ import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.Correlation;
 import umcg.genetica.text.Strings;
 
 import java.io.File;
@@ -229,7 +228,7 @@ public class VCFCorrelator {
 						double[] x = toArr(data.getLeft(), a);
 						double[] y = toArr(data.getRight(), a);
 
-						double r = Correlation.correlate(x, y);
+						double r = JSci.maths.ArrayMath.correlation(x, y);
 						String ln;
 						var1.recalculateMAFAndCallRate();
 						var2.recalculateMAFAndCallRate();
@@ -389,9 +388,9 @@ public class VCFCorrelator {
 			int nrAlleles = variant.getAlleles().length;
 			double rsq = 0;
 			if (nrAlleles == 2) {
-				double[] probabilies = convertToProbsToDouble(variant);
+				double[] probabilies = variant.getGenotypeDosages();
 				double[] bestguess = convertGenotypesToDouble(variant);
-				double r = Correlation.correlate(bestguess, probabilies);
+				double r = JSci.maths.ArrayMath.correlation(bestguess, probabilies);
 				rsq = r * r;
 			}
 

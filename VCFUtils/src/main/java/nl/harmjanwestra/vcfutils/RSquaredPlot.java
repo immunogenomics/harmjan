@@ -53,7 +53,7 @@ public class RSquaredPlot {
 				String ref = elems[0];
 				String file = elems[1];
 
-				if (refHash.containsKey(ref)) {
+				if (!refHash.containsKey(ref)) {
 					refHash.put(ref, refsList.size());
 					refsList.add(ref);
 				}
