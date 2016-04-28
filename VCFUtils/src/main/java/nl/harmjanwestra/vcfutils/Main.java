@@ -354,6 +354,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("countoverlap")
+				.desc("Count overlapping variants between two vcfs")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.hasArg()
 				.longOpt("rsquared")
 				.desc("RSquared threshold")
@@ -445,6 +451,18 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("summarize")
+				.desc("Calculate summary statistics. ")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("summarize2")
+				.desc("Calculate summary statistics (2). ")
+				.build();
+		OPTIONS.addOption(option);
+
 	}
 
 	public static void main(String[] args) {
@@ -523,10 +541,19 @@ public class Main {
 //				}
 //
 //			} else
-			if (cmd.hasOption("updateimputationquals")) {
+			if (cmd.hasOption("countoverlap")) {
+
+				CompareOverlappingVariants q = new CompareOverlappingVariants();
+				if (cmd.hasOption("i2")) {
+					q.run(input, cmd.getOptionValue("i2"));
+				} else {
+					System.out.println("use -i2 with --countoverlap");
+				}
+
+			} else if (cmd.hasOption("updateimputationquals")) {
 
 				VCFCorrelator correlator = new VCFCorrelator();
-				correlator.updateVCFInfoScore(input,out);
+				correlator.updateVCFInfoScore(input, out);
 			} else if (cmd.hasOption("filtersampleoverlap")) {
 
 				VCFSampleFilter filter = new VCFSampleFilter();
@@ -739,6 +766,16 @@ public class Main {
 				} else {
 					printHelp();
 				}
+			} else if (cmd.hasOption("summarize")) {
+				VCFFunctions f = new VCFFunctions();
+
+				f.summarizeVCF(input, out);
+
+			} else if (cmd.hasOption("summarize2")) {
+				VCFFunctions f = new VCFFunctions();
+
+				f.determineVCFSummaryStatistics(input, out);
+
 			} else if (cmd.hasOption("rmc")) {
 				VCFFunctions f = new VCFFunctions();
 

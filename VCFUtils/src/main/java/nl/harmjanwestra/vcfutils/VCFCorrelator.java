@@ -252,10 +252,10 @@ public class VCFCorrelator {
 							String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 
 							if (Double.isNaN(r)) {
-								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
+								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
 							} else {
 								double rsq = r * r;
-								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + info1.get("AR2") + "\t" + info2.get("AR2");
+								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
 							}
 							tfot.writeln(ln);
 							writtenVariants.add(varStr);

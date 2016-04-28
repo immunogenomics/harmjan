@@ -838,6 +838,17 @@ public class VCFVariant {
 		return separator;
 	}
 
+	public boolean isIndel() {
+		String[] alleles = getAlleles();
+		boolean isIndel = false;
+		for(String s: alleles){
+			if(s.length() > 1){
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public enum PARSE {
 		HEADER,
 		GENOTYPES,
