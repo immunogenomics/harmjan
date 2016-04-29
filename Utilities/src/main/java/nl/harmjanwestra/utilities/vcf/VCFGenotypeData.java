@@ -13,145 +13,157 @@ import java.util.Iterator;
  */
 public class VCFGenotypeData implements Iterator<VCFVariant> {
 
-    private ArrayList<VCFGenotypeFilter> genotypeFilters;
-    TextFile tf = null;
-    VCFVariant next = null;
+	private ArrayList<VCFGenotypeFilter> genotypeFilters;
+	TextFile tf = null;
+	VCFVariant next = null;
+	String nextLn = null;
 
-    public VCFGenotypeData(TextFile tf, HashSet<String> excludeTheseSamples, ArrayList<VCFGenotypeFilter> genotypeFilters) throws IOException {
-        this.tf = tf;
-        this.genotypeFilters = genotypeFilters;
-        tf.close();
-        tf.open();
+	public VCFGenotypeData(TextFile tf, HashSet<String> excludeTheseSamples, ArrayList<VCFGenotypeFilter> genotypeFilters) throws IOException {
+		this.tf = tf;
+		this.genotypeFilters = genotypeFilters;
+		tf.close();
+		tf.open();
 
-        init();
-    }
+		init();
+	}
 
-    public VCFGenotypeData(TextFile tf, HashSet<String> excludeTheseSamples) throws IOException {
-        this.tf = tf;
-        tf.close();
-        tf.open();
+	public VCFGenotypeData(TextFile tf, HashSet<String> excludeTheseSamples) throws IOException {
+		this.tf = tf;
+		tf.close();
+		tf.open();
 
-        init();
-    }
+		init();
+	}
 
-    public VCFGenotypeData(TextFile tf) throws IOException {
-        this.tf = tf;
-        tf.close();
-        tf.open();
+	public VCFGenotypeData(TextFile tf) throws IOException {
+		this.tf = tf;
+		tf.close();
+		tf.open();
 
-        init();
-    }
+		init();
+	}
 
-    public VCFGenotypeData(String vcffile) throws IOException {
-        tf = new TextFile(vcffile, TextFile.R);
-        init();
+	public VCFGenotypeData(String vcffile) throws IOException {
+		tf = new TextFile(vcffile, TextFile.R);
+		init();
 
-    }
+	}
 
-    public void open() throws IOException {
-        tf.open();
-        init();
-    }
+	public void open() throws IOException {
+		tf.open();
+		init();
+	}
 
-    private void init() throws IOException {
-        String ln = tf.readLine();
-        while (ln.startsWith("#")) {
-            if (ln.startsWith("#CHROM")) {
-                parseheader(ln);
-            }
-            ln = tf.readLine();
-        }
+	private void init() throws IOException {
+		String ln = tf.readLine();
+		while (ln.startsWith("#")) {
+			if (ln.startsWith("#CHROM")) {
+				parseheader(ln);
+			}
+			ln = tf.readLine();
+		}
 
-        if (ln != null) {
-            next = new VCFVariant(ln);
-        } else {
-            next = null;
-        }
-    }
+		if (ln != null) {
+			next = new VCFVariant(ln);
+			nextLn = ln;
+		} else {
+			next = null;
+		}
+	}
 
-    ArrayList<String> samples = new ArrayList<String>();
+	ArrayList<String> samples = new ArrayList<String>();
 
-    public ArrayList<String> getSamples() {
-        return samples;
-    }
+	public ArrayList<String> getSamples() {
+		return samples;
+	}
 
-    private void parseheader(String ln) {
-        String[] elems = ln.split("\t");
-        // #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+	private void parseheader(String ln) {
+		String[] elems = ln.split("\t");
+		// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
 
-        for (int e = 9; e < elems.length; e++) {
-            String sample = elems[e];
+		for (int e = 9; e < elems.length; e++) {
+			String sample = elems[e];
 
-            samples.add(sample);
-
-
-        }
+			samples.add(sample);
 
 
-    }
+		}
 
-    @Override
-    public boolean hasNext() {
-        return next != null;
-    }
 
-    @Override
-    public VCFVariant next() {
-        VCFVariant current = next;
-        try {
-            String ln = tf.readLine();
-            if (ln != null) {
-                next = new VCFVariant(ln, genotypeFilters, true);
-            } else {
-                next = null;
-            }
+	}
 
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-        return current;
-    }
+	@Override
+	public boolean hasNext() {
+		return next != null;
+	}
 
-    @Override
-    public void remove() {
+	@Override
+	public VCFVariant next() {
+		VCFVariant current = next;
+		try {
+			String ln = tf.readLine();
+			if (ln != null) {
+				next = new VCFVariant(ln, genotypeFilters, true);
+				nextLn = ln;
+			} else {
+				next = null;
+				nextLn = null;
+			}
 
-    }
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
+		return current;
+	}
 
-    public void close() throws IOException {
-        this.tf.close();
-    }
+	@Override
+	public void remove() {
 
-    public VCFVariant nextLoadGenotypesOnly() {
-        VCFVariant current = next;
-        try {
+	}
 
-            String ln = tf.readLine();
-            if (ln != null) {
-                next = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
-            } else {
-                next = null;
-            }
+	public void close() throws IOException {
+		this.tf.close();
+	}
 
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-        return current;
-    }
+	public VCFVariant nextLoadGenotypesOnly() {
+		VCFVariant current = next;
+		try {
 
-    public VCFVariant nextLoadHeader() {
-        VCFVariant current = next;
-        try {
+			String ln = tf.readLine();
+			if (ln != null) {
+				next = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
+				nextLn = ln;
+			} else {
+				next = null;
+				nextLn = null;
+			}
 
-            String ln = tf.readLine();
-            if (ln != null) {
-                next = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
-            } else {
-                next = null;
-            }
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
+		return current;
+	}
 
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-        return current;
-    }
+	public VCFVariant nextLoadHeader() {
+		VCFVariant current = next;
+		try {
+
+			String ln = tf.readLine();
+			if (ln != null) {
+				next = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				nextLn = ln;
+			} else {
+				next = null;
+				nextLn = null;
+			}
+
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
+		return current;
+	}
+
+	public String getNextLn() {
+		return nextLn;
+	}
 }

@@ -162,9 +162,9 @@ public class VCFCorrelator {
 			if (!chr.equals(Chromosome.X)) {
 				String varStr = var.toString();
 				if (varsToTest == null || varsToTest.contains(varStr)) {
-					if (var.getTokens() != null) {
-						var.parseGenotypes(var.getTokens(), VCFVariant.PARSE.ALL);
-						var.cleartokens();
+					String varln = data1.getNextLn();
+					if (varln != null) {
+						var.parseGenotypes(varln, VCFVariant.PARSE.ALL);
 						variantMap.put(var.toString(), var);
 					}
 				}
