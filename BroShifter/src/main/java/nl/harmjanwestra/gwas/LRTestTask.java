@@ -35,20 +35,24 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	private int alleleOffsetGenotypes;
 	private int alleleOffsetDosages;
 	private LRTestOptions options;
+	private String vcfLn;
+
 
 	public LRTestTask() {
 	}
 
-	public LRTestTask(VCFVariant variant,
-	                  int iter,
-	                  boolean[] genotypesWithCovariatesAndDiseaseStatus,
-	                  double[] finalDiseaseStatus,
-	                  double[][] finalCovariates,
-	                  ArrayList<Triple<double[][], boolean[], Integer>> conditional, ArrayList<double[][]> conditionalDosages,
-	                  int alleleOffsetGenotypes,
-	                  int alleleOffsetDosages,
-	                  LRTestOptions options) {
+	public LRTestTask(String vcfLn,
+					  VCFVariant variant,
+					  int iter,
+					  boolean[] genotypesWithCovariatesAndDiseaseStatus,
+					  double[] finalDiseaseStatus,
+					  double[][] finalCovariates,
+					  ArrayList<Triple<double[][], boolean[], Integer>> conditional, ArrayList<double[][]> conditionalDosages,
+					  int alleleOffsetGenotypes,
+					  int alleleOffsetDosages,
+					  LRTestOptions options) {
 		this.variant = variant;
+		this.vcfLn = vcfLn;
 		this.iter = iter;
 		this.genotypesWithCovariatesAndDiseaseStatus = genotypesWithCovariatesAndDiseaseStatus;
 		this.finalDiseaseStatus = finalDiseaseStatus;
@@ -62,16 +66,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 	@Override
 	public Triple<String, AssociationResult, VCFVariant> call() throws Exception {
-		// do some more parsing
 		if (iter == 0) {
-			String[] tokens = variant.getTokens();
-			if (tokens != null) {
-				variant.parseGenotypes(tokens, VCFVariant.PARSE.ALL);
-				variant.cleartokens();
-				variant.recalculateMAFAndCallRate();
-			} else {
-				System.out.println("Variant with null tokens.. " + variant.toString());
-			}
+			// do some more parsing if this is the first time we're seeing this variant...
+			variant = new VCFVariant(vcfLn, VCFVariant.PARSE.ALL);
+			vcfLn = null;
 		}
 
 		// TODO: switch this around: make the ordering of the covariate table the same as the genotype file...
@@ -463,11 +461,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	private AssociationResult pruneAndTest(double[][] x,
-	                                       double[] y,
-	                                       int nrAlleles,
-	                                       int alleleOffset,
-	                                       VCFVariant variant,
-	                                       double maf) throws REXPMismatchException, REngineException, IOException {
+										   double[] y,
+										   int nrAlleles,
+										   int alleleOffset,
+										   VCFVariant variant,
+										   double maf) throws REXPMismatchException, REngineException, IOException {
 		Pair<double[][], boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X

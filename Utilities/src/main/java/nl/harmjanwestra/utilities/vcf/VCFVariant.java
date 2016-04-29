@@ -272,7 +272,7 @@ public class VCFVariant {
 
 		if (ln != null) {
 			int strlen = ln.length();
-			int substrlen = 2500; // this should capture most annotation //
+			int substrlen = 1500; // this should capture most annotation //
 			if (strlen < substrlen) {
 				substrlen = strlen;
 			}

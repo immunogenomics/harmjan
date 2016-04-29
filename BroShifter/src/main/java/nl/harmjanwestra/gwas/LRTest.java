@@ -272,7 +272,6 @@ public class LRTest {
 			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
 			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
 
-
 			while (iter < options.getMaxIter()) {
 				TextFile logout = null;
 				if (iter == 0) {
@@ -314,11 +313,21 @@ public class LRTest {
 				}
 
 
-				while ((iter == 0 && data.hasNext()) || (iter > 0 && variantCtr < variants.size())) {
+				String vcfLn = null;
+				TextFile vcfIn = null;
+				if (iter == 0) {
+					vcfIn = new TextFile(options.getVcf(), TextFile.R);
+					vcfLn = vcfIn.readLine();
+					while (vcfLn != null && vcfLn.startsWith("#")) {
+						vcfLn = vcfIn.readLine();
+					}
+				}
+
+				while ((iter == 0 && vcfLn != null) || (iter > 0 && variantCtr < variants.size())) {
 
 					VCFVariant variant = null;
 					if (iter == 0) {
-						variant = data.nextLoadHeader();
+						variant = new VCFVariant(vcfLn, VCFVariant.PARSE.HEADER);
 					} else {
 						variant = variants.get(variantCtr);
 					}
@@ -394,7 +403,8 @@ public class LRTest {
 
 							// throw into a thread
 							// TODO: conditional on dosages is separate from conditional on genotypes.. ?
-							LRTestTask task = new LRTestTask(variant,
+							LRTestTask task = new LRTestTask(vcfLn,
+									variant,
 									iter,
 									genotypesWithCovariatesAndDiseaseStatus,
 									finalDiseaseStatus,
@@ -421,8 +431,14 @@ public class LRTest {
 						}
 						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + " loaded.\tSubmitted to queue: " + submitted + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10P + "\tSNP: " + currentLowestDosagePValSNPId);
 					}
+					if (iter == 0) {
+						vcfLn = vcfIn.readLine();
+					}
 				} // end data.hasnext
 
+				if (iter == 0) {
+					vcfIn.close();
+				}
 
 				if (submitted % maxNrOfResultsInBuffer == 0) {
 					clearQueue(logout, pvalout, iter, variants, jobHandler);
@@ -496,8 +512,8 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-	                        int iter, ArrayList<VCFVariant> variants,
-	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
+							int iter, ArrayList<VCFVariant> variants,
+							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
