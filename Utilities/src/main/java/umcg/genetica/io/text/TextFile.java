@@ -79,12 +79,12 @@ public class TextFile implements Iterable<String> {
 		} else {
 			if (writeable) {
 				if (gzipped) {
-					this.buffersize = 500 * 1024;
+					this.buffersize = 1000 * 1024;
 //					if (parallel) {
 //						ParallelGZIPOutputStream gzipOutputStream = new ParallelGZIPOutputStream(new FileOutputStream(file));
 //						out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
 //					} else {
-					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(file));
+					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(file), buffersize);
 					out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
 //					}
 				} else {
@@ -92,9 +92,10 @@ public class TextFile implements Iterable<String> {
 				}
 			} else {
 				if (gzipped) {
-					this.buffersize = 500 * 1024;
-					GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(file));
+					this.buffersize = 1000 * 1024;
+					GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(file), buffersize);
 					in = new BufferedReader(new InputStreamReader(gzipInputStream, "US-ASCII"));
+
 				} else {
 //                System.out.println("Opening file: "+file);
 					in = new BufferedReader(new InputStreamReader(new FileInputStream(file), ENCODING), 8096);

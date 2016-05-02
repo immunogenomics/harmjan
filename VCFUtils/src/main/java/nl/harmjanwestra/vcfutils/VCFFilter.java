@@ -180,13 +180,14 @@ public class VCFFilter {
 					read++;
 
 					if (read % 1000 == 0) {
-						System.out.println(filtered + " filtered out / " + read + " total filtered");
+						System.out.print(filtered + " filtered out / " + read + " total filtered\r");
 
 					}
 				}
 			}
 			ln = tf1.readLine();
 		}
+		System.out.println();
 		System.out.println(filtered + " variants filtered out of: " + read + " (" + ((double) filtered / read) + "). " + (read - filtered) + " remain.");
 		System.out.println(lowcr + " low call rate " + ((double) lowcr / filtered));
 		System.out.println(lowmaf + " low mafthreshold " + ((double) lowmaf / filtered));
