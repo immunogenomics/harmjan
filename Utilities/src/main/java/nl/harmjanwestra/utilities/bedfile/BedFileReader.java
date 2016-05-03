@@ -38,33 +38,31 @@ public class BedFileReader {
 		this.filter = filter;
 	}
 
-	public Track readAsTrack(String file, String name) throws IOException {
-		nrFeatures = 0;
-		featureLengthSum = 0;
-		TextFile tf = new TextFile(file, TextFile.R);
-
-		System.out.println("Reading file: " + file);
-		Feature filter = null;
-
-
-		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
-		String[] elems = tf.readLineElems(splitpattern);
-		Track track = new Track(name);
-
-		while (elems != null) {
-			Feature f = parseElems(elems);
-			if (f != null) {
-				track.addFeature(f);
-			}
-			elems = tf.readLineElems(splitpattern);
-		}
-
-		tf.close();
-
-		System.out.println("Average feature featureLengthSum: " + ((double) featureLengthSum / nrFeatures) + "\tNumber of elements: " + nrFeatures);
-		track.printNrFeatures();
-		return track;
-	}
+//	public Track readAsTrack(String file, String name, boolean removeduplicates) throws IOException {
+//		nrFeatures = 0;
+//		featureLengthSum = 0;
+//		TextFile tf = new TextFile(file, TextFile.R);
+//
+//		System.out.println("Reading file: " + file);
+//
+//		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
+//		String[] elems = tf.readLineElems(splitpattern);
+//		Track track = new Track(name, removeduplicates);
+//
+//		while (elems != null) {
+//			Feature f = parseElems(elems);
+//			if (f != null) {
+//				track.addFeature(f);
+//			}
+//			elems = tf.readLineElems(splitpattern);
+//		}
+//
+//		tf.close();
+//
+//		System.out.println("Average feature featureLengthSum: " + ((double) featureLengthSum / nrFeatures) + "\tNumber of elements: " + nrFeatures);
+//		track.printNrFeatures();
+//		return track;
+//	}
 
 	public ArrayList<Feature> readAsList(String file) throws IOException {
 

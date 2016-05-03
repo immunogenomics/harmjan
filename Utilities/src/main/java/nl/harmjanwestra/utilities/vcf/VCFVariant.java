@@ -118,156 +118,158 @@ public class VCFVariant {
 
 			String[] tokenArr = Strings.tab.split(ln);
 
-			// parse actual genotypes.
-			int nrTokens = tokenArr.length;
-			int nrSamples = nrTokens - nrHeaderElems;
-			byte[] alleles1 = new byte[nrSamples];
-			byte[] alleles2 = new byte[nrSamples];
-			approximateDepth = new short[nrSamples];
-			genotypeQuals = new short[nrSamples];
+			if (tokenArr.length > 9) { // allow VCFs without any actual genotypes
+				// parse actual genotypes.
+				int nrTokens = tokenArr.length;
+				int nrSamples = nrTokens - nrHeaderElems;
+				byte[] alleles1 = new byte[nrSamples];
+				byte[] alleles2 = new byte[nrSamples];
+				approximateDepth = new short[nrSamples];
+				genotypeQuals = new short[nrSamples];
 
-			for (int t = 9; t < nrTokens; t++) {
-				String token = tokenArr[t];
-				int indPos = t - nrHeaderElems;
-				String sampleColumn = token;
-				if (nullGenotype.equals(sampleColumn)) {
-					// not called
-					alleles1[indPos] = -1;
-					alleles2[indPos] = -1;
-				} else {
-					//String[] sampleElems = Strings.colon.split(sampleColumn);
+				for (int t = 9; t < nrTokens; t++) {
+					String token = tokenArr[t];
+					int indPos = t - nrHeaderElems;
+					String sampleColumn = token;
+					if (nullGenotype.equals(sampleColumn)) {
+						// not called
+						alleles1[indPos] = -1;
+						alleles2[indPos] = -1;
+					} else {
+						//String[] sampleElems = Strings.colon.split(sampleColumn);
 
-					String[] sampleTokens = Strings.colon.split(sampleColumn);
+						String[] sampleTokens = Strings.colon.split(sampleColumn);
 
 
-					int sampleTokenCtr = 0;
-					for (int s = 0; s < sampleTokens.length; s++) {
-						String sampleToken = sampleTokens[s];
+						int sampleTokenCtr = 0;
+						for (int s = 0; s < sampleTokens.length; s++) {
+							String sampleToken = sampleTokens[s];
 
-						if (s == gtCol) {
-							String gt = sampleToken;
-							if (nullGenotype.equals(gt)) {
-								alleles1[indPos] = -1;
-								alleles2[indPos] = -1;
-							} else {
-								String[] gtElems = slash.split(gt);
-								separator = "/";
-								if (gtElems.length == 1) { // phased genotypes
-									gtElems = pipe.split(gt);
-									separator = "|";
-								}
-
-								byte gt1 = 0;
-								byte gt2 = 0;
-
-								if (gtElems[0].equals(".")) {
+							if (s == gtCol) {
+								String gt = sampleToken;
+								if (nullGenotype.equals(gt)) {
 									alleles1[indPos] = -1;
 									alleles2[indPos] = -1;
 								} else {
-									try {
-										gt1 = Byte.parseByte(gtElems[0]);
-										gt2 = Byte.parseByte(gtElems[1]);
+									String[] gtElems = slash.split(gt);
+									separator = "/";
+									if (gtElems.length == 1) { // phased genotypes ??
+										gtElems = pipe.split(gt);
+										separator = "|";
+									}
 
-										alleles1[indPos] = gt1;
-										alleles2[indPos] = gt2;
+									byte gt1 = 0;
+									byte gt2 = 0;
 
-									} catch (NumberFormatException e) {
-										System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length);
+									if (gtElems[0].equals(".")) {
 										alleles1[indPos] = -1;
 										alleles2[indPos] = -1;
+									} else {
+										try {
+											gt1 = Byte.parseByte(gtElems[0]);
+											gt2 = Byte.parseByte(gtElems[1]);
+
+											alleles1[indPos] = gt1;
+											alleles2[indPos] = gt2;
+
+										} catch (NumberFormatException e) {
+											System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length);
+											alleles1[indPos] = -1;
+											alleles2[indPos] = -1;
+										}
 									}
 								}
-							}
-						} else if (s == dsCol) {
-							// dosages
-							if (p.equals(PARSE.ALL)) {
-								try {
-									if (genotypeDosages == null) {
-										genotypeDosages = new double[nrSamples];
+							} else if (s == dsCol) {
+								// dosages
+								if (p.equals(PARSE.ALL)) {
+									try {
+										if (genotypeDosages == null) {
+											genotypeDosages = new double[nrSamples];
+										}
+										genotypeDosages[indPos] = Double.parseDouble(sampleToken);
+									} catch (NumberFormatException e) {
+
 									}
-									genotypeDosages[indPos] = Double.parseDouble(sampleToken);
+								}
+							} else if (s == gpCol) {
+								// genotype probs
+								if (p.equals(PARSE.ALL)) {
+									String[] gpElems = Strings.comma.split(sampleToken);
+
+									try {
+
+										if (genotypeProbabilies == null) {
+											genotypeProbabilies = new double[gpElems.length][nrSamples];
+										}
+
+										for (int g = 0; g < gpElems.length; g++) {
+
+											genotypeProbabilies[g][indPos] = Double.parseDouble(gpElems[g]);
+
+										}
+
+									} catch (NumberFormatException e) {
+
+									}
+								}
+							} else if (s == adCol) {
+								// depth of sequencing per allele
+								String[] adElems = Strings.comma.split(sampleToken);
+								try {
+									if (allelicDepth == null) {
+										allelicDepth = new short[alleles.length][nrSamples];
+									}
+
+									for (int g = 0; g < adElems.length; g++) {
+										allelicDepth[g][indPos] = Short.parseShort(adElems[g]);
+									}
+
 								} catch (NumberFormatException e) {
 
 								}
-							}
-						} else if (s == gpCol) {
-							// genotype probs
-							if (p.equals(PARSE.ALL)) {
-								String[] gpElems = Strings.comma.split(sampleToken);
+							} else if (s == gqCol) {
+								// genotype quals
+								short gq = 0;
 
 								try {
-
-									if (genotypeProbabilies == null) {
-										genotypeProbabilies = new double[gpElems.length][nrSamples];
+									if (gqCol != -1) {
+										gq = Short.parseShort(sampleToken);
 									}
-
-									for (int g = 0; g < gpElems.length; g++) {
-
-										genotypeProbabilies[g][indPos] = Double.parseDouble(gpElems[g]);
-
-									}
-
 								} catch (NumberFormatException e) {
-
 								}
+								genotypeQuals[indPos] = gq;
+
+							} else if (s == dpCol) {
+								// approximate depth of sequencing
+								short depth = 0;
+
+								try {
+									if (dpCol != -1) {
+										depth = Short.parseShort(sampleToken);
+									}
+								} catch (NumberFormatException e) {
+								}
+								approximateDepth[indPos] = depth;
 							}
-						} else if (s == adCol) {
-							// depth of sequencing per allele
-							String[] adElems = Strings.comma.split(sampleToken);
-							try {
-								if (allelicDepth == null) {
-									allelicDepth = new short[alleles.length][nrSamples];
-								}
-
-								for (int g = 0; g < adElems.length; g++) {
-									allelicDepth[g][indPos] = Short.parseShort(adElems[g]);
-								}
-
-							} catch (NumberFormatException e) {
-
-							}
-						} else if (s == gqCol) {
-							// genotype quals
-							short gq = 0;
-
-							try {
-								if (gqCol != -1) {
-									gq = Short.parseShort(sampleToken);
-								}
-							} catch (NumberFormatException e) {
-							}
-							genotypeQuals[indPos] = gq;
-
-						} else if (s == dpCol) {
-							// approximate depth of sequencing
-							short depth = 0;
-
-							try {
-								if (dpCol != -1) {
-									depth = Short.parseShort(sampleToken);
-								}
-							} catch (NumberFormatException e) {
-							}
-							approximateDepth[indPos] = depth;
+							sampleTokenCtr++;
 						}
-						sampleTokenCtr++;
 					}
 				}
-			}
 
-			genotypeAlleles = new byte[2][];
-			genotypeAlleles[0] = alleles1;
-			genotypeAlleles[1] = alleles2;
+				genotypeAlleles = new byte[2][];
+				genotypeAlleles[0] = alleles1;
+				genotypeAlleles[1] = alleles2;
 
-			if (filters != null) {
-				for (VCFGenotypeFilter filter : filters) {
-					filter.filter(this);
+				if (filters != null) {
+					for (VCFGenotypeFilter filter : filters) {
+						filter.filter(this);
+					}
 				}
+				recalculateMAFAndCallRate();
 			}
 		}
 
 
-		recalculateMAFAndCallRate();
 	}
 
 
@@ -330,7 +332,7 @@ public class VCFVariant {
 								for (int e = 0; e < infoElems.length; e++) {
 									String[] infoElemElems = Strings.equalssign.split(infoElems[e]);
 									String id = new String(infoElemElems[0]).intern();
-									if(infoElemElems.length>=2) {
+									if (infoElemElems.length >= 2) {
 										String val = new String(infoElemElems[1]).intern();
 										info.put(id, val);
 									} else {

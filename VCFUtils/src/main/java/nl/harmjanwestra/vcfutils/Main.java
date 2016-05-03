@@ -796,6 +796,8 @@ public class Main {
 				VCFVariantStats stats = new VCFVariantStats();
 				if (cmd.hasOption("b") && cmd.hasOption("i2")) {
 					stats.compare(input, cmd.getOptionValue("i2"), out, cmd.getOptionValue("b"));
+				} else {
+					System.out.println("Provide -b and -i2 additional to -i and -o.");
 				}
 			} else if (cmd.hasOption("rmc")) {
 				VCFFunctions f = new VCFFunctions();

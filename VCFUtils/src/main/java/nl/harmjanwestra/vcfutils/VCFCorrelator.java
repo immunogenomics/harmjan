@@ -212,8 +212,6 @@ public class VCFCorrelator {
 //					}
 
 					double[][] gprobs1 = null;
-					HashMap<String, Double> info1 = var1.getInfo();
-					HashMap<String, Double> info2 = var2.getInfo();
 					if (var1.hasImputationProbs()) {
 						gprobs1 = var1.getImputedDosages();
 					} else {

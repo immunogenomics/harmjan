@@ -2,6 +2,7 @@ package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureTree;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -12,11 +13,25 @@ import umcg.genetica.text.Strings;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.NavigableSet;
 
 /**
  * Created by hwestra on 5/2/16.
  */
 public class VCFVariantStats {
+
+	public static void main(String[] args) {
+		Main m = new Main();
+		args = new String[]{
+				"--summarize3compare",
+				"-i", "/Data/tmp/2016-05-03/cosmo.stats.vcf.gz",
+				"-i2", "/Data/tmp/2016-05-03/cosmo.stats.vcf.gz",
+				"-o", "/Data/tmp/2016-05-03/CosmoVsHRC",
+				"-b", "/Data/tmp/2016-05-03/AllICLoci.bed"
+		};
+		Main.main(args);
+
+	}
 
 	public void run(String vcf1, String vcf2) throws IOException {
 
@@ -88,9 +103,12 @@ public class VCFVariantStats {
 		BedFileReader bedFileReader = new BedFileReader();
 		ArrayList<Feature> bedFeatures = bedFileReader.readAsList(regionsFile);
 
+		System.out.println(bedFeatures.size() + " regions in " + regionsFile);
 
 		ArrayList<VCFVariant> variants1 = loadVariants(vcf1, bedFeatures);
+		System.out.println(variants1.size() + " variants in " + vcf1);
 		ArrayList<VCFVariant> variants2 = loadVariants(vcf2, bedFeatures);
+		System.out.println(variants1.size() + " variants in " + vcf2);
 
 		GenotypeTools tools = new GenotypeTools();
 		VCFMerger merger = new VCFMerger();
@@ -108,84 +126,95 @@ public class VCFVariantStats {
 		outf.writeln("Chr\tPos\tSNP1\tRef1\tAlt1\tNrAlleles1\tAN1\tAF1\tAC1\t" +
 				"SNP2\tRef2\tAlt2\tNrAlleles2\tAC2\tAN2\tAF2\tEqualID\tNrEqualAlleles\tComplement\tReferenceEqual");
 
-		for (int i = 1; i < 23; i++) {
+		int shared = 0;
+		int uniquein1 = 0;
+		int uniquein2 = 0;
+
+		for (int chr = 1; chr < 23; chr++) {
 			// hash the variants in list 1
-			HashMap<Feature, ArrayList<VCFVariant>> set = filter(variants1, i);
+			HashMap<Feature, ArrayList<VCFVariant>> set = filter(variants1, chr);
 
 			// get overlapping variants
 			for (int j = 0; j < variants2.size(); j++) {
 				VCFVariant var2 = variants2.get(j);
-				Feature f = var2.asFeature();
-				f.setName(null);
-				ArrayList<VCFVariant> variantsIn1 = set.get(f);
-				if (variantsIn1 == null) {
+				if (var2.getChrObj().getNumber() == chr) {
+					Feature f = var2.asFeature();
+					f.setName(null);
+					ArrayList<VCFVariant> variantsIn1 = set.get(f);
+					if (variantsIn1 == null) {
 
-					String outstr = var2.getChr() + "\t" + var2.getPos()
-							+ "\t" + var2.getId() + "\t" + var2.getAlleles()[0] + "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length) + "\t" + var2.getAlleles().length
-							+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC");
-					outunique2.writeln(outstr);
-
-				} else {
-					for (int k = 0; k < variantsIn1.size(); k++) {
-						VCFVariant var1 = variantsIn1.get(k);
-						// identical
-						String[] alleles1 = var1.getAlleles();
-						String[] alleles2 = var2.getAlleles();
-						int nrIdenticalAlleles = merger.countIdenticalAlleles(alleles1, alleles2);
-						boolean complement = false;
-						if (nrIdenticalAlleles < 2) {
-							// try complement
-							var1.convertAllelesToComplement();
-							alleles1 = var1.getAlleles();
-							nrIdenticalAlleles = merger.countIdenticalAlleles(alleles1, alleles2);
-							complement = true;
-						}
-
-						boolean referenceEqual = true;
-						// check whether the reference alleles are identical
-						if (alleles1.length == 2 && alleles1.length == 2 && !var1.getAlleles()[0].equals(var2.getAlleles()[1])) {
-							// check which allele corresponds to the reference allele
-							referenceEqual = false;
-
-							Double AN = Double.parseDouble(var2.getInfo().get("AN"));
-							Double AF = Double.parseDouble(var2.getInfo().get("AF"));
-							Double AC = Double.parseDouble(var2.getInfo().get("AC"));
-
-							var2.getInfo().put("AF", "" + (1d - AF));
-							var2.getInfo().put("AC", "" + (AN - AC));
-							var2.flipReferenceAlelele();
-						}
-
-						String outStr = var1.getChr() + "\t" + var1.getPos()
-								+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
-								+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC")
+						String outstr = var2.getChr() + "\t" + var2.getPos()
 								+ "\t" + var2.getId() + "\t" + var2.getAlleles()[0] + "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length) + "\t" + var2.getAlleles().length
-								+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC")
-								+ "\t" + var1.getId().equals(var2.getId())
-								+ "\t" + nrIdenticalAlleles
-								+ "\t" + complement
-								+ "\t" + referenceEqual;
-						outf.writeln(outStr);
+								+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC");
+						outunique2.writeln(outstr);
+						uniquein2++;
+					} else {
+						shared++;
+						for (int k = 0; k < variantsIn1.size(); k++) {
+							VCFVariant var1 = variantsIn1.get(k);
+							// identical
+							String[] alleles1 = var1.getAlleles();
+							String[] alleles2 = var2.getAlleles();
+							int nrIdenticalAlleles = merger.countIdenticalAlleles(alleles1, alleles2);
+							boolean complement = false;
+							if (nrIdenticalAlleles < 2) {
+								// try complement
+								var1.convertAllelesToComplement();
+								alleles1 = var1.getAlleles();
+								nrIdenticalAlleles = merger.countIdenticalAlleles(alleles1, alleles2);
+								complement = true;
+							}
 
-						if (complement) {
-							// change back to original orientation
-							var1.convertAllelesToComplement();
+							boolean referenceEqual = true;
+							// check whether the reference alleles are identical
+							if (alleles1.length == 2 && alleles2.length == 2 && !var1.getAlleles()[0].equals(var2.getAlleles()[0])) {
+								// check which allele corresponds to the reference allele
+								referenceEqual = false;
+
+								Double AN = Double.parseDouble(var2.getInfo().get("AN"));
+								Double AF = Double.parseDouble(var2.getInfo().get("AF"));
+								Double AC = Double.parseDouble(var2.getInfo().get("AC"));
+
+								var2.getInfo().put("AF", "" + (1d - AF));
+								var2.getInfo().put("AC", "" + (AN - AC));
+								var2.flipReferenceAlelele();
+							}
+
+							String outStr = var1.getChr() + "\t" + var1.getPos()
+									+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
+									+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC")
+									+ "\t" + var2.getId() + "\t" + var2.getAlleles()[0] + "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length) + "\t" + var2.getAlleles().length
+									+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC")
+									+ "\t" + var1.getId().equals(var2.getId())
+									+ "\t" + nrIdenticalAlleles
+									+ "\t" + complement
+									+ "\t" + referenceEqual;
+							outf.writeln(outStr);
+
+							if (complement) {
+								// change back to original orientation
+								var1.convertAllelesToComplement();
+							}
 						}
 					}
 				}
+
 			}
 
-			set = filter(variants2, i);
+			set = filter(variants2, chr);
 			for (int j = 0; j < variants1.size(); j++) {
 				VCFVariant var1 = variants1.get(j);
-				Feature f = var1.asFeature();
-				f.setName(null);
-				ArrayList<VCFVariant> variantsIn2 = set.get(f);
-				if (variantsIn2 == null) {
-					String outstr = var1.getChr() + "\t" + var1.getPos()
-							+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
-							+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC");
-					outunique1.writeln(outstr);
+				if (var1.getChrObj().getNumber() == chr) {
+					Feature f = var1.asFeature();
+					f.setName(null);
+					ArrayList<VCFVariant> variantsIn2 = set.get(f);
+					if (variantsIn2 == null) {
+						uniquein1++;
+						String outstr = var1.getChr() + "\t" + var1.getPos()
+								+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
+								+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC");
+						outunique1.writeln(outstr);
+					}
 				}
 			}
 		}
@@ -194,6 +223,9 @@ public class VCFVariantStats {
 		outunique1.close();
 		outunique2.close();
 
+		System.out.println(shared + " variants shared.");
+		System.out.println(uniquein1 + " variants unique in " + vcf1);
+		System.out.println(uniquein2 + " variants unique in " + vcf2);
 
 	}
 
@@ -217,27 +249,43 @@ public class VCFVariantStats {
 
 	public ArrayList<VCFVariant> loadVariants(String vcf, ArrayList<Feature> bedFeatures) throws IOException {
 		ArrayList<VCFVariant> variants1 = new ArrayList<VCFVariant>();
+
+
+		FeatureTree tree = new FeatureTree(bedFeatures, true);
+
+		System.out.println(tree.getTreeSize() + " regions in tree, " + tree.getListSize() + " regions in list");
+
+
+		int loaded = 0;
+		int parsed = 0;
+
 		VCFGenotypeData data1 = new VCFGenotypeData(vcf);
 		VCFVariant variant1 = data1.nextLoadHeader();
 		while (data1.hasNext()) {
-
-
 			Feature f1 = variant1.asFeature();
-			boolean overlap = false;
-			for (int q = 0; q < bedFeatures.size(); q++) {
-				Feature f = bedFeatures.get(q);
-				if (f.overlaps(f1)) {
-					overlap = true;
-					break;
+			NavigableSet<Feature> overlappingSet = tree.getFeatureSet(f1);
+			if (!overlappingSet.isEmpty()) {
+				variants1.add(variant1);
+				loaded++;
+			} else {
+				overlappingSet = tree.getFeatureSet(f1.getChromosome(), 0, f1.getChromosome().getLength());
+
+				for (Feature f : overlappingSet) {
+					if (f.overlaps(f1)) {
+						System.out.println("excluded: " + f1.toBedString() + " but overlaps: " + f.toBedString());
+					}
 				}
 			}
 
-			if (overlap) {
-				variants1.add(variant1);
-			}
 			variant1 = data1.nextLoadHeader();
+			parsed++;
+			if (parsed % 10000 == 0) {
+				System.out.print(parsed + " variants parsed. " + loaded + " in memory.\r");
+			}
 		}
-
+		System.out.println();
+		System.out.println(parsed + " variants parsed. " + loaded + " in memory.");
+		System.out.println("Done loading: " + vcf);
 		return variants1;
 	}
 

@@ -12,10 +12,17 @@ import java.util.Comparator;
  */
 public class FeatureComparator implements Comparator<Feature> {
 
-	boolean removeOverlap = false;
+	boolean allowOverlap = false;
 
-	public FeatureComparator(boolean removeOverlap) {
-		this.removeOverlap = removeOverlap;
+	public FeatureComparator() {
+	}
+
+	public FeatureComparator(boolean allowOverlap) {
+		this.allowOverlap = allowOverlap;
+	}
+
+	public void setAllowOverlap(boolean b) {
+		this.allowOverlap = b;
 	}
 
 	@Override
@@ -23,7 +30,7 @@ public class FeatureComparator implements Comparator<Feature> {
 		if (obj1.equals(obj2)) {
 			return 0;
 		}
-		if (removeOverlap) {
+		if (allowOverlap) {
 			if (obj1.overlaps(obj2)) {
 				return 0;
 			}

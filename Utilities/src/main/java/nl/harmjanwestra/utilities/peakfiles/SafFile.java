@@ -22,10 +22,6 @@ public class SafFile extends TextFile {
 		super(file, mode);
 	}
 
-	public SafFile(File file, boolean mode, int buffersize) throws IOException {
-		super(file, mode, buffersize);
-	}
-
 	public SafFile(String file, boolean mode, int buffersize) throws IOException {
 		super(file, mode, buffersize);
 	}
