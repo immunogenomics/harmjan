@@ -1,7 +1,6 @@
 package nl.harmjanwestra.utilities.vcf;
 
 import com.gs.collections.impl.multimap.list.FastListMultimap;
-import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
@@ -1026,7 +1025,7 @@ public class VCFFunctions {
 				}
 
 				double maf = variant.getMAF();
-				double[] alleleFrequencies = variant.getAllelefrequencies();
+				double[] alleleFrequencies = variant.getAlleleFrequencies();
 				byte[][] genotypes = variant.getGenotypeAlleles();
 				int[] variantAllelesObserved = variant.getNrAllelesObserved();
 				int nrCalled = 0;

@@ -20,7 +20,7 @@ public class VCFVariant {
 	private static final Pattern slash = Pattern.compile("/");
 	private static final Pattern pipe = Pattern.compile("\\|");
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
-	private final HashMap<String, Double> info = new HashMap<String, Double>();
+	private final HashMap<String, String> info = new HashMap<String, String>();
 	private ArrayList<VCFGenotypeFilter> filters;
 	private byte[][] genotypeAlleles; // format [alleles][individuals] (save some memory by making only two individual-sized arrays)
 	private int[] nrAllelesObserved;
@@ -33,7 +33,7 @@ public class VCFVariant {
 	private boolean multiallelic;
 	private double hwep;
 	private boolean biallelic = false;
-	private double[] allelefrequencies;
+	private double[] alleleFrequencies;
 	private String minorAllele;
 	private String[] alleles = null;
 	private String chr = null;
@@ -59,6 +59,8 @@ public class VCFVariant {
 
 	private boolean ignoregender;
 	private short[][] allelicDepth;
+	private int totalCalledAlleles;
+
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
@@ -99,12 +101,15 @@ public class VCFVariant {
 
 	public Double getImputationQualityScore() {
 		// BEAGLE VCF qual score
-		Double output = info.get("AR2");
+		String output = info.get("AR2");
 		if (output == null) {
 			// PBWT / Impute2
 			output = info.get("INFO");
 		}
-		return output;
+		if (output != null) {
+			return Double.parseDouble(output);
+		}
+		return null;
 	}
 
 	public void parseGenotypes(String ln, PARSE p) {
@@ -325,25 +330,11 @@ public class VCFVariant {
 								for (int e = 0; e < infoElems.length; e++) {
 									String[] infoElemElems = Strings.equalssign.split(infoElems[e]);
 									String id = new String(infoElemElems[0]).intern();
-									if (infoElemElems.length > 1) {
-										try {
-											Double val = Double.parseDouble(infoElemElems[1]);
-											info.put(id, val);
-										} catch (NumberFormatException ex) {
-
-										}
+									if(infoElemElems.length>=2) {
+										String val = new String(infoElemElems[1]).intern();
+										info.put(id, val);
 									} else {
-										if (infoElems[e].equals("DB")) {
-											info.put(id, 1d);
-										} else if (infoElems[e].equals("PR")) {
-											info.put(id, 1d);
-										} else {
-//									if (!notSplittableElems.contains(infoElems[e])) {
-//										System.out.println("info: " + infoElems[e] + " not splitable");
-//										notSplittableElems.add(new String(infoElems[e]));
-//									}
-										}
-
+										info.put(id, null);
 									}
 								}
 							}
@@ -409,8 +400,12 @@ public class VCFVariant {
 		return biallelic;
 	}
 
-	public double[] getAllelefrequencies() {
-		return allelefrequencies;
+	public double[] getAlleleFrequencies() {
+		return alleleFrequencies;
+	}
+
+	public int getTotalAlleleCount() {
+		return totalCalledAlleles;
 	}
 
 	public String[] getAlleles() {
@@ -480,8 +475,6 @@ public class VCFVariant {
 					}
 				}
 			}
-
-
 		}
 	}
 
@@ -685,7 +678,7 @@ public class VCFVariant {
 		return genotypeProbabilies;
 	}
 
-	public HashMap<String, Double> getInfo() {
+	public HashMap<String, String> getInfo() {
 		return info;
 	}
 
@@ -771,12 +764,13 @@ public class VCFVariant {
 
 		int nrAllelesThatHaveAlleleFrequency = 0;
 		double minAlleleFreq = 2;
-		allelefrequencies = new double[nrAllelesObserved.length];
+		alleleFrequencies = new double[nrAllelesObserved.length];
 		minorAllele = null;
+		totalCalledAlleles = totalAllelesObs;
 
 		for (int i = 0; i < nrAllelesObserved.length; i++) {
 			double alleleFreq = (double) nrAllelesObservedLocal[i] / totalAllelesObs;
-			allelefrequencies[i] = alleleFreq;
+			alleleFrequencies[i] = alleleFreq;
 
 			if (nrAllelesObservedLocal[i] > 0) {
 				nrAllelesThatHaveAlleleFrequency++;
@@ -838,6 +832,7 @@ public class VCFVariant {
 
 	}
 
+
 	public int getGTCol() {
 		return gtCol;
 	}
@@ -855,6 +850,15 @@ public class VCFVariant {
 			}
 		}
 		return false;
+	}
+
+	public Chromosome getChrObj() {
+		if (chr == null) {
+			return Chromosome.NA;
+		} else {
+			return Chromosome.parseChr(chr);
+		}
+
 	}
 
 	public enum PARSE {

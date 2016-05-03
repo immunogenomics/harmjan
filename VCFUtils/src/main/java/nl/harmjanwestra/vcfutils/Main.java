@@ -463,6 +463,18 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("summarize3")
+				.desc("Calculate AF, AN and AC for each variant in input. Output as VCF, without sample data.")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("summarize3compare")
+				.desc("Compare summarized VCF files.")
+				.build();
+		OPTIONS.addOption(option);
+
 	}
 
 	public static void main(String[] args) {
@@ -776,6 +788,15 @@ public class Main {
 
 				f.determineVCFSummaryStatistics(input, out);
 
+			} else if (cmd.hasOption("summarize3")) {
+				VCFVariantStats stats = new VCFVariantStats();
+				stats.run(input, out);
+
+			} else if (cmd.hasOption("summarize3compare")) {
+				VCFVariantStats stats = new VCFVariantStats();
+				if (cmd.hasOption("b") && cmd.hasOption("i2")) {
+					stats.compare(input, cmd.getOptionValue("i2"), out, cmd.getOptionValue("b"));
+				}
 			} else if (cmd.hasOption("rmc")) {
 				VCFFunctions f = new VCFFunctions();
 

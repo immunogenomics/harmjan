@@ -170,4 +170,20 @@ public class Strings {
 
 		return concat(elems, tab, includeelem, null);
 	}
+
+	public static String concat(double[] d, Pattern t, int start, int end) {
+		String[] data = new String[end - start];
+		for (int i = start; i < end; i++) {
+			data[i - start] = ""+d[i];
+		}
+		return concat(data, t);
+	}
+
+	public static String concat(int[] d, Pattern t, int start, int end) {
+		String[] data = new String[end - start];
+		for (int i = start; i < end; i++) {
+			data[i - start] = ""+d[i];
+		}
+		return concat(data, t);
+	}
 }
