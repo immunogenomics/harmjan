@@ -1,14 +1,11 @@
 package nl.harmjanwestra.utilities.graphics.panels;
 
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureTree;
 import nl.harmjanwestra.utilities.features.SNPFeature;
-import nl.harmjanwestra.utilities.features.Track;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
-import umcg.genetica.containers.Pair;
 
 import java.awt.*;
-import java.io.File;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.NavigableSet;
 
@@ -19,7 +16,7 @@ public class AnnotationPanel extends Panel {
 
 
 	private Feature region;
-	private ArrayList<Track> annotations;
+	private ArrayList<FeatureTree> annotations;
 	private ArrayList<SNPFeature> testOverlapWith;
 	int trackheight = 10;
 	int marginBetween = 2;
@@ -28,7 +25,7 @@ public class AnnotationPanel extends Panel {
 		super(nrRows, nrCols);
 	}
 
-	public void setData(Feature region, ArrayList<Track> annotations) {
+	public void setData(Feature region, ArrayList<FeatureTree> annotations) {
 		this.region = region;
 		this.annotations = annotations;
 	}
@@ -69,7 +66,7 @@ public class AnnotationPanel extends Panel {
 			g2d.drawLine(startX, trackYpos + trackheight, startX + width, trackYpos + trackheight);
 			g2d.setColor(defaultLightGrey);
 			// get subset within region
-			Track t = annotations.get(i);
+			FeatureTree t = annotations.get(i);
 			NavigableSet<Feature> set = t.getFeatureSet(region);
 			ArrayList<Feature> list = new ArrayList<Feature>();
 			if (set != null) {

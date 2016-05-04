@@ -14,6 +14,7 @@ public class FeatureTree {
 	FeatureComparator comparator = new FeatureComparator(false);
 	TreeSet<Feature> treeSet = new TreeSet<Feature>(comparator);
 	ArrayList<Feature> features = new ArrayList<>();
+	private String name;
 
 	public FeatureTree(ArrayList<Feature> features, boolean mergedups) {
 		if (mergedups) {
@@ -71,5 +72,10 @@ public class FeatureTree {
 
 	public int getListSize() {
 		return features.size();
+	}
+
+	public String getName() {
+
+		return name;
 	}
 }

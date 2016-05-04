@@ -114,6 +114,8 @@ public class VCFVariantStats {
 		VCFMerger merger = new VCFMerger();
 
 		TextFile outf = new TextFile(out + "shared.txt", TextFile.W);
+		TextFile outfailed = new TextFile(out + "failedcomp.txt", TextFile.W);
+		TextFile outmultiallelic = new TextFile(out + "multiallelic.txt", TextFile.W);
 		TextFile outunique1 = new TextFile(out + "uniqueTo1.txt", TextFile.W);
 		TextFile outunique2 = new TextFile(out + "uniqueTo2.txt", TextFile.W);
 
@@ -130,6 +132,8 @@ public class VCFVariantStats {
 		int uniquein1 = 0;
 		int uniquein2 = 0;
 
+		int multiAllelic = 0;
+
 		for (int chr = 1; chr < 23; chr++) {
 			// hash the variants in list 1
 			HashMap<Feature, ArrayList<VCFVariant>> set = filter(variants1, chr);
@@ -138,16 +142,24 @@ public class VCFVariantStats {
 			for (int j = 0; j < variants2.size(); j++) {
 				VCFVariant var2 = variants2.get(j);
 				if (var2.getChrObj().getNumber() == chr) {
+
+					if (var2.getAlleles().length > 2) {
+						multiAllelic++;
+					}
+
 					Feature f = var2.asFeature();
 					f.setName(null);
 					ArrayList<VCFVariant> variantsIn1 = set.get(f);
 					if (variantsIn1 == null) {
 
-						String outstr = var2.getChr() + "\t" + var2.getPos()
-								+ "\t" + var2.getId() + "\t" + var2.getAlleles()[0] + "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length) + "\t" + var2.getAlleles().length
-								+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC");
-						outunique2.writeln(outstr);
-						uniquein2++;
+						if (var2.getAlleles().length == 2) {
+							String outstr = var2.getChr() + "\t" + var2.getPos()
+									+ "\t" + var2.getId() + "\t" + var2.getAlleles()[0] + "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length) + "\t" + var2.getAlleles().length
+									+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC");
+							outunique2.writeln(outstr);
+							uniquein2++;
+						}
+
 					} else {
 						shared++;
 						for (int k = 0; k < variantsIn1.size(); k++) {
@@ -155,45 +167,65 @@ public class VCFVariantStats {
 							// identical
 							String[] alleles1 = var1.getAlleles();
 							String[] alleles2 = var2.getAlleles();
-							int nrIdenticalAlleles = merger.countIdenticalAlleles(alleles1, alleles2);
-							boolean complement = false;
-							if (nrIdenticalAlleles < 2) {
-								// try complement
-								var1.convertAllelesToComplement();
-								alleles1 = var1.getAlleles();
-								nrIdenticalAlleles = merger.countIdenticalAlleles(alleles1, alleles2);
-								complement = true;
-							}
+							if (alleles1.length == 2 && alleles2.length == 2) {
 
-							boolean referenceEqual = true;
-							// check whether the reference alleles are identical
-							if (alleles1.length == 2 && alleles2.length == 2 && !var1.getAlleles()[0].equals(var2.getAlleles()[0])) {
-								// check which allele corresponds to the reference allele
-								referenceEqual = false;
+								int nrIdenticalAlleles = merger.countIdenticalAlleles(alleles1, alleles2);
+								boolean complement = false;
+								if (nrIdenticalAlleles < 2) {
+									// try complement
+									var1.convertAllelesToComplement();
+									alleles1 = var1.getAlleles();
+									nrIdenticalAlleles = merger.countIdenticalAlleles(alleles1, alleles2);
+									complement = true;
+								}
 
-								Double AN = Double.parseDouble(var2.getInfo().get("AN"));
-								Double AF = Double.parseDouble(var2.getInfo().get("AF"));
-								Double AC = Double.parseDouble(var2.getInfo().get("AC"));
+								if (nrIdenticalAlleles == 2) {
+									// consider as a unique variant in stead
+									boolean referenceEqual = true;
+									// check whether the reference alleles are identical
+									if (!var1.getAlleles()[0].equals(var2.getAlleles()[0])) {
+										// check which allele corresponds to the reference allele
+										referenceEqual = false;
 
-								var2.getInfo().put("AF", "" + (1d - AF));
-								var2.getInfo().put("AC", "" + (AN - AC));
-								var2.flipReferenceAlelele();
-							}
+										Double AN = Double.parseDouble(var2.getInfo().get("AN"));
+										Double AF = Double.parseDouble(var2.getInfo().get("AF"));
+										Double AC = Double.parseDouble(var2.getInfo().get("AC"));
 
-							String outStr = var1.getChr() + "\t" + var1.getPos()
-									+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
-									+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC")
-									+ "\t" + var2.getId() + "\t" + var2.getAlleles()[0] + "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length) + "\t" + var2.getAlleles().length
-									+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC")
-									+ "\t" + var1.getId().equals(var2.getId())
-									+ "\t" + nrIdenticalAlleles
-									+ "\t" + complement
-									+ "\t" + referenceEqual;
-							outf.writeln(outStr);
+										var2.getInfo().put("AF", "" + (1d - AF));
+										var2.getInfo().put("AC", "" + (AN - AC));
+										var2.flipReferenceAlelele();
+									}
 
-							if (complement) {
-								// change back to original orientation
-								var1.convertAllelesToComplement();
+									String outStr = var1.getChr() + "\t" + var1.getPos()
+											+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
+											+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC")
+											+ "\t" + var2.getId() + "\t" + var2.getAlleles()[0] + "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length) + "\t" + var2.getAlleles().length
+											+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC")
+											+ "\t" + var1.getId().equals(var2.getId())
+											+ "\t" + nrIdenticalAlleles
+											+ "\t" + complement
+											+ "\t" + referenceEqual;
+									outf.writeln(outStr);
+								} else {
+									String outStr = var1.getChr() + "\t" + var1.getPos()
+											+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
+											+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC")
+											+ "\t" + var2.getId() + "\t" + var2.getAlleles()[0] + "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length) + "\t" + var2.getAlleles().length
+											+ "\t" + var2.getInfo().get("AN") + "\t" + var2.getInfo().get("AF") + "\t" + var2.getInfo().get("AC")
+											+ "\t" + var1.getId().equals(var2.getId())
+											+ "\t" + nrIdenticalAlleles
+											+ "\t" + complement
+											+ "\t" + null;
+									outfailed.writeln(outStr);
+								}
+
+
+								if (complement) {
+									// change back to original orientation
+									var1.convertAllelesToComplement();
+								}
+							} else {
+								outmultiallelic.writeln();
 							}
 						}
 					}
@@ -207,25 +239,30 @@ public class VCFVariantStats {
 				if (var1.getChrObj().getNumber() == chr) {
 					Feature f = var1.asFeature();
 					f.setName(null);
-					ArrayList<VCFVariant> variantsIn2 = set.get(f);
-					if (variantsIn2 == null) {
-						uniquein1++;
-						String outstr = var1.getChr() + "\t" + var1.getPos()
-								+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
-								+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC");
-						outunique1.writeln(outstr);
+					if (var1.getAlleles().length == 2) {
+						ArrayList<VCFVariant> variantsIn2 = set.get(f);
+						if (variantsIn2 == null) {
+							uniquein1++;
+							String outstr = var1.getChr() + "\t" + var1.getPos()
+									+ "\t" + var1.getId() + "\t" + var1.getAlleles()[0] + "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length) + "\t" + var1.getAlleles().length
+									+ "\t" + var1.getInfo().get("AN") + "\t" + var1.getInfo().get("AF") + "\t" + var1.getInfo().get("AC");
+							outunique1.writeln(outstr);
+						}
 					}
 				}
 			}
 		}
 
 		outf.close();
+		outfailed.close();
+		outmultiallelic.close();
 		outunique1.close();
 		outunique2.close();
 
 		System.out.println(shared + " variants shared.");
 		System.out.println(uniquein1 + " variants unique in " + vcf1);
 		System.out.println(uniquein2 + " variants unique in " + vcf2);
+		System.out.println(multiAllelic + " multi allelic");
 
 	}
 
