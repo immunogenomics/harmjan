@@ -64,8 +64,9 @@ public class VCFVariantStats {
 						String AN = "AN=" + variant.getTotalAlleleCount();
 						String AF = "AF=" + Strings.concat(variant.getAlleleFrequencies(), Strings.comma, 1, variant.getAlleles().length);
 						String AC = "AC=" + Strings.concat(variant.getNrAllelesObserved(), Strings.comma, 1, variant.getAlleles().length);
+						String INFO = "INFO=" + variant.getImputationQualityScore();
 
-						String infoString = AC + ";" + AF + ";" + AN;
+						String infoString = AC + ";" + AF + ";" + AN + ";" + INFO;
 
 						StringBuilder outbuilder = new StringBuilder(1000);
 						outbuilder.append(variant.getChr())
