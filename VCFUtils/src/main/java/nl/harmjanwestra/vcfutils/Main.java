@@ -379,6 +379,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("exclude")
+				.desc("Switch mode of filter")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.hasArg()
 				.longOpt("separator")
 				.desc("VCF Genotype allele separator")
@@ -795,9 +801,17 @@ public class Main {
 			} else if (cmd.hasOption("summarize3compare")) {
 				VCFVariantStats stats = new VCFVariantStats();
 				if (cmd.hasOption("b") && cmd.hasOption("i2")) {
-					stats.compare(input, cmd.getOptionValue("i2"), out, cmd.getOptionValue("b"));
+					boolean filterExcludes = false;
+					if (cmd.hasOption("exclude")) {
+						filterExcludes = true;
+					}
+					String filter = null;
+					if (cmd.hasOption("l")) {
+						filter = cmd.getOptionValue("l");
+					}
+					stats.compare(input, cmd.getOptionValue("i2"), out, cmd.getOptionValue("b"), filter, filterExcludes);
 				} else {
-					System.out.println("Provide -b and -i2 additional to -i and -o.");
+					System.out.println("Provide -b and -i2 additional to -i and -o. [and optionally -l for a list of variants]");
 				}
 			} else if (cmd.hasOption("rmc")) {
 				VCFFunctions f = new VCFFunctions();
