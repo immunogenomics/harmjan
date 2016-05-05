@@ -62,6 +62,7 @@ public class VCFVariant {
 	private int totalCalledAlleles;
 
 
+
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
 	}
@@ -861,6 +862,19 @@ public class VCFVariant {
 			return Chromosome.parseChr(chr);
 		}
 
+	}
+
+	public byte[] getGenotypesAsByteVector() {
+		byte[][] alleles = getGenotypeAlleles();
+		byte[] output = new byte[alleles[0].length];
+		for (int i = 0; i < alleles[0].length; i++) {
+			if (alleles[0][i] == -1) {
+				output[i] = -1;
+			} else {
+				output[i] = (byte) (alleles[0][i] + alleles[1][i]);
+			}
+		}
+		return output;
 	}
 
 	public enum PARSE {

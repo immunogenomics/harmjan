@@ -67,6 +67,11 @@ public class VariantCorrelationMatrix {
 			double[] genotypes1 = convertToDouble(variants.get(i));
 			for (int j = i + 1; j < variants.size(); j++) {
 				double[] genotypes2 = convertToDouble(variants.get(j));
+
+
+
+
+
 				matrix[i][j] = Correlation.correlate(genotypes1, genotypes2);
 				matrix[j][i] = matrix[i][j];
 			}
