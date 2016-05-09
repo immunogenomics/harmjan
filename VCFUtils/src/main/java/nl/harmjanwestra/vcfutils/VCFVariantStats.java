@@ -404,8 +404,6 @@ public class VCFVariantStats {
 
 				for (Feature f : overlappingSet) {
 					if (f.overlaps(f1)) {
-
-
 						System.out.println("excluded: " + f1.toBedString() + " but overlaps: " + f.toBedString());
 					}
 				}

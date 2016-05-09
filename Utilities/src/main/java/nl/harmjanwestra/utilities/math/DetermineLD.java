@@ -31,7 +31,7 @@ public class DetermineLD {
 		// convert to byte[]
 		return getLD(variant1.getGenotypesAsByteVector(),variant2.getGenotypesAsByteVector(), null, INCLUDE_CASES_AND_CONTROLS, false);
 	}
-	
+
 	public synchronized Pair<Double, Double> getLD(byte[] snp1Genotypes, byte[] snp2Genotypes, Boolean[] indIsCase, int individualsToInclude, boolean print) {
 
 		if (snp1Genotypes == null || snp2Genotypes == null) {

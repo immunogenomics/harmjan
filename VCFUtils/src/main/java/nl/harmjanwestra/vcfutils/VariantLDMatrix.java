@@ -1,10 +1,16 @@
 package nl.harmjanwestra.vcfutils;
 
+import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.graphics.Grid;
+import nl.harmjanwestra.utilities.graphics.panels.LDPanel;
+import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
+import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.math.matrix2.DoubleMatrixDataset;
 import umcg.genetica.math.stats.Correlation;
 import umcg.genetica.text.Strings;
 
@@ -15,9 +21,9 @@ import java.util.Collections;
 /**
  * Created by Harm-Jan on 02/27/16.
  */
-public class VariantCorrelationMatrix {
+public class VariantLDMatrix {
 
-	public void correlate(String vcf, String bedregion, String out, boolean printheaders) throws IOException {
+	public void correlate(String vcf, String bedregion, String out, boolean printheaders, boolean dprime, boolean useCorrelation) throws IOException {
 		Feature region = new Feature();
 		String[] regionelems = bedregion.split(":");
 		Chromosome chr = Chromosome.parseChr(regionelems[0]);
@@ -63,16 +69,28 @@ public class VariantCorrelationMatrix {
 		Collections.sort(variants, new VCFVariantComparator());
 
 		double[][] matrix = new double[variants.size()][variants.size()];
+		DetermineLD ldcalc = new DetermineLD();
 		for (int i = 0; i < variants.size(); i++) {
+			matrix[i][i] = 1d;
 			double[] genotypes1 = convertToDouble(variants.get(i));
 			for (int j = i + 1; j < variants.size(); j++) {
 				double[] genotypes2 = convertToDouble(variants.get(j));
 
+				if (useCorrelation) {
+					matrix[i][j] = Correlation.correlate(genotypes1, genotypes2);
+				} else {
+					Pair<Double, Double> ldInfo = ldcalc.getLD(variants.get(i), variants.get(j));
 
-
-
-
-				matrix[i][j] = Correlation.correlate(genotypes1, genotypes2);
+					if (ldInfo != null) {
+						if (dprime) {
+							matrix[i][j] = ldInfo.getLeft();
+						} else {
+							matrix[i][j] = ldInfo.getRight();
+						}
+					} else {
+						matrix[i][j] = 0;
+					}
+				}
 				matrix[j][i] = matrix[i][j];
 			}
 			matrix[i][i] = 1;
@@ -86,11 +104,30 @@ public class VariantCorrelationMatrix {
 
 	}
 
+	public void plot(String correlationMatrix, String output) throws IOException {
+
+		Grid grid = new Grid(1000, 1000, 1, 1, 10, 10);
+
+
+		LDPanel panel = new LDPanel(0, 0);
+		DoubleMatrixDataset<String, String> set = new DoubleMatrixDataset<String, String>();
+		set.loadDoubleData(correlationMatrix);
+		panel.setData(set);
+		grid.addPanel(panel);
+
+		try {
+			grid.draw(output);
+		} catch (DocumentException e) {
+			e.printStackTrace();
+		}
+
+
+	}
 
 	private void savelist(ArrayList<VCFVariant> variants, String out) throws IOException {
 		TextFile tfout = new TextFile(out + "-variantlist.txt", TextFile.W);
 		for (int i = 0; i < variants.size(); i++) {
-			tfout.writeln(variants.get(i).toString() + "-" + variants.get(i).getId());
+			tfout.writeln(variants.get(i).toString());
 		}
 		tfout.close();
 	}
@@ -100,14 +137,14 @@ public class VariantCorrelationMatrix {
 		if (printheaders) {
 			String header = "-";
 			for (int i = 0; i < variants.size(); i++) {
-				header += "\t" + variants.get(i).toString() + "-" + variants.get(i).getId();
+				header += "\t" + variants.get(i).toString();
 			}
 			tfout.writeln(header);
 		}
 		for (int row = 0; row < matrix.length; row++) {
 			String header = "";
 			if (printheaders) {
-				header = variants.get(row).toString() + "-" + variants.get(row).getId();
+				header = variants.get(row).toString();
 			}
 			tfout.writeln(header + "\t" + Strings.concat(matrix[row], Strings.tab));
 		}

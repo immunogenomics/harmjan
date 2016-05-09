@@ -193,9 +193,22 @@ public class Main {
 
 		option = Option.builder()
 				.desc("Variant correlation matrix (within a region)")
-				.longOpt("correlatevariants")
+				.longOpt("ldmatrix")
 				.build();
 		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Use dprime (in stead of rsquared) for --ldmatrix")
+				.longOpt("dprime")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Use correlation (in stead of dprime or rsquared) for --ldmatrix")
+				.longOpt("usecorrelation")
+				.build();
+		OPTIONS.addOption(option);
+
 
 		option = Option.builder()
 				.desc("Chr splitter")
@@ -392,8 +405,8 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.longOpt("printheader")
-				.desc("Print header (for correlation matrix)")
+				.longOpt("skipheader")
+				.desc("Skip printing the header (for --ldmatrix)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -410,6 +423,7 @@ public class Main {
 				.desc("Number of threads to use (for --proxy)")
 				.build();
 		OPTIONS.addOption(option);
+
 		option = Option.builder()
 				.hasArg()
 				.longOpt("tabix")
@@ -746,16 +760,26 @@ public class Main {
 				} else {
 					plotter.run(input, out);
 				}
-			} else if (cmd.hasOption("correlatevariants")) {
-				VariantCorrelationMatrix mat = new VariantCorrelationMatrix();
+			} else if (cmd.hasOption("ldmatrix")) {
+				VariantLDMatrix mat = new VariantLDMatrix();
 				if (cmd.hasOption("b")) {
-					if (cmd.hasOption("printheader")) {
-						mat.correlate(input, cmd.getOptionValue("b"), out, true);
-					} else {
-						mat.correlate(input, cmd.getOptionValue("b"), out, false);
+
+					boolean dprime = false;
+					boolean usecorrelation = false;
+					boolean printheader = true;
+					if (cmd.hasOption("usecorrelation")) {
+						usecorrelation = true;
+					} else if (cmd.hasOption("dprime")) {
+						dprime = true;
 					}
+					if (cmd.hasOption("skipheader")) {
+						printheader = false;
+					}
+
+					mat.correlate(input, cmd.getOptionValue("b"), out, printheader, dprime, usecorrelation);
+
 				} else {
-					System.out.println("Please use -b with --correlatevariants");
+					System.out.println("Please use -b with --ldmatrix");
 				}
 			} else if (cmd.hasOption("correlatevcf")) {
 
