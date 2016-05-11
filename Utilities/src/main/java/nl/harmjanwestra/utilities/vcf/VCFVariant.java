@@ -62,7 +62,6 @@ public class VCFVariant {
 	private int totalCalledAlleles;
 
 
-
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
 	}
@@ -875,6 +874,40 @@ public class VCFVariant {
 			}
 		}
 		return output;
+	}
+
+	public String getMinorAlleleFromInfoField() {
+
+		String alleleCounts = info.get("AC");
+		String totalCounts = info.get("AN");
+
+		if (alleleCounts != null && totalCounts != null) {
+			String[] elems = alleleCounts.split(",");
+			double[] freqs = new double[elems.length];
+			double totalAlleles = Double.parseDouble(totalCounts);
+			double refFreq = 1;
+			for (int i = 0; i < elems.length; i++) {
+				double ct = Double.parseDouble(elems[i]);
+				freqs[i] = ct / totalAlleles;
+				refFreq -= freqs[i];
+			}
+
+			int minorAlleleNr = 0;
+			double minorAlleleFreq = refFreq;
+			for (int i = 0; i < elems.length; i++) {
+				if(freqs[i] < minorAlleleFreq){
+					minorAlleleNr = i+1;
+					minorAlleleFreq = freqs[i];
+				}
+			}
+
+			MAF = minorAlleleFreq;
+			minorAllele = alleles[minorAlleleNr];
+			return minorAllele;
+		}
+
+		return null;
+
 	}
 
 	public enum PARSE {
