@@ -354,6 +354,8 @@ public class LRTest {
 								logout.writeln(variant.getId()
 										+ "\t" + variant.getChr()
 										+ "\t" + variant.getPos()
+										+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
+										+ "\t" + variant.getMinorAllele()
 										+ "\t" + imputationqualityscore
 										+ "\t" + null
 										+ "\t" + null
@@ -393,6 +395,8 @@ public class LRTest {
 								logout.writeln(variant.getId()
 										+ "\t" + variant.getChr()
 										+ "\t" + variant.getPos()
+										+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
+										+ "\t" + variant.getMinorAllele()
 										+ "\t" + imputationqualityscore
 										+ "\t" + null
 										+ "\t" + overlap

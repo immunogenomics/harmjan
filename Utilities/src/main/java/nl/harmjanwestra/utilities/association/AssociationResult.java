@@ -1,6 +1,7 @@
 package nl.harmjanwestra.utilities.association;
 
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import umcg.genetica.text.Strings;
 
 
@@ -10,7 +11,7 @@ import umcg.genetica.text.Strings;
 public class AssociationResult {
 
 
-	private Feature snp;
+	private SNPFeature snp;
 	private double[] beta = null;
 	private double[] se = null;
 	private double pval = Double.NaN;
@@ -23,17 +24,11 @@ public class AssociationResult {
 	private int df;
 	private double posterior;
 
-	public double getImputationQualScore() {
-		return imputationQualScore;
-	}
-
-	private double imputationQualScore;
-
 	public Feature getSnp() {
 		return snp;
 	}
 
-	public void setSnp(Feature snp) {
+	public void setSnp(SNPFeature snp) {
 		this.snp = snp;
 	}
 
@@ -132,9 +127,11 @@ public class AssociationResult {
 				+ "\t" + snp.getStart()
 				+ "\t" + snp.getName()
 				+ "\t" + snp.toString()
+				+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
+				+ "\t" + snp.getMinorAllele()
+				+ "\t" + snp.getImputationQualityScore()
 				+ "\t" + n
 				+ "\t" + maf
-				+ "\t" + imputationQualScore
 				+ "\t" + devianceNull
 				+ "\t" + devianceGeno
 				+ "\t" + df;
@@ -171,9 +168,7 @@ public class AssociationResult {
 		return -Math.log10(pval);
 	}
 
-	public void setImputationQualScore(double imputationQualScore) {
-		this.imputationQualScore = imputationQualScore;
-	}
+
 
 	public double[] getConfHi() {
 		if (beta != null && se != null) {
