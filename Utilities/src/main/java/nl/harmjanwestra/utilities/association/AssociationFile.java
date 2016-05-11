@@ -2,6 +2,7 @@ package nl.harmjanwestra.utilities.association;
 
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
@@ -30,7 +31,7 @@ public class AssociationFile {
 				Chromosome chr = Chromosome.parseChr(elems[1]);
 				if (region.getChromosome().equals(chr)) {
 					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
-					Feature f2 = new Feature();
+					SNPFeature f2 = new SNPFeature();
 					f2.setChromosome(chr);
 					f2.setStart(Integer.parseInt(elems[2]));
 					f2.setStop(Integer.parseInt(elems[2]));
@@ -58,7 +59,7 @@ public class AssociationFile {
 				Chromosome chr = Chromosome.parseChr(elems[1]);
 				if (region.getChromosome().equals(chr)) {
 					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
-					Feature f2 = new Feature();
+					SNPFeature f2 = new SNPFeature();
 					f2.setChromosome(chr);
 					Integer position = Integer.parseInt(elems[2]);
 					f2.setStart(position);
@@ -109,6 +110,8 @@ public class AssociationFile {
 		int chrcol = -1;
 		int poscol = -1;
 		int idcol = -1;
+		int allelesCol = -1;
+		int minorAlleleCol = -1;
 		int combinedIdCol = -1;
 		int ncol = -1;
 		int mafcol = -1;
@@ -145,6 +148,10 @@ public class AssociationFile {
 						idcol = i;
 					} else if (e.equals("CombinedId")) {
 						combinedIdCol = i;
+					} else if (e.equals("Alleles")) {
+						allelesCol = i;
+					} else if (e.equals("MinorAllele")) {
+						minorAlleleCol = i;
 					} else if (e.equals("N")) {
 						ncol = i;
 					} else if (e.equals("MAF")) {
@@ -203,6 +210,8 @@ public class AssociationFile {
 					double posterior = 0d;
 					Feature assocregion = null;
 					double impqualscore = Double.NaN;
+					String[] alleles = null;
+					String minorAllele = null;
 
 					if (chrcol != -1) {
 						chr = Chromosome.parseChr(elems[chrcol]);
@@ -216,6 +225,18 @@ public class AssociationFile {
 					}
 					if (idcol != -1) {
 						id = elems[idcol];
+					}
+
+					if (allelesCol != -1) {
+						String alleleStr = elems[allelesCol];
+						String[] alleletmp = alleleStr.split(",");
+						alleles = new String[alleletmp.length];
+						for (int i = 0; i < alleletmp.length; i++) {
+							alleles[i] = new String(alleletmp[i]).intern();
+						}
+					}
+					if (minorAlleleCol != -1) {
+						minorAllele = new String(elems[minorAlleleCol]).intern();
 					}
 					if (ncol != -1) {
 						try {
@@ -319,8 +340,12 @@ public class AssociationFile {
 					}
 
 
-					Feature snp = new Feature(chr, pos, pos);
+					SNPFeature snp = new SNPFeature(chr, pos, pos);
 					snp.setName(id);
+					snp.setImputationQualityScore(impqualscore);
+					snp.setAlleles(alleles);
+					snp.setMinorAllele(minorAllele);
+
 					if (region == null || region.overlaps(snp)) {
 						AssociationResult result = new AssociationResult();
 						result.setSnp(snp);
@@ -335,7 +360,7 @@ public class AssociationFile {
 						result.setBf(bf);
 						result.setPosterior(posterior);
 						result.setRegion(assocregion);
-						result.setImputationQualScore(impqualscore);
+
 						results.add(result);
 					}
 				}
@@ -357,9 +382,11 @@ public class AssociationFile {
 				"\tPos" +
 				"\tId" +
 				"\tCombinedId" +
+				"\tAlleles" +
+				"\tMinorAllele" +
+				"\tImputationQualScore" +
 				"\tN" +
 				"\tMAF" +
-				"\tImputationQualScore" +
 				"\tDevianceNull" +
 				"\tDevianceGeno" +
 				"\tDfAlt" +

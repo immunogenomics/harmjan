@@ -2,6 +2,7 @@ package nl.harmjanwestra.utilities.association;
 
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class PosteriorPValFile {
 				Double pval = Double.parseDouble(elems[6]);
 				Double posterior = Double.parseDouble(elems[7]);
 
-				Feature snp = new Feature(chr, pos, pos);
+				SNPFeature snp = new SNPFeature(chr, pos, pos);
 				snp.setName(id);
 				result.setSnp(snp);
 				result.setPosterior(posterior);

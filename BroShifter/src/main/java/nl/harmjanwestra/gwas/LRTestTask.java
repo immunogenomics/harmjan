@@ -4,7 +4,7 @@ import JSci.maths.ArrayMath;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.features.Chromosome;
-import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.math.LogisticRegression;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -13,6 +13,7 @@ import org.rosuda.REngine.REngineException;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.math.stats.ChiSquare;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -99,6 +100,8 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				String output = variant.getId()
 						+ "\t" + variant.getChr()
 						+ "\t" + variant.getPos()
+						+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
+						+ "\t" + variant.getMinorAllele()
 						+ "\t" + variant.getImputationQualityScore()
 						+ "\t" + true
 						+ "\t" + true
@@ -138,6 +141,8 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			String output = variant.getId()
 					+ "\t" + variant.getChr()
 					+ "\t" + variant.getPos()
+					+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
+					+ "\t" + variant.getMinorAllele()
 					+ "\t" + variant.getImputationQualityScore()
 					+ "\t" + true
 					+ "\t" + true
@@ -500,14 +505,17 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		double log10p = 0;
 		AssociationResult result = new AssociationResult();
-		Feature snp = new Feature(Chromosome.parseChr(variant.getChr()), variant.getPos(), variant.getPos());
+		SNPFeature snp = new SNPFeature(Chromosome.parseChr(variant.getChr()), variant.getPos(), variant.getPos());
 		snp.setName(variant.getId());
 		result.setSnp(snp);
 		result.setN(x.length);
 		result.setMaf(maf);
 
 		Double imputationqualityscore = variant.getImputationQualityScore();
-		result.setImputationQualScore(imputationqualityscore);
+		snp.setImputationQualityScore(imputationqualityscore);
+		snp.setAlleles(variant.getAlleles());
+		snp.setMinorAllele(variant.getMinorAllele());
+
 
 		if (nrRemaining > 0) {
 			// perform test on full model

@@ -39,6 +39,10 @@ public class Strings {
 
 	public static String concat(String[] s, Pattern t, boolean[] includeElem, String replaceNull) {
 
+		if(s == null){
+			return null;
+		}
+
 		int approximateFinalStrLen = 0;
 		for (int i = 0; i < s.length; i++) {
 			if (includeElem != null && includeElem[i]) {

@@ -6,7 +6,11 @@ package nl.harmjanwestra.utilities.features;
 public class SNPFeature extends Feature {
 	double p;
 
-	public SNPFeature(){
+	private double imputationQualScore;
+	private String[] alleles;
+	private String minorAllele;
+
+	public SNPFeature() {
 
 	}
 
@@ -14,6 +18,35 @@ public class SNPFeature extends Feature {
 		super(f2);
 		this.p = f2.getP();
 	}
+
+	public SNPFeature(Chromosome chr, int start, int end) {
+		super(chr, start, end);
+	}
+
+	public double getImputationQualityScore() {
+		return imputationQualScore;
+	}
+
+	public void setImputationQualityScore(double imputationQualScore) {
+		this.imputationQualScore = imputationQualScore;
+	}
+
+	public String[] getAlleles() {
+		return alleles;
+	}
+
+	public void setAlleles(String[] alleles) {
+		this.alleles = alleles;
+	}
+
+	public String getMinorAllele() {
+		return minorAllele;
+	}
+
+	public void setMinorAllele(String minorAllele) {
+		this.minorAllele = minorAllele;
+	}
+
 
 	public void setP(double p) {
 		this.p = p;

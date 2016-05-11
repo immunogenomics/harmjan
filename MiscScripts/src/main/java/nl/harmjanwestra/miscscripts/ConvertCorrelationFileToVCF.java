@@ -15,12 +15,16 @@ public class ConvertCorrelationFileToVCF {
 		try {
 
 			ConvertCorrelationFileToVCF c = new ConvertCorrelationFileToVCF();
-			String input = "/Data/tmp/2016-05-04/T1D-cosmo-merged.txt";
-			String output = "/Data/tmp/2016-05-04/T1D-cosmo-accurracy-stats.vcf.gz";
-			c.run(input, output);
+//			String input = "/Data/tmp/2016-05-04/T1D-cosmo-merged.txt";
+//			String output = "/Data/tmp/2016-05-04/T1D-cosmo-accurracy-stats.vcf.gz";
+//			c.run(input, output);
+//
+//			input = "/Data/tmp/2016-05-04/T1D-HRC-merged.txt";
+//			output = "/Data/tmp/2016-05-04/T1D-HRC-accurracy-stats.vcf.gz";
+//			c.run(input, output);
 
-			input = "/Data/tmp/2016-05-04/T1D-HRC-merged.txt";
-			output = "/Data/tmp/2016-05-04/T1D-HRC-accurracy-stats.vcf.gz";
+			String input = "/Data/tmp/2016-05-04/T1D-eur-merged.txt";
+			String output = "/Data/tmp/2016-05-04/T1D-EUR-accurracy-stats.vcf.gz";
 			c.run(input, output);
 
 		} catch (IOException e) {
