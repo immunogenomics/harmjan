@@ -156,6 +156,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Match variants to reference VCF")
+				.longOpt("matchusingsummarystats")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Correlate imputation output (between two files) ")
 				.longOpt("correlatevcf")
 				.build();

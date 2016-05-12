@@ -567,8 +567,8 @@ public class VCFFunctions {
 	}
 
 	public Pair<byte[][], String[]> loadVCFGenotypes(String vcf,
-													 HashMap<String, Integer> sampleMap,
-													 HashMap<Feature, Integer> variantMap) throws IOException {
+	                                                 HashMap<String, Integer> sampleMap,
+	                                                 HashMap<Feature, Integer> variantMap) throws IOException {
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -869,12 +869,12 @@ public class VCFFunctions {
 
 
 	public void filterLowFrequencyVariants(String sequencingVCF,
-										   String outputdir,
-										   String famfile, boolean filterGT,
-										   int minimalReadDepth,
-										   int minimalGenotypeQual,
-										   double callratethreshold,
-										   int minObservationsPerAllele) throws IOException {
+	                                       String outputdir,
+	                                       String famfile, boolean filterGT,
+	                                       int minimalReadDepth,
+	                                       int minimalGenotypeQual,
+	                                       double callratethreshold,
+	                                       int minObservationsPerAllele) throws IOException {
 
 
 		PedAndMapFunctions pm = new PedAndMapFunctions();
@@ -1748,7 +1748,6 @@ public class VCFFunctions {
 	}
 
 
-
 //	public void compareAndCorrectVCFVariants(String vcf1,
 //											 String vcf1out,
 //											 String vcf2,
@@ -2327,10 +2326,15 @@ public class VCFFunctions {
 
 	public void splitPerChromosome(String vcfIn, String outdirprefix) throws IOException {
 		System.out.println("Splitting: " + vcfIn + " to " + outdirprefix);
-		ArrayList<Feature> allVariants = getVariantsFromVCF(vcfIn, true, false);
+
 		HashMap<Chromosome, TextFile> textFiles = new HashMap<Chromosome, TextFile>();
 
-		for (Feature f : allVariants) {
+		VCFGenotypeData d = new VCFGenotypeData(vcfIn);
+		int ctr = 0;
+		while (d.hasNext()) {
+			VCFVariant v = d.next();
+			Feature f = v.asFeature();
+			ctr++;
 			if (f.getChromosome().equals(Chromosome.NA)) {
 				System.out.println("unknown chromosome found..?");
 			} else {
@@ -2340,13 +2344,15 @@ public class VCFFunctions {
 			}
 
 		}
+		d.close();
+
 		Set<Chromosome> chromosomes = textFiles.keySet();
 
 		for (Chromosome chr : chromosomes) {
 			System.out.println(chr.getName() + " found");
 		}
 
-		System.out.println(allVariants.size() + " over " + textFiles.size() + " chromosomes");
+		System.out.println(ctr + " over " + textFiles.size() + " chromosomes");
 		TextFile tf = new TextFile(vcfIn, TextFile.R);
 
 		String ln = tf.readLine();
