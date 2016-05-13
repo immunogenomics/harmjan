@@ -1023,7 +1023,7 @@ public class VCFMerger {
 					variantToAR2.put(s, medianar2);
 					ctr++;
 				} else {
-					System.out.println(s + " may have duplicates?");
+					System.out.println(s + " may have duplicates? " + d.size() + " variants found, expected: " + nrBatches);
 				}
 			}
 
