@@ -39,8 +39,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	private String vcfLn;
 
 
-	public LRTestTask() {
-	}
+	public LRTestTask() {}
 
 	public LRTestTask(String vcfLn,
 					  VCFVariant variant,
