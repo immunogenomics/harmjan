@@ -229,6 +229,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Merge imputation batches")
+				.longOpt("checkimputation")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Make pseudo controls")
 				.longOpt("pseudo")
 				.build();
@@ -1035,7 +1041,7 @@ public class Main {
 					VCFMatcher matcher = new VCFMatcher();
 					matcher.runReferenceOnlyHasVariantPositions(vcf2, input, out, linux, vcfsort);
 				}
-			}else if (cmd.hasOption("mergeimputation")) {
+			} else if (cmd.hasOption("mergeimputation")) {
 				VCFMerger merger = new VCFMerger();
 				int nrbatches = 0;
 				if (cmd.hasOption("nrbatches")) {
@@ -1051,9 +1057,25 @@ public class Main {
 				}
 
 				if (run) {
-
 					merger.mergeImputationBatches(input, out, variantList, nrbatches);
+				}
+			} else if (cmd.hasOption("checkimputation")) {
+				VCFMerger merger = new VCFMerger();
+				int nrbatches = 0;
+				if (cmd.hasOption("nrbatches")) {
+					nrbatches = Integer.parseInt(cmd.getOptionValue("nrbatches"));
+				} else {
+					run = false;
+					System.out.println("Provide --nrbatches");
+				}
 
+				String variantList = null;
+				if (cmd.hasOption("l")) {
+					variantList = cmd.getOptionValue("l");
+				}
+
+				if (run) {
+					merger.checkImputationBatches(input, out, variantList, nrbatches);
 				}
 			} else if (cmd.hasOption("mergecheese")) {
 				VCFMerger merger = new VCFMerger();

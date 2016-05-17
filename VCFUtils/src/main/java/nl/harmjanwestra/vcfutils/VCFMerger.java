@@ -904,6 +904,118 @@ public class VCFMerger {
 
 	}
 
+	public void checkImputationBatches(String dirInPrefix, String outfilename, String variantsToTestFile, int nrBatches) throws IOException {
+		// make a list of variants to include
+		ArrayList<String> files = new ArrayList<String>();
+		HashMap<String, ArrayList<Double>> allVariants = new HashMap<String, ArrayList<Double>>();
+
+		HashSet<String> varsToTest = null;
+		if (variantsToTestFile != null) {
+			TextFile fin = new TextFile(variantsToTestFile, TextFile.R);
+			ArrayList<String> str = fin.readAsArrayList();
+			boolean splitweirdly = false;
+			varsToTest = new HashSet<String>();
+			for (String s : str) {
+				String[] elems = s.split(";");
+				if (elems.length > 1) {
+					varsToTest.add(elems[0] + "-" + elems[1]);
+					splitweirdly = true;
+				} else {
+					varsToTest.add(s);
+				}
+
+			}
+			if (splitweirdly) {
+				System.out.println("split weirdly ;)");
+			}
+			fin.close();
+			System.out.println(varsToTest.size() + " variants to mergecheese from " + variantsToTestFile);
+		}
+
+		System.out.println("Looking for " + nrBatches + " batches near " + dirInPrefix);
+		System.out.println("Out: " + outfilename);
+
+		boolean allpresent = true;
+		for (int batch = 0; batch < nrBatches; batch++) {
+			String batchvcfName = dirInPrefix + batch + ".vcf.gz";
+			if (!Gpio.exists(batchvcfName)) {
+				allpresent = false;
+				System.out.println("Could not find: " + batchvcfName);
+			}
+		}
+
+		if (!allpresent) {
+			System.exit(-1);
+		} else {
+			System.out.println("All files are there.");
+		}
+
+
+		// get a list of variants and their R-squared values
+		int[] variantsPerBatch = new int[nrBatches];
+		for (int batch = 0; batch < nrBatches; batch++) {
+			String batchvcfName = dirInPrefix + batch + ".vcf.gz";
+			if (Gpio.exists(batchvcfName)) {
+				files.add(batchvcfName);
+				TextFile tf = new TextFile(batchvcfName, TextFile.R);
+//				String[] elems = tf.readLineElems(TextFile.tab);
+				String ln = tf.readLine();
+				System.out.println("reading: " + batchvcfName);
+
+				HashMap<String, ArrayList<Double>> allVariantsLocal = new HashMap<String, ArrayList<Double>>();
+
+				while (ln != null) {
+					if (ln.startsWith("#")) {
+
+					} else {
+						String[] elems = new String[9];
+						StringTokenizer tokenizer = new StringTokenizer(ln, "\t");
+						int ctr = 0;
+						while (tokenizer.hasMoreTokens() && ctr < 9) {
+							elems[ctr] = tokenizer.nextToken();
+							ctr++;
+						}
+
+						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+						String variantSelect = elems[0] + "-" + elems[1] + "-" + elems[2];
+						if (varsToTest == null || varsToTest.contains(variantSelect)) {
+							//	String infoStr = elems[7];
+							ArrayList<Double> rsquareds = allVariants.get(variant);
+							ArrayList<Double> rsquaredLocal = allVariantsLocal.get(variant);
+							if (rsquareds == null) {
+								rsquareds = new ArrayList<Double>();
+							}
+							if (rsquaredLocal == null) {
+								rsquaredLocal = new ArrayList<Double>();
+							}
+							String[] infoElems = elems[7].split(";");
+							for (String s : infoElems) {
+								if (s.startsWith("AR2")) {
+									String[] rsquaredElems = s.split("=");
+									Double d = Double.parseDouble(rsquaredElems[1]);
+									rsquareds.add(d);
+									rsquaredLocal.add(d);
+								}
+							}
+							allVariants.put(variant, rsquareds);
+							allVariantsLocal.put(variant, rsquaredLocal);
+						}
+					}
+					ln = tf.readLine();
+				}
+				System.out.println(allVariants.size() + " variants found... " + allVariantsLocal.size() + " in this file");
+				if (allVariants.size() != allVariantsLocal.size()) {
+					System.out.println("ERROR: number of variants differs! :( " + batchvcfName);
+
+				}
+				tf.close();
+			} else {
+				System.out.println("Could not find: " + batchvcfName);
+			}
+		}
+	}
+
 	// same variants, different samples
 	public void mergeImputationBatches(String dirInPrefix, String outfilename, String variantsToTestFile, int nrBatches) throws IOException {
 
