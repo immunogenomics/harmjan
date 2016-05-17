@@ -1,7 +1,11 @@
 package nl.harmjanwestra.utilities.vcf;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.matrix.ByteMatrix2D;
+import nl.harmjanwestra.utilities.matrix.ShortMatrix2D;
 import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
 import umcg.genetica.io.trityper.util.BaseAnnot;
 import umcg.genetica.text.Strings;
@@ -22,10 +26,11 @@ public class VCFVariant {
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
 	private final HashMap<String, String> info = new HashMap<String, String>();
 	private ArrayList<VCFGenotypeFilter> filters;
-	private byte[][] genotypeAlleles; // format [alleles][individuals] (save some memory by making only two individual-sized arrays)
+	private ByteMatrix2D genotypeAlleles; // format [alleles][individuals] (save some memory by making only two individual-sized arrays)
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
-	private double[][] genotypeProbabilies;
+	private DoubleMatrix2D genotypeProbabilies;
+
 	private short[] genotypeQuals;
 	private short[] approximateDepth;
 	private boolean monomorphic;
@@ -58,9 +63,8 @@ public class VCFVariant {
 	private int gpCol = -1;
 
 	private boolean ignoregender;
-	private short[][] allelicDepth;
+	private ShortMatrix2D allelicDepth;
 	private int totalCalledAlleles;
-
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
@@ -85,7 +89,7 @@ public class VCFVariant {
 	}
 
 	public short[][] getAllelicDepth() {
-		return allelicDepth;
+		return allelicDepth.toArray();
 	}
 
 	private void parse(String ln, PARSE p) {
@@ -122,8 +126,8 @@ public class VCFVariant {
 				// parse actual genotypes.
 				int nrTokens = tokenArr.length;
 				int nrSamples = nrTokens - nrHeaderElems;
-				byte[] alleles1 = new byte[nrSamples];
-				byte[] alleles2 = new byte[nrSamples];
+
+				genotypeAlleles = new ByteMatrix2D(2, nrSamples);
 				approximateDepth = new short[nrSamples];
 				genotypeQuals = new short[nrSamples];
 
@@ -133,23 +137,23 @@ public class VCFVariant {
 					String sampleColumn = token;
 					if (nullGenotype.equals(sampleColumn)) {
 						// not called
-						alleles1[indPos] = -1;
-						alleles2[indPos] = -1;
+						genotypeAlleles.setQuick(0, indPos, (byte) -1);
+						genotypeAlleles.setQuick(1, indPos, (byte) -1);
+
 					} else {
 						//String[] sampleElems = Strings.colon.split(sampleColumn);
 
 						String[] sampleTokens = Strings.colon.split(sampleColumn);
 
-
-						int sampleTokenCtr = 0;
 						for (int s = 0; s < sampleTokens.length; s++) {
 							String sampleToken = sampleTokens[s];
 
 							if (s == gtCol) {
 								String gt = sampleToken;
 								if (nullGenotype.equals(gt)) {
-									alleles1[indPos] = -1;
-									alleles2[indPos] = -1;
+									genotypeAlleles.setQuick(0, indPos, (byte) -1);
+									genotypeAlleles.setQuick(1, indPos, (byte) -1);
+
 								} else {
 									String[] gtElems = slash.split(gt);
 									separator = "/";
@@ -162,20 +166,22 @@ public class VCFVariant {
 									byte gt2 = 0;
 
 									if (gtElems[0].equals(".")) {
-										alleles1[indPos] = -1;
-										alleles2[indPos] = -1;
+										genotypeAlleles.setQuick(0, indPos, (byte) -1);
+										genotypeAlleles.setQuick(1, indPos, (byte) -1);
+
 									} else {
 										try {
 											gt1 = Byte.parseByte(gtElems[0]);
 											gt2 = Byte.parseByte(gtElems[1]);
 
-											alleles1[indPos] = gt1;
-											alleles2[indPos] = gt2;
+											genotypeAlleles.setQuick(0, indPos, gt1);
+											genotypeAlleles.setQuick(1, indPos, gt2);
+
 
 										} catch (NumberFormatException e) {
 											System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length);
-											alleles1[indPos] = -1;
-											alleles2[indPos] = -1;
+											genotypeAlleles.setQuick(0, indPos, (byte) -1);
+											genotypeAlleles.setQuick(1, indPos, (byte) -1);
 										}
 									}
 								}
@@ -199,12 +205,11 @@ public class VCFVariant {
 									try {
 
 										if (genotypeProbabilies == null) {
-											genotypeProbabilies = new double[gpElems.length][nrSamples];
+											genotypeProbabilies = new DenseDoubleMatrix2D(gpElems.length, nrSamples);
 										}
 
 										for (int g = 0; g < gpElems.length; g++) {
-
-											genotypeProbabilies[g][indPos] = Double.parseDouble(gpElems[g]);
+											genotypeProbabilies.setQuick(g, indPos, Double.parseDouble(gpElems[g]));
 
 										}
 
@@ -217,11 +222,11 @@ public class VCFVariant {
 								String[] adElems = Strings.comma.split(sampleToken);
 								try {
 									if (allelicDepth == null) {
-										allelicDepth = new short[alleles.length][nrSamples];
+										allelicDepth = new ShortMatrix2D(alleles.length, nrSamples);
 									}
 
 									for (int g = 0; g < adElems.length; g++) {
-										allelicDepth[g][indPos] = Short.parseShort(adElems[g]);
+										allelicDepth.setQuick(g, indPos, Short.parseShort(adElems[g]));
 									}
 
 								} catch (NumberFormatException e) {
@@ -251,14 +256,9 @@ public class VCFVariant {
 								}
 								approximateDepth[indPos] = depth;
 							}
-							sampleTokenCtr++;
 						}
 					}
 				}
-
-				genotypeAlleles = new byte[2][];
-				genotypeAlleles[0] = alleles1;
-				genotypeAlleles[1] = alleles2;
 
 				if (filters != null) {
 					for (VCFGenotypeFilter filter : filters) {
@@ -284,7 +284,7 @@ public class VCFVariant {
 				substrlen = strlen;
 			}
 			String lnheader = ln.substring(0, substrlen);
-			String[] tokenArr = lnheader.split("\t");
+			String[] tokenArr = Strings.tab.split(lnheader);
 
 			for (int t = 0; t < 9; t++) {
 				if (t < tokenArr.length) {
@@ -455,7 +455,7 @@ public class VCFVariant {
 	}
 
 	public byte[][] getGenotypeAlleles() {
-		return genotypeAlleles;
+		return genotypeAlleles.toArray();
 	}
 
 	public void flipReferenceAlelele() {
@@ -468,12 +468,12 @@ public class VCFVariant {
 		if (genotypeAlleles != null) {
 
 			// only works for biallelic variants!
-			for (int i = 0; i < genotypeAlleles[0].length; i++) {
-				for (int j = 0; j < genotypeAlleles.length; j++) {
-					if (genotypeAlleles[j][i] == -1) {
-						genotypeAlleles[j][i] = -1;
+			for (int i = 0; i < genotypeAlleles.columns(); i++) {
+				for (int j = 0; j < genotypeAlleles.rows(); j++) {
+					if (genotypeAlleles.getQuick(j, i) == -1) {
+						genotypeAlleles.setQuick(j, i, (byte) -1);
 					} else {
-						genotypeAlleles[j][i] = (byte) Math.abs(genotypeAlleles[j][i] - 1);
+						genotypeAlleles.setQuick(j, i, (byte) Math.abs(genotypeAlleles.getQuick(j, i) - 1));
 					}
 				}
 			}
@@ -481,42 +481,7 @@ public class VCFVariant {
 	}
 
 	public double[][] getImputedDosages() {
-
-		double[][] probs = getGenotypeProbabilies();
-		int nrAlleles = getAlleles().length;
-		double[][] dosages = null;
-		if (probs == null) {
-
-			byte[][] gt = getGenotypeAlleles();
-			dosages = new double[gt[0].length][nrAlleles - 1];
-			for (int i = 0; i < gt[0].length; i++) {
-				for (int j = 0; j < gt.length; j++) {
-					dosages[i][0] = gt[j][i];
-				}
-
-			}
-		} else {
-			dosages = new double[probs[0].length][nrAlleles - 1];
-			for (int i = 0; i < probs[0].length; i++) {
-				int alctr = 0;
-				for (int a1 = 0; a1 < nrAlleles; a1++) {
-					for (int a2 = a1; a2 < nrAlleles; a2++) {
-						double dosageval = probs[alctr][i];
-						if (a1 > 0) {
-							dosages[i][a1 - 1] += dosageval;
-						}
-						if (a2 > 0) {
-							dosages[i][a2 - 1] += dosageval;
-						}
-						alctr++;
-					}
-				}
-			}
-
-		}
-
-
-		return dosages;
+		return getImputedDosagesAsMatrix2D().toArray();
 	}
 
 	public Boolean alleleFlip(VCFVariant var2) {
@@ -531,29 +496,29 @@ public class VCFVariant {
 
 	}
 
-	public double[][] getDosages() {
-		int nrAlleles = getAlleles().length;
-		double[][] output = new double[genotypeAlleles[0].length][nrAlleles - 1]; // allow for multiple alleles
-		for (int i = 0; i < output.length; i++) {
-			for (int j = 0; j < genotypeAlleles.length; j++) {
-				int a = (int) genotypeAlleles[j][i];
 
-
-				if (a == -1) {
-					// missing genotype
-					output[i][0] = Double.NaN;
-				} else if (a > 0) {
-					if (a > 0) {
-						a -= 1;
-					}
-					output[i][a]++;
-				}
-
-			}
-		}
-
-		return output;
-	}
+	//???
+//	public double[][] getDosages() {
+//		int nrAlleles = getAlleles().length;
+//		double[][] output = new double[genotypeAlleles.columns()][nrAlleles - 1]; // allow for multiple alleles
+//		for (int i = 0; i < output.length; i++) {
+//			for (int j = 0; j < genotypeAlleles.rows(); j++) {
+//				int a = (int) genotypeAlleles.getQuick(j, i);
+//				if (a == -1) {
+//					// missing genotype
+//					output[i][0] = Double.NaN;
+//				} else if (a > 0) {
+//					if (a > 0) {
+//						a -= 1;
+//					}
+//					output[i][a]++;
+//				}
+//
+//			}
+//		}
+//
+//		return output;
+//	}
 
 	public String allelesAsString() {
 		return Strings.concat(alleles, Pattern.compile("/"));
@@ -585,16 +550,16 @@ public class VCFVariant {
 
 
 		if (genotypeAlleles != null) {
-			for (int i = 0; i < genotypeAlleles[0].length; i++) {
-				for (int j = 0; j < genotypeAlleles.length; j++) {
-					if (genotypeAlleles[j][i] == -1) {
-						genotypeAlleles[j][i] = -1;
+			for (int i = 0; i < genotypeAlleles.columns(); i++) {
+				for (int j = 0; j < genotypeAlleles.rows(); j++) {
+					if (genotypeAlleles.getQuick(j, i) == -1) {
+						genotypeAlleles.setQuick(j, i, (byte) -1);
 					} else {
-						if (alleleRecode[genotypeAlleles[j][i]] == -1) {
-							System.err.println("Allele " + alleleRecode[genotypeAlleles[j][i]] + " removed!");
+						if (alleleRecode[genotypeAlleles.getQuick(j, i)] == -1) {
+							System.err.println("Allele " + alleleRecode[genotypeAlleles.getQuick(j, i)] + " removed!");
 							System.exit(-1);
 						}
-						genotypeAlleles[j][i] = (byte) alleleRecode[genotypeAlleles[j][i]];
+						genotypeAlleles.setQuick(j, i, (byte) alleleRecode[genotypeAlleles.getQuick(j, i)]);
 					}
 				}
 			}
@@ -650,13 +615,15 @@ public class VCFVariant {
 		builder.append("\t.\t.\t.\tGT");
 
 
-		for (int i = 0; i < genotypeAlleles[0].length; i++) {
-			String al1 = "" + genotypeAlleles[0][i];
-			String al2 = "" + genotypeAlleles[1][i];
-			if (genotypeAlleles[0][i] == -1) {
+		for (int i = 0; i < genotypeAlleles.columns(); i++) {
+			byte a1 = genotypeAlleles.getQuick(0, i);
+			byte a2 = genotypeAlleles.getQuick(1, i);
+			String al1 = "" + a1;
+			String al2 = "" + a2;
+			if (a1 == -1) {
 				al1 = ".";
 			}
-			if (genotypeAlleles[1][i] == -1) {
+			if (a2 == -1) {
 				al2 = ".";
 			}
 			builder.append("\t");
@@ -677,7 +644,7 @@ public class VCFVariant {
 	}
 
 	public double[][] getGenotypeProbabilies() {
-		return genotypeProbabilies;
+		return genotypeProbabilies.toArray();
 	}
 
 	public HashMap<String, String> getInfo() {
@@ -697,12 +664,12 @@ public class VCFVariant {
 		int nrCalled = 0;
 		nrAllelesObserved = new int[nrAllelesObserved.length];
 		int[] nrAllelesObservedLocal = new int[nrAllelesObserved.length];
-		int nrIndividuals = genotypeAlleles[0].length;
+		int nrIndividuals = genotypeAlleles.columns();
 		Chromosome chromosome = Chromosome.parseChr(chr);
 		if (individualIsFemale != null) {
 			int nrFemales = 0;
 			int nrMales = 0;
-			for (int i = 0; i < genotypeAlleles[0].length; i++) {
+			for (int i = 0; i < nrIndividuals; i++) {
 				if (individualIsFemale[i] != null) {
 					if (individualIsFemale[i]) {
 						nrFemales++;
@@ -716,18 +683,18 @@ public class VCFVariant {
 			} else if (chromosome.equals(Chromosome.Y)) {
 				nrIndividuals = nrMales;
 			} else {
-				nrIndividuals = genotypeAlleles[0].length;
+				nrIndividuals = nrIndividuals;
 			}
 		}
 
 
-		for (int i = 0; i < genotypeAlleles[0].length; i++) {
+		for (int i = 0; i < genotypeAlleles.columns(); i++) {
 			if (chromosome.equals(Chromosome.X)) {
 				if (ignoregender || (individualIsFemale != null && individualIsFemale[i] != null && individualIsFemale[i])) {
-					if (genotypeAlleles[0][i] != -1) {
+					if (genotypeAlleles.getQuick(0, i) != -1) {
 						nrCalled++;
-						nrAllelesObservedLocal[genotypeAlleles[0][i]]++;
-						nrAllelesObservedLocal[genotypeAlleles[1][i]]++;
+						nrAllelesObservedLocal[genotypeAlleles.getQuick(0, i)]++;
+						nrAllelesObservedLocal[genotypeAlleles.getQuick(1, i)]++;
 					}
 				} else if (individualIsFemale == null) {
 //					System.err.println("ERROR: cannot calculate chr X MAF if gender information unavailable.");
@@ -735,26 +702,28 @@ public class VCFVariant {
 				}
 			} else if (chromosome.equals(Chromosome.Y)) {
 				if (ignoregender || (individualIsFemale != null && individualIsFemale[i] != null && !individualIsFemale[i])) {
-					if (genotypeAlleles[0][i] != -1) {
+					if (genotypeAlleles.getQuick(0, i) != -1) {
 						nrCalled++;
-						nrAllelesObservedLocal[genotypeAlleles[0][i]]++;
-						nrAllelesObservedLocal[genotypeAlleles[1][i]]++;
+						nrAllelesObservedLocal[genotypeAlleles.getQuick(0, i)]++;
+						nrAllelesObservedLocal[genotypeAlleles.getQuick(1, i)]++;
 					}
 				} else if (individualIsFemale == null) {
 					System.err.println("ERROR: cannot calculate chr Y MAF if gender information unavailable.");
 					throw new IllegalArgumentException("ERROR: cannot calculate chr X MAF if gender information unavailable.");
 				}
 			} else {
-				if (genotypeAlleles[0][i] != -1) {
+				if (genotypeAlleles.getQuick(0, i) != -1) {
 					nrCalled++;
-					nrAllelesObservedLocal[genotypeAlleles[0][i]]++;
-					nrAllelesObservedLocal[genotypeAlleles[1][i]]++;
+					nrAllelesObservedLocal[genotypeAlleles.getQuick(0, i)]++;
+					nrAllelesObservedLocal[genotypeAlleles.getQuick(1, i)]++;
+
 				}
 			}
 
-			if (genotypeAlleles[0][i] != -1) {
-				nrAllelesObserved[genotypeAlleles[0][i]]++;
-				nrAllelesObserved[genotypeAlleles[1][i]]++;
+			if (genotypeAlleles.getQuick(0, i) != -1) {
+				nrAllelesObserved[genotypeAlleles.getQuick(0, i)]++;
+				nrAllelesObserved[genotypeAlleles.getQuick(1, i)]++;
+
 			}
 
 		}
@@ -797,6 +766,9 @@ public class VCFVariant {
 			}
 		}
 
+
+		calculateHWEP();
+
 		if (nrAllelesThatHaveAlleleFrequency == 2) {
 			biallelic = true;
 
@@ -807,6 +779,66 @@ public class VCFVariant {
 		} else {
 			monomorphic = true;
 		}
+	}
+
+	public void calculateHWEP() {
+		int nrAlleles = alleles.length;
+		int nrCombinations = (nrAlleles * (nrAlleles + 1)) / 2;
+		int[] obs = new int[nrCombinations];
+		int[] nrHomozygous = new int[nrAlleles];
+		int nrCalled = 0;
+		int[][] index = new int[nrAlleles][nrAlleles];
+
+		int ctr = 0;
+		for (int i = 0; i < nrAlleles; i++) {
+			for (int j = i; j < nrAlleles; j++) {
+				index[i][j] = ctr;
+				index[j][i] = ctr;
+				ctr++;
+			}
+		}
+
+		// count the homozygous
+		for (int i = 0; i < genotypeAlleles.columns(); i++) {
+			byte a1 = genotypeAlleles.getQuick(0, i);
+			if (a1 != -1) {
+				byte a2 = genotypeAlleles.getQuick(1, i);
+				if (a1 == a2) {
+					nrHomozygous[a1]++;
+				}
+
+				int id = index[a1][a2];
+				obs[id]++;
+				nrCalled++;
+			}
+		}
+
+		double[] freqs = new double[nrAlleles];
+		for (int i = 0; i < nrAlleles; i++) {
+			freqs[i] = Math.sqrt((double) nrHomozygous[i] / nrCalled);
+		}
+
+		ctr = 0;
+		double chisq = 0;
+		for (int i = 0; i < nrAlleles; i++) {
+			for (int j = i; j < nrAlleles; j++) {
+				double expectedFreq;
+				if (i == j) {
+					expectedFreq = (freqs[i] * freqs[i]) * nrCalled; // homozygote freq
+				} else {
+					expectedFreq = (2 * (freqs[i] * freqs[j])) * nrCalled; // heterozygote freq
+				}
+				double observedFreq = obs[ctr];
+				double oe = (observedFreq - expectedFreq);
+				if (oe > 0 && expectedFreq > 0) {
+					chisq += ((oe * oe) / expectedFreq);
+				}
+				ctr++;
+			}
+		}
+
+		int df = (nrCombinations - nrAlleles);
+		hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
 	}
 
 	public String getInfoString() {
@@ -895,8 +927,8 @@ public class VCFVariant {
 			int minorAlleleNr = 0;
 			double minorAlleleFreq = refFreq;
 			for (int i = 0; i < elems.length; i++) {
-				if(freqs[i] < minorAlleleFreq){
-					minorAlleleNr = i+1;
+				if (freqs[i] < minorAlleleFreq) {
+					minorAlleleNr = i + 1;
 					minorAlleleFreq = freqs[i];
 				}
 			}
@@ -908,6 +940,45 @@ public class VCFVariant {
 
 		return null;
 
+	}
+
+	public ByteMatrix2D getGenotypeAllelesAsMatrix2D() {
+		return genotypeAlleles;
+	}
+
+	public DoubleMatrix2D getGenotypeProbabiliesAsMatrix2D() {
+		return genotypeProbabilies;
+	}
+
+	public DoubleMatrix2D getImputedDosagesAsMatrix2D() {
+		int nrAlleles = getAlleles().length;
+		DoubleMatrix2D dosages = null;
+		if (genotypeProbabilies == null) {
+			dosages = new DenseDoubleMatrix2D(genotypeAlleles.columns(), nrAlleles - 1);
+			for (int i = 0; i < genotypeAlleles.columns(); i++) {
+				for (int j = 0; j < genotypeAlleles.rows(); j++) {
+					dosages.setQuick(i, 0, genotypeAlleles.getQuick(j, i));
+				}
+			}
+		} else {
+			dosages = new DenseDoubleMatrix2D(genotypeProbabilies.columns(), nrAlleles - 1);
+			for (int i = 0; i < genotypeProbabilies.columns(); i++) {
+				int alctr = 0;
+				for (int a1 = 0; a1 < nrAlleles; a1++) {
+					for (int a2 = a1; a2 < nrAlleles; a2++) {
+						double dosageval = genotypeProbabilies.getQuick(alctr, i);
+						if (a1 > 0) {
+							dosages.setQuick(i, a1 - 1, dosages.getQuick(i, a1 - 1) + dosageval);
+						}
+						if (a2 > 0) {
+							dosages.setQuick(i, a2 - 1, dosages.getQuick(i, a2 - 1) + dosageval);
+						}
+						alctr++;
+					}
+				}
+			}
+		}
+		return dosages;
 	}
 
 	public enum PARSE {

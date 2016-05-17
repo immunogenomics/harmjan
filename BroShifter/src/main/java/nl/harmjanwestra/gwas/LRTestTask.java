@@ -1,12 +1,17 @@
 package nl.harmjanwestra.gwas;
 
 import JSci.maths.ArrayMath;
+
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.SNPFeature;
-import nl.harmjanwestra.utilities.math.LogisticRegression;
+
+import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
+import nl.harmjanwestra.utilities.matrix.ByteMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REngineException;
@@ -30,24 +35,26 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	private int iter;
 	private boolean[] genotypesWithCovariatesAndDiseaseStatus;
 	private double[] finalDiseaseStatus;
-	private double[][] finalCovariates;
-	private ArrayList<Triple<double[][], boolean[], Integer>> conditional;
-	private ArrayList<double[][]> conditionalDosages;
+	private DoubleMatrix2D finalCovariates;
+	private ArrayList<Triple<DoubleMatrix2D, boolean[], Integer>> conditional;
+	private ArrayList<DoubleMatrix2D> conditionalDosages;
 	private int alleleOffsetGenotypes;
 	private int alleleOffsetDosages;
 	private LRTestOptions options;
 	private String vcfLn;
 
 
-	public LRTestTask() {}
+	public LRTestTask() {
+	}
 
 	public LRTestTask(String vcfLn,
 					  VCFVariant variant,
 					  int iter,
 					  boolean[] genotypesWithCovariatesAndDiseaseStatus,
 					  double[] finalDiseaseStatus,
-					  double[][] finalCovariates,
-					  ArrayList<Triple<double[][], boolean[], Integer>> conditional, ArrayList<double[][]> conditionalDosages,
+					  DoubleMatrix2D finalCovariates,
+					  ArrayList<Triple<DoubleMatrix2D, boolean[], Integer>> conditional,
+					  ArrayList<DoubleMatrix2D> conditionalDosages,
 					  int alleleOffsetGenotypes,
 					  int alleleOffsetDosages,
 					  LRTestOptions options) {
@@ -74,22 +81,22 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		// TODO: switch this around: make the ordering of the covariate table the same as the genotype file...
 		// recode the genotypes to the same ordering as the covariate table
-		Triple<double[][], boolean[], Integer> unfilteredGenotypeData = filterAndRecodeGenotypes(
+		Triple<DoubleMatrix2D, boolean[], Integer> unfilteredGenotypeData = filterAndRecodeGenotypes(
 				genotypesWithCovariatesAndDiseaseStatus,
-				variant.getGenotypeAlleles(),
+				variant.getGenotypeAllelesAsMatrix2D(),
 				variant.getAlleles().length,
-				finalCovariates.length);
+				finalCovariates.rows());
 
 		// generate pseudocontrol genotypes
-		Pair<Pair<double[][], double[]>,
+		Pair<Pair<DoubleMatrix2D, double[]>,
 				Pair<Double, Double>> recodeGenotypes = prepareGenotypeMatrix(
 				unfilteredGenotypeData,
 				conditional,
 				finalDiseaseStatus,
 				finalCovariates,
-				finalCovariates.length);
+				finalCovariates.rows());
 
-		Pair<double[][], double[]> genotypedata = recodeGenotypes.getLeft();
+		Pair<DoubleMatrix2D, double[]> genotypedata = recodeGenotypes.getLeft();
 		Pair<Double, Double> summary = recodeGenotypes.getRight();
 
 		double maf = summary.getLeft();
@@ -106,36 +113,28 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						+ "\t" + true
 						+ "\t" + false
 						+ "\t" + true;
-
 				return new Triple<>(output, null, null);
-//					logout.writeln(
-				//);
 			} else {
 				return null;
 			}
 		} else {
-
-//				if (iter == 0 && maxNrIter > 1) {
-//					variants.add(variant);
-//				}
-
-			double[][] probs = variant.getGenotypeProbabilies(); // [probs][inds]
+			DoubleMatrix2D probs = variant.getGenotypeProbabiliesAsMatrix2D(); // [probs][inds]
 			int nrAlleles = variant.getAlleles().length;
 			double[] y = genotypedata.getRight();
-			double[][] x = genotypedata.getLeft();
+			DoubleMatrix2D x = genotypedata.getLeft();
 
 			AssociationResult result = null;
 			if (probs == null) {
 				result = pruneAndTest(x, y, nrAlleles, alleleOffsetGenotypes, variant, maf);
-//
 			} else {
 				// recode to dosages
-				double[][] dosages = variant.getImputedDosages();
-				double[][] dosageMat = prepareDosageMatrix(genotypesWithCovariatesAndDiseaseStatus, dosages, finalCovariates, conditionalDosages);
+				DoubleMatrix2D dosageMatWrapper = variant.getImputedDosagesAsMatrix2D();
+				DoubleMatrix2D dosageMat = prepareDosageMatrix(genotypesWithCovariatesAndDiseaseStatus,
+						dosageMatWrapper,
+						finalCovariates,
+						conditionalDosages);
 				result = pruneAndTest(dosageMat, y, nrAlleles, alleleOffsetDosages, variant, maf);
-
 			}
-//				nrTested++;
 			//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
 			String output = variant.getId()
 					+ "\t" + variant.getChr()
@@ -152,30 +151,30 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	// remove variables with zero variance and perfect correlation
-	private Pair<double[][], boolean[]> removeCollinearVariables(double[][] mat) {
+	private Pair<DoubleMatrix2D, boolean[]> removeCollinearVariables(DoubleMatrix2D mat) {
 
-		boolean[] includeCol = new boolean[mat[0].length];
+		boolean[] includeCol = new boolean[mat.columns()];
 		for (int c = 0; c < includeCol.length; c++) {
 			includeCol[c] = true;
 		}
 
 		includeCol[0] = true; // intercept
-		for (int j = 1; j < mat[0].length; j++) {
+		for (int j = 1; j < mat.columns(); j++) {
 			if (includeCol[j]) {
-				double[] vals = new double[mat.length];
-				for (int i = 0; i < mat.length; i++) {
-					vals[i] = mat[i][j];
+				double[] vals = new double[mat.rows()];
+				for (int i = 0; i < mat.rows(); i++) {
+					vals[i] = mat.getQuick(i, j);
 				}
 
 				double variance = ArrayMath.variance(vals);
 				if (variance == 0d) {
 					includeCol[j] = false;
 				} else {
-					for (int j2 = j + 1; j2 < mat[0].length; j2++) {
+					for (int j2 = j + 1; j2 < mat.columns(); j2++) {
 						if (includeCol[j2]) {
-							double[] vals2 = new double[mat.length];
-							for (int i = 0; i < mat.length; i++) {
-								vals2[i] = mat[i][j2];
+							double[] vals2 = new double[mat.rows()];
+							for (int i = 0; i < mat.rows(); i++) {
+								vals2[i] = mat.getQuick(i, j2);
 							}
 							// correlate
 							double variance2 = ArrayMath.variance(vals2);
@@ -201,12 +200,12 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		}
 
 		// remove correlated variables
-		double[][] matOut = new double[mat.length][nrRemaining];
+		DoubleMatrix2D matOut = new DenseDoubleMatrix2D(mat.rows(), nrRemaining);
 		int ctr = 0;
-		for (int j = 0; j < mat[0].length; j++) {
+		for (int j = 0; j < mat.columns(); j++) {
 			if (includeCol[j]) {
-				for (int i = 0; i < mat.length; i++) {
-					matOut[i][ctr] = mat[i][j];
+				for (int i = 0; i < mat.rows(); i++) {
+					matOut.setQuick(i, ctr, mat.getQuick(i, j));
 				}
 				ctr++;
 			}
@@ -216,7 +215,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		return new Pair<>(matOut, includeCol);
 	}
 
-	private double[][] removeGenotypes(double[][] x, boolean[] colsToRemove) {
+	private DoubleMatrix2D removeGenotypes(DoubleMatrix2D x, boolean[] colsToRemove) {
 
 		int nrToRemove = 0;
 		for (int i = 0; i < colsToRemove.length; i++) {
@@ -225,12 +224,12 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 		}
 
-		double[][] output = new double[x.length][colsToRemove.length - nrToRemove];
+		DoubleMatrix2D output = new DenseDoubleMatrix2D(x.rows(), colsToRemove.length - nrToRemove);
 		int ctr = 0;
 		for (int j = 0; j < colsToRemove.length; j++) {
 			if (!colsToRemove[j]) {
-				for (int i = 0; i < x.length; i++) {
-					output[i][ctr] = x[i][j];
+				for (int i = 0; i < x.rows(); i++) {
+					output.setQuick(i, ctr, x.getQuick(i, j));
 				}
 				ctr++;
 			}
@@ -238,25 +237,25 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		return output;
 	}
 
-	Triple<double[][], boolean[], Integer> filterAndRecodeGenotypes(
+	Triple<DoubleMatrix2D, boolean[], Integer> filterAndRecodeGenotypes(
 			boolean[] includeGenotype,
-			byte[][] genotypeAlleles,
+			ByteMatrix2D genotypeAlleles,
 			int nrAlleles,
 			int nrsamples) {
 
-		double[][] tmpgenotypes = new double[nrAlleles - 1][nrsamples];
+		DoubleMatrix2D tmpgenotypes = new DenseDoubleMatrix2D(nrAlleles - 1, nrsamples);
 		int individualCounter = 0;
 
 		// first iterate the genotyped samples to load the genotypes
 		int nrWithMissingGenotypes = 0;
 		boolean[] genotypeMissing = new boolean[nrsamples];
-		for (int i = 0; i < genotypeAlleles[0].length; i++) {
+		for (int i = 0; i < genotypeAlleles.columns(); i++) {
 			if (includeGenotype[i]) { // this is set to false if the genotype doesn't have a disease status or covariate data.
-				byte b1 = genotypeAlleles[0][i];
-				byte b2 = genotypeAlleles[1][i];
+				byte b1 = genotypeAlleles.getQuick(0, i);
+				byte b2 = genotypeAlleles.getQuick(1, i);
 				if (b1 == -1) {
-					for (int q = 0; q < tmpgenotypes.length; q++) {
-						tmpgenotypes[q][individualCounter] = Double.NaN;
+					for (int q = 0; q < tmpgenotypes.rows(); q++) {
+						tmpgenotypes.setQuick(q, individualCounter, Double.NaN);
 					}
 					nrWithMissingGenotypes++;
 					genotypeMissing[individualCounter] = true;
@@ -268,17 +267,17 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						} else {
 							int allele = b1 - 1;
 							if (allele >= 0) {
-								tmpgenotypes[allele][individualCounter] = 2;
+								tmpgenotypes.set(allele, individualCounter, 2);
 							}
 						}
 					} else {
 						int allele1 = b1 - 1;
 						int allele2 = b2 - 1;
 						if (allele1 >= 0) {
-							tmpgenotypes[allele1][individualCounter] = 1;
+							tmpgenotypes.set(allele1, individualCounter, 1);
 						}
 						if (allele2 >= 0) {
-							tmpgenotypes[allele2][individualCounter] = 1;
+							tmpgenotypes.set(allele2, individualCounter, 1);
 						}
 					}
 				}
@@ -290,39 +289,41 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	// output format genotypes+covariates, matched disease status, maf, cr
-	private Pair<Pair<double[][], double[]>, Pair<Double, Double>> prepareGenotypeMatrix(
-			Triple<double[][], boolean[], Integer> genotypeData,
-			ArrayList<Triple<double[][], boolean[], Integer>> conditional,
+	private Pair<Pair<DoubleMatrix2D, double[]>, Pair<Double, Double>> prepareGenotypeMatrix(
+			Triple<DoubleMatrix2D, boolean[], Integer> genotypeData,
+			ArrayList<Triple<DoubleMatrix2D, boolean[], Integer>> conditional,
 			double[] diseaseStatus,
-			double[][] covariates,
+			DoubleMatrix2D covariates,
 			int nrsamples) {
 
 		int nrWithMissingGenotypes = genotypeData.getRight();
 		boolean[] genotypeMissing = genotypeData.getMiddle();
-		double[][] genotypes = genotypeData.getLeft();
+		DoubleMatrix2D genotypes = genotypeData.getLeft();
 
 
-		double[][] tmpgenotypes = genotypes;
+		DoubleMatrix2D tmpgenotypes = genotypes;
 
 		if (!conditional.isEmpty()) {
 			// count extra columns from conditional genotypes
 			int extraAlleles = 0;
-			for (Triple<double[][], boolean[], Integer> t : conditional) {
-				double[][] data = t.getLeft();
-				int nrCols = data.length;
+			for (Triple<DoubleMatrix2D, boolean[], Integer> t : conditional) {
+				DoubleMatrix2D data = t.getLeft();
+				int nrCols = data.rows();
 				extraAlleles += nrCols;
 			}
 
-			tmpgenotypes = new double[genotypes.length + extraAlleles][genotypes[0].length];
+			tmpgenotypes = new DenseDoubleMatrix2D(genotypes.rows() + extraAlleles, genotypes.columns());
 
 			// copy the data to the new matrix
 			int ctr = 0;
-			for (Triple<double[][], boolean[], Integer> t : conditional) {
-				double[][] data = t.getLeft();
+			for (Triple<DoubleMatrix2D, boolean[], Integer> t : conditional) {
+				DoubleMatrix2D data = t.getLeft();
 				boolean[] missingGT = t.getMiddle();
-				int nrAllelesForSNP = data.length;
+				int nrAllelesForSNP = data.rows();
 				for (int i = 0; i < nrAllelesForSNP; i++) {
-					tmpgenotypes[i + ctr] = data[i];
+					for (int j = 0; j < data.columns(); j++) {
+						tmpgenotypes.setQuick(i + ctr, j, data.getQuick(i, j));
+					}
 				}
 
 				for (int i = 0; i < missingGT.length; i++) {
@@ -333,8 +334,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 
 // copy the original genotypes to the matrix
-			for (int i = 0; i < genotypes.length; i++) {
-				tmpgenotypes[i + ctr] = genotypes[i];
+			for (int i = 0; i < genotypes.rows(); i++) {
+				for (int j = 0; j < genotypes.columns(); j++) {
+					tmpgenotypes.setQuick(i + ctr, j, genotypes.getQuick(i, j));
+				}
 			}
 
 			nrWithMissingGenotypes = 0;
@@ -346,17 +349,18 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		}
 
 		// determine MAF
-		int[] nrAllelesPresent = new int[genotypes.length + 1];
+		int[] nrAllelesPresent = new int[genotypes.rows() + 1];
 		int called = 0;
-		for (int i = 0; i < genotypes[0].length; i++) { // individuals
+		for (int i = 0; i < genotypes.columns(); i++) { // individuals
 			int nrAllelesLeft = 2;
-			for (int j = 0; j < genotypes.length; j++) { // alleles
+			for (int j = 0; j < genotypes.rows(); j++) { // alleles
 				if (!genotypeMissing[i]) {
+					double gji = genotypes.getQuick(j, i);
 					called += 2;
-					if (genotypes[j][i] == 2d) {
+					if (gji == 2d) {
 						nrAllelesPresent[j + 1] += 2;
 						nrAllelesLeft -= 2;
-					} else if (genotypes[j][i] == 1d) {
+					} else if (gji == 1d) {
 						nrAllelesPresent[j + 1] += 1;
 						nrAllelesLeft -= 1;
 					}
@@ -374,28 +378,28 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		}
 
 		// merge with covariate matrix, and remove missing genotypes
-		int nrAlleles = tmpgenotypes.length;
-		int nrCovariates = covariates[0].length;
+		int nrAlleles = tmpgenotypes.rows();
+		int nrCovariates = covariates.columns();
 		double[] outputdiseaseStatus = new double[nrsamples - nrWithMissingGenotypes];
-		double[][] outputmatrixwgenotypes = new double[nrsamples - nrWithMissingGenotypes][nrAlleles + nrCovariates + 1];
+		DoubleMatrix2D outputmatrixwgenotypes = new DenseDoubleMatrix2D(nrsamples - nrWithMissingGenotypes, nrAlleles + nrCovariates + 1);
 
 		int ctr = 0;
 
-		for (int i = 0; i < covariates.length; i++) {
+		for (int i = 0; i < covariates.rows(); i++) {
 			if (!genotypeMissing[i]) {
 
 				// add the intercept
-				outputmatrixwgenotypes[ctr][0] = 1;
+				outputmatrixwgenotypes.setQuick(ctr, 0, 1);
 
 				// copy the genotypes
-				for (int a = 0; a < tmpgenotypes.length; a++) {
-					double tmp = tmpgenotypes[a][i];
-					outputmatrixwgenotypes[ctr][a + 1] = tmp;
+				for (int a = 0; a < tmpgenotypes.rows(); a++) {
+					double tmp = tmpgenotypes.getQuick(a, i);
+					outputmatrixwgenotypes.setQuick(ctr, a + 1, tmp);
 				}
 
 				// copy the covariates
-				for (int a = 0; a < covariates[0].length; a++) {
-					outputmatrixwgenotypes[ctr][nrAlleles + a + 1] = covariates[i][a];
+				for (int a = 0; a < covariates.columns(); a++) {
+					outputmatrixwgenotypes.setQuick(ctr, nrAlleles + a + 1, covariates.getQuick(i, a));
 				}
 				outputdiseaseStatus[ctr] = diseaseStatus[i];
 				ctr++;
@@ -408,10 +412,13 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				new Pair<>(maf, (double) called / 2));
 	}
 
-	private double[][] prepareDosageMatrix(boolean[] includeGenotype, double[][] dosages, double[][] covariates, ArrayList<double[][]> conditional) {
+	private DoubleMatrix2D prepareDosageMatrix(boolean[] includeGenotype,
+											   DoubleMatrix2D dosages,
+											   DoubleMatrix2D covariates,
+											   ArrayList<DoubleMatrix2D> conditional) {
 
 		int nrSamples = 0;
-		for (int i = 0; i < dosages.length; i++) {
+		for (int i = 0; i < dosages.rows(); i++) {
 			if (includeGenotype[i]) {
 				nrSamples++;
 			}
@@ -420,57 +427,56 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		int extraAlleles = 0;
 		for (int i = 0; i < conditional.size(); i++) {
-			double[][] data = conditional.get(i);
-			extraAlleles += data[0].length;
+			DoubleMatrix2D data = conditional.get(i);
+			extraAlleles += data.columns();
 		}
 
-		double[][] matrix = new double[nrSamples][dosages[0].length + covariates[0].length + extraAlleles + offset];
+		DoubleMatrix2D matrix = new DenseDoubleMatrix2D(nrSamples, dosages.columns() + covariates.columns() + extraAlleles + offset);
 
-		int nrGenotypeSamples = dosages.length;
+		int nrGenotypeSamples = dosages.rows();
 
 		// copy conditional alleles
 		int addedAlleles = 0;
 		for (int z = 0; z < conditional.size(); z++) {
-			double[][] data = conditional.get(z);
+			DoubleMatrix2D data = conditional.get(z);
 			int ctr = 0;
 			for (int i = 0; i < nrGenotypeSamples; i++) {
 				if (includeGenotype[i]) {
-					for (int j = 0; j < data[0].length; j++) {
-						matrix[ctr][offset + addedAlleles + j] = data[i][j];
+					for (int j = 0; j < data.columns(); j++) {
+						matrix.setQuick(ctr, offset + addedAlleles + j, data.getQuick(i, j));
 					}
 					ctr++;
 				}
 			}
-			addedAlleles += data[0].length;
+			addedAlleles += data.columns();
 		}
 
 		int ctr = 0;
-		int nrAlleles = dosages[0].length;
+		int nrAlleles = dosages.columns();
 		for (int i = 0; i < nrGenotypeSamples; i++) {
 			if (includeGenotype[i]) {
-				matrix[ctr][0] = 1; // intercept
+				matrix.setQuick(ctr, 0, 1); // intercept
 
 				for (int j = 0; j < nrAlleles; j++) {
-					matrix[ctr][j + extraAlleles + offset] = dosages[i][j];
+					matrix.setQuick(ctr, j + extraAlleles + offset, dosages.getQuick(i, j));
 				}
 
-				for (int j = 0; j < covariates[ctr].length; j++) {
-					matrix[ctr][j + extraAlleles + offset + nrAlleles] = covariates[ctr][j];
+				for (int j = 0; j < covariates.columns(); j++) {
+					matrix.setQuick(ctr, j + extraAlleles + offset + nrAlleles, covariates.getQuick(ctr, j));
 				}
-
 				ctr++;
 			}
 		}
 		return matrix;
 	}
 
-	private AssociationResult pruneAndTest(double[][] x,
+	private AssociationResult pruneAndTest(DoubleMatrix2D x,
 										   double[] y,
 										   int nrAlleles,
 										   int alleleOffset,
 										   VCFVariant variant,
 										   double maf) throws REXPMismatchException, REngineException, IOException {
-		Pair<double[][], boolean[]> pruned = removeCollinearVariables(x);
+		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X
 
@@ -482,7 +488,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		// index new position in X
 		int nrRemaining = 0;
 		int[] alleleIndex = new int[nrAlleles - 1];
-		boolean[] colsToRemove = new boolean[x[0].length];
+		boolean[] colsToRemove = new boolean[x.columns()];
 		for (int i = 0; i < alleleIndex.length; i++) {
 			alleleIndex[i] = -1;
 		}
@@ -507,7 +513,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		SNPFeature snp = new SNPFeature(Chromosome.parseChr(variant.getChr()), variant.getPos(), variant.getPos());
 		snp.setName(variant.getId());
 		result.setSnp(snp);
-		result.setN(x.length);
+		result.setN(x.rows());
 		result.setMaf(maf);
 
 		Double imputationqualityscore = variant.getImputationQualityScore();
@@ -559,10 +565,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //
 //				} else {
 
-			LogisticRegression reg = new LogisticRegression();
+			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 			LogisticRegressionResult resultX = reg.univariate(y, x);
 			double devx = resultX.getDeviance();
-			double[][] covarsOnly = removeGenotypes(x, colsToRemove);
+			DoubleMatrix2D covarsOnly = removeGenotypes(x, colsToRemove);
 			LogisticRegressionResult resultCovars = reg.univariate(y, covarsOnly);
 			double devnull = resultCovars.getDeviance();
 			double[] betasmlelr = new double[nrRemaining];
@@ -592,7 +598,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 
 			double deltaDeviance = devnull - devx;
-			int df = x[0].length - covarsOnly[0].length;
+			int df = x.columns() - covarsOnly.columns();
 			double p = ChiSquare.getP(df, deltaDeviance);
 //				log10p = Math.abs((-Math.log10(p)));
 

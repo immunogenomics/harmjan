@@ -1,5 +1,7 @@
 package nl.harmjanwestra.gwas;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
@@ -190,16 +192,16 @@ public class LRTest {
 			System.out.println("Problem with matching samples...");
 		} else {
 			double[] finalDiseaseStatus = new double[sampleToIntGenotypes.size()];
-			double[][] finalCovariates = new double[sampleToIntGenotypes.size()][covariates.columns()];
+			DoubleMatrix2D finalCovariates = new DenseDoubleMatrix2D(sampleToIntGenotypes.size(), covariates.columns());
 
 			TextFile sampleListOut = new TextFile(options.getOutputdir() + "samplelist.txt", TextFile.W);
 			System.out.println(options.getOutputdir() + "samplelist.txt");
-			for (int i = 0; i < finalCovariates.length; i++) {
+			for (int i = 0; i < finalCovariates.rows(); i++) {
 				sampleListOut.writeln(samplesIntersect.get(i));
 			}
 			sampleListOut.close();
 
-			System.out.println("Final covariate array size: " + finalCovariates.length);
+			System.out.println("Final covariate array size: " + finalCovariates.rows());
 			System.out.println("Final disease status array size: " + finalDiseaseStatus.length);
 
 			// reorder the covariates to match the genotyped samples
@@ -243,7 +245,7 @@ public class LRTest {
 
 					}
 					for (int col = 0; col < covariates.columns(); col++) {
-						finalCovariates[id][col] = covariates.getElement(sid, col);
+						finalCovariates.setQuick(id, col, covariates.getElement(sid, col));
 					}
 					nrTotal++;
 				}
@@ -260,8 +262,8 @@ public class LRTest {
 
 			// keep a list of genotypes to condition on
 			int iter = 0;
-			ArrayList<Triple<double[][], boolean[], Integer>> conditional = new ArrayList<>();
-			ArrayList<double[][]> conditionalDosages = new ArrayList<>();
+			ArrayList<Triple<DoubleMatrix2D, boolean[], Integer>> conditional = new ArrayList<>();
+			ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
 			ArrayList<String> conditionalVariantIds = new ArrayList<String>();
 			AssociationFile associationFile = new AssociationFile();
 			String header = associationFile.getHeader();
@@ -305,11 +307,11 @@ public class LRTest {
 				highestLog10P = 0;
 				highestLog10PProbs = 0;
 
-				for (Triple<double[][], boolean[], Integer> c : conditional) {
-					alleleOffsetGenotypes += c.getLeft().length;
+				for (Triple<DoubleMatrix2D, boolean[], Integer> c : conditional) {
+					alleleOffsetGenotypes += c.getLeft().rows();
 				}
-				for (double[][] c : conditionalDosages) {
-					alleleOffsetDosages += c[0].length;
+				for (DoubleMatrix2D c : conditionalDosages) {
+					alleleOffsetDosages += c.columns();
 				}
 
 
@@ -469,14 +471,14 @@ public class LRTest {
 							System.out.println("Variant found: " + variantFeature.getName() + " iter: " + iterForVariant + " next: " + nextIter);
 
 							if (iterForVariant != null && iterForVariant <= nextIter) {
-								Triple<double[][], boolean[], Integer> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
+								Triple<DoubleMatrix2D, boolean[], Integer> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
 										genotypesWithCovariatesAndDiseaseStatus,
-										variant.getGenotypeAlleles(),
+										variant.getGenotypeAllelesAsMatrix2D(),
 										variant.getAlleles().length,
-										finalCovariates.length);
+										finalCovariates.rows());
 								conditional.add(unfilteredGenotypeData);
 
-								double[][] dosages = variant.getImputedDosages();
+								DoubleMatrix2D dosages = variant.getImputedDosagesAsMatrix2D();
 								conditionalDosages.add(dosages);
 								conditionalVariantIds.add(variant.getId());
 							}
@@ -484,15 +486,15 @@ public class LRTest {
 					}
 				} else if (currentLowestVariant != null) {
 					VCFVariant variant = currentLowestVariant;
-					Triple<double[][], boolean[], Integer> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
+					Triple<DoubleMatrix2D, boolean[], Integer> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
 							genotypesWithCovariatesAndDiseaseStatus,
-							variant.getGenotypeAlleles(),
+							variant.getGenotypeAllelesAsMatrix2D(),
 							variant.getAlleles().length,
-							finalCovariates.length);
+							finalCovariates.rows());
 					conditional.add(unfilteredGenotypeData);
 
 
-					double[][] dosages = variant.getImputedDosages();
+					DoubleMatrix2D dosages = variant.getImputedDosagesAsMatrix2D();
 					conditional.add(unfilteredGenotypeData);
 					conditionalDosages.add(dosages);
 					conditionalVariantIds.add(variant.getId());

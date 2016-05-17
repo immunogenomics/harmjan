@@ -5,8 +5,8 @@ package nl.harmjanwestra.utilities.math;
  * Derived from Scott. A. Czepiel's implementation (http://czep.net/)
  */
 
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.jet.stat.Gamma;
 import umcg.genetica.math.stats.ChiSquare;
 

@@ -240,13 +240,13 @@ public class VCFMerger {
 	This merges samples from two VCF files if there are variants that are overlapping. Non-overlapping variants are excluded.
 	 */
 	public void mergeAndIntersect(boolean linux,
-	                              int chrint,
-	                              String vcfsort,
-	                              String refVCF,
-	                              String testVCF,
-	                              String matchedPanelsOut,
-	                              boolean keepoverlapping,
-	                              String separator) throws IOException {
+								  int chrint,
+								  String vcfsort,
+								  String refVCF,
+								  String testVCF,
+								  String matchedPanelsOut,
+								  boolean keepoverlapping,
+								  String separator) throws IOException {
 		Chromosome chr = Chromosome.parseChr("" + chrint);
 
 		mergeAndIntersectVCFVariants(
@@ -269,13 +269,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-	                                          String testVCF,
-	                                          String vcf1out,
-	                                          String vcf2out,
-	                                          String vcfmergedout,
-	                                          String separatorInMergedFile,
-	                                          String logoutfile,
-	                                          boolean keepNonOverlapping) throws IOException {
+											  String testVCF,
+											  String vcf1out,
+											  String vcf2out,
+											  String vcfmergedout,
+											  String separatorInMergedFile,
+											  String logoutfile,
+											  boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -571,7 +571,7 @@ public class VCFMerger {
 	Utility function to mergecheese two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-	                                           String separatorInMergedFile) {
+											   String separatorInMergedFile) {
 
 
 		String[] refAlleles = refVariant.getAlleles();
@@ -954,6 +954,7 @@ public class VCFMerger {
 
 
 		// get a list of variants and their R-squared values
+		int[] variantsPerBatch = new int[nrBatches];
 		for (int batch = 0; batch < nrBatches; batch++) {
 			String batchvcfName = dirInPrefix + batch + ".vcf.gz";
 			if (Gpio.exists(batchvcfName)) {
@@ -962,6 +963,8 @@ public class VCFMerger {
 //				String[] elems = tf.readLineElems(TextFile.tab);
 				String ln = tf.readLine();
 				System.out.println("reading: " + batchvcfName);
+
+				HashMap<String, ArrayList<Double>> allVariantsLocal = new HashMap<String, ArrayList<Double>>();
 
 				while (ln != null) {
 					if (ln.startsWith("#")) {
@@ -981,8 +984,12 @@ public class VCFMerger {
 						if (varsToTest == null || varsToTest.contains(variantSelect)) {
 							//	String infoStr = elems[7];
 							ArrayList<Double> rsquareds = allVariants.get(variant);
+							ArrayList<Double> rsquaredLocal = allVariantsLocal.get(variant);
 							if (rsquareds == null) {
 								rsquareds = new ArrayList<Double>();
+							}
+							if (rsquaredLocal == null) {
+								rsquaredLocal = new ArrayList<Double>();
 							}
 							String[] infoElems = elems[7].split(";");
 							for (String s : infoElems) {
@@ -990,14 +997,20 @@ public class VCFMerger {
 									String[] rsquaredElems = s.split("=");
 									Double d = Double.parseDouble(rsquaredElems[1]);
 									rsquareds.add(d);
+									rsquaredLocal.add(d);
 								}
 							}
 							allVariants.put(variant, rsquareds);
+							allVariantsLocal.put(variant, rsquaredLocal);
 						}
 					}
 					ln = tf.readLine();
 				}
-				System.out.println(allVariants.size() + " variants found...");
+				System.out.println(allVariants.size() + " variants found... " + allVariantsLocal.size() + " in this file");
+				if (allVariants.size() != allVariantsLocal.size()) {
+					System.out.println("ERROR: number of variants differs! :( ");
+					System.exit(-1);
+				}
 				tf.close();
 			} else {
 				System.out.println("Could not find: " + batchvcfName);
@@ -1024,6 +1037,7 @@ public class VCFMerger {
 					ctr++;
 				} else {
 					System.out.println(s + " may have duplicates? " + d.size() + " variants found, expected: " + nrBatches);
+					System.exit(-1);
 				}
 			}
 
@@ -1135,7 +1149,7 @@ public class VCFMerger {
 	}
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-	                                           boolean linux, String vcfsort) throws IOException {
+											   boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants
