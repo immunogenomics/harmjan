@@ -16,7 +16,6 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 	private ArrayList<VCFGenotypeFilter> genotypeFilters;
 	TextFile tf = null;
 	VCFVariant next = null;
-	String nextLn = null;
 
 	public VCFGenotypeData(TextFile tf, HashSet<String> excludeTheseSamples, ArrayList<VCFGenotypeFilter> genotypeFilters) throws IOException {
 		this.tf = tf;
@@ -65,7 +64,6 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 
 		if (ln != null) {
 			next = new VCFVariant(ln);
-			nextLn = ln;
 		} else {
 			next = null;
 		}
@@ -104,10 +102,8 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 			String ln = tf.readLine();
 			if (ln != null) {
 				next = new VCFVariant(ln, genotypeFilters, true);
-				nextLn = ln;
 			} else {
 				next = null;
-				nextLn = null;
 			}
 
 		} catch (IOException ex) {
@@ -132,10 +128,8 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 			String ln = tf.readLine();
 			if (ln != null) {
 				next = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
-				nextLn = ln;
 			} else {
 				next = null;
-				nextLn = null;
 			}
 
 		} catch (IOException ex) {
@@ -151,10 +145,8 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 			String ln = tf.readLine();
 			if (ln != null) {
 				next = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
-				nextLn = ln;
 			} else {
 				next = null;
-				nextLn = null;
 			}
 
 		} catch (IOException ex) {
@@ -163,7 +155,5 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 		return current;
 	}
 
-	public String getNextLn() {
-		return nextLn;
-	}
+
 }

@@ -225,9 +225,20 @@ public class VCFVariant {
 										allelicDepth = new ShortMatrix2D(alleles.length, nrSamples);
 									}
 
+//									try {
 									for (int g = 0; g < adElems.length; g++) {
 										allelicDepth.setQuick(g, indPos, Short.parseShort(adElems[g]));
 									}
+//									} catch (ArrayIndexOutOfBoundsException e) {
+//										e.printStackTrace();
+//
+//
+////										System.out.println("Error with: " + ln);
+//
+//										System.out.println();
+//										System.out.println(adElems.length + "\t" + alleles.length + "\t" + nrSamples + "\t" + Strings.concat(alleles, Strings.comma));
+//										System.exit(-1);
+//									}
 
 								} catch (NumberFormatException e) {
 
@@ -311,6 +322,7 @@ public class VCFVariant {
 							for (int i = 0; i < alternateAlleles.length; i++) {
 								alleles[1 + i] = new String(alternateAlleles[i]).intern();
 							}
+//							System.out.println(id + "\t" + Strings.concat(alleles, Strings.comma));
 							nrAllelesObserved = new int[alternateAlleles.length + 1];
 							break;
 						case 5:
@@ -498,27 +510,27 @@ public class VCFVariant {
 
 
 	//???
-//	public double[][] getDosages() {
-//		int nrAlleles = getAlleles().length;
-//		double[][] output = new double[genotypeAlleles.columns()][nrAlleles - 1]; // allow for multiple alleles
-//		for (int i = 0; i < output.length; i++) {
-//			for (int j = 0; j < genotypeAlleles.rows(); j++) {
-//				int a = (int) genotypeAlleles.getQuick(j, i);
-//				if (a == -1) {
-//					// missing genotype
-//					output[i][0] = Double.NaN;
-//				} else if (a > 0) {
-//					if (a > 0) {
-//						a -= 1;
-//					}
-//					output[i][a]++;
-//				}
-//
-//			}
-//		}
-//
-//		return output;
-//	}
+	public double[][] getDosages() {
+		int nrAlleles = getAlleles().length;
+		double[][] output = new double[genotypeAlleles.columns()][nrAlleles - 1]; // allow for multiple alleles
+		for (int i = 0; i < output.length; i++) {
+			for (int j = 0; j < genotypeAlleles.rows(); j++) {
+				int a = (int) genotypeAlleles.getQuick(j, i);
+				if (a == -1) {
+					// missing genotype
+					output[i][0] = Double.NaN;
+				} else if (a > 0) {
+					if (a > 0) {
+						a -= 1;
+					}
+					output[i][a]++;
+				}
+
+			}
+		}
+
+		return output;
+	}
 
 	public String allelesAsString() {
 		return Strings.concat(alleles, Pattern.compile("/"));

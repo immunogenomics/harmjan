@@ -5,6 +5,7 @@ import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.math.stats.Regression;
 import umcg.genetica.text.Strings;
 
 import java.io.File;
@@ -156,17 +157,13 @@ public class VCFCorrelator {
 		HashMap<String, VCFVariant> variantMap = new HashMap<String, VCFVariant>();
 		int ctr1 = 0;
 		while (data1.hasNext()) {
-			VCFVariant var = data1.nextLoadHeader();
+			VCFVariant var = data1.next();
 			Chromosome chr = Chromosome.parseChr(var.getChr());
 
 			if (!chr.equals(Chromosome.X)) {
 				String varStr = var.toString();
 				if (varsToTest == null || varsToTest.contains(varStr)) {
-					String varln = data1.getNextLn();
-					if (varln != null) {
-						var.parseGenotypes(varln, VCFVariant.PARSE.ALL);
-						variantMap.put(var.toString(), var);
-					}
+					variantMap.put(var.toString(), var);
 				}
 			}
 			ctr1++;
@@ -243,6 +240,13 @@ public class VCFCorrelator {
 							double[] y = toArr(data.getRight(), a);
 
 							double r = JSci.maths.ArrayMath.correlation(x, y);
+
+							// calculate betas
+
+							double[] coeff = Regression.getLinearRegressionCoefficients(x, y);
+							double beta = coeff[0];
+							double se = coeff[2];
+
 							var1.recalculateMAFAndCallRate();
 							var2.recalculateMAFAndCallRate();
 
@@ -250,10 +254,10 @@ public class VCFCorrelator {
 							String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 
 							if (Double.isNaN(r)) {
-								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
+								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
 							} else {
 								double rsq = r * r;
-								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
+								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + beta + "\t" + se + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
 							}
 							tfot.writeln(ln);
 							writtenVariants.add(varStr);
