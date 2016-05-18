@@ -118,19 +118,18 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				return null;
 			}
 		} else {
-			DoubleMatrix2D probs = variant.getGenotypeProbabiliesAsMatrix2D(); // [probs][inds]
+
 			int nrAlleles = variant.getAlleles().length;
 			double[] y = genotypedata.getRight();
 			DoubleMatrix2D x = genotypedata.getLeft();
 
 			AssociationResult result = null;
-			if (probs == null) {
+			if (!variant.hasImputationDosages()) {
 				result = pruneAndTest(x, y, nrAlleles, alleleOffsetGenotypes, variant, maf);
 			} else {
 				// recode to dosages
-				DoubleMatrix2D dosageMatWrapper = variant.getImputedDosagesAsMatrix2D();
 				DoubleMatrix2D dosageMat = prepareDosageMatrix(genotypesWithCovariatesAndDiseaseStatus,
-						dosageMatWrapper,
+						variant.getImputedDosagesAsMatrix2D(),
 						finalCovariates,
 						conditionalDosages);
 				result = pruneAndTest(dosageMat, y, nrAlleles, alleleOffsetDosages, variant, maf);

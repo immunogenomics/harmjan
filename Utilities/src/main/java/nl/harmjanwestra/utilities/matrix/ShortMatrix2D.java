@@ -23,7 +23,6 @@ public class ShortMatrix2D extends AbstractMatrix2D {
 		this.rows = rows;
 		this.columns = columns;
 		this.matrix = new short[rows * columns];
-		System.out.println(this.matrix.length +" short matrix");
 	}
 
 	public short getQuick(int i, int j) {

@@ -23,8 +23,16 @@ public class ConvertCorrelationFileToVCF {
 //			output = "/Data/tmp/2016-05-04/T1D-HRC-accurracy-stats.vcf.gz";
 //			c.run(input, output);
 
-			String input = "/Data/tmp/2016-05-04/T1D-eur-merged.txt";
-			String output = "/Data/tmp/2016-05-04/T1D-EUR-accurracy-stats.vcf.gz";
+			String input = "/Data/tmp/2016-05-18/T1D-COSMO-merged.txt";
+			String output = "/Data/tmp/2016-05-18/T1D-COSMO-merged.vcf.gz";
+			c.run(input, output);
+
+			input = "/Data/tmp/2016-05-18/T1D-EUR-merged.txt";
+			output = "/Data/tmp/2016-05-18/T1D-EUR-merged.vcf.gz";
+			c.run(input, output);
+
+			input = "/Data/tmp/2016-05-18/T1D-HRC-COSMO-merged.txt";
+			output = "/Data/tmp/2016-05-18/T1D-HRC-COSMO-merged.vcf.gz";
 			c.run(input, output);
 
 		} catch (IOException e) {

@@ -209,14 +209,14 @@ public class VCFCorrelator {
 //					}
 
 					double[][] gprobs1 = null;
-					if (var1.hasImputationProbs()) {
+					if (var1.hasImputationDosages()) {
 						gprobs1 = var1.getImputedDosages();
 					} else {
 						gprobs1 = var1.getDosages();
 					}
 
 					double[][] gprobs2 = null;
-					if (var2.hasImputationProbs()) {
+					if (var2.hasImputationDosages()) {
 						gprobs2 = var2.getImputedDosages(); // format [samples][alleles]
 					} else {
 						gprobs2 = var2.getDosages();

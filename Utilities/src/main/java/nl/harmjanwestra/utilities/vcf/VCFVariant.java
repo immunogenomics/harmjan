@@ -27,9 +27,10 @@ public class VCFVariant {
 	private final HashMap<String, String> info = new HashMap<String, String>();
 	private ArrayList<VCFGenotypeFilter> filters;
 	private ByteMatrix2D genotypeAlleles; // format [alleles][individuals] (save some memory by making only two individual-sized arrays)
+	private DoubleMatrix2D imputedDosages; // format [alleles][individuals] (save some memory by making only two individual-sized arrays)
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
-	private DoubleMatrix2D genotypeProbabilies;
+//	private DoubleMatrix2D genotypeProbabilies;
 
 	private short[] genotypeQuals;
 	private short[] approximateDepth;
@@ -88,6 +89,20 @@ public class VCFVariant {
 		parse(ln, p);
 	}
 
+	public VCFVariant(String chr, Integer pos, String id, String alleleStr, String info, ByteMatrix2D alleles, DoubleMatrix2D dosages) {
+		this.chr = new String(chr).intern();
+		this.pos = pos;
+		this.id = id;
+		String[] allelesElems = alleleStr.split(",");
+		this.alleles = allelesElems;
+		parseInfoString(info);
+		this.genotypeAlleles = alleles;
+		this.imputedDosages = dosages;
+
+		recalculateMAFAndCallRate();
+
+	}
+
 	public short[][] getAllelicDepth() {
 		return allelicDepth.toArray();
 	}
@@ -130,6 +145,8 @@ public class VCFVariant {
 				genotypeAlleles = new ByteMatrix2D(2, nrSamples);
 				approximateDepth = new short[nrSamples];
 				genotypeQuals = new short[nrSamples];
+
+				DenseDoubleMatrix2D genotypeProbabilies = null;
 
 				for (int t = 9; t < nrTokens; t++) {
 					String token = tokenArr[t];
@@ -271,6 +288,26 @@ public class VCFVariant {
 					}
 				}
 
+				if (genotypeProbabilies != null) {
+					int nrAlleles = alleles.length;
+					imputedDosages = new DenseDoubleMatrix2D(genotypeProbabilies.columns(), nrAlleles - 1);
+					for (int i = 0; i < genotypeProbabilies.columns(); i++) {
+						int alctr = 0;
+						for (int a1 = 0; a1 < nrAlleles; a1++) {
+							for (int a2 = a1; a2 < nrAlleles; a2++) {
+								double dosageval = genotypeProbabilies.getQuick(alctr, i);
+								if (a1 > 0) {
+									imputedDosages.setQuick(i, a1 - 1, imputedDosages.getQuick(i, a1 - 1) + dosageval);
+								}
+								if (a2 > 0) {
+									imputedDosages.setQuick(i, a2 - 1, imputedDosages.getQuick(i, a2 - 1) + dosageval);
+								}
+								alctr++;
+							}
+						}
+					}
+				}
+
 				if (filters != null) {
 					for (VCFGenotypeFilter filter : filters) {
 						filter.filter(this);
@@ -338,20 +375,7 @@ public class VCFVariant {
 							break;
 						case 7:
 							String infoStr = token;
-							String[] infoElems = Strings.semicolon.split(infoStr);
-
-							if (!infoStr.equals(".")) {
-								for (int e = 0; e < infoElems.length; e++) {
-									String[] infoElemElems = Strings.equalssign.split(infoElems[e]);
-									String id = new String(infoElemElems[0]).intern();
-									if (infoElemElems.length >= 2) {
-										String val = new String(infoElemElems[1]).intern();
-										info.put(id, val);
-									} else {
-										info.put(id, null);
-									}
-								}
-							}
+							parseInfoString(infoStr);
 							break;
 						case 8:
 							String[] format = Strings.colon.split(token);
@@ -392,6 +416,23 @@ public class VCFVariant {
 			}
 		}
 
+	}
+
+	private void parseInfoString(String infoStr) {
+		String[] infoElems = Strings.semicolon.split(infoStr);
+
+		if (!infoStr.equals(".")) {
+			for (int e = 0; e < infoElems.length; e++) {
+				String[] infoElemElems = Strings.equalssign.split(infoElems[e]);
+				String id = new String(infoElemElems[0]).intern();
+				if (infoElemElems.length >= 2) {
+					String val = new String(infoElemElems[1]).intern();
+					info.put(id, val);
+				} else {
+					info.put(id, null);
+				}
+			}
+		}
 	}
 
 	public boolean isMonomorphic() {
@@ -655,16 +696,16 @@ public class VCFVariant {
 		return genotypeDosages;
 	}
 
-	public double[][] getGenotypeProbabilies() {
-		return genotypeProbabilies.toArray();
-	}
+//	public double[][] getGenotypeProbabilies() {
+//		return genotypeProbabilies.toArray();
+//	}
 
 	public HashMap<String, String> getInfo() {
 		return info;
 	}
 
-	public boolean hasImputationProbs() {
-		return genotypeProbabilies != null;
+	public boolean hasImputationDosages() {
+		return imputedDosages != null;
 	}
 
 	public void recalculateMAFAndCallRate() {
@@ -735,13 +776,10 @@ public class VCFVariant {
 			if (genotypeAlleles.getQuick(0, i) != -1) {
 				nrAllelesObserved[genotypeAlleles.getQuick(0, i)]++;
 				nrAllelesObserved[genotypeAlleles.getQuick(1, i)]++;
-
 			}
-
 		}
 
 		callrate = (double) nrCalled / nrIndividuals;
-
 
 		int totalAllelesObs = nrCalled * 2;
 
@@ -777,7 +815,6 @@ public class VCFVariant {
 				minorAllele = alleles[0];
 			}
 		}
-
 
 		calculateHWEP();
 
@@ -859,15 +896,24 @@ public class VCFVariant {
 			return ".";
 		} else {
 			Set<String> keys = info.keySet();
-			String[] infoStr = new String[keys.size()];
-			int keyctr = 0;
+			String infoStr = "";
 			for (String key : keys) {
 				Object infoObj = info.get(key);
-				infoStr[keyctr] = infoObj.toString();
-				keyctr++;
+				if (infoObj == null) {
+					if (infoStr.length() == 0) {
+						infoStr += key;
+					} else {
+						infoStr += ";" + key;
+					}
+				} else {
+					if (infoStr.length() == 0) {
+						infoStr += key + "=" + infoObj.toString();
+					} else {
+						infoStr += ";" + key + "=" + infoObj.toString();
+					}
+				}
 			}
-			String output = Strings.concat(infoStr, Strings.semicolon);
-			return output;
+			return infoStr;
 		}
 	}
 
@@ -958,39 +1004,21 @@ public class VCFVariant {
 		return genotypeAlleles;
 	}
 
-	public DoubleMatrix2D getGenotypeProbabiliesAsMatrix2D() {
-		return genotypeProbabilies;
-	}
-
 	public DoubleMatrix2D getImputedDosagesAsMatrix2D() {
+		// parse genotype probs
 		int nrAlleles = getAlleles().length;
 		DoubleMatrix2D dosages = null;
-		if (genotypeProbabilies == null) {
+		if (imputedDosages == null) {
 			dosages = new DenseDoubleMatrix2D(genotypeAlleles.columns(), nrAlleles - 1);
 			for (int i = 0; i < genotypeAlleles.columns(); i++) {
 				for (int j = 0; j < genotypeAlleles.rows(); j++) {
 					dosages.setQuick(i, 0, genotypeAlleles.getQuick(j, i));
 				}
 			}
+			return dosages;
 		} else {
-			dosages = new DenseDoubleMatrix2D(genotypeProbabilies.columns(), nrAlleles - 1);
-			for (int i = 0; i < genotypeProbabilies.columns(); i++) {
-				int alctr = 0;
-				for (int a1 = 0; a1 < nrAlleles; a1++) {
-					for (int a2 = a1; a2 < nrAlleles; a2++) {
-						double dosageval = genotypeProbabilies.getQuick(alctr, i);
-						if (a1 > 0) {
-							dosages.setQuick(i, a1 - 1, dosages.getQuick(i, a1 - 1) + dosageval);
-						}
-						if (a2 > 0) {
-							dosages.setQuick(i, a2 - 1, dosages.getQuick(i, a2 - 1) + dosageval);
-						}
-						alctr++;
-					}
-				}
-			}
+			return imputedDosages;
 		}
-		return dosages;
 	}
 
 	public enum PARSE {
