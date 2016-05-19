@@ -15,18 +15,19 @@ import java.util.ArrayList;
 public class VCFGenotypeDataBinary extends BinaryFile {
 
 	private String[] sampleNames;
+	private boolean isPhased;
 
 	public VCFGenotypeDataBinary(String loc, boolean mode) throws IOException {
 		super(loc, mode);
 		if (mode == BinaryFile.R) {
-			readSamples();
+			readHeader();
 		}
 	}
 
 	public VCFGenotypeDataBinary(String loc, boolean mode, int buffersize) throws IOException {
 		super(loc, mode, buffersize);
 		if (mode == BinaryFile.R) {
-			readSamples();
+			readHeader();
 		}
 	}
 
@@ -110,28 +111,33 @@ public class VCFGenotypeDataBinary extends BinaryFile {
 		}
 	}
 
-
-	public void writeSamples(ArrayList<String> samples) throws IOException {
-		writeSamples(samples.toArray(new String[0]));
+	public void setIsPhased(boolean b) {
+		isPhased = b;
 	}
 
-	public void writeSamples(String[] samples) throws IOException {
+	public void writeHeader(ArrayList<String> samples) throws IOException {
+		writeHeader(samples.toArray(new String[0]));
+	}
+
+	public void writeHeader(String[] samples) throws IOException {
+		this.os.writeByte(1);
+		this.os.writeBoolean(isPhased);
 		this.os.writeInt(samples.length);
 		for (int s = 0; s < samples.length; s++) {
 			this.os.writeChars(samples[s]);
 		}
 	}
 
-	public void readSamples() throws IOException {
+	public void readHeader() throws IOException {
+		byte magic = this.is.readByte();
+		isPhased = this.is.readBoolean();
 		Integer nrSamples = this.is.readInt();
 		this.sampleNames = new String[nrSamples];
 		for (int s = 0; s < nrSamples; s++) {
 			String sampleName = this.is.readUTF();
 			sampleNames[s] = sampleName;
 		}
-
 	}
-
 
 	public void write(String ln) throws IOException {
 		if (!ln.startsWith("#")) {

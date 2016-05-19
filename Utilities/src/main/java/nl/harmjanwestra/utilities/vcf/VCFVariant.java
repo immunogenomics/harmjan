@@ -665,8 +665,11 @@ public class VCFVariant {
 		builder.append(alleles[0]);
 		builder.append("\t");
 		builder.append(Strings.concat(alleles, Strings.comma, 1, alleles.length));
-		builder.append("\t.\t.\t.\tGT");
+		builder.append("\t.\t.\t").append(getInfoString()).append("\tGT");
 
+		if (hasImputationDosages()) {
+			builder.append(":DS");
+		}
 
 		for (int i = 0; i < genotypeAlleles.columns(); i++) {
 			byte a1 = genotypeAlleles.getQuick(0, i);
@@ -681,6 +684,19 @@ public class VCFVariant {
 			}
 			builder.append("\t");
 			builder.append(al1).append(separator).append(al2);
+			if (hasImputationDosages()) {
+
+				// samples x alleles
+				builder.append(":");
+				for (int a = 0; a < imputedDosages.columns(); a++) {
+					if (a == 0) {
+						builder.append(imputedDosages.getQuick(i, a));
+					} else {
+						builder.append(",").append(imputedDosages.getQuick(i, a));
+					}
+				}
+
+			}
 
 		}
 		return builder.toString();

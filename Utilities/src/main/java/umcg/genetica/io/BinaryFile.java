@@ -32,6 +32,7 @@ public class BinaryFile {
 		if (writeable) {
 			is = null;
 			if (loc.endsWith(".gz")) {
+				GZIPOutputStream gos = new GZIPOutputStream(new FileOutputStream(loc), 32 * 1024);
 				os = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(loc), 32 * 1024));
 			} else {
 				os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(loc), 32 * 1024));
