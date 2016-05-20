@@ -72,7 +72,7 @@ public class ScatterplotPanel extends Panel {
 					dataRange = new Range(dataRange.getMinX(),
 							dataRange.getMinY(),
 							dataRange.getMaxX(),
-							r.getMaxX());
+							r.getMaxY());
 				}
 				if (r.getMinX() < dataRange.getMinX()) {
 					dataRange = new Range(r.getMinX(),
@@ -80,7 +80,7 @@ public class ScatterplotPanel extends Panel {
 							dataRange.getMaxX(),
 							dataRange.getMaxY());
 				}
-				if (r.getMinY() > dataRange.getMinY()) {
+				if (r.getMinY() < dataRange.getMinY()) {
 					dataRange = new Range(dataRange.getMinX(),
 							r.getMinY(),
 							dataRange.getMaxX(),

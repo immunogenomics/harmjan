@@ -239,28 +239,31 @@ public class VCFCorrelator {
 							double[] x = toArr(data.getLeft(), a);
 							double[] y = toArr(data.getRight(), a);
 
-							double r = JSci.maths.ArrayMath.correlation(x, y);
+							if(x.length > 0 && y.length > 0){
+								double r = JSci.maths.ArrayMath.correlation(x, y);
 
-							// calculate betas
+								// calculate betas
 
-							double[] coeff = Regression.getLinearRegressionCoefficients(x, y);
-							double beta = coeff[0];
-							double se = coeff[2];
+								double[] coeff = Regression.getLinearRegressionCoefficients(x, y);
+								double beta = coeff[0];
+								double se = coeff[2];
 
-							var1.recalculateMAFAndCallRate();
-							var2.recalculateMAFAndCallRate();
+								var1.recalculateMAFAndCallRate();
+								var2.recalculateMAFAndCallRate();
 
-							String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
-							String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
+								String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
+								String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 
-							if (Double.isNaN(r)) {
-								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
-							} else {
-								double rsq = r * r;
-								ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + beta + "\t" + se + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
+								if (Double.isNaN(r)) {
+									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
+								} else {
+									double rsq = r * r;
+									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + beta + "\t" + se + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
+								}
+								tfot.writeln(ln);
+								writtenVariants.add(varStr);
 							}
-							tfot.writeln(ln);
-							writtenVariants.add(varStr);
+
 						}
 					} else {
 						// ?
