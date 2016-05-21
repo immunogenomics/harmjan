@@ -1037,6 +1037,10 @@ public class VCFVariant {
 		}
 	}
 
+	public ByteMatrix2D getGenotypeAllelesAsByteMatrix2D() {
+		return genotypeAlleles;
+	}
+
 	public enum PARSE {
 		HEADER,
 		GENOTYPES,

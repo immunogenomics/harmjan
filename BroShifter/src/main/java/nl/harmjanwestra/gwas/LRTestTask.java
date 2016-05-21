@@ -100,6 +100,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		Pair<Double, Double> summary = recodeGenotypes.getRight();
 
 		double maf = summary.getLeft();
+		double hwep = calculateHWEP(variant.getGenotypeAllelesAsByteMatrix2D(), finalDiseaseStatus, variant.getAlleles().length);
+
+
 		if (maf < options.getMafthresholdD()) {
 			if (iter == 0) {
 //								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
@@ -298,8 +301,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		int nrWithMissingGenotypes = genotypeData.getRight();
 		boolean[] genotypeMissing = genotypeData.getMiddle();
 		DoubleMatrix2D genotypes = genotypeData.getLeft();
-
-
 		DoubleMatrix2D tmpgenotypes = genotypes;
 
 		if (!conditional.isEmpty()) {
@@ -386,7 +387,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		for (int i = 0; i < covariates.rows(); i++) {
 			if (!genotypeMissing[i]) {
-
 				// add the intercept
 				outputmatrixwgenotypes.setQuick(ctr, 0, 1);
 
@@ -402,13 +402,75 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				}
 				outputdiseaseStatus[ctr] = diseaseStatus[i];
 				ctr++;
-
 			}
 		}
 
 		return new Pair<>(
 				new Pair<>(outputmatrixwgenotypes, outputdiseaseStatus),
 				new Pair<>(maf, (double) called / 2));
+	}
+
+	private double calculateHWEP(ByteMatrix2D genotypeAlleles, double[] diseaseStatus, int nrAlleles) {
+
+		int nrCombinations = (nrAlleles * (nrAlleles + 1)) / 2;
+		int[] obs = new int[nrCombinations];
+		int[] nrHomozygous = new int[nrAlleles];
+		int nrCalled = 0;
+		int[][] index = new int[nrAlleles][nrAlleles];
+
+		int ctr = 0;
+		for (int i = 0; i < nrAlleles; i++) {
+			for (int j = i; j < nrAlleles; j++) {
+				index[i][j] = ctr;
+				index[j][i] = ctr;
+				ctr++;
+			}
+		}
+
+		// count the homozygous
+		for (int i = 0; i < genotypeAlleles.columns(); i++) {
+			byte a1 = genotypeAlleles.getQuick(0, i);
+			if (a1 != -1) {
+				byte a2 = genotypeAlleles.getQuick(1, i);
+				if(diseaseStatus[i] == 1){ // controls
+					if (a1 == a2) {
+						nrHomozygous[a1]++;
+					}
+
+					int id = index[a1][a2];
+					obs[id]++;
+					nrCalled++;
+				}
+
+			}
+		}
+
+		double[] freqs = new double[nrAlleles];
+		for (int i = 0; i < nrAlleles; i++) {
+			freqs[i] = Math.sqrt((double) nrHomozygous[i] / nrCalled);
+		}
+
+		ctr = 0;
+		double chisq = 0;
+		for (int i = 0; i < nrAlleles; i++) {
+			for (int j = i; j < nrAlleles; j++) {
+				double expectedFreq;
+				if (i == j) {
+					expectedFreq = (freqs[i] * freqs[i]) * nrCalled; // homozygote freq
+				} else {
+					expectedFreq = (2 * (freqs[i] * freqs[j])) * nrCalled; // heterozygote freq
+				}
+				double observedFreq = obs[ctr];
+				double oe = (observedFreq - expectedFreq);
+				if (oe > 0 && expectedFreq > 0) {
+					chisq += ((oe * oe) / expectedFreq);
+				}
+				ctr++;
+			}
+		}
+
+		int df = (nrCombinations - nrAlleles);
+		return umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
 	}
 
 	private DoubleMatrix2D prepareDosageMatrix(boolean[] includeGenotype,
