@@ -3,6 +3,7 @@ package nl.harmjanwestra.vcfutils.plots;
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.BoxPlotPanel;
+import nl.harmjanwestra.utilities.graphics.panels.HistogramPanel;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.util.Primitives;
@@ -15,7 +16,7 @@ import java.util.HashSet;
 /**
  * Created by hwestra on 5/18/16.
  */
-public class Plotter {
+public class PlotterAccuracy {
 
 
 	// id	allele1	allele2	maf	callrate	allele21	allele22	maf 	cr	df	nrsamples	r	rsq	beta	se	impqual0	impqual1
@@ -41,7 +42,7 @@ public class Plotter {
 	boolean onlyIc = false;
 
 	public static void main(String[] args) {
-		Plotter p = new Plotter();
+		PlotterAccuracy p = new PlotterAccuracy();
 		try {
 			p.plotCorr();
 		} catch (IOException e) {
@@ -95,13 +96,15 @@ public class Plotter {
 
 	public void plotCorr() throws IOException, DocumentException {
 		String[] files = new String[]{
-				"D:\\tmp\\2016-05-19\\T1D\\T1D-EUR-merged.txt",
-				"D:\\tmp\\2016-05-19\\T1D\\T1D-COSMO-merged.txt",
-				"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-merged.txt"
+				"/Data/tmp/2016-05-20/T1D/T1D-EUR-merged.txt",
+				"/Data/tmp/2016-05-20/T1D/T1D-COSMO-merged.txt",
+				"/Data/tmp/2016-05-20/T1D/T1D-HRC-COSMO-merged.txt"
 		};
+		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO"};
+		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
 
 		String[] files2 = new String[]{
-				"D:\\tmp\\2016-05-19\\ImmunoChipGenotyped.txt"
+				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
 		};
 //		files = new String[]{
 ////				"D:\\tmp\\2016-05-19\\T1D\\T1D-EUR-merged.txt",
@@ -109,8 +112,8 @@ public class Plotter {
 ////				"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-merged.txt"
 //		};
 
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO"};
-		String variantsOnIC = "D:\\tmp\\2016-05-19\\T1D\\T1D-recode-stats.vcf.gz";
+
+
 
 		String out = "";
 
@@ -130,25 +133,25 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = false;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-rsquared-unfiltered.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-rsquared-unfiltered.png";
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-rsquared-unfiltered.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-rsquared-unfiltered.png";
 		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-rsquared-unfiltered.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-rsquared-unfiltered.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot4-betaVsImpQual-unfiltered.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot4-betaVsImpQual-unfiltered.png";
 		plot4(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot4-betaVsImpQual-imputedonly.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot4-betaVsImpQual-imputedonly.png";
 		plot4(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, true, variantHash);
 
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot4-CorrVsImpQual-unfiltered.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot4-CorrVsImpQual-unfiltered.png";
 		plot5(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot4-CorrVsImpQual-imputedonly.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot4-CorrVsImpQual-imputedonly.png";
 		plot5(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, true, variantHash);
 
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-immunochip.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-immunochip.png";
 		onlyIc = true;
 		plot2(files2, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 		onlyIc = false;
@@ -159,11 +162,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = false;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-rsquared-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-rsquared-noindels.png";
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-rsquared-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-rsquared-noindels.png";
 		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-rsquared-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-rsquared-noindels.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -171,11 +174,11 @@ public class Plotter {
 		requireabovemaf = true;
 		plotOnlyImputed = false;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-rsquared-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-rsquared-noindels-mafgt0.01.png";
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-rsquared-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-rsquared-noindels-mafgt0.01.png";
 		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-rsquared-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-rsquared-noindels-mafgt0.01.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -183,11 +186,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = false;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-rsquared-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-rsquared-noindels-maflt0.01.png";
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-rsquared-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-rsquared-noindels-maflt0.01.png";
 		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-rsquared-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-rsquared-noindels-maflt0.01.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = true;
@@ -195,11 +198,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = true;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-rsquared-imputedonly.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-rsquared-imputedonly.png";
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-rsquared-imputedonly.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-rsquared-imputedonly.png";
 		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-rsquared-imputedonly.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-rsquared-imputedonly.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -207,11 +210,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = true;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-rsquared-imputedonly-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-rsquared-imputedonly-noindels.png";
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-rsquared-imputedonly-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-rsquared-imputedonly-noindels.png";
 		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-rsquared-imputedonly-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-rsquared-imputedonly-noindels.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -219,11 +222,11 @@ public class Plotter {
 		requireabovemaf = true;
 		plotOnlyImputed = true;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-rsquared-imputedonly-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-rsquared-imputedonly-noindels-mafgt0.01.png";
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-rsquared-imputedonly-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-rsquared-imputedonly-noindels-mafgt0.01.png";
 		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-rsquared-imputedonly-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-rsquared-imputedonly-noindels-mafgt0.01.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -231,11 +234,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = true;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-rsquared-imputedonly-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-rsquared-imputedonly-noindels-maflt0.01.png";
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-rsquared-imputedonly-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-rsquared-imputedonly-noindels-maflt0.01.png";
 		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-rsquared-imputedonly-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-rsquared-imputedonly-noindels-maflt0.01.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		/// impquals
@@ -244,11 +247,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = false;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-impqual-unfiltered.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-impqual-unfiltered.png";
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-impqual-unfiltered.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-impqual-unfiltered.png";
 		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-impqual-unfiltered.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-impqual-unfiltered.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -256,11 +259,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = false;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-impqual-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-impqual-noindels.png";
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-impqual-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-impqual-noindels.png";
 		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-impqual-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-impqual-noindels.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -268,11 +271,11 @@ public class Plotter {
 		requireabovemaf = true;
 		plotOnlyImputed = false;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-impqual-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-impqual-noindels-mafgt0.01.png";
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-impqual-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-impqual-noindels-mafgt0.01.png";
 		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-impqual-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-impqual-noindels-mafgt0.01.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -280,11 +283,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = false;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-impqual-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-impqual-noindels-maflt0.01.png";
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-impqual-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-impqual-noindels-maflt0.01.png";
 		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-impqual-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-impqual-noindels-maflt0.01.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = true;
@@ -292,11 +295,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = true;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-impqual-imputedonly.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-impqual-imputedonly.png";
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-impqual-imputedonly.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-impqual-imputedonly.png";
 		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-impqual-imputedonly.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-impqual-imputedonly.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -304,11 +307,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = true;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-impqual-imputedonly-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-impqual-imputedonly-noindels.png";
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-impqual-imputedonly-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-impqual-imputedonly-noindels.png";
 		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-impqual-imputedonly-noindels.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-impqual-imputedonly-noindels.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -316,11 +319,11 @@ public class Plotter {
 		requireabovemaf = true;
 		plotOnlyImputed = true;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-impqual-imputedonly-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-impqual-imputedonly-noindels-mafgt0.01.png";
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-impqual-imputedonly-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-impqual-imputedonly-noindels-mafgt0.01.png";
 		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-impqual-imputedonly-noindels-mafgt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-impqual-imputedonly-noindels-mafgt0.01.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 		includeindels = false;
@@ -328,11 +331,11 @@ public class Plotter {
 		requireabovemaf = false;
 		plotOnlyImputed = true;
 		mafthreshold = 0.01;
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot1-impqual-imputedonly-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot1-impqual-imputedonly-noindels-maflt0.01.png";
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot2-impqual-imputedonly-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot2-impqual-imputedonly-noindels-maflt0.01.png";
 		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
-		out = "D:\\tmp\\2016-05-19\\plotsacc\\plot3-impqual-imputedonly-noindels-maflt0.01.png";
+		out = "/Data/tmp/2016-05-20/T1D/plotsacc/plot3-impqual-imputedonly-noindels-maflt0.01.png";
 		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash);
 
 //
@@ -383,12 +386,12 @@ public class Plotter {
 	}
 
 	public void plot1(String[] files, String[] labels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
@@ -472,16 +475,16 @@ public class Plotter {
 	}
 
 	public void plot2(String[] files, String[] datasetLabels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash
 	) throws IOException, DocumentException {
 		// plot 2: x-axis maf, y-axis correlation (boxplot)
 
-		String[] labels = new String[]{
+		String[] binLabels = new String[]{
 				"0 - 0.005",
 				"0.005 - 0.01",
 				"0.01 - 0.02",
@@ -523,6 +526,8 @@ public class Plotter {
 		};
 
 		double[][][] bins = new double[files.length][upperthreshold.length][];
+
+		double[][] binfreqs = new double[files.length][upperthreshold.length];
 
 		for (int i = 0; i < files.length; i++) {
 			int loaded = 0;
@@ -577,29 +582,40 @@ public class Plotter {
 			// convert to double[]
 			for (int bin = 0; bin < upperthreshold.length; bin++) {
 				ArrayList<Double> d = filebins.get(bin);
+				binfreqs[i][bin] = d.size();
 				double[] arr = Primitives.toPrimitiveArr(d.toArray(new Double[0]));
 				bins[i][bin] = arr;
 			}
 			System.out.println("Loaded: " + loaded + " from file: " + file);
 		}
 
-		Grid grid = new Grid(width, height, 1, 1, 100, 100);
+
+		Grid grid = new Grid(width * 2, height, 1, 2, 100, 100);
 		BoxPlotPanel panel = new BoxPlotPanel(1, 1);
 		panel.setData(bins);
 		panel.setDrawDataPoints(false);
 		panel.useTukeysDefault(true);
-		panel.setLabels(labels);
+		panel.setBinLabels(binLabels);
 		grid.addPanel(panel);
+
+		HistogramPanel panel2 = new HistogramPanel(1, 1);
+		panel2.setData(binfreqs);
+		panel2.setDatasetLabels(datasetLabels);
+		panel2.setBinLabels(binLabels);
+
+		grid.addPanel(panel2);
 		grid.draw(out);
+
+
 	}
 
 	public void plot3(String[] files, String[] datasetLabels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash) throws IOException, DocumentException {
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash) throws IOException, DocumentException {
 		//			// plot 3: maf vs maf
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {
@@ -655,12 +671,12 @@ public class Plotter {
 	}
 
 	public void plot4(String[] files, String[] datasetLabels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash) throws IOException, DocumentException {
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash) throws IOException, DocumentException {
 		//			// plot 3: impqual vs beta
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {
@@ -716,12 +732,12 @@ public class Plotter {
 	}
 
 	public void plot5(String[] files, String[] datasetLabels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash) throws IOException, DocumentException {
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash) throws IOException, DocumentException {
 		//			// plot 3: impqual vs beta
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {

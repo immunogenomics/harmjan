@@ -171,10 +171,10 @@ public class Harmonics {
 				distArr[1] = dists.getLeft();
 				distArr[2] = dists.getRight();
 
-				HistogramPanel.PLOTTYPE[] types = new HistogramPanel.PLOTTYPE[3];
-				types[0] = HistogramPanel.PLOTTYPE.BAR;
-				types[1] = HistogramPanel.PLOTTYPE.POLY;
-				types[2] = HistogramPanel.PLOTTYPE.POLY;
+				HistogramPanel.DATASETPLOTTYPE[] types = new HistogramPanel.DATASETPLOTTYPE[3];
+				types[0] = HistogramPanel.DATASETPLOTTYPE.BAR;
+				types[1] = HistogramPanel.DATASETPLOTTYPE.POLY;
+				types[2] = HistogramPanel.DATASETPLOTTYPE.POLY;
 
 //				String outfilename = plotOut + allSampleNames.get(i) + ".pdf";
 //				try {
@@ -197,7 +197,7 @@ public class Harmonics {
 
 				HistogramPanel histogram = new HistogramPanel(1, 1);
 				histogram.setData(distArr);
-				histogram.setPlotTypes(types);
+				histogram.setDatasetPlotTypes(types);
 
 				grid.addPanel(histogram, i + 1, 2);
 
@@ -223,12 +223,12 @@ public class Harmonics {
 
 				histogram2.setData(dataForHist);
 
-				HistogramPanel.PLOTTYPE[] types2 = new HistogramPanel.PLOTTYPE[4];
-				types2[0] = HistogramPanel.PLOTTYPE.BAR;
-				types2[1] = HistogramPanel.PLOTTYPE.BAR;
+				HistogramPanel.DATASETPLOTTYPE[] types2 = new HistogramPanel.DATASETPLOTTYPE[4];
+				types2[0] = HistogramPanel.DATASETPLOTTYPE.BAR;
+				types2[1] = HistogramPanel.DATASETPLOTTYPE.BAR;
 
-//				types2[2] = HistogramPanel.PLOTTYPE.POLY;
-//				types2[3] = HistogramPanel.PLOTTYPE.POLY;
+//				types2[2] = HistogramPanel.DATASETPLOTTYPE.POLY;
+//				types2[3] = HistogramPanel.DATASETPLOTTYPE.POLY;
 
 				gridHist.addPanel(histogram2, i, 0);
 			}
@@ -260,14 +260,14 @@ public class Harmonics {
 			distArr[1] = dists.getLeft();
 			distArr[2] = dists.getRight();
 
-			HistogramPanel.PLOTTYPE[] types = new HistogramPanel.PLOTTYPE[3];
-			types[0] = HistogramPanel.PLOTTYPE.BAR;
-			types[1] = HistogramPanel.PLOTTYPE.POLY;
-			types[2] = HistogramPanel.PLOTTYPE.POLY;
+			HistogramPanel.DATASETPLOTTYPE[] types = new HistogramPanel.DATASETPLOTTYPE[3];
+			types[0] = HistogramPanel.DATASETPLOTTYPE.BAR;
+			types[1] = HistogramPanel.DATASETPLOTTYPE.POLY;
+			types[2] = HistogramPanel.DATASETPLOTTYPE.POLY;
 
 			HistogramPanel histogram = new HistogramPanel(1, 1);
 			histogram.setData(distArr);
-			histogram.setPlotTypes(types);
+			histogram.setDatasetPlotTypes(types);
 
 			grid.addPanel(histogram, unstranded.length + 1, 2);
 
@@ -292,12 +292,12 @@ public class Harmonics {
 
 			histogram2.setData(dataForHist);
 
-			HistogramPanel.PLOTTYPE[] types2 = new HistogramPanel.PLOTTYPE[4];
-			types2[0] = HistogramPanel.PLOTTYPE.BAR;
-			types2[1] = HistogramPanel.PLOTTYPE.BAR;
+			HistogramPanel.DATASETPLOTTYPE[] types2 = new HistogramPanel.DATASETPLOTTYPE[4];
+			types2[0] = HistogramPanel.DATASETPLOTTYPE.BAR;
+			types2[1] = HistogramPanel.DATASETPLOTTYPE.BAR;
 
-//			types2[2] = HistogramPanel.PLOTTYPE.POLY;
-//			types2[3] = HistogramPanel.PLOTTYPE.POLY;
+//			types2[2] = HistogramPanel.DATASETPLOTTYPE.POLY;
+//			types2[3] = HistogramPanel.DATASETPLOTTYPE.POLY;
 
 			gridHist.addPanel(histogram2, unstranded.length, 0);
 

@@ -23,13 +23,13 @@ public class PlotTest {
 
 //		for (int i = 0; i < 3; i++) {
 //			double[][] data = new double[2][10];
-//			HistogramPanel.PLOTTYPE[] types = new HistogramPanel.PLOTTYPE[2];
+//			HistogramPanel.DATASETPLOTTYPE[] types = new HistogramPanel.DATASETPLOTTYPE[2];
 //
 //			for (int q = 0; q < data.length; q++) {
 //				if (q == 1) {
-//					types[q] = HistogramPanel.PLOTTYPE.POLY;
+//					types[q] = HistogramPanel.DATASETPLOTTYPE.POLY;
 //				} else {
-//					types[q] = HistogramPanel.PLOTTYPE.BAR;
+//					types[q] = HistogramPanel.DATASETPLOTTYPE.BAR;
 //				}
 //			}
 //
@@ -49,10 +49,10 @@ public class PlotTest {
 //			histogram.setMarginY(50);
 //
 //			if (i == 0) {
-//				histogram.setRange(new Range(-10, 0, 10, 20));
+//				histogram.setPlotRange(new Range(-10, 0, 10, 20));
 //			}
 //
-//			histogram.setPlotTypes(types);
+//			histogram.setDatasetPlotTypes(types);
 //
 //			grid.addPanel(histogram);
 //

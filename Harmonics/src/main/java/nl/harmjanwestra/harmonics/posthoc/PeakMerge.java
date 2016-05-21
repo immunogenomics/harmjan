@@ -1316,9 +1316,9 @@ x 14  stDevCoverageCoveredBases
 		BoxPlotPanel boxplotpanel = new BoxPlotPanel(1, 1);
 		Range r = new Range(0, 0, 0, 150);
 		boxplotpanel.setDrawDataPoints(false);
-		boxplotpanel.setLabels(sampleNames);
+		boxplotpanel.setBinLabels(sampleNames);
 		boxplotpanel.setOutputIQRS(outfilename + "-iqrs.txt");
-		boxplotpanel.setRange(r);
+		boxplotpanel.setPlotRange(r);
 		boxplotpanel.setData(convertIntMatToDouble(coverageDist));
 		grid.addPanel(boxplotpanel);
 		grid.draw(outfilename);
@@ -1363,8 +1363,8 @@ x 14  stDevCoverageCoveredBases
 		Range r = new Range(0, 0, 0, 1250);
 		boxplotpanel.setDrawDataPoints(false);
 		boxplotpanel.setUseMeanAndSd(true);
-		boxplotpanel.setLabels(sampleNames);
-		boxplotpanel.setRange(r);
+		boxplotpanel.setBinLabels(sampleNames);
+		boxplotpanel.setPlotRange(r);
 		boxplotpanel.setOutputIQRS(outfilename + "-iqrs.txt");
 		boxplotpanel.setData(convertFeaturesToDouble(features));
 		grid.addPanel(boxplotpanel);

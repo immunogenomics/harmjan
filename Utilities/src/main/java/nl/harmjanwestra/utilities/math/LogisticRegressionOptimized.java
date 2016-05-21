@@ -195,6 +195,22 @@ public class LogisticRegressionOptimized {
 		int kJMinusOne = (K * (J - 1));
 
 		// if this is the first iteration, initialize (and save some GC time in the following iterations)
+		if (pi != null) {
+			// check the size
+			if (pi.rows() != N || pi.columns() != J) {
+				pi = new DenseDoubleMatrix2D(N, J);
+			}
+			if (H.rows() != kJMinusOne || H.columns() != kJMinusOne) {
+				H = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);
+			}
+			if (g.length != kJMinusOne) {
+				g = new double[kJMinusOne];
+			}
+			if (numer.length != J) {
+				numer = new double[J];
+			}
+		}
+
 		if (pi == null) {
 			pi = new DenseDoubleMatrix2D(N, J);
 			H = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);

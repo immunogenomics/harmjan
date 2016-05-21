@@ -115,7 +115,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						+ "\t" + true;
 				return new Triple<>(output, null, null);
 			} else {
-				return null;
+				return new Triple<>(null, null, null);
 			}
 		} else {
 

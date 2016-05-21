@@ -401,9 +401,9 @@ public class FeatureCounts {
 		BoxPlotPanel boxplotpanel = new BoxPlotPanel(1, 1);
 		Range r = new Range(0, 0, 0, 300);
 		boxplotpanel.setDrawDataPoints(false);
-		boxplotpanel.setLabels(sampleNames);
+		boxplotpanel.setBinLabels(sampleNames);
 		boxplotpanel.setOutputIQRS(outfilename + "-iqrs.txt");
-		boxplotpanel.setRange(r);
+		boxplotpanel.setPlotRange(r);
 		boxplotpanel.setData(data);
 		grid.addPanel(boxplotpanel);
 		grid.draw(outfilename);

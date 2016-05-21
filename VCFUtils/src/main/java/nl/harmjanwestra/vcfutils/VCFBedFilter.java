@@ -135,11 +135,13 @@ public class VCFBedFilter {
 					vcfoutf.writeln(ln);
 				} else {
 
-					String[] elems = ln.split("\t");
+					String header = ln.substring(0,500);
+					String[] headerElems = header.split("\t");
+
 					Feature f = new Feature();
-					f.setChromosome(Chromosome.parseChr(elems[0]));
-					f.setStart(Integer.parseInt(elems[1]));
-					f.setStop(Integer.parseInt(elems[1]));
+					f.setChromosome(Chromosome.parseChr(headerElems[0]));
+					f.setStart(Integer.parseInt(headerElems[1]));
+					f.setStop(Integer.parseInt(headerElems[1]));
 					boolean overlap = false;
 					for (Feature region : set) {
 						if (f.overlaps(region)) {
@@ -152,7 +154,7 @@ public class VCFBedFilter {
 						vcfoutf.writeln(ln);
 						saved++;
 					} else {
-						vcfoutf2.writeln(Strings.concat(elems, Strings.tab, 0, 9));
+						vcfoutf2.writeln(Strings.concat(headerElems, Strings.tab, 0, 9));
 					}
 					parsed++;
 

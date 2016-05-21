@@ -21,11 +21,11 @@ import java.util.Arrays;
 public class BoxPlotPanel extends Panel {
 
 	private double[][][] data;
-	private Range range;
+	private Range plotRange;
 	private boolean drawDataPoints;
 	private boolean useMeanAndSd;
 	private String outputIQRS;
-	private String[] labels;
+	private String[] binLabels;
 	private boolean useTukeysDefault;
 
 	public BoxPlotPanel(int nrRows, int nrCols) {
@@ -36,13 +36,13 @@ public class BoxPlotPanel extends Panel {
 	public void draw(DefaultGraphics g) {
 
 		int nrDatasets = data.length;
-		int nrBins = data[0].length;
+		int nrBinClusters = data[0].length;
 
 		double[][][] iqrs = new double[data.length][data[0].length][0];
 		double max = -Double.MAX_VALUE;
 		double min = Double.MAX_VALUE;
 		for (int ds = 0; ds < nrDatasets; ds++) {
-			for (int bin = 0; bin < nrBins; bin++) {
+			for (int bin = 0; bin < nrBinClusters; bin++) {
 				iqrs[ds][bin] = collectStats(data[ds][bin]);
 				double localmin = iqrs[ds][bin][0];
 				double localmax = iqrs[ds][bin][4];
@@ -56,25 +56,22 @@ public class BoxPlotPanel extends Panel {
 			}
 		}
 
-
-		if (range == null) {
-			range = new Range(0, min, 0, max);
+		if (plotRange == null) {
+			plotRange = new Range(0, min, 0, max);
 		}
 
+		int nrPixelsMaxX = width - (2 * marginX);
+		int nrPixelsMaxY = height - (2 * marginY);
 
-		int pixelsY = height - (2 * marginY);
-		int pixelsX = width - (2 - marginX);
-
-
-		// plot the data
-		int marginBetweenBins = 20;
+//		if (plottype == PLOTTYPE.CLUSTERED) {
+		int marginBetweenBinClusters = 10;
 		int marginBetweenDatasets = 2;
 
-		int totalNrOfBins = nrDatasets * nrBins;
-		int spaceRequiredByBetweenDatasetMargins = (totalNrOfBins - 1) * marginBetweenDatasets;
-		int spaceRequiredByBetweenBinMargins = (nrBins - 1) * marginBetweenBins;
-		int totalSpaceLeftAfterRemovalOfBins = pixelsX - spaceRequiredByBetweenBinMargins - spaceRequiredByBetweenDatasetMargins;
-		int widthPerDatasetBin = totalSpaceLeftAfterRemovalOfBins / totalNrOfBins;
+		// calculate bar width
+		int widthPerBinCluster = ((nrPixelsMaxX) / nrBinClusters);
+		int widthPerBinClusterBin = widthPerBinCluster - marginBetweenBinClusters;
+		int widthPerDataset = (widthPerBinClusterBin / nrDatasets);
+		int widthPerDatasetBin = widthPerDataset - marginBetweenDatasets;
 
 		int starty = y0 + marginY;
 
@@ -91,26 +88,25 @@ public class BoxPlotPanel extends Panel {
 			}
 
 
-			for (int bin = 0; bin < nrBins; bin++) {
-				for (int ds = 0; ds < nrDatasets; ds++) {
-					int startX = x0 + marginX + (bin * marginBetweenBins) + (bin * nrDatasets * widthPerDatasetBin) + ((nrDatasets - 1) * marginBetweenDatasets);
-					startX += (ds * widthPerDatasetBin) + (ds * marginBetweenDatasets);
+			for (int binCluster = 0; binCluster < nrBinClusters; binCluster++) {
+				for (int dataset = 0; dataset < nrDatasets; dataset++) {
+					int startX = x0 + marginX + (binCluster * widthPerBinCluster) + (dataset * widthPerDataset);
 
 					// retrieve IQRS
-					double datamin = iqrs[ds][bin][0];
-					double dataq1 = iqrs[ds][bin][1];
-					double datamedian = iqrs[ds][bin][2];
-					double dataq3 = iqrs[ds][bin][3];
-					double datamax = iqrs[ds][bin][4];
-					double mean = iqrs[ds][bin][5];
-					double sd = iqrs[ds][bin][6];
+					double datamin = iqrs[dataset][binCluster][0];
+					double dataq1 = iqrs[dataset][binCluster][1];
+					double datamedian = iqrs[dataset][binCluster][2];
+					double dataq3 = iqrs[dataset][binCluster][3];
+					double datamax = iqrs[dataset][binCluster][4];
+					double mean = iqrs[dataset][binCluster][5];
+					double sd = iqrs[dataset][binCluster][6];
 
-					double[] datasetDataForBin = data[ds][bin];
+					double[] datasetDataForBin = data[dataset][binCluster];
 
 					if (datasetDataForBin.length > 2) {
 						if (drawDataPoints) {
 
-							Pair<double[][], double[]> densityData = determineDensity(datasetDataForBin, range);
+							Pair<double[][], double[]> densityData = determineDensity(datasetDataForBin, plotRange);
 
 							double[][] values = densityData.getLeft();
 							double[] frequencies = densityData.getRight();
@@ -121,18 +117,17 @@ public class BoxPlotPanel extends Panel {
 								for (int v = 0; v < dataInFreqBin.length; v++) {
 									double d = dataInFreqBin[v];
 
-									if (d > range.getMaxY()) {
-										d = range.getMaxY();
+									if (d > plotRange.getMaxY()) {
+										d = plotRange.getMaxY();
 									}
-									if (d < range.getMinY()) {
-										d = range.getMinY();
+									if (d < plotRange.getMinY()) {
+										d = plotRange.getMinY();
 									}
 
-									// determine where this point falls in the range
-									double yperc = range.getRelativePositionY(d);
-									int relY = (int) Math.ceil(yperc * pixelsY);
-
-									int plotY = starty + pixelsY - relY;
+									// determine where this point falls in the plotRange
+									double yperc = plotRange.getRelativePositionY(d);
+									int relY = (int) Math.ceil(yperc * nrPixelsMaxY);
+									int plotY = starty + nrPixelsMaxY - relY;
 
 									// add some jitter to the x-direction
 									// should be dependent on density
@@ -177,46 +172,53 @@ public class BoxPlotPanel extends Panel {
 								for (int i = 0; i < datasetDataForBin.length; i++) {
 									double d = datasetDataForBin[i];
 									if (d > iqrmax || d < iqrmin) {
-										double pos = range.getRelativePositionY(d);
-										int outlierY = (int) Math.ceil(pos * pixelsY);
-										int outlierYPx = starty + pixelsY - outlierY;
+										double pos = plotRange.getRelativePositionY(d);
+										int outlierY = (int) Math.ceil(pos * nrPixelsMaxY);
+										int outlierYPx = starty + nrPixelsMaxY - outlierY;
 										g2d.fillOval(startX + halfWidthOfDataset - 2, outlierYPx - 2, 4, 4);
 									}
 								}
 
-								g2d.setColor(theme.getColor(ds));
+								g2d.setColor(theme.getColor(dataset));
 
 								boolean clippingbottom = false;
 								boolean clippingtop = false;
 
-								if (iqrmin < range.getMinY()) {
-									iqrmin = range.getMinY();
+								if (iqrmin < plotRange.getMinY()) {
+									iqrmin = plotRange.getMinY();
 									clippingbottom = true;
 								}
 
-								if (iqrmax > range.getMaxY()) {
-									iqrmax = range.getMaxY();
+								if (iqrmax > plotRange.getMaxY()) {
+									iqrmax = plotRange.getMaxY();
 									clippingtop = true;
 								}
 
 
-								double iqrminy = range.getRelativePositionY(iqrmin);
-								double q1y = range.getRelativePositionY(dataq1);
-								double m2y = range.getRelativePositionY(datamedian);
-								double q3y = range.getRelativePositionY(dataq3);
-								double iqrmaxy = range.getRelativePositionY(iqrmax);
+								double iqrminy = plotRange.getRelativePositionY(iqrmin);
+								double q1y = plotRange.getRelativePositionY(dataq1);
+								double m2y = plotRange.getRelativePositionY(datamedian);
+								double q3y = plotRange.getRelativePositionY(dataq3);
+								double iqrmaxy = plotRange.getRelativePositionY(iqrmax);
+								double meany = plotRange.getRelativePositionY(mean);
 
-								int iqrMinYPx = (int) Math.ceil(iqrminy * pixelsY);
-								int q1yPx = (int) Math.ceil(q1y * pixelsY);
-								int m2yPx = (int) Math.ceil(m2y * pixelsY);
-								int q3yPx = (int) Math.ceil(q3y * pixelsY);
-								int iqrMaxYPx = (int) Math.ceil(iqrmaxy * pixelsY);
+								int iqrMinYPx = (int) Math.ceil(iqrminy * nrPixelsMaxY);
+								int q1yPx = (int) Math.ceil(q1y * nrPixelsMaxY);
+								int m2yPx = (int) Math.ceil(m2y * nrPixelsMaxY);
+								int q3yPx = (int) Math.ceil(q3y * nrPixelsMaxY);
+								int iqrMaxYPx = (int) Math.ceil(iqrmaxy * nrPixelsMaxY);
+								int meanYPx = (int) Math.ceil(meany * nrPixelsMaxY);
 
-								int plotYiqrMinY = starty + pixelsY - iqrMinYPx;
-								int plotYq1yPx = starty + pixelsY - q1yPx;
-								int plotYm2yPx = starty + pixelsY - m2yPx;
-								int plotYq3yPx = starty + pixelsY - q3yPx;
-								int plotYiqrMaxY = starty + pixelsY - iqrMaxYPx;
+								int plotYiqrMinY = starty + nrPixelsMaxY - iqrMinYPx;
+								int plotYq1yPx = starty + nrPixelsMaxY - q1yPx;
+								int plotYm2yPx = starty + nrPixelsMaxY - m2yPx;
+								int plotYq3yPx = starty + nrPixelsMaxY - q3yPx;
+								int plotYiqrMaxY = starty + nrPixelsMaxY - iqrMaxYPx;
+								int plotYmeanY = starty + nrPixelsMaxY - meanYPx;
+
+
+								// draw the box
+								g2d.fillRect(startX, plotYq3yPx, widthPerDatasetBin, plotYq1yPx - plotYq3yPx);
 
 //								if (clippingbottom) {
 //									g2d.setStroke(theme.getStrokeDashed());
@@ -238,13 +240,15 @@ public class BoxPlotPanel extends Panel {
 								g2d.drawLine(startX + halfWidthOfDataset, plotYq3yPx, startX + halfWidthOfDataset, plotYiqrMaxY);
 
 								// draw the median
+								g2d.setColor(Color.white);
 								g2d.drawLine(startX, plotYm2yPx, startX + widthPerDatasetBin, plotYm2yPx);
-								g2d.fillOval(startX + halfWidthOfDataset - 3, plotYm2yPx - 3, 6, 6);
+								// draw the mean
 
+								g2d.setColor(Color.white);
+								g2d.fillOval(startX + halfWidthOfDataset - 5, plotYmeanY - 5, 10, 10);
+								g2d.setColor(theme.getColor(dataset));
+								g2d.fillOval(startX + halfWidthOfDataset - 3, plotYmeanY - 3, 6, 6);
 
-								// draw a lightgrey box
-
-								g2d.drawRect(startX, plotYq3yPx, widthPerDatasetBin, plotYq1yPx - plotYq3yPx);
 
 								// System.out.println(startX + "\t" + plotYq1y + "\t" + widthPerDataset + "\t" + (plotYq1y - plotYq3y));
 
@@ -253,43 +257,43 @@ public class BoxPlotPanel extends Panel {
 								boolean clippingbottom = false;
 								boolean clippingtop = false;
 
-								if (datamin < range.getMinY()) {
-									datamin = range.getMinY();
+								if (datamin < plotRange.getMinY()) {
+									datamin = plotRange.getMinY();
 									clippingbottom = true;
 								}
 
-								if (datamax > range.getMaxY()) {
-									datamax = range.getMaxY();
+								if (datamax > plotRange.getMaxY()) {
+									datamax = plotRange.getMaxY();
 									clippingtop = true;
 								}
 
-								double m1y = range.getRelativePositionY(datamin);
-								double q1y = range.getRelativePositionY(dataq1);
-								double m2y = range.getRelativePositionY(datamax);
-								double q3y = range.getRelativePositionY(dataq3);
+								double m1y = plotRange.getRelativePositionY(datamin);
+								double q1y = plotRange.getRelativePositionY(dataq1);
+								double m2y = plotRange.getRelativePositionY(datamax);
+								double q3y = plotRange.getRelativePositionY(dataq3);
 
-								int m1yPx = (int) Math.ceil(m1y * pixelsY);
-								int q1yPx = (int) Math.ceil(q1y * pixelsY);
+								int m1yPx = (int) Math.ceil(m1y * nrPixelsMaxY);
+								int q1yPx = (int) Math.ceil(q1y * nrPixelsMaxY);
 
 
-								int m2yPx = (int) Math.ceil(m2y * pixelsY);
-								int q3yPx = (int) Math.ceil(q3y * pixelsY);
+								int m2yPx = (int) Math.ceil(m2y * nrPixelsMaxY);
+								int q3yPx = (int) Math.ceil(q3y * nrPixelsMaxY);
 
-								int plotYm1y = starty + pixelsY - m1yPx;
-								int plotYq1y = starty + pixelsY - q1yPx;
+								int plotYm1y = starty + nrPixelsMaxY - m1yPx;
+								int plotYq1y = starty + nrPixelsMaxY - q1yPx;
 
 
 								if (clippingbottom) {
 									g2d.setStroke(theme.getStrokeDashed());
-									g2d.drawLine(startX + halfWidthOfDataset - halfWidthOfDataset, starty + pixelsY, startX + halfWidthOfDataset + halfWidthOfDataset, starty + pixelsY);
+									g2d.drawLine(startX + halfWidthOfDataset - halfWidthOfDataset, starty + nrPixelsMaxY, startX + halfWidthOfDataset + halfWidthOfDataset, starty + nrPixelsMaxY);
 								}
 								g2d.setStroke(theme.getStroke());
 
 								g2d.drawLine(startX + halfWidthOfDataset, plotYm1y, startX + halfWidthOfDataset, plotYq1y);
 
 
-								int plotYm2y = starty + pixelsY - m2yPx;
-								int plotYq3y = starty + pixelsY - q3yPx;
+								int plotYm2y = starty + nrPixelsMaxY - m2yPx;
+								int plotYq3y = starty + nrPixelsMaxY - q3yPx;
 
 								if (clippingtop) {
 									g2d.setStroke(theme.getStrokeDashed());
@@ -300,10 +304,10 @@ public class BoxPlotPanel extends Panel {
 
 
 								// draw the median
-								double q2y = range.getRelativePositionY(datamedian);
-								int q2yPx = (int) Math.ceil(q2y * pixelsY);
+								double q2y = plotRange.getRelativePositionY(datamedian);
+								int q2yPx = (int) Math.ceil(q2y * nrPixelsMaxY);
 								g2d.setColor(theme.getColor(1));
-								int plotYq2y = starty + pixelsY - q2yPx;
+								int plotYq2y = starty + nrPixelsMaxY - q2yPx;
 								g2d.fillOval(startX + halfWidthOfDataset - 3, plotYq2y - 3, 6, 6);
 								g2d.setColor(theme.getColor(0));
 
@@ -336,7 +340,7 @@ public class BoxPlotPanel extends Panel {
 		g2d.setColor(theme.getDarkGrey());
 
 		// plot y-axis
-		double tickUnitY = range.getRangeY() / 10;
+		double tickUnitY = plotRange.getRangeY() / 10;
 		String pattern = "###,###,###.##";
 		DecimalFormat decimalFormat = new DecimalFormat(pattern);
 
@@ -345,11 +349,12 @@ public class BoxPlotPanel extends Panel {
 
 		int xPosYAxis = x0 + marginX - 10;
 		int yPosYAxis = y0 + marginY;
+		int pixelsY = height - (2 * marginY);
 		g2d.drawLine(xPosYAxis, yPosYAxis, xPosYAxis, yPosYAxis + pixelsY);
 
 		int maxlen = 0;
-		for (double y = range.getMinY(); y < range.getMaxY() + (tickUnitY / 2); y += tickUnitY) {
-			double yPerc = range.getRelativePositionY(y);
+		for (double y = plotRange.getMinY(); y < plotRange.getMaxY() + (tickUnitY / 2); y += tickUnitY) {
+			double yPerc = plotRange.getRelativePositionY(y);
 
 			int ypos = y0 + marginY + (int) Math.ceil((1 - yPerc) * pixelsY);
 			int startx = xPosYAxis - 5;
@@ -368,33 +373,34 @@ public class BoxPlotPanel extends Panel {
 		// draw an x-axis
 
 		// plot x-axis
-		int yPosXAxis = y0 + marginY + pixelsY + 10;
 
+		int yPosXAxis = y0 + marginY + pixelsY + 10;
 		int xPosXAxis = x0 + marginX;
 		int nrPixelsX = width - (2 * marginX);
 		g2d.drawLine(xPosXAxis, yPosXAxis, xPosXAxis + nrPixelsX, yPosXAxis);
-		for (int bin = 0; bin < nrBins; bin++) {
-			int startX = x0 + marginX + (bin * marginBetweenBins) + (bin * nrDatasets * widthPerDatasetBin) + ((nrDatasets - 1) * marginBetweenDatasets);
+		for (int binCluster = 0; binCluster < nrBinClusters; binCluster++) {
 
-			int totalBinWidth = (nrDatasets * widthPerDatasetBin) + ((nrDatasets - 1) * marginBetweenDatasets);
+			int startX = x0 + marginX + (binCluster * widthPerBinCluster);
 
-			startX += totalBinWidth / 2;
+			int halfBinClusterWidth = widthPerBinCluster / 2;
+			startX += halfBinClusterWidth - marginBetweenBinClusters;
 			g2d.drawLine(startX, yPosXAxis, startX, yPosXAxis + 5);
 		}
 
-		if (labels != null) {
+		if (binLabels != null) {
 			g2d.setColor(theme.getDarkGrey());
 			g2d.setFont(theme.getSmallFont());
 			metrics = g2d.getFontMetrics(g2d.getFont());
 			int fontheight = metrics.getHeight();
 
 			int y = yPosXAxis + 5;
-			for (int bin = 0; bin < labels.length; bin++) {
-				int startX = x0 + marginX + (bin * marginBetweenBins) + (bin * nrDatasets * widthPerDatasetBin) + ((nrDatasets - 1) * marginBetweenDatasets);
-				int totalBinWidth = (nrDatasets * widthPerDatasetBin) + ((nrDatasets - 1) * marginBetweenDatasets);
-				startX += totalBinWidth / 2;
+			for (int binCluster = 0; binCluster < binLabels.length; binCluster++) {
+				int startX = x0 + marginX + (binCluster * widthPerBinCluster);
 
-				String str = labels[bin];
+				int halfBinClusterWidth = widthPerBinCluster / 2;
+				startX += halfBinClusterWidth - marginBetweenBinClusters;
+
+				String str = binLabels[binCluster];
 				int widthOfStr = metrics.stringWidth(str);
 				drawRotate(g2d, startX + (fontheight / 2), y + widthOfStr + 10, -90, str);
 			}
@@ -445,8 +451,8 @@ public class BoxPlotPanel extends Panel {
 		g2d.translate(-(float) x, -(float) y);
 	}
 
-	public void setRange(Range range) {
-		this.range = range;
+	public void setPlotRange(Range plotRange) {
+		this.plotRange = plotRange;
 	}
 
 	public void setData(double[][] data) {
@@ -533,8 +539,8 @@ public class BoxPlotPanel extends Panel {
 		this.outputIQRS = outputIQRS;
 	}
 
-	public void setLabels(String[] labels) {
-		this.labels = labels;
+	public void setBinLabels(String[] binLabels) {
+		this.binLabels = binLabels;
 	}
 
 	public void setData(double[][][] bins) {

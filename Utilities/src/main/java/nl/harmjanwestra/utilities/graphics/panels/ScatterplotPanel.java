@@ -2,6 +2,9 @@ package nl.harmjanwestra.utilities.graphics.panels;
 
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.Range;
+import umcg.genetica.containers.Pair;
+import umcg.genetica.math.stats.Correlation;
+import umcg.genetica.math.stats.Regression;
 
 import java.awt.*;
 import java.text.DecimalFormat;
@@ -18,6 +21,7 @@ public class ScatterplotPanel extends Panel {
 	private String xAxisLabel;
 	private String yAxisLabel;
 	private String[] datasetLabels;
+	private boolean plotLinearRegression = false;
 
 	public ScatterplotPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -201,6 +205,53 @@ public class ScatterplotPanel extends Panel {
 				} else {
 					// plot some markers somewhere?
 				}
+			}
+
+
+		}
+
+		if (plotLinearRegression) {
+			for (int i = 0; i < x.length; i++) {
+				g2d.setColor(theme.getColor(i));
+				double[] xval = x[i];
+				double[] yval = y[i];
+
+				Pair<double[], double[]> filtered = removeNulls(xval, yval);
+				xval = filtered.getLeft();
+				yval = filtered.getRight();
+
+				// y = a + bx
+				double[] params = Regression.getLinearRegressionCoefficients(xval, yval);
+				double beta = params[0];
+				double alpha = params[1];
+
+				double minX = dataRange.getMinX();
+				double maxX = dataRange.getMaxX();
+
+				double y1 = alpha + (minX * beta);
+				double y2 = alpha + (maxX * beta);
+
+
+				double x1perc = dataRange.getRelativePositionX(minX);
+				double y1perc = dataRange.getRelativePositionY(y1);
+				double x2perc = dataRange.getRelativePositionX(maxX);
+				double y2perc = dataRange.getRelativePositionY(y2);
+
+
+				int pixelX1 = x0 + marginX + (int) Math.ceil(nrPixelsMaxX * x1perc);
+				int pixelY1 = y0 + marginY + (int) Math.ceil(nrPixelsMaxY - (nrPixelsMaxY * y1perc));
+				int pixelX2 = x0 + marginX + (int) Math.ceil(nrPixelsMaxX * x2perc);
+				int pixelY2 = y0 + marginY + (int) Math.ceil(nrPixelsMaxY - (nrPixelsMaxY * y2perc));
+
+				g2d.drawLine(pixelX1, pixelY1, pixelX2, pixelY2);
+
+				// for shits and giggles, calculate the R-squared using the correlation coefficient
+				double corr = Correlation.correlate(xval, yval);
+				double rsq = corr * corr;
+
+				DecimalFormat format = new DecimalFormat("#.##");
+
+				g2d.drawString("" + format.format(rsq), pixelX2, pixelY2);
 
 			}
 		}
@@ -230,6 +281,32 @@ public class ScatterplotPanel extends Panel {
 		}
 
 
+	}
+
+	private Pair<double[], double[]> removeNulls(double[] xval, double[] yval) {
+		boolean[] isnull = new boolean[xval.length];
+		int ctrnotnull = 0;
+		for (int i = 0; i < xval.length; i++) {
+			if (Double.isNaN(xval[i]) || Double.isNaN(yval[i])) {
+				isnull[i] = true;
+			} else {
+				ctrnotnull++;
+			}
+		}
+
+		double[] outx = new double[ctrnotnull];
+		double[] outy = new double[ctrnotnull];
+		ctrnotnull = 0;
+		for (int i = 0; i < xval.length; i++) {
+			if (Double.isNaN(xval[i]) || Double.isNaN(yval[i])) {
+
+			} else {
+				outx[ctrnotnull] = xval[i];
+				outy[ctrnotnull] = yval[i];
+				ctrnotnull++;
+			}
+		}
+		return new Pair<double[], double[]>(outx, outy);
 	}
 
 
