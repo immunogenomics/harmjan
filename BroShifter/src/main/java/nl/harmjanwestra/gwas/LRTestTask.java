@@ -103,7 +103,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		double hwep = calculateHWEP(variant.getGenotypeAllelesAsByteMatrix2D(), finalDiseaseStatus, variant.getAlleles().length);
 
 
-		if (maf < options.getMafthresholdD()) {
+		if (maf < options.getMafthresholdD() && hwep < options.getHWEPThreshold()) {
 			if (iter == 0) {
 //								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
 				String output = variant.getId()

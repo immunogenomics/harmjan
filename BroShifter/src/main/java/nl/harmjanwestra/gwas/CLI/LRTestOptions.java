@@ -27,6 +27,20 @@ public class LRTestOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("maf")
+				.hasArg()
+				.desc("MAF threshold (default: 0.005)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("hwep")
+				.hasArg()
+				.desc("HWEP threshold (default: 10-5)")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("o")
 				.hasArg()
 				.desc("Output prefix")
@@ -112,6 +126,7 @@ public class LRTestOptions {
 	}
 
 	private String conditional;
+	private double HWEPThreshold = 10 - 5;
 
 	public String getConditional() {
 		return conditional;
@@ -170,6 +185,14 @@ public class LRTestOptions {
 			} else {
 				System.out.println("Please provide input: -c");
 				run = false;
+			}
+
+			if (cmd.hasOption("maf")) {
+				mafthresholdD = Double.parseDouble(cmd.getOptionValue("maf"));
+			}
+
+			if (cmd.hasOption("hwep")) {
+				HWEPThreshold = Double.parseDouble(cmd.getOptionValue("hwep"));
 			}
 
 			if (cmd.hasOption("conditional")) {
@@ -329,5 +352,9 @@ public class LRTestOptions {
 
 	public void setMaxIter(int maxIter) {
 		this.maxIter = maxIter;
+	}
+
+	public double getHWEPThreshold() {
+		return HWEPThreshold;
 	}
 }
