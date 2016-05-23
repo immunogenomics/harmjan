@@ -34,7 +34,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	private boolean[] genotypesWithCovariatesAndDiseaseStatus;
 	private double[] finalDiseaseStatus;
 	private DoubleMatrix2D finalCovariates;
-	private ArrayList<Triple<DoubleMatrix2D, boolean[], Integer>> conditional;
+	private ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional;
 	private ArrayList<DoubleMatrix2D> conditionalDosages;
 	private int alleleOffsetGenotypes;
 	private int alleleOffsetDosages;
@@ -51,7 +51,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	                  boolean[] genotypesWithCovariatesAndDiseaseStatus,
 	                  double[] finalDiseaseStatus,
 	                  DoubleMatrix2D finalCovariates,
-	                  ArrayList<Triple<DoubleMatrix2D, boolean[], Integer>> conditional,
+	                  ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
 	                  ArrayList<DoubleMatrix2D> conditionalDosages,
 	                  int alleleOffsetGenotypes,
 	                  int alleleOffsetDosages,
@@ -378,7 +378,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	// output format genotypes+covariates, matched disease status, maf, cr
 	private Pair<DoubleMatrix2D, double[]> prepareGenotypeMatrix(
 			Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> genotypeData,
-			ArrayList<Triple<DoubleMatrix2D, boolean[], Integer>> conditional,
+			ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
 			double[] diseaseStatus,
 			DoubleMatrix2D covariates,
 			int nrsamples) {
@@ -391,7 +391,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		if (!conditional.isEmpty()) {
 			// count extra columns from conditional genotypes
 			int extraAlleles = 0;
-			for (Triple<DoubleMatrix2D, boolean[], Integer> t : conditional) {
+			for (Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> t : conditional) {
 				DoubleMatrix2D data = t.getLeft();
 				int nrCols = data.rows();
 				extraAlleles += nrCols;
@@ -401,7 +401,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 			// copy the data to the new matrix
 			int ctr = 0;
-			for (Triple<DoubleMatrix2D, boolean[], Integer> t : conditional) {
+			for (Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> t : conditional) {
 				DoubleMatrix2D data = t.getLeft();
 				boolean[] missingGT = t.getMiddle();
 				int nrAllelesForSNP = data.rows();

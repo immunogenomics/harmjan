@@ -262,7 +262,7 @@ public class LRTest {
 
 			// keep a list of genotypes to condition on
 			int iter = 0;
-			ArrayList<Triple<DoubleMatrix2D, boolean[], Integer>> conditional = new ArrayList<>();
+			ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional = new ArrayList<>();
 			ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
 			ArrayList<String> conditionalVariantIds = new ArrayList<String>();
 			AssociationFile associationFile = new AssociationFile();
@@ -307,13 +307,12 @@ public class LRTest {
 				highestLog10P = 0;
 				highestLog10PProbs = 0;
 
-				for (Triple<DoubleMatrix2D, boolean[], Integer> c : conditional) {
+				for (Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> c : conditional) {
 					alleleOffsetGenotypes += c.getLeft().rows();
 				}
 				for (DoubleMatrix2D c : conditionalDosages) {
 					alleleOffsetDosages += c.columns();
 				}
-
 
 				String vcfLn = null;
 				TextFile vcfIn = null;
@@ -471,9 +470,10 @@ public class LRTest {
 							System.out.println("Variant found: " + variantFeature.getName() + " iter: " + iterForVariant + " next: " + nextIter);
 
 							if (iterForVariant != null && iterForVariant <= nextIter) {
-								Triple<DoubleMatrix2D, boolean[], Integer> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
+								Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
 										genotypesWithCovariatesAndDiseaseStatus,
 										variant.getGenotypeAllelesAsMatrix2D(),
+										finalDiseaseStatus,
 										variant.getAlleles().length,
 										finalCovariates.rows());
 								conditional.add(unfilteredGenotypeData);
@@ -486,9 +486,10 @@ public class LRTest {
 					}
 				} else if (currentLowestVariant != null) {
 					VCFVariant variant = currentLowestVariant;
-					Triple<DoubleMatrix2D, boolean[], Integer> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
+					Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
 							genotypesWithCovariatesAndDiseaseStatus,
 							variant.getGenotypeAllelesAsMatrix2D(),
+							finalDiseaseStatus,
 							variant.getAlleles().length,
 							finalCovariates.rows());
 					conditional.add(unfilteredGenotypeData);

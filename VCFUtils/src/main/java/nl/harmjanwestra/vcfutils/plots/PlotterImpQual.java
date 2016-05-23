@@ -26,7 +26,7 @@ public class PlotterImpQual {
 	int width = 640;
 	int height = 480;
 	boolean onlyIc = false;
-	boolean windows = true;
+	boolean windows = false;
 
 	public static void main(String[] args) {
 
@@ -44,19 +44,21 @@ public class PlotterImpQual {
 	public void run() throws IOException, DocumentException {
 
 		String[] files = new String[]{
-				"/Data/tmp/2016-05-20/T1D/T1D-EUR-merged.txt",
-				"/Data/tmp/2016-05-20/T1D/T1D-COSMO-merged.txt",
-				"/Data/tmp/2016-05-20/T1D/T1D-HRC-COSMO-merged.txt"
+				"/Data/tmp/2016-05-23/T1D-EUR-stats.vcf.gz",
+				"/Data/tmp/2016-05-23/T1D-COSMO-stats.vcf.gz",
+				"/Data/tmp/2016-05-23/T1D-HRC-COSMO.vcf.gz",
+				"/Data/tmp/2016-05-23/T1D-HRC-COSMO-w100kb.vcf.gz",
+				"/Data/tmp/2016-05-23/T1D-HRC-HRC-w100kb.vcf.gz"
 		};
 
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO"};
+		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-HRC-w100kb", "HRC-COSMO-w100kb"};
 		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
 
 		String[] files2 = new String[]{
 				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
 		};
-		String bedregions = "";
-		String outdir = "";
+		String bedregions = "/Data/tmp/2016-05-23/AllICLoci.bed";
+		String outdir = "/Data/tmp/2016-05-23/T1D-plotsImpQual/";
 
 		if (windows) {
 
@@ -112,7 +114,7 @@ public class PlotterImpQual {
 
 		out = outdir + "plot1-impqual-noindels.png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-noindels.png";
+		out = outdir + "plot2-impqual-noindels.pdf";
 		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 
@@ -121,7 +123,7 @@ public class PlotterImpQual {
 		requireabovemaf = true;
 		plotOnlyImputed = false;
 
-		out = outdir + "plot1-impqual-noindels-mafgt"+mafthreshold+".png";
+		out = outdir + "plot1-impqual-noindels-mafgt" + mafthreshold + ".png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 		out = outdir + "plot2-impqual-noindels-mafgt0.01.png";
 		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
@@ -131,7 +133,7 @@ public class PlotterImpQual {
 		requireabovemaf = false;
 		plotOnlyImputed = false;
 
-		out = outdir + "plot1-impqual-noindels-maflt"+mafthreshold+".png";
+		out = outdir + "plot1-impqual-noindels-maflt" + mafthreshold + ".png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 		out = outdir + "plot2-impqual-noindels-maflt0.01.png";
 		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
@@ -142,7 +144,7 @@ public class PlotterImpQual {
 		requireabovemaf = true;
 		plotOnlyImputed = false;
 
-		out = outdir + "plot1-impqual-withindels-mafgt"+mafthreshold+".png";
+		out = outdir + "plot1-impqual-withindels-mafgt" + mafthreshold + ".png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 		includeindels = true;
@@ -150,7 +152,7 @@ public class PlotterImpQual {
 		requireabovemaf = false;
 		plotOnlyImputed = false;
 
-		out = outdir + "plot1-impqual-withindels-maflt"+mafthreshold+".png";
+		out = outdir + "plot1-impqual-withindels-maflt" + mafthreshold + ".png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 
@@ -173,7 +175,7 @@ public class PlotterImpQual {
 
 		out = outdir + "plot1-impqual-imputedonly-noindels.png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly-noindels.png";
+		out = outdir + "plot2-impqual-imputedonly-noindels.pdf";
 		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 		includeindels = false;
@@ -181,7 +183,7 @@ public class PlotterImpQual {
 		requireabovemaf = true;
 		plotOnlyImputed = true;
 
-		out = outdir + "plot1-impqual-imputedonly-noindels-mafgt"+mafthreshold+".png";
+		out = outdir + "plot1-impqual-imputedonly-noindels-mafgt" + mafthreshold + ".png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 		out = outdir + "plot2-impqual-imputedonly-noindels-mafgt0.01.png";
 		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
@@ -191,7 +193,7 @@ public class PlotterImpQual {
 		requireabovemaf = false;
 		plotOnlyImputed = true;
 
-		out = outdir + "plot1-impqual-imputedonly-noindels-maflt"+mafthreshold+".png";
+		out = outdir + "plot1-impqual-imputedonly-noindels-maflt" + mafthreshold + ".png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 		out = outdir + "plot2-impqual-imputedonly-noindels-maflt0.01.png";
 		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
@@ -292,13 +294,13 @@ public class PlotterImpQual {
 
 
 	public void plot1(String[] files, String[] labels, String out,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
@@ -373,7 +375,7 @@ public class PlotterImpQual {
 		Grid grid = new Grid(width, height, 1, 1, 100, 100);
 		ScatterplotPanel panel = new ScatterplotPanel(1, 1);
 		panel.setData(x, y);
-		Range range = new Range(0,0,maxSize,1);
+		Range range = new Range(0, 0, maxSize, 1);
 		panel.setDataRange(range);
 		range.roundX();
 
@@ -383,13 +385,13 @@ public class PlotterImpQual {
 	}
 
 	public void plot2(String[] files, String[] datasetLabels, String out,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 2: x-axis maf, y-axis correlation (boxplot)
 
