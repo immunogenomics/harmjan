@@ -344,7 +344,7 @@ public class BoxPlotPanel extends Panel {
 		String pattern = "###,###,###.##";
 		DecimalFormat decimalFormat = new DecimalFormat(pattern);
 
-		g2d.setFont(theme.getSmallFont());
+		g2d.setFont(theme.getMediumFont());
 		FontMetrics metrics = g2d.getFontMetrics(g2d.getFont());
 
 		int xPosYAxis = x0 + marginX - 10;
@@ -365,7 +365,7 @@ public class BoxPlotPanel extends Panel {
 			if (adv > maxlen) {
 				maxlen = adv;
 			}
-			g2d.setFont(theme.getSmallFont());
+			g2d.setFont(theme.getMediumFont());
 			g2d.drawString(formattedStr, startx - adv - 5, ypos);
 		}
 
@@ -389,7 +389,7 @@ public class BoxPlotPanel extends Panel {
 
 		if (binLabels != null) {
 			g2d.setColor(theme.getDarkGrey());
-			g2d.setFont(theme.getSmallFont());
+			g2d.setFont(theme.getMediumFont());
 			metrics = g2d.getFontMetrics(g2d.getFont());
 			int fontheight = metrics.getHeight();
 

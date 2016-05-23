@@ -32,22 +32,6 @@ public class Range {
 
 	}
 
-	public double getMaxX() {
-		return maxX;
-	}
-
-	public double getMaxY() {
-		return maxY;
-	}
-
-	public double getMinX() {
-		return minX;
-	}
-
-	public double getMinY() {
-		return minY;
-	}
-
 	public Range(double[][] histogram) {
 
 		minX = 0;
@@ -65,33 +49,27 @@ public class Range {
 		}
 	}
 
+	public double getMaxX() {
+		return maxX;
+	}
 
-	public void round() {
+	public double getMaxY() {
+		return maxY;
+	}
 
-		// round up max Y
-		double rangeY = Math.abs(maxY - minY);
-		unitY = determineUnit(rangeY);
-		double remainder = Math.abs(maxY) % unitY;
-		if (remainder != 0) {
-			maxY += (unitY - remainder);
+	public double getMinX() {
+		return minX;
+	}
 
-		}
+	public double getMinY() {
+		return minY;
+	}
 
-
-		// round down min Y
-		remainder = Math.abs(minY) % unitY;
-		if (remainder != 0) {
-			minY -= (unitY - remainder);
-			if (minY < 0) {
-				minY = 0;
-			}
-		}
-
-
+	public void roundX() {
 		// round up max X
 		double rangeX = Math.abs(maxX - minX);
 		unitX = determineUnit(rangeX);
-		remainder = Math.abs(maxX) % unitX;
+		double remainder = Math.abs(maxX) % unitX;
 		if (remainder != 0) {
 			maxX += (unitX - remainder);
 		}
@@ -104,7 +82,30 @@ public class Range {
 				minX = 0;
 			}
 		}
+	}
 
+	public void roundY() {
+		// round up max Y
+		double rangeY = Math.abs(maxY - minY);
+		unitY = determineUnit(rangeY);
+		double remainder = Math.abs(maxY) % unitY;
+		if (remainder != 0) {
+			maxY += (unitY - remainder);
+		}
+
+		// round down min Y
+		remainder = Math.abs(minY) % unitY;
+		if (remainder != 0) {
+			minY -= (unitY - remainder);
+			if (minY < 0) {
+				minY = 0;
+			}
+		}
+	}
+
+	public void round() {
+		roundX();
+		roundY();
 	}
 
 	public double getRangeX() {

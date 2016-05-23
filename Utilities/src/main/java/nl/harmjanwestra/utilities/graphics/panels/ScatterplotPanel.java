@@ -109,7 +109,7 @@ public class ScatterplotPanel extends Panel {
 		String pattern = "###,###,###.##";
 		DecimalFormat decimalFormat = new DecimalFormat(pattern);
 
-		g2d.setFont(theme.getSmallFont());
+		g2d.setFont(theme.getMediumFont());
 		FontMetrics metrics = g2d.getFontMetrics(g2d.getFont());
 
 		int xPosYAxis = x0 + marginX - 10;
@@ -129,7 +129,7 @@ public class ScatterplotPanel extends Panel {
 			if (adv > maxlen) {
 				maxlen = adv;
 			}
-			g2d.setFont(theme.getSmallFont());
+			g2d.setFont(theme.getMediumFont());
 			g2d.drawString(formattedStr, startx - adv - 5, ypos);
 
 
@@ -163,7 +163,7 @@ public class ScatterplotPanel extends Panel {
 			String formattedStr = decimalFormat.format(x);
 			g2d.drawLine(xpos, starty, xpos, stopy);
 			int adv = metrics.stringWidth(formattedStr);
-			g2d.setFont(theme.getSmallFont());
+			g2d.setFont(theme.getMediumFont());
 			g2d.drawString(formattedStr, xpos - (adv / 2), stopy + 10);
 
 		}
