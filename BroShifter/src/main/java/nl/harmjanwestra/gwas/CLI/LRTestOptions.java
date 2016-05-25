@@ -20,7 +20,7 @@ public class LRTestOptions {
 				.desc("Run second iteration conditional on these variants, in specified order (semicolon separated). Format: chrx-start-rsname;chrx2-start2-rsname2")
 				.build();
 		OPTIONS.addOption(option);
-		
+
 		option = Option.builder()
 				.longOpt("exhaustive")
 				.desc("Run pairwise conditional analysis (on all pairs in regions); pair vs null model that includes only covariates")
@@ -138,7 +138,7 @@ public class LRTestOptions {
 	}
 
 	private String conditional;
-	private double HWEPThreshold = 10 - 5;
+	private double HWEPThreshold = 1E-5;
 	private boolean exhaustivePairwiseAnalysis;
 	private boolean conditionalAnalysis;
 

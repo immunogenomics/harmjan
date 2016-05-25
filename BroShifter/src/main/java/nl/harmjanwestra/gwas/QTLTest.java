@@ -10,7 +10,6 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.matrix2.DoubleMatrixDataset;
 import umcg.genetica.math.stats.ZScores;
@@ -206,7 +205,7 @@ public class QTLTest {
 		int variantctr = 0;
 		while (genotypeVCF.hasNext()) {
 			VCFVariant variant = genotypeVCF.next();
-			Double impqual = variant.getInfo().get("AR2");
+			Double impqual = variant.getImputationQualityScore();
 			if (impqual == null || impqual > imputationqualthreshold) {
 				if (variant.getAlleles().length == 2
 						&& variant.getMAF() > mafThreshold

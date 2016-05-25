@@ -186,6 +186,7 @@ public class AssociationResult {
 					+ "\t" + maf2
 					+ "\t" + hwep
 					+ "\t" + hwep2
+					+ "\t" + (snp.getStart() - snp2.getStart())
 					+ "\t" + ldRSquared
 					+ "\t" + ldDprime;
 		} else {

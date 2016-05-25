@@ -47,14 +47,14 @@ public class LRTest {
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
-		if(options.isConditionalAnalysis()){
+		if (options.isConditionalAnalysis()) {
 			testConditional();
-		} else if(options.isExhaustivePairwiseAnalysis()){
+		} else if (options.isExhaustivePairwiseAnalysis()) {
 			testExhaustivePairwise();
 		} else {
 			testNormal();
 		}
-		
+
 	}
 
 	public void testNormal() throws IOException {
@@ -819,17 +819,26 @@ public class LRTest {
 			HashSet<Feature> availableRegions = new HashSet<Feature>();
 
 			LRTestTask tasktmp = new LRTestTask();
+			int nrLoaded = 0;
+			int nrParsed = 0;
+			System.out.println("Parsing: " + options.getVcf());
+			TextFile logout = new TextFile(options.getOutputdir() + "variantlog.txt", TextFile.W);
+			System.out.println("Variant log is here: " + options.getOutputdir() + "-variantlog.txt.gz");
 			while (vcfLn != null) {
 				VCFVariant variant = new VCFVariant(vcfLn, VCFVariant.PARSE.HEADER);
 				Double impqual = variant.getImputationQualityScore();
 				if (impqual == null || impqual > options.getImputationqualitythreshold()) {
 					boolean variantPassesQC = true;
 					boolean variantHasBeenQCed = false;
+					boolean variantIncluded = false;
+					boolean overlap = false;
+					double maf = 0;
+					double hwep = 0;
 					for (int f = 0; f < bedRegions.size() && variantPassesQC; f++) {
 						Feature region = bedRegions.get(f);
 						if (variant.asFeature().overlaps(region)) {
 
-
+							overlap = true;
 							if (!variantHasBeenQCed) {
 								variant = new VCFVariant(vcfLn, VCFVariant.PARSE.ALL);
 								// parse the genotype, do some QC checks
@@ -842,8 +851,8 @@ public class LRTest {
 
 								Triple<Integer, Double, Double> qc = unfilteredGenotypeData.getRight();
 
-								Double maf = qc.getMiddle();
-								Double hwep = qc.getRight();
+								maf = qc.getMiddle();
+								hwep = qc.getRight();
 								if (maf < options.getMafthresholdD() || hwep < options.getHWEPThreshold()) {
 									variantPassesQC = false;
 								}
@@ -855,21 +864,41 @@ public class LRTest {
 								if (variants == null) {
 									variants = new ArrayList<>();
 								}
-								variant = new VCFVariant(vcfLn, VCFVariant.PARSE.HEADER);
 								variants.add(variant);
 								variantsInRegions.put(region, variants);
 								availableRegions.add(region);
+								variantIncluded = true;
 							}
 						}
 					}
+					if (variantIncluded) {
+						nrLoaded++;
+					}
+					logout.writeln(variant.getChr()
+							+ "\t" + variant.getPos()
+							+ "\t" + variant.getId()
+							+ "\t" + maf
+							+ "\t" + hwep
+							+ "\t" + overlap
+							+ "\t" + variantPassesQC
+					);
 				}
 				vcfLn = vcfIn.readLine();
+				nrParsed++;
+				if (nrParsed % 1000 == 0) {
+					System.out.print(nrParsed + " lines parsed.. " + nrLoaded + " loaded\r");
+				}
 			}
 			vcfIn.close();
+			logout.close();
+			System.out.println("Done parsing. " + nrLoaded + " variants loaded in total");
+
+			System.out.println(availableRegions.size() + " regions in file " + vcfIn.getFileName());
 
 			// combinatorial madness!
 			if (availableRegions.isEmpty() || variantsInRegions.isEmpty()) {
 				// print some fancy error message;
+				System.out.println("Sorry. No work.");
 			} else {
 				//			// boot up threadpool
 				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
@@ -907,7 +936,8 @@ public class LRTest {
 							}
 						}
 						returned++;
-						pb.iterate();
+						pb.set(returned);
+
 
 					} catch (InterruptedException e) {
 						e.printStackTrace();

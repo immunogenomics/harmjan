@@ -412,6 +412,7 @@ public class AssociationFile {
 					"\tMAF2" +
 					"\tHWEP" +
 					"\tHWEP2" +
+					"\tDistance" +
 					"\tLD(RSQ)" +
 					"\tLD(D')" +
 					"\tDevianceNull" +

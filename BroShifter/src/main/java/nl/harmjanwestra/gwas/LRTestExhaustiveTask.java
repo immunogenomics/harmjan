@@ -64,9 +64,9 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 		Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData2 = taskObj.filterAndRecodeGenotypes(
 				genotypesWithCovariatesAndDiseaseStatus,
-				variant1.getGenotypeAllelesAsMatrix2D(),
+				variant2.getGenotypeAllelesAsMatrix2D(),
 				finalDiseaseStatus,
-				variant1.getAlleles().length,
+				variant2.getAlleles().length,
 				finalCovariates.rows());
 
 		Triple<Integer, Double, Double> stats2 = unfilteredGenotypeData2.getRight();
@@ -102,31 +102,29 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 		}
 
 		SNPFeature snp = new SNPFeature(Chromosome.parseChr(variant1.getChr()), variant1.getPos(), variant1.getPos());
+
+		Double imputationqualityscore = variant1.getImputationQualityScore();
 		snp.setName(variant1.getId());
 		output.setSnp(snp);
 		output.setN(x.rows());
 		output.setMaf(maf1);
-
-		Double imputationqualityscore = variant1.getImputationQualityScore();
+		output.setHWEP(hwep1);
 		snp.setImputationQualityScore(imputationqualityscore);
 		snp.setAlleles(variant1.getAlleles());
 		snp.setMinorAllele(variant1.getMinorAllele());
 
 		SNPFeature snp2 = new SNPFeature(Chromosome.parseChr(variant2.getChr()), variant2.getPos(), variant2.getPos());
-		snp2.setName(variant2.getId());
-		output.setSnp2(snp);
-		output.setMaf(maf2);
-
 		Double imputationqualityscore2 = variant2.getImputationQualityScore();
+		snp2.setName(variant2.getId());
+		output.setSnp2(snp2);
+		output.setMaf2(maf2);
+		output.setHWEP2(hwep2);
 		snp2.setImputationQualityScore(imputationqualityscore2);
 		snp2.setAlleles(variant2.getAlleles());
 		snp2.setMinorAllele(variant2.getMinorAllele());
 
 		output.setPairWise(true);
-		output.setMaf(maf1);
-		output.setMaf2(maf2);
-		output.setHWEP(hwep1);
-		output.setHWEP2(hwep2);
+
 
 		// calculate the ld between the variants :)
 		DetermineLD ldcalc = new DetermineLD();

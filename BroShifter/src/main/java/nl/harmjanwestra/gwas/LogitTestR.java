@@ -427,7 +427,7 @@ public class LogitTestR implements Callable<Boolean> {
 
 						lastVariant = variant; // debugging purposes :(
 
-						Double imputationqualityscore = variant.getInfo().get("AR2");
+						Double imputationqualityscore = variant.getImputationQualityScore();
 						boolean testvariant = false;
 						if (imputationqualityfilter) {
 							if (imputationqualityscore != null && imputationqualityscore >= imputationqualitythreshold) {
@@ -1453,7 +1453,7 @@ public class LogitTestR implements Callable<Boolean> {
 
 						lastVariant = variant; // debugging purposes :(
 
-						Double imputationqualityscore = variant.getInfo().get("AR2");
+						Double imputationqualityscore = variant.getImputationQualityScore();
 						boolean testvariant = false;
 						if (imputationqualityfilter) {
 							if (imputationqualityscore != null && imputationqualityscore >= imputationqualitythreshold) {

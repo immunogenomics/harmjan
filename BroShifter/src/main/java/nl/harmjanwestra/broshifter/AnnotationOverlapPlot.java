@@ -212,7 +212,7 @@ public class AnnotationOverlapPlot {
 
 			// determine size of plotBinaryTrait
 			AnnotationPanel annotPanel = new AnnotationPanel(annotationsSorted.size(), 1);
-			annotPanel.setData(region, annotationsSorted);
+//			annotPanel.setData(region, annotationsSorted);
 			annotPanel.setOverlappingFeatures(credibleSetSNPFeatures);
 
 			int pixelspertrack = annotPanel.getTrackheight() + annotPanel.getMarginBetween();
