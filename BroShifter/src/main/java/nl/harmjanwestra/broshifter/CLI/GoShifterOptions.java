@@ -78,7 +78,7 @@ public class GoShifterOptions {
 
 		option = Option.builder("a")
 				.hasArg()
-				.desc("List of annotations to test. One line per annotation file. Annotations can be in .xls or .bed file, and may be gzipped")
+				.desc("List of annotations to testNormal. One line per annotation file. Annotations can be in .xls or .bed file, and may be gzipped")
 				.longOpt("annotations")
 				.build();
 		OPTIONS.addOption(option);
@@ -106,7 +106,7 @@ public class GoShifterOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder("s")
-				.desc("Use annotation centers to test for enrichment")
+				.desc("Use annotation centers to testNormal for enrichment")
 				.longOpt("summit")
 				.build();
 		OPTIONS.addOption(option);

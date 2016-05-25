@@ -633,7 +633,7 @@ public class QTLTest {
 							// update the X matrix
 							updateX(x, variant, includeGenotypeSample);
 
-							// -- test variant w/ linear model (use covariates)
+							// -- testNormal variant w/ linear model (use covariates)
 							ols.newSampleData(y, x);
 
 							double[] regressionParameters = ols.estimateRegressionParameters();

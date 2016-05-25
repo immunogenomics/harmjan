@@ -51,7 +51,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	}
 
 	public Pair<String, ArrayList<String>> call() throws IOException {
-		// load bed regions to test
+		// load bed regions to testNormal
 		BedFileReader bf = new BedFileReader();
 		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
 		System.out.println("Thread " + threadNum + " | " + regions.size() + " regions in: " + options.regionFile);

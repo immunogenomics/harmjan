@@ -498,8 +498,8 @@ public class LogitTestR implements Callable<Boolean> {
 
 				System.out.println("thread:\t" + threadnum + "\tAll data loaded: " + allGenotypes.size() + " variants loaded.");
 
-				// now test the variants
-				System.out.println("thread:\t" + threadnum + "\tAbout to test: " + bedRegions.size() + " regions");
+				// now testNormal the variants
+				System.out.println("thread:\t" + threadnum + "\tAbout to testNormal: " + bedRegions.size() + " regions");
 				for (int r = 0; r < bedRegions.size(); r++) {
 					// get a list of indexes of variants overlapping each bedRegion
 					Pair<ArrayList<double[][]>, ArrayList<String>> overlappingVariants = overlapVariantsWithBedRegion(bedRegions.get(r),
@@ -1395,7 +1395,7 @@ public class LogitTestR implements Callable<Boolean> {
 
 //				System.exit(-1);
 
-				// test without genotypes
+				// testNormal without genotypes
 				// glm_null <-  glm(status ~ condmatrix.min + collect + gender, family=binomial(logit))
 				// glm.null <- glm(status ~ collect + gender, family=binomial(logit))
 				// deviance_null <- summary(glm_null)$deviance
@@ -1706,7 +1706,7 @@ public class LogitTestR implements Callable<Boolean> {
 
 
 					// encode genotypes
-					// test with genotype (how to handle R2 < 0.8)?
+					// testNormal with genotype (how to handle R2 < 0.8)?
 					// glm_test <- glm(status ~ condmatrix.min + collect + gender + vdose, family=binomial(logit))
 
                     /*

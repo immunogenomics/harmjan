@@ -100,7 +100,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 					conditionalDosages);
 			output = pruneAndTest(dosageMat, y, nrAlleles, taskObj);
 		}
-		
+
 		SNPFeature snp = new SNPFeature(Chromosome.parseChr(variant1.getChr()), variant1.getPos(), variant1.getPos());
 		snp.setName(variant1.getId());
 		output.setSnp(snp);
@@ -177,8 +177,8 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 
 		if (nrRemaining > 0) {
-			// perform test on full model
-			// remove genotypes and run test on reduced model
+			// perform testNormal on full model
+			// remove genotypes and run testNormal on reduced model
 
 			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 			LogisticRegressionResult resultX = reg.univariate(y, x);

@@ -583,10 +583,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 
 		if (nrRemaining > 0) {
-			// perform test on full model
-			// remove genotypes and run test on reduced model
+			// perform testNormal on full model
+			// remove genotypes and run testNormal on reduced model
 //				if (useR) {
-//					// debug: test with R
+//					// debug: testNormal with R
 //					rConnection.assign("y", y);
 //					assignAsRMatrix(rConnection, x, "x", false);
 //					double[][] covarsOnly = removeGenotypes(x, colsToRemove);

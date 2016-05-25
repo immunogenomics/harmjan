@@ -47,10 +47,17 @@ public class LRTest {
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
-		test();
+		if(options.isConditionalAnalysis()){
+			testConditional();
+		} else if(options.isExhaustivePairwiseAnalysis()){
+			testExhaustivePairwise();
+		} else {
+			testNormal();
+		}
+		
 	}
 
-	public void test() throws IOException {
+	public void testNormal() throws IOException {
 		boolean initialized = initialize();
 
 		if (initialized) {
@@ -693,7 +700,7 @@ public class LRTest {
 
 				// get iter0 results
 				// get best associated variant in region
-				// test conditional on best variant
+				// testNormal conditional on best variant
 
 				HashSet<Feature> visitedRegions = new HashSet<Feature>();
 				for (VCFVariant v : variants) {

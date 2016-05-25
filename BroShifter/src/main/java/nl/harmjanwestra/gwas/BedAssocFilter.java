@@ -20,7 +20,7 @@ public class BedAssocFilter {
 	public BedAssocFilter(BedAssocFilterOptions options) throws IOException {
 
 
-		// load bed regions to test
+		// load bed regions to testNormal
 		BedFileReader bf = new BedFileReader();
 		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
 

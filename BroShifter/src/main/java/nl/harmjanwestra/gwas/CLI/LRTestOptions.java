@@ -15,9 +15,21 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.longOpt("conditional")
+				.longOpt("conditions")
 				.hasArg()
 				.desc("Run second iteration conditional on these variants, in specified order (semicolon separated). Format: chrx-start-rsname;chrx2-start2-rsname2")
+				.build();
+		OPTIONS.addOption(option);
+		
+		option = Option.builder()
+				.longOpt("exhaustive")
+				.desc("Run pairwise conditional analysis (on all pairs in regions); pair vs null model that includes only covariates")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("conditional")
+				.desc("Run single variant conditional analysis (on all pairs in regions); null model includes conditional variant")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -127,6 +139,8 @@ public class LRTestOptions {
 
 	private String conditional;
 	private double HWEPThreshold = 10 - 5;
+	private boolean exhaustivePairwiseAnalysis;
+	private boolean conditionalAnalysis;
 
 	public String getConditional() {
 		return conditional;
@@ -195,7 +209,7 @@ public class LRTestOptions {
 				HWEPThreshold = Double.parseDouble(cmd.getOptionValue("hwep"));
 			}
 
-			if (cmd.hasOption("conditional")) {
+			if (cmd.hasOption("conditions")) {
 				this.conditional = cmd.getOptionValue("conditional");
 				this.maxIter = 1;
 			}
@@ -256,6 +270,12 @@ public class LRTestOptions {
 				testVariantsWithoutImputationQuality = false;
 			} else {
 				testVariantsWithoutImputationQuality = true;
+			}
+
+			if (cmd.hasOption("exhaustive")) {
+				exhaustivePairwiseAnalysis = true;
+			} else if (cmd.hasOption("conditonal")) {
+				conditionalAnalysis = true;
 			}
 
 			if (cmd.hasOption("maxiter")) {
@@ -356,5 +376,13 @@ public class LRTestOptions {
 
 	public double getHWEPThreshold() {
 		return HWEPThreshold;
+	}
+
+	public boolean isExhaustivePairwiseAnalysis() {
+		return exhaustivePairwiseAnalysis;
+	}
+
+	public boolean isConditionalAnalysis() {
+		return conditionalAnalysis;
 	}
 }

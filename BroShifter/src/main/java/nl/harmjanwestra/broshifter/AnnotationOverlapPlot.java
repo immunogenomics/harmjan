@@ -121,7 +121,7 @@ public class AnnotationOverlapPlot {
 		GTFAnnotation geneannotation = new GTFAnnotation(options.geneAnnotationFile);
 
 
-		// load bed regions to test
+		// load bed regions to testNormal
 		BedFileReader bf = new BedFileReader();
 		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
 
@@ -263,7 +263,7 @@ public class AnnotationOverlapPlot {
 		GTFAnnotation geneannotation = new GTFAnnotation(options.geneAnnotationFile);
 
 
-		// load bed regions to test
+		// load bed regions to testNormal
 		BedFileReader bf = new BedFileReader();
 		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
 
@@ -419,7 +419,7 @@ public class AnnotationOverlapPlot {
 			System.exit(-1);
 		}
 
-		// load bed regions to test
+		// load bed regions to testNormal
 		BedFileReader bf = new BedFileReader();
 		ArrayList<Feature> regions = bf.readAsList(options.regionFile);
 

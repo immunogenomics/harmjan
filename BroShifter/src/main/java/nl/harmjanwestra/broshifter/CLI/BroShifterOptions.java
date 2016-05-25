@@ -37,7 +37,7 @@ public class BroShifterOptions {
 
 		option = Option.builder("a")
 				.hasArg()
-				.desc("List of annotations to test. One line per annotation file. Annotations can be in .xls or .bed file, and may be gzipped")
+				.desc("List of annotations to testNormal. One line per annotation file. Annotations can be in .xls or .bed file, and may be gzipped")
 				.longOpt("annotations")
 
 				.build();
@@ -66,7 +66,7 @@ public class BroShifterOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder("s")
-				.desc("Use peak centers to test for enrichment")
+				.desc("Use peak centers to testNormal for enrichment")
 				.longOpt("summit")
 				.build();
 		OPTIONS.addOption(option);
