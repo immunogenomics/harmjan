@@ -16,7 +16,6 @@ public class Transcript extends Feature {
     private final Gene gene;
     private ArrayList<Exon> exons;
 
-
     public Transcript(String name, Chromosome chromosome, Strand strand, Gene gene) {
         this.name = name;
         this.chromosome = chromosome;

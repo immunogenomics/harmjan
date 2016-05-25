@@ -57,10 +57,33 @@ public class AssociationPosteriorPlotter {
 		for (Feature region : regions) {
 			boolean regionhasvariants = false;
 
+//			Collection<Gene> allgenes = annotation.getGenes();
+//			for (Gene g : allgenes) {
+//				String geneid = g.getGeneId();
+//				if(geneid.equals("PUS10")){
+//					System.out.println(g.toString());
+//				}
+//
+//			}
+
 			TreeSet<Gene> genes = annotation.getGeneTree();
+//			for (Gene g : genes) {
+//				String geneid = g.getGeneId();
+//				if(geneid.equals("PUS10")){
+//					System.out.println(g.toString());
+//				}
+//
+//			}
+
+
 			Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
 			Gene geneStop = new Gene("", region.getChromosome(), Strand.POS, region.getStop(), region.getStop());
 			SortedSet<Gene> overlappingGenes = genes.subSet(geneStart, true, geneStop, true);
+
+			for (Gene g : overlappingGenes) {
+				System.out.println(g.toString());
+
+			}
 
 			ArrayList<Gene> overlappingGenesList = new ArrayList<>();
 			overlappingGenesList.addAll(overlappingGenes);

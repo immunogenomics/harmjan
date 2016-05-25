@@ -12,10 +12,15 @@ public class AssociationResult {
 
 
 	private SNPFeature snp;
+	private SNPFeature snp2;
+	private boolean pair = false;
 	private double[] beta = null;
 	private double[] se = null;
 	private double pval = Double.NaN;
 	private double maf = Double.NaN;
+	private double maf2 = Double.NaN;
+	private double hwep = Double.NaN;
+	private double hwep2 = Double.NaN;
 	private Feature region;
 	private double bf = Double.NaN;
 	private int n;
@@ -23,6 +28,44 @@ public class AssociationResult {
 	private double devianceGeno;
 	private int df;
 	private double posterior;
+	private double ldRSquared;
+	private Double ldDprime;
+
+	public SNPFeature getSnp2() {
+		return snp2;
+	}
+
+	public double getMaf2() {
+		return maf2;
+	}
+
+	public double getHwep() {
+		return hwep;
+	}
+
+	public void setHwep(double hwep) {
+		this.hwep = hwep;
+	}
+
+	public double getHwep2() {
+		return hwep2;
+	}
+
+	public void setHwep2(double hwep2) {
+		this.hwep2 = hwep2;
+	}
+
+	public double getLdRSquared() {
+		return ldRSquared;
+	}
+
+	public void setPairWise(boolean b) {
+		this.pair = b;
+	}
+
+	public void setHWEP(double hwep) {
+		this.hwep = hwep;
+	}
 
 	public Feature getSnp() {
 		return snp;
@@ -122,17 +165,44 @@ public class AssociationResult {
 
 	@Override
 	public String toString() {
+		String str = "";
+		if (pair) {
+			str = snp.getChromosome().toString()
+					+ "\t" + snp.getStart()
+					+ "\t" + snp.getName()
+					+ "\t" + snp.toString()
+					+ "\t" + snp2.getChromosome().toString()
+					+ "\t" + snp2.getStart()
+					+ "\t" + snp2.getName()
+					+ "\t" + snp2.toString()
+					+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
+					+ "\t" + Strings.concat(snp2.getAlleles(), Strings.comma)
+					+ "\t" + snp.getMinorAllele()
+					+ "\t" + snp2.getMinorAllele()
+					+ "\t" + snp.getImputationQualityScore()
+					+ "\t" + snp2.getImputationQualityScore()
+					+ "\t" + n
+					+ "\t" + maf
+					+ "\t" + maf2
+					+ "\t" + hwep
+					+ "\t" + hwep2
+					+ "\t" + ldRSquared
+					+ "\t" + ldDprime;
+		} else {
+			str = snp.getChromosome().toString()
+					+ "\t" + snp.getStart()
+					+ "\t" + snp.getName()
+					+ "\t" + snp.toString()
+					+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
+					+ "\t" + snp.getMinorAllele()
+					+ "\t" + snp.getImputationQualityScore()
+					+ "\t" + n
+					+ "\t" + maf
+					+ "\t" + hwep;
+		}
+
 		// Chr     Pos     Id      CombinedId      N       MAF     DevianceNull    DevianceGeno    Df      Beta(Genotype)  SE(Genotype)    OR      OR-Hi   OR-Lo   Pval    -Log10(pval)
-		String str = snp.getChromosome().toString()
-				+ "\t" + snp.getStart()
-				+ "\t" + snp.getName()
-				+ "\t" + snp.toString()
-				+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
-				+ "\t" + snp.getMinorAllele()
-				+ "\t" + snp.getImputationQualityScore()
-				+ "\t" + n
-				+ "\t" + maf
-				+ "\t" + devianceNull
+		str += "\t" + devianceNull
 				+ "\t" + devianceGeno
 				+ "\t" + df;
 
@@ -162,12 +232,11 @@ public class AssociationResult {
 	}
 
 	public double getLog10Pval() {
-		if(pval == 0d || Double.isNaN(pval) || Double.isInfinite(pval)){
+		if (pval == 0d || Double.isNaN(pval) || Double.isInfinite(pval)) {
 			return 0;
 		}
 		return -Math.log10(pval);
 	}
-
 
 
 	public double[] getConfHi() {
@@ -207,4 +276,23 @@ public class AssociationResult {
 	}
 
 
+	public void setHWEP2(double HWEP2) {
+		this.hwep2 = HWEP2;
+	}
+
+	public void setMaf2(double maf2) {
+		this.maf2 = maf2;
+	}
+
+	public void setSnp2(SNPFeature snp2) {
+		this.snp2 = snp2;
+	}
+
+	public void setLDRSquared(double LD) {
+		this.ldRSquared = LD;
+	}
+
+	public void setLdDprime(Double ldDprime) {
+		this.ldDprime = ldDprime;
+	}
 }

@@ -9,6 +9,7 @@ import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * Created by hwestra on 2/24/16.
@@ -25,12 +26,16 @@ public class BedAssocFilter {
 
 		TextFile out = new TextFile(options.outfile, TextFile.W);
 
-		double threshold = -Math.log10(options.threshold);
 		AssociationFile assocFile = new AssociationFile();
+		ArrayList<AssociationResult> allResults = assocFile.read(options.assocFile, null);
+
+		double threshold = -Math.log10(options.threshold);
+
 		ArrayList<Feature> regionsAfterFilter = new ArrayList<>();
 		for (int i = 0; i < regions.size(); i++) {
 			Feature region = regions.get(i);
-			ArrayList<AssociationResult> results = assocFile.read(options.assocFile, region);
+			System.out.println(i + "/" + regions.size());
+			ArrayList<AssociationResult> results = filter(allResults, region);
 			boolean written = false;
 			for (int j = 0; j < results.size() && !written; j++) {
 				AssociationResult result = results.get(j);
@@ -51,7 +56,7 @@ public class BedAssocFilter {
 			TextFile tfout = new TextFile(options.outfile + "-topAssociations.txt", TextFile.W);
 			for (int i = 0; i < regionsAfterFilter.size(); i++) {
 				Feature region = regionsAfterFilter.get(i);
-				ArrayList<AssociationResult> results = assocFile.read(options.assocFile, region);
+				ArrayList<AssociationResult> results = filter(allResults, region);
 
 				double maxP = 0;
 				AssociationResult maxResult = null;
@@ -73,5 +78,10 @@ public class BedAssocFilter {
 
 		}
 
+	}
+
+	private ArrayList<AssociationResult> filter(ArrayList<AssociationResult> allResults, Feature region) {
+		ArrayList<AssociationResult> r = allResults.stream().filter(r1 -> r1.getSnp().overlaps(region)).collect(Collectors.toCollection(ArrayList::new));
+		return r;
 	}
 }

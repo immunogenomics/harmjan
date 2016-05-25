@@ -92,111 +92,124 @@ public class PlotterImpQual {
 
 		String out = "";
 		includeindels = true;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
+		usemafthreshold = true;
+		requireabovemaf = true;
+		plotOnlyImputed = true;
 
-		out = outdir + "plot1-impqual-unfiltered.png";
+		out = outdir + "plot1-imputed-impqual-withIndels-mafgt0.005.pdf";
+		//plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+		out = outdir + "plot1-imputed-impqual-withoutIndels-mafgt0.005.pdf";
+		includeindels = false;
+		//plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+
+		usemafthreshold = true;
+		requireabovemaf = false;
+		out = outdir + "plot1-imputed-impqual-withoutIndels-maflt0.005.png";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
-		out = outdir + "plot2-impqual-unfiltered.png";
-		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+
+//		out = outdir + "plot1-impqual-unfiltered.png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+
+//		out = outdir + "plot2-impqual-unfiltered.png";
+//		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 //		out = outdir +"plot2-immunochip.png";
 //		onlyIc = true;
 //		plot2(files2, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 //		onlyIc = false;
 
-		includeindels = false;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-noindels.png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-noindels.pdf";
-		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-noindels-mafgt" + mafthreshold + ".png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-noindels-mafgt0.01.png";
-		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-noindels-maflt" + mafthreshold + ".png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-noindels-maflt0.01.png";
-		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		//
-		includeindels = true;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-withindels-mafgt" + mafthreshold + ".png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = true;
-		usemafthreshold = true;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-withindels-maflt" + mafthreshold + ".png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-
-		//
-
-		includeindels = true;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = true;
-
-		out = outdir + "plot1-impqual-imputedonly.png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly.png";
-		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = true;
-
-		out = outdir + "plot1-impqual-imputedonly-noindels.png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly-noindels.pdf";
-		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = true;
-
-		out = outdir + "plot1-impqual-imputedonly-noindels-mafgt" + mafthreshold + ".png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly-noindels-mafgt0.01.png";
-		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = false;
-		plotOnlyImputed = true;
-
-		out = outdir + "plot1-impqual-imputedonly-noindels-maflt" + mafthreshold + ".png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly-noindels-maflt0.01.png";
-		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		includeindels = false;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-impqual-noindels.png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-noindels.pdf";
+//		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = false;
+//		out = outdir + "plot1-impqual-noindels-mafgt" + mafthreshold + ".png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot1-impqual-withindels-mafgt" + mafthreshold + ".png";
+//		plot1(files, labels, out, true, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-noindels-mafgt0.01.png";
+//		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = false;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-impqual-noindels-maflt" + mafthreshold + ".png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-noindels-maflt0.01.png";
+//		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		//
+//		includeindels = true;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-impqual-withindels-mafgt" + mafthreshold + ".png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = true;
+//		usemafthreshold = true;
+//		requireabovemaf = false;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-impqual-withindels-maflt" + mafthreshold + ".png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//
+//		//
+//
+//		includeindels = true;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-impqual-imputedonly.png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-imputedonly.png";
+//		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-impqual-imputedonly-noindels.png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-imputedonly-noindels.pdf";
+//		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-impqual-imputedonly-noindels-mafgt" + mafthreshold + ".png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-imputedonly-noindels-mafgt0.01.png";
+//		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-impqual-imputedonly-noindels-maflt" + mafthreshold + ".png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-imputedonly-noindels-maflt0.01.png";
+//		plot2(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 	}
 
@@ -377,7 +390,7 @@ public class PlotterImpQual {
 		panel.setData(x, y);
 		Range range = new Range(0, 0, maxSize, 1);
 		panel.setDataRange(range);
-		range.roundX();
+//		range.roundX();
 
 		panel.setDatasetLabels(labels);
 		grid.addPanel(panel);

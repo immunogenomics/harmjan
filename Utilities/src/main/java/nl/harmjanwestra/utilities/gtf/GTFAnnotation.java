@@ -54,12 +54,16 @@ public class GTFAnnotation {
 				// skip
 			} else {
 				GTFLine lineObj = new GTFLine(ln);
+
+
+
 				if (lineObj.getType().equals("exon") || lineObj.getType().equals("start_codon") || lineObj.getType().equals("stop_codon") || lineObj.getType().equals("transcript")
 						|| lineObj.getType().equals("gene")) {
 					Gene currentGene = null;
 					Transcript currentTranscript = null;
 
 					String geneName = lineObj.getGeneName();
+
 
 					String transcriptName = lineObj.getTranscriptId();
 					Gene tmpGene = new Gene(geneName, lineObj.getChr(), lineObj.getStr());
@@ -126,11 +130,13 @@ public class GTFAnnotation {
 	}
 
 	public TreeSet<Gene> getGeneTree() {
-		TreeSet<Gene> geneTree = new TreeSet<Gene>(new FeatureComparator(true));
+		FeatureComparator comp = new FeatureComparator(false);
+		TreeSet<Gene> geneTree = new TreeSet<Gene>(comp);
 		for (Gene g : genes) {
 			g.getBounds();
 			geneTree.add(g);
 		}
+		comp.setAllowOverlap(true);
 		return geneTree;
 	}
 

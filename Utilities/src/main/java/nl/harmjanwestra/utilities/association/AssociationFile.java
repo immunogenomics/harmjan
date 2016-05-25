@@ -15,6 +15,8 @@ import java.util.HashSet;
  */
 public class AssociationFile {
 
+	private boolean pairWise;
+
 	public ArrayList<AssociationResult> readVariantPValues(String pvaluefile, Feature region) throws IOException {
 		HashSet<String> variantHash = new HashSet<String>();
 		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
@@ -129,6 +131,7 @@ public class AssociationFile {
 		int posteriorcol = -1;
 		int bfcol = -1;
 		int regioncol = -1;
+		int hwepcol = -1;
 
 
 		ArrayList<AssociationResult> results = new ArrayList<AssociationResult>();
@@ -156,6 +159,8 @@ public class AssociationFile {
 						ncol = i;
 					} else if (e.equals("MAF")) {
 						mafcol = i;
+					} else if (e.equals("HWEP")) {
+						hwepcol = i;
 					} else if (e.equals("DevianceNull")) {
 						deviancenullcol = i;
 					} else if (e.equals("DevianceGeno")) {
@@ -198,6 +203,7 @@ public class AssociationFile {
 					String id = null;
 					int n = 0;
 					double maf = 0d;
+					double hwep = 0d;
 					double deviancenull = 0d;
 					double deviancegeno = 0d;
 					int df = 0;
@@ -248,6 +254,14 @@ public class AssociationFile {
 					if (mafcol != -1) {
 						try {
 							maf = Double.parseDouble(elems[mafcol]);
+						} catch (NumberFormatException e) {
+
+						}
+					}
+
+					if (hwepcol != -1) {
+						try {
+							hwep = Double.parseDouble(elems[hwepcol]);
 						} catch (NumberFormatException e) {
 
 						}
@@ -358,6 +372,7 @@ public class AssociationFile {
 						result.setSe(se);
 						result.setPval(pval);
 						result.setBf(bf);
+						result.setHWEP(hwep);
 						result.setPosterior(posterior);
 						result.setRegion(assocregion);
 
@@ -378,25 +393,64 @@ public class AssociationFile {
 			str = model + "\n";
 		}
 
-		str += "#Chromosome" +
-				"\tPos" +
-				"\tId" +
-				"\tCombinedId" +
-				"\tAlleles" +
-				"\tMinorAllele" +
-				"\tImputationQualScore" +
-				"\tN" +
-				"\tMAF" +
-				"\tDevianceNull" +
-				"\tDevianceGeno" +
-				"\tDfAlt" +
-				"\tBeta(Genotype)" +
-				"\tSE(Genotype)" +
-				"\tOR" +
-				"\tOR-Hi" +
-				"\tOR-Lo" +
-				"\tPval" +
-				"\t-Log10(pval)";
+		if (pairWise) {
+			str += "#Chromosome" +
+					"\tPos1" +
+					"\tId1" +
+					"\tPos2" +
+					"\tId2" +
+					"\tCombinedId1" +
+					"\tCombinedId2" +
+					"\tAlleles1" +
+					"\tAlleles2" +
+					"\tMinorAllele1" +
+					"\tMinorAllele2" +
+					"\tImputationQualScore" +
+					"\tImputationQualScore2" +
+					"\tN" +
+					"\tMAF1" +
+					"\tMAF2" +
+					"\tHWEP" +
+					"\tHWEP2" +
+					"\tLD(RSQ)" +
+					"\tLD(D')" +
+					"\tDevianceNull" +
+					"\tDevianceGeno" +
+					"\tDfAlt" +
+					"\tBeta(Genotype)" +
+					"\tSE(Genotype)" +
+					"\tOR" +
+					"\tOR-Hi" +
+					"\tOR-Lo" +
+					"\tPval" +
+					"\t-Log10(pval)";
+		} else {
+			str += "#Chromosome" +
+					"\tPos" +
+					"\tId" +
+					"\tCombinedId" +
+					"\tAlleles" +
+					"\tMinorAllele" +
+					"\tImputationQualScore" +
+					"\tN" +
+					"\tMAF" +
+					"\tHWEP" +
+					"\tDevianceNull" +
+					"\tDevianceGeno" +
+					"\tDfAlt" +
+					"\tBeta(Genotype)" +
+					"\tSE(Genotype)" +
+					"\tOR" +
+					"\tOR-Hi" +
+					"\tOR-Lo" +
+					"\tPval" +
+					"\t-Log10(pval)";
+		}
+
 		return str;
+	}
+
+	public void setPairWise(boolean pairWise) {
+		this.pairWise = pairWise;
 	}
 }

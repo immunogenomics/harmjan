@@ -200,7 +200,7 @@ public class ScatterplotPanel extends Panel {
 					int pixelX = x0 + marginX + (int) Math.ceil(nrPixelsMaxX * xperc);
 					int pixelY = y0 + marginY + (int) Math.ceil(nrPixelsMaxY - (nrPixelsMaxY * yperc));
 
-					g2d.fillOval(pixelX - 1, pixelY - 1, 2, 2);
+					g2d.fillOval(pixelX - 2, pixelY - 2, 4, 4);
 
 				} else {
 					// plot some markers somewhere?

@@ -101,20 +101,24 @@ public class PlotterAccuracy {
 
 	public void plotCorr() throws IOException, DocumentException {
 		String[] files = new String[]{
-				"/Data/tmp/2016-05-20/T1D/T1D-EUR-merged.txt",
-				"/Data/tmp/2016-05-20/T1D/T1D-COSMO-merged.txt",
-				"/Data/tmp/2016-05-20/T1D/T1D-HRC-COSMO-merged.txt"
+				"/Data/tmp/2016-05-23/T1D/T1D-EUR-merged.txt",
+				"/Data/tmp/2016-05-23/T1D/T1D-COSMO-merged.txt",
+				"/Data/tmp/2016-05-23/T1D/T1D-HRC-COSMO-merged.txt",
+				"/Data/tmp/2016-05-23/T1D/T1D-HRC-HRC-w100kb-merged.txt",
+				"/Data/tmp/2016-05-23/T1D/T1D-HRC-COSMO-w100kb-merged.txt"
 		};
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO"};
+
+		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-HRC-w100kb", "HRC-COSMO-w100kb"};
 		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
 
 		String[] files2 = new String[]{
 				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
 		};
-		String outdir = "";
-		String bedregions = "";
+		String bedregions = "/Data/tmp/2016-05-23/AllICLoci.bed";
+		String outdir = "/Data/tmp/2016-05-23/T1D-plotsAccuracy/";
 
-		boolean windows = true;
+
+		boolean windows = false;
 
 		if (windows) {
 
@@ -123,7 +127,7 @@ public class PlotterAccuracy {
 					"D:\\tmp\\2016-05-19\\T1D\\T1D-COSMO-merged.txt",
 					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-merged.txt",
 					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-HRC-w100kb-merged.txt",
-					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-w100kb-merged.txt",
+					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-w100kb-merged.txt"
 			};
 			labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-HRC-w100kb", "HRC-COSMO-w100kb"};
 			variantsOnIC = "D:\\tmp\\2016-05-19\\T1D-recode-stats.vcf.gz";
@@ -156,218 +160,241 @@ public class PlotterAccuracy {
 		boolean usemafthreshold = false;
 		boolean requireabovemaf = false;
 		boolean plotOnlyImputed = false;
-		double mafthreshold = 0.01;
+		double mafthreshold = 0.005;
 
 
 		includeindels = true;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-rsquared-unfiltered." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		out = outdir + "plot2-rsquared-unfiltered." + ext;
-		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-rsquared-unfiltered." + ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		out = outdir + "plot4-betaVsImpQual-unfiltered." + ext;
-		plot4(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot4-betaVsImpQual-imputedonly." + ext;
-		plot4(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, true, variantHash, bedfileRegions);
-
-		out = outdir + "plot4-CorrVsImpQual-unfiltered." + ext;
-		plot5(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot4-CorrVsImpQual-imputedonly." + ext;
-		plot5(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, true, variantHash, bedfileRegions);
-
-		out = outdir + "plot2-immunochip." + ext;
-		onlyIc = true;
-		plot2(files2, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		onlyIc = false;
-
-
-		includeindels = false;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-rsquared-noindels." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-rsquared-noindels." + ext;
-		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-rsquared-noindels." + ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
 		usemafthreshold = true;
 		requireabovemaf = true;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
-		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-rsquared-noindels-maflt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-rsquared-noindels-maflt" + mafthreshold + "." + ext;
-		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-rsquared-noindels-maflt" + mafthreshold + "." + ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = true;
-		usemafthreshold = false;
-		requireabovemaf = false;
 		plotOnlyImputed = true;
-
-		out = outdir + "plot1-rsquared-imputedonly." + ext;
+		out = outdir + "plot1-rsquared-withindels-mafgt0.005." + ext;
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-rsquared-imputedonly." + ext;
-		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-rsquared-imputedonly." + ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = true;
-
-		out = outdir + "plot1-rsquared-imputedonly-noindels." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-rsquared-imputedonly-noindels." + ext;
-		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-rsquared-imputedonly-noindels." + ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 		includeindels = false;
 		usemafthreshold = true;
 		requireabovemaf = true;
 		plotOnlyImputed = true;
-
-		out = outdir + "plot1-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
+		out = outdir + "plot1-rsquared-withoutindels-mafgt0.005." + ext;
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
-		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = false;
-		plotOnlyImputed = true;
-
-		out = outdir + "plot1-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
-		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		/// impquals
 		includeindels = true;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-unfiltered."+ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-unfiltered."+ext;
-		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-impqual-unfiltered."+ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-noindels."+ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-noindels."+ext;
-		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-impqual-noindels."+ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
 		usemafthreshold = true;
 		requireabovemaf = true;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-noindels-mafgt" + mafthreshold + "."+ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-noindels-mafgt" + mafthreshold + "."+ext;
-		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-impqual-noindels-mafgt" + mafthreshold + "."+ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = false;
-		plotOnlyImputed = false;
-
-		out = outdir + "plot1-impqual-noindels-maflt" + mafthreshold+ "."+ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-noindels-maflt" + mafthreshold + "."+ext;
-		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-impqual-noindels-maflt" + mafthreshold + "."+ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = true;
-		usemafthreshold = false;
-		requireabovemaf = false;
 		plotOnlyImputed = true;
-
-		out = outdir + "plot1-impqual-imputedonly."+ext;
+		out = outdir + "plot1-impqual-withindels-mafgt0.005." + ext;
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly."+ext;
-		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-impqual-imputedonly."+ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = false;
-		requireabovemaf = false;
-		plotOnlyImputed = true;
-
-		out = outdir + "plot1-impqual-imputedonly-noindels."+ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly-noindels."+ext;
-		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-impqual-imputedonly-noindels."+ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 		includeindels = false;
 		usemafthreshold = true;
 		requireabovemaf = true;
 		plotOnlyImputed = true;
-
-		out = outdir + "plot1-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
+		out = outdir + "plot1-impqual-withoutindels-mafgt0.005." + ext;
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
-		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = false;
-		plotOnlyImputed = true;
-
-		out = outdir + "plot1-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot2-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
-		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot3-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
-		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot1-rsquared-unfiltered." + ext;
+//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		out = outdir + "plot2-rsquared-unfiltered." + ext;
+//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-rsquared-unfiltered." + ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		out = outdir + "plot4-betaVsImpQual-unfiltered." + ext;
+//		plot4(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot4-betaVsImpQual-imputedonly." + ext;
+//		plot4(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, true, variantHash, bedfileRegions);
+//
+//		out = outdir + "plot4-CorrVsImpQual-unfiltered." + ext;
+//		plot5(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot4-CorrVsImpQual-imputedonly." + ext;
+//		plot5(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, true, variantHash, bedfileRegions);
+//
+//		out = outdir + "plot2-immunochip." + ext;
+//		onlyIc = true;
+//		plot2(files2, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		onlyIc = false;
+//
+//
+//		includeindels = false;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-rsquared-noindels." + ext;
+//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-rsquared-noindels." + ext;
+//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-rsquared-noindels." + ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
+//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = false;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-rsquared-noindels-maflt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-rsquared-noindels-maflt" + mafthreshold + "." + ext;
+//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-rsquared-noindels-maflt" + mafthreshold + "." + ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = true;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-rsquared-imputedonly." + ext;
+//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-rsquared-imputedonly." + ext;
+//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-rsquared-imputedonly." + ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-rsquared-imputedonly-noindels." + ext;
+//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-rsquared-imputedonly-noindels." + ext;
+//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-rsquared-imputedonly-noindels." + ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
+//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
+//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		/// impquals
+//		includeindels = true;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-impqual-unfiltered."+ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-unfiltered."+ext;
+//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-impqual-unfiltered."+ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-impqual-noindels."+ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-noindels."+ext;
+//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-impqual-noindels."+ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-impqual-noindels-mafgt" + mafthreshold + "."+ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-noindels-mafgt" + mafthreshold + "."+ext;
+//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-impqual-noindels-mafgt" + mafthreshold + "."+ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = false;
+//		plotOnlyImputed = false;
+//
+//		out = outdir + "plot1-impqual-noindels-maflt" + mafthreshold+ "."+ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-noindels-maflt" + mafthreshold + "."+ext;
+//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-impqual-noindels-maflt" + mafthreshold + "."+ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = true;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-impqual-imputedonly."+ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-imputedonly."+ext;
+//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-impqual-imputedonly."+ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = false;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-impqual-imputedonly-noindels."+ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-imputedonly-noindels."+ext;
+//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-impqual-imputedonly-noindels."+ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
+//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = false;
+//		plotOnlyImputed = true;
+//
+//		out = outdir + "plot1-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot2-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
+//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		out = outdir + "plot3-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
+//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 //
 

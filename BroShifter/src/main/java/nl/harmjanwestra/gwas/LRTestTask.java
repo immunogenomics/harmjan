@@ -46,16 +46,16 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	public LRTestTask(String vcfLn,
-	                  VCFVariant variant,
-	                  int iter,
-	                  boolean[] genotypesWithCovariatesAndDiseaseStatus,
-	                  double[] finalDiseaseStatus,
-	                  DoubleMatrix2D finalCovariates,
-	                  ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
-	                  ArrayList<DoubleMatrix2D> conditionalDosages,
-	                  int alleleOffsetGenotypes,
-	                  int alleleOffsetDosages,
-	                  LRTestOptions options) {
+					  VCFVariant variant,
+					  int iter,
+					  boolean[] genotypesWithCovariatesAndDiseaseStatus,
+					  double[] finalDiseaseStatus,
+					  DoubleMatrix2D finalCovariates,
+					  ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
+					  ArrayList<DoubleMatrix2D> conditionalDosages,
+					  int alleleOffsetGenotypes,
+					  int alleleOffsetDosages,
+					  LRTestOptions options) {
 		this.variant = variant;
 		this.vcfLn = vcfLn;
 		this.iter = iter;
@@ -93,17 +93,16 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		if (maf < options.getMafthresholdD() && hwep < options.getHWEPThreshold()) {
 
 			if (iter == 0) {
-//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
 				String output = variant.getId()
 						+ "\t" + variant.getChr()
 						+ "\t" + variant.getPos()
 						+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
 						+ "\t" + variant.getMinorAllele()
 						+ "\t" + variant.getImputationQualityScore()
-						+ "\t" + true
-						+ "\t" + true
-						+ "\t" + false
-						+ "\t" + true;
+						+ "\t" + maf
+						+ "\t" + hwep
+						+ "\t" + false;
+
 				return new Triple<>(output, null, null);
 			} else {
 				return new Triple<>(null, null, null);
@@ -124,6 +123,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			AssociationResult result = null;
 			if (!variant.hasImputationDosages()) {
 				result = pruneAndTest(x, y, nrAlleles, alleleOffsetGenotypes, variant, maf);
+				result.setHWEP(hwep);
 			} else {
 				// recode to dosages
 				DoubleMatrix2D dosageMat = prepareDosageMatrix(genotypesWithCovariatesAndDiseaseStatus,
@@ -131,6 +131,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						finalCovariates,
 						conditionalDosages);
 				result = pruneAndTest(dosageMat, y, nrAlleles, alleleOffsetDosages, variant, maf);
+				result.setHWEP(hwep);
 			}
 			//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
 			String output = variant.getId()
@@ -139,16 +140,16 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
 					+ "\t" + variant.getMinorAllele()
 					+ "\t" + variant.getImputationQualityScore()
-					+ "\t" + true
-					+ "\t" + true
-					+ "\t" + true
+					+ "\t" + maf
+					+ "\t" + hwep
 					+ "\t" + true;
+
 			return new Triple<>(output, result, variant);
 		} // end maf > threshold
 	}
 
 	// remove variables with zero variance and perfect correlation
-	private Pair<DoubleMatrix2D, boolean[]> removeCollinearVariables(DoubleMatrix2D mat) {
+	public Pair<DoubleMatrix2D, boolean[]> removeCollinearVariables(DoubleMatrix2D mat) {
 
 		boolean[] includeCol = new boolean[mat.columns()];
 		for (int c = 0; c < includeCol.length; c++) {
@@ -212,7 +213,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		return new Pair<>(matOut, includeCol);
 	}
 
-	private DoubleMatrix2D removeGenotypes(DoubleMatrix2D x, boolean[] colsToRemove) {
+	public DoubleMatrix2D removeGenotypes(DoubleMatrix2D x, boolean[] colsToRemove) {
 
 		int nrToRemove = 0;
 		for (int i = 0; i < colsToRemove.length; i++) {
@@ -271,7 +272,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				byte b2 = genotypeAlleles.getQuick(1, i);
 
 				if (b1 != -1) {
-					if (diseaseStatus[i] == 1) { // controls
+					if (diseaseStatus[individualCounter] == 1) { // controls
 						if (b1 == b2) {
 							nrHomozygous[b1]++;
 						}
@@ -376,7 +377,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	// output format genotypes+covariates, matched disease status, maf, cr
-	private Pair<DoubleMatrix2D, double[]> prepareGenotypeMatrix(
+	public Pair<DoubleMatrix2D, double[]> prepareGenotypeMatrix(
 			Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> genotypeData,
 			ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
 			double[] diseaseStatus,
@@ -471,10 +472,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //		return umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
 //	}
 
-	private DoubleMatrix2D prepareDosageMatrix(boolean[] includeGenotype,
-	                                           DoubleMatrix2D dosages,
-	                                           DoubleMatrix2D covariates,
-	                                           ArrayList<DoubleMatrix2D> conditional) {
+	public DoubleMatrix2D prepareDosageMatrix(boolean[] includeGenotype,
+											   DoubleMatrix2D dosages,
+											   DoubleMatrix2D covariates,
+											   ArrayList<DoubleMatrix2D> conditional) {
 
 		int nrSamples = 0;
 		for (int i = 0; i < dosages.rows(); i++) {
@@ -530,11 +531,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-	                                       double[] y,
-	                                       int nrAlleles,
-	                                       int alleleOffset,
-	                                       VCFVariant variant,
-	                                       double maf) throws REXPMismatchException, REngineException, IOException {
+										   double[] y,
+										   int nrAlleles,
+										   int alleleOffset,
+										   VCFVariant variant,
+										   double maf) throws REXPMismatchException, REngineException, IOException {
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X
