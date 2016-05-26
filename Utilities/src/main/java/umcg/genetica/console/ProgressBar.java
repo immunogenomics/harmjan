@@ -117,6 +117,10 @@ public class ProgressBar {
 
 	}
 
+	public void setPrintEvery(int nr) {
+		this.printEvery = nr;
+	}
+
 	public void close() {
 		iterations = maxIterations;
 		print();
