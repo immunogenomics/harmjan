@@ -187,6 +187,13 @@ public class VCFVariant {
 										genotypeAlleles.setQuick(1, indPos, (byte) -1);
 
 									} else {
+
+										if(gtElems.length < 2){
+											System.out.println(ln);
+											System.out.println(Strings.concat(gtElems,Strings.tab));
+											System.exit(-1);
+										}
+
 										try {
 											gt1 = Byte.parseByte(gtElems[0]);
 											gt2 = Byte.parseByte(gtElems[1]);

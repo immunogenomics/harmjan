@@ -12,6 +12,7 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.math.stats.ChiSquare;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -101,6 +102,10 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			output = pruneAndTest(dosageMat, y, nrAlleles, taskObj);
 		}
 
+		if (output == null) {
+			return null;
+		}
+
 		SNPFeature snp = new SNPFeature(Chromosome.parseChr(variant1.getChr()), variant1.getPos(), variant1.getPos());
 
 		Double imputationqualityscore = variant1.getImputationQualityScore();
@@ -180,9 +185,37 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 			LogisticRegressionResult resultX = reg.univariate(y, x);
+			if (resultX == null) {
+				System.err.println("ERROR: did not converge. ");
+				VCFVariant variant1 = variants.get(snpid1);
+				VCFVariant variant2 = variants.get(snpid2);
+				System.err.println("Variant1: " + variant1.getChr()
+						+ "\t" + variant1.getPos()
+						+ "\t" + variant1.getId()
+						+ "\t" + Strings.concat(variant1.getAlleles(), Strings.comma)
+						+ "\t" + variant1.getMinorAllele()
+						+ "\t" + variant1.getMAF());
+				System.err.println("Variant2: " + variant2.getChr()
+						+ "\t" + variant2.getPos()
+						+ "\t" + variant2.getId()
+						+ "\t" + Strings.concat(variant2.getAlleles(), Strings.comma)
+						+ "\t" + variant2.getMinorAllele()
+						+ "\t" + variant2.getMAF());
+				DetermineLD d = new DetermineLD();
+				Pair<Double, Double> ld = d.getLD(variant1, variant2);
+				System.err.println("Distance:" + Math.abs(variant1.getPos() - variant2.getPos()));
+				System.err.println("LD dp:" + ld.getLeft() + " / rsq " + ld.getRight());
+				System.err.println("-----");
+				return null;
+			}
+
 			double devx = resultX.getDeviance();
 			DoubleMatrix2D covarsOnly = testObj.removeGenotypes(x, colsToRemove);
 			LogisticRegressionResult resultCovars = reg.univariate(y, covarsOnly);
+			if (resultCovars == null) {
+				System.err.println("ERROR: covariate regression did not converge. ");
+				return null;
+			}
 			double devnull = resultCovars.getDeviance();
 			double[] betasmlelr = new double[nrRemaining];
 			double[] stderrsmlelr = new double[nrRemaining];

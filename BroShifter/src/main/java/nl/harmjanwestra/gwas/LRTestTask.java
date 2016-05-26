@@ -133,6 +133,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				result = pruneAndTest(dosageMat, y, nrAlleles, alleleOffsetDosages, variant, maf);
 				result.setHWEP(hwep);
 			}
+
+			if (result == null) {
+				return new Triple<>(null, null, null);
+			}
 			//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
 			String output = variant.getId()
 					+ "\t" + variant.getChr()
@@ -473,9 +477,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //	}
 
 	public DoubleMatrix2D prepareDosageMatrix(boolean[] includeGenotype,
-											   DoubleMatrix2D dosages,
-											   DoubleMatrix2D covariates,
-											   ArrayList<DoubleMatrix2D> conditional) {
+											  DoubleMatrix2D dosages,
+											  DoubleMatrix2D covariates,
+											  ArrayList<DoubleMatrix2D> conditional) {
 
 		int nrSamples = 0;
 		for (int i = 0; i < dosages.rows(); i++) {
@@ -627,9 +631,24 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 			LogisticRegressionResult resultX = reg.univariate(y, x);
+			if (resultX == null) {
+				System.err.println("ERROR: did not converge. ");
+				System.err.println("Variant: " + snp.getChromosome().toString()
+						+ "\t" + snp.getStart()
+						+ "\t" + snp.getName()
+						+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
+						+ "\t" + snp.getMinorAllele()
+						+ "\t" + maf);
+				System.err.println("-----");
+				return null;
+			}
 			double devx = resultX.getDeviance();
 			DoubleMatrix2D covarsOnly = removeGenotypes(x, colsToRemove);
 			LogisticRegressionResult resultCovars = reg.univariate(y, covarsOnly);
+			if (resultCovars == null) {
+				System.err.println("ERROR: covariate regression did not converge. ");
+				return null;
+			}
 			double devnull = resultCovars.getDeviance();
 			double[] betasmlelr = new double[nrRemaining];
 			double[] stderrsmlelr = new double[nrRemaining];

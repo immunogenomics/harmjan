@@ -156,8 +156,34 @@ public class QTLTest {
 		exp.reorderCols(newSampleOrder);
 
 		// load the gene annotation
-		GTFAnnotation geneAnnotation = new GTFAnnotation(gtfAnnotationFile);
-		Collection<Gene> allGenes = geneAnnotation.getGenes();
+		Collection<Gene> allGenes = null;
+		if (gtfAnnotationFile.endsWith("gtf")) {
+			GTFAnnotation geneAnnotation = new GTFAnnotation(gtfAnnotationFile);
+			allGenes = geneAnnotation.getGenes();
+		} else {
+			TextFile tf = new TextFile(gtfAnnotationFile, TextFile.R);
+
+			String[] elems = tf.readLineElems(TextFile.tab);
+			allGenes = new ArrayList<>();
+			while (elems != null) {
+				String name = elems[1];
+				Chromosome chr = Chromosome.parseChr(elems[3]);
+				if (chr.equals(Chromosome.NA)) {
+
+				} else {
+					Integer start = Integer.parseInt(elems[4]);
+					Integer stop = Integer.parseInt(elems[5]);
+					Gene g = new Gene(elems[2], chr, Strand.POS, start, stop);
+					g.setGeneId(name);
+					allGenes.add(g);
+//					System.out.println(g.toString());
+				}
+
+				elems = tf.readLineElems(TextFile.tab);
+			}
+			tf.close();
+			System.out.println(allGenes.size() + " genes loaded from: " + gtfAnnotationFile);
+		}
 
 
 		ArrayList<Gene> finalGeneSetArr = new ArrayList<>();
@@ -176,8 +202,10 @@ public class QTLTest {
 			}
 		}
 
-		TreeSet<Gene> finalGeneSet = new TreeSet<>(new FeatureComparator(false));
+		FeatureComparator comp = new FeatureComparator(false);
+		TreeSet<Gene> finalGeneSet = new TreeSet<>(comp);
 		finalGeneSet.addAll(finalGeneSetArr);
+		comp.setAllowOverlap(true);
 
 		TextFile notfound = new TextFile(outfile + "-expressionNotFound.txt", TextFile.W);
 		ArrayList<String> expgenes = exp.getRowObjects();
@@ -198,46 +226,60 @@ public class QTLTest {
 		// for each chromosome
 		// load all genotypes (load only biallelic markers)
 		// put the variants in a treemap
-		TreeSet<Feature> variantSet = new TreeSet<Feature>(new FeatureComparator(false));
+		FeatureComparator comp2 = new FeatureComparator(false);
+		TreeSet<Feature> variantSet = new TreeSet<Feature>(comp2);
 		LinkedHashMap<Feature, VCFVariant> allGenotypes = new LinkedHashMap<>();
 		System.out.println("Loading variants");
 		HashSet<Gene> genesOverlappingVariants = new HashSet<Gene>();
 		int variantctr = 0;
-		while (genotypeVCF.hasNext()) {
-			VCFVariant variant = genotypeVCF.next();
-			Double impqual = variant.getImputationQualityScore();
-			if (impqual == null || impqual > imputationqualthreshold) {
-				if (variant.getAlleles().length == 2
-						&& variant.getMAF() > mafThreshold
-						&& variant.getCallrate() > callrateThreshold) {
-					int minPosition = variant.getPos() - cisWindow;
-					if (minPosition < 0) {
-						minPosition = 0;
-					}
-					int maxPosition = variant.getPos() + cisWindow;
-					if (maxPosition > Integer.MAX_VALUE) {
-						maxPosition = Integer.MAX_VALUE;
+		genotypeVCF.close();
+		TextFile tf1 = new TextFile(genotypeDataFile, TextFile.R);
+		String vcfln = tf1.readLine();
+		while (vcfln != null) {
+			if (!vcfln.startsWith("#")) {
+				VCFVariant variant = new VCFVariant(vcfln, VCFVariant.PARSE.HEADER);
+				if(variant.getChrObj().isAutosome()){
+					Double impqual = variant.getImputationQualityScore();
+					if (impqual == null || impqual > imputationqualthreshold) {
+						variant = new VCFVariant(vcfln, VCFVariant.PARSE.ALL);
+						if (variant.getAlleles().length == 2
+								&& variant.getMAF() > mafThreshold
+								&& variant.getCallrate() > callrateThreshold) {
+							int minPosition = variant.getPos() - cisWindow;
+							if (minPosition < 0) {
+								minPosition = 0;
+							}
+							int maxPosition = variant.getPos() + cisWindow;
+							if (maxPosition > Integer.MAX_VALUE) {
+								maxPosition = Integer.MAX_VALUE;
+							}
+
+							// load only variants near genes
+							Chromosome chr = Chromosome.parseChr(variant.getChr());
+							Gene geneStart = new Gene("", chr, Strand.POS, minPosition, minPosition);
+							Gene geneStop = new Gene("", chr, Strand.POS, maxPosition, maxPosition);
+							SortedSet<Gene> overlappingGenes = finalGeneSet.subSet(geneStart, true, geneStop, true);
+
+							if (!overlappingGenes.isEmpty()) {
+								genesOverlappingVariants.addAll(overlappingGenes);
+								variantSet.add(variant.asFeature());
+								allGenotypes.put(variant.asFeature(), variant);
+							}
+						}
 					}
 
-					// load only variants near genes
-					Chromosome chr = Chromosome.parseChr(variant.getChr());
-					Gene geneStart = new Gene("", chr, Strand.POS, minPosition, minPosition);
-					Gene geneStop = new Gene("", chr, Strand.POS, maxPosition, maxPosition);
-					SortedSet<Gene> overlappingGenes = finalGeneSet.subSet(geneStart, true, geneStop, true);
-
-					if (!overlappingGenes.isEmpty()) {
-						genesOverlappingVariants.addAll(overlappingGenes);
-						variantSet.add(variant.asFeature());
-						allGenotypes.put(variant.asFeature(), variant);
+					variantctr++;
+					if (variantctr % 1000 == 0) {
+						System.out.print("\r" + variantctr + " variants parsed. " + allGenotypes.size() + " in memory");
 					}
 				}
+
 			}
 
-			variantctr++;
-			if (variantctr % 1000 == 0) {
-				System.out.print("\r" + variantctr + " variants parsed. " + allGenotypes.size() + " in memory");
-			}
+			vcfln = tf1.readLine();
 		}
+		tf1.close();
+		comp2.setAllowOverlap(true);
 		System.out.println();
 		System.out.println("Done loading genotypes");
 		genotypeVCF.close();

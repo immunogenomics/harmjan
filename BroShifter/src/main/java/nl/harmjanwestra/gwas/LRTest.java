@@ -779,7 +779,7 @@ public class LRTest {
 			System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
 			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
 
-			TextFile logout = new TextFile(options.getOutputdir() + "variantlog.txt", TextFile.W);
+			TextFile logout = new TextFile(options.getOutputdir() + "-variantlog.txt", TextFile.W);
 			System.out.println("Variant log is here: " + logout.getFileName());
 			ArrayList<VCFVariant> allVariants = readVariants(threadPool, logout);
 			logout.close();
