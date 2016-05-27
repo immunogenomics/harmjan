@@ -4,6 +4,7 @@ import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.gwas.CLI.ProxyFinderOptions;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
@@ -29,9 +30,9 @@ public class ProxyFinder {
 		} else {
 			findProxies();
 		}
-
 	}
 
+	// use tabix to find proxies
 	public void findProxies() throws IOException {
 		ArrayList<Feature> snps = new ArrayList<Feature>();
 		TextFile tf = new TextFile(options.snpfile, TextFile.R);
@@ -105,6 +106,7 @@ public class ProxyFinder {
 		threadPool.shutdown();
 	}
 
+	// use tabix for pairwise LD calculations
 	public void pairwiseLD() throws IOException {
 		ArrayList<Pair<String, String>> pairs = new ArrayList<>();
 		TextFile tf = new TextFile(options.snpfile, TextFile.R);
@@ -190,7 +192,6 @@ public class ProxyFinder {
 				if (rsq > options.threshold) {
 					nr++;
 				}
-
 			}
 		}
 		out.close();
@@ -260,6 +261,7 @@ public class ProxyFinder {
 		return output;
 	}
 
+
 	public class ProxyFinderTask implements Callable<ArrayList<String>> {
 
 		String tabixrefprefix;
@@ -276,7 +278,6 @@ public class ProxyFinder {
 
 		@Override
 		public ArrayList<String> call() throws Exception {
-
 			ArrayList<String> output = new ArrayList<>();
 			String selfStr = queryVariantFeature.getChromosome().toString()
 					+ "\t" + queryVariantFeature.getStart()
@@ -299,24 +300,23 @@ public class ProxyFinder {
 
 			String tabixfile = tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz";
 			TabixReader reader = new TabixReader(tabixfile);
-			double[] genotypes1 = convertToDouble(testSNPObj);
 			TabixReader.Iterator window = reader.query(queryVariantFeature.getChromosome().getNumber() + ":" + (queryVariantFeature.getStart() - windowsize) + "-" + (queryVariantFeature.getStart() + windowsize));
 			String next = window.next();
 
+			DetermineLD ldcalc = new DetermineLD();
 			while (next != null) {
 				// correlate
 				VCFVariant variant = new VCFVariant(next);
 				if (!variant.equals(testSNPObj)) {
 					// correlate
 					if (variant.getMAF() > 0.005 && variant.getAlleles().length == 2) {
-						double[] genotypes2 = convertToDouble(variant);
 
-						Pair<double[], double[]> filtered = stripmissing(genotypes1, genotypes2);
-						double corr = Correlation.correlate(filtered.getLeft(), filtered.getRight());
-						corr *= corr;
+						Pair<Double, Double> ld = ldcalc.getLD(testSNPObj, variant);
+						double rsq = ld.getRight();
 
 						// TODO: should replace with actual linkage
-						if (corr >= threshold) {
+						if (rsq >= threshold) {
+
 							output.add(queryVariantFeature.getChromosome().toString()
 									+ "\t" + queryVariantFeature.getStart()
 									+ "\t" + queryVariantFeature.getName()
@@ -324,7 +324,7 @@ public class ProxyFinder {
 									+ "\t" + variant.asFeature().getStart()
 									+ "\t" + variant.asFeature().getName()
 									+ "\t" + (Math.abs(queryVariantFeature.getStart() - variant.getPos()))
-									+ "\t" + corr);
+									+ "\t" + rsq);
 						}
 					}
 				}

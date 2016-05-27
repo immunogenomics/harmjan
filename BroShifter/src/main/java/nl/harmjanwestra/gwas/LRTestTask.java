@@ -32,14 +32,14 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	private VCFVariant variant;
 	private int iter;
 	private boolean[] genotypesWithCovariatesAndDiseaseStatus;
-	private double[] finalDiseaseStatus;
+	private DiseaseStatus[] finalDiseaseStatus;
 	private DoubleMatrix2D finalCovariates;
 	private ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional;
 	private ArrayList<DoubleMatrix2D> conditionalDosages;
 	private int alleleOffsetGenotypes;
 	private int alleleOffsetDosages;
 	private LRTestOptions options;
-	private String vcfLn;
+
 
 
 	public LRTestTask() {
@@ -49,7 +49,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					  VCFVariant variant,
 					  int iter,
 					  boolean[] genotypesWithCovariatesAndDiseaseStatus,
-					  double[] finalDiseaseStatus,
+					  DiseaseStatus[] finalDiseaseStatus,
 					  DoubleMatrix2D finalCovariates,
 					  ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
 					  ArrayList<DoubleMatrix2D> conditionalDosages,
@@ -57,7 +57,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					  int alleleOffsetDosages,
 					  LRTestOptions options) {
 		this.variant = variant;
-		this.vcfLn = vcfLn;
+
 		this.iter = iter;
 		this.genotypesWithCovariatesAndDiseaseStatus = genotypesWithCovariatesAndDiseaseStatus;
 		this.finalDiseaseStatus = finalDiseaseStatus;
@@ -71,11 +71,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 	@Override
 	public Triple<String, AssociationResult, VCFVariant> call() throws Exception {
-		if (iter == 0) {
-			// do some more parsing if this is the first time we're seeing this variant...
-			variant = new VCFVariant(vcfLn, VCFVariant.PARSE.ALL);
-			vcfLn = null;
-		}
 
 		// TODO: switch this around: make the ordering of the covariate table the same as the genotype file...
 		// recode the genotypes to the same ordering as the covariate table
@@ -123,7 +118,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			AssociationResult result = null;
 			if (!variant.hasImputationDosages()) {
 				result = pruneAndTest(x, y, nrAlleles, alleleOffsetGenotypes, variant, maf);
-				result.setHWEP(hwep);
 			} else {
 				// recode to dosages
 				DoubleMatrix2D dosageMat = prepareDosageMatrix(genotypesWithCovariatesAndDiseaseStatus,
@@ -131,12 +125,12 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						finalCovariates,
 						conditionalDosages);
 				result = pruneAndTest(dosageMat, y, nrAlleles, alleleOffsetDosages, variant, maf);
-				result.setHWEP(hwep);
 			}
 
 			if (result == null) {
 				return new Triple<>(null, null, null);
 			}
+			result.setHWEP(hwep);
 			//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
 			String output = variant.getId()
 					+ "\t" + variant.getChr()
@@ -242,7 +236,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> filterAndRecodeGenotypes(
 			boolean[] includeGenotype,
 			ByteMatrix2D genotypeAlleles,
-			double[] diseaseStatus,
+			DiseaseStatus[] diseaseStatus,
 			int nrAlleles,
 			int nrsamples) {
 
@@ -276,7 +270,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				byte b2 = genotypeAlleles.getQuick(1, i);
 
 				if (b1 != -1) {
-					if (diseaseStatus[individualCounter] == 1) { // controls
+					if (diseaseStatus[individualCounter].equals(DiseaseStatus.CONTROL)) { // controls
 						if (b1 == b2) {
 							nrHomozygous[b1]++;
 						}
@@ -384,7 +378,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	public Pair<DoubleMatrix2D, double[]> prepareGenotypeMatrix(
 			Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> genotypeData,
 			ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
-			double[] diseaseStatus,
+			DiseaseStatus[] diseaseStatus,
 			DoubleMatrix2D covariates,
 			int nrsamples) {
 
@@ -461,7 +455,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				for (int a = 0; a < covariates.columns(); a++) {
 					outputmatrixwgenotypes.setQuick(ctr, nrAlleles + a + 1, covariates.getQuick(i, a));
 				}
-				outputdiseaseStatus[ctr] = diseaseStatus[i];
+				outputdiseaseStatus[ctr] = diseaseStatus[i].getNumber();
 				ctr++;
 			}
 		}

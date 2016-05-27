@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
 public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 	private final boolean[] genotypesWithCovariatesAndDiseaseStatus;
-	private final double[] finalDiseaseStatus;
+	private final DiseaseStatus[] finalDiseaseStatus;
 	private final DoubleMatrix2D finalCovariates;
 	private final LRTestOptions options;
 	private int snpid1;
@@ -33,7 +33,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 	public LRTestExhaustiveTask(ArrayList<VCFVariant> variants, int i, int j,
 								boolean[] genotypesWithCovariatesAndDiseaseStatus,
-								double[] finalDiseaseStatus,
+								DiseaseStatus[] finalDiseaseStatus,
 								DoubleMatrix2D finalCovariates,
 								LRTestOptions options) {
 		this.variants = variants;

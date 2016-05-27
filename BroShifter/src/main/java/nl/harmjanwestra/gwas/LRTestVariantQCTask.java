@@ -18,7 +18,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 	private final LRTestOptions options;
 	private final boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
 	private final DoubleMatrix2D finalCovariates;
-	private final double[] finalDiseaseStatus;
+	private final DiseaseStatus[] finalDiseaseStatus;
 	private String ln;
 	private ArrayList<Feature> regions;
 
@@ -26,7 +26,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 							   ArrayList<Feature> regions,
 							   LRTestOptions options,
 							   boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
-							   double[] finalDiseaseStatus,
+							   DiseaseStatus[] finalDiseaseStatus,
 							   DoubleMatrix2D finalCovariates) {
 		this.regions = regions;
 		this.options = options;

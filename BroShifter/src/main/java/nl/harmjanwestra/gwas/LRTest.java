@@ -43,7 +43,8 @@ public class LRTest {
 	private ArrayList<Feature> bedRegions = null;
 	private boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
 	private DenseDoubleMatrix2D finalCovariates;
-	private double[] finalDiseaseStatus;
+	private DiseaseStatus[] finalDiseaseStatus;
+	private ProgressBar progressBar;
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
@@ -61,6 +62,17 @@ public class LRTest {
 		boolean initialized = initialize();
 
 		if (initialized) {
+
+			// boot up threadpool
+			System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
+			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
+
+			TextFile log = new TextFile(options.getOutputdir() + "variantlog.txt", TextFile.W);
+			String logoutheader = "SNP\tChr\tPos\tAlleles\tMinorAllele\tImputationQual\tMAF\tHWEP\tTested";
+			log.writeln(logoutheader);
+			System.out.println("Log will be written here: " + log.getFileName());
+			ArrayList<VCFVariant> variants = readVariants(threadPool, log);
+			log.close();
 
 			String condition = options.getConditional();
 			HashMap<Feature, Integer> conditionsPerIter = null;
@@ -91,251 +103,60 @@ public class LRTest {
 			ArrayList<String> conditionalVariantIds = new ArrayList<String>();
 			AssociationFile associationFile = new AssociationFile();
 			String header = associationFile.getHeader();
-			ArrayList<VCFVariant> variants = new ArrayList<>();
 
-			// boot up threadpool
-			System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
-			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
 			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
 
-			while (iter < options.getMaxIter()) {
-				TextFile logout = null;
-				if (iter == 0) {
-					System.out.println("Iteration " + iter + " starting. Model: y ~ SNP + covar.");
-					logout = new TextFile(options.getOutputdir() + "log-iter" + iter + ".txt", TextFile.W);
-					String logoutheader = "SNP\tChr\tPos\tAlleles\tMinorAllele\tImputationQual\tMAF\tHWEP\tTested";
-					logout.writeln(logoutheader);
-					System.out.println("Log will be written here: " + options.getOutputdir() + "log-iter" + iter + ".txt");
-				} else {
-					System.out.println("Iteration " + iter + " starting. Model: y ~ " + Strings.concat(conditionalVariantIds, Strings.semicolon)
-							+ " + SNP + covar.");
-					System.out.println(variants.size() + " variants in total.");
-				}
 
-				TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
-				System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
-				pvalout.writeln(header);
+			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
+			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
+			pvalout.writeln(header);
 
-				currentLowestVariant = null;
+			currentLowestVariant = null;
 
-				int variantCtr = 0;
-				nrTested = 0;
-				submitted = 0;
-				returned = 0;
+			int variantCtr = 0;
+			nrTested = 0;
+			submitted = 0;
+			returned = 0;
 
-				int alleleOffsetGenotypes = 0;
-				int alleleOffsetDosages = 0;
-				highestLog10p = 0;
-				highestLog10PProbs = 0;
+			int alleleOffsetGenotypes = 0;
+			int alleleOffsetDosages = 0;
+			highestLog10p = 0;
+			highestLog10PProbs = 0;
 
-				for (Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> c : conditional) {
-					alleleOffsetGenotypes += c.getLeft().rows();
-				}
-				for (DoubleMatrix2D c : conditionalDosages) {
-					alleleOffsetDosages += c.columns();
-				}
-
-				String vcfLn = null;
-				TextFile vcfIn = null;
-				if (iter == 0) {
-					vcfIn = new TextFile(options.getVcf(), TextFile.R);
-					vcfLn = vcfIn.readLine();
-					while (vcfLn != null && vcfLn.startsWith("#")) {
-						vcfLn = vcfIn.readLine();
-					}
-				}
-
-				while ((iter == 0 && vcfLn != null) || (iter > 0 && variantCtr < variants.size())) {
-
-					VCFVariant variant = null;
-					if (iter == 0) {
-						variant = new VCFVariant(vcfLn, VCFVariant.PARSE.HEADER);
-					} else {
-						variant = variants.get(variantCtr);
-					}
-
-					String name = variant.getId();
-					if (snpLimit == null || snpLimit.contains(name)) {
-
-						Double imputationqualityscore = variant.getImputationQualityScore();
-						if (imputationqualityscore == null) {
-							imputationqualityscore = Double.NaN;
-						}
-
-
-						boolean impqualscoreOK = false;
-
-						if ((Double.isNaN(imputationqualityscore) && options.isTestVariantsWithoutImputationQuality())
-								|| (!Double.isNaN(imputationqualityscore) && imputationqualityscore >= options.getImputationqualitythreshold())) {
-							impqualscoreOK = true;
-						} else if (Double.isNaN(imputationqualityscore)) {
-							System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
-							System.err.println("In file: " + options.getVcf());
-							if (iter == 0) {
-//								SNP	Chr	Pos	ImputationQual	MAF	Region	OverlapOK	MAFOk	ImpQualOK
-								logout.writeln(variant.getId()
-										+ "\t" + variant.getChr()
-										+ "\t" + variant.getPos()
-										+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
-										+ "\t" + variant.getMinorAllele()
-										+ "\t" + imputationqualityscore
-										+ "\t" + null
-										+ "\t" + null
-										+ "\t" + null
-										+ "\t" + false);
-							}
-						}
-
-						boolean overlap = false;
-						if (bedRegions == null) {
-							overlap = true;
-						} else if (bedRegions != null && impqualscoreOK) {
-							Feature variantFeature = variant.asFeature();
-//
-//							if (variant.getId().equals("rs12022522")) {
-//								System.out.println("Got it");
-//							}
-
-							for (Feature r : bedRegions) {
-								if (r.overlaps(variantFeature)) {
-									overlap = true;
-									break;
-								}
-							}
-//							if (variant.getId().equals("rs12022522")) {
-//								System.out.println(overlap);
-//								for (Feature r : bedRegions) {
-//									System.out.println(r.toString() + "\t" + variantFeature.toString() + "\t" + r.overlaps(variantFeature));
-//								}
-//								System.exit(-1);
-//							}
-						}
-
-						if (!impqualscoreOK || !overlap) {
-							if (iter == 0) {
-//								SNP	Chr	Pos	ImputationQual	MAF	Region	OverlapOK	MAFOk	ImpQualOK
-								logout.writeln(variant.getId()
-										+ "\t" + variant.getChr()
-										+ "\t" + variant.getPos()
-										+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
-										+ "\t" + variant.getMinorAllele()
-										+ "\t" + imputationqualityscore
-										+ "\t" + null
-										+ "\t" + overlap
-										+ "\t" + null
-										+ "\t" + false);
-							}
-						} else {
-
-							// throw into a thread
-							// TODO: conditional on dosages is separate from conditional on genotypes.. ?
-							LRTestTask task = new LRTestTask(vcfLn,
-									variant,
-									iter,
-									genotypeSamplesWithCovariatesAndDiseaseStatus,
-									finalDiseaseStatus,
-									finalCovariates,
-									conditional,
-									conditionalDosages,
-									alleleOffsetGenotypes,
-									alleleOffsetDosages,
-									options);
-							jobHandler.submit(task);
-							submitted++;
-
-							if (submitted % 1000 == 0) {
-								clearQueue(logout, pvalout, iter, variants, jobHandler, null);
-							}
-						}
-					} // end snplimit.contains(snp)
-					variantCtr++;
-
-					if (variantCtr % 1000 == 0) {
-						String currentLowestDosagePValSNPId = null;
-						if (currentLowestVariant != null) {
-							currentLowestDosagePValSNPId = currentLowestVariant.getId();
-						}
-						System.out.println("Iteration: " + iter + "\tNr variants: " + variantCtr + " loaded.\tSubmitted to queue: " + submitted + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10p + "\tSNP: " + currentLowestDosagePValSNPId);
-					}
-					if (iter == 0) {
-						vcfLn = vcfIn.readLine();
-					}
-				} // end data.hasnext
-
-				if (iter == 0) {
-					vcfIn.close();
-				}
-
-				if (submitted > 0) {
-					clearQueue(logout, pvalout, iter, variants, jobHandler, null);
-				}
-
-				String currentLowestDosagePValSNPId = null;
-				if (currentLowestVariant != null) {
-					currentLowestDosagePValSNPId = currentLowestVariant.getId();
-				}
-				System.out.println("Iteration: " + iter + " is done. \tNr variants: " + variantCtr + "\tNr Tested: " + nrTested + "\tHighest P-val: " + highestLog10p + "\tBy variant: " + currentLowestDosagePValSNPId);
-
-				// TODO: this code does not handle the absence of imputation dosages very well...
-				LRTestTask tasktmp = new LRTestTask();
-				if (conditionsPerIter != null) {
-					System.out.println("Iterating " + variants.size() + " variants");
-
-					// iterate the variants
-					int nextIter = iter + 1;
-					for (VCFVariant variant : variants) {
-						Feature variantFeature = variant.asFeature();
-
-						if (conditionsPerIter.containsKey(variantFeature)) {
-							Integer iterForVariant = conditionsPerIter.get(variantFeature);
-							System.out.println("Variant found: " + variantFeature.getName() + " iter: " + iterForVariant + " next: " + nextIter);
-
-							if (iterForVariant != null && iterForVariant <= nextIter) {
-								Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
-										genotypeSamplesWithCovariatesAndDiseaseStatus,
-										variant.getGenotypeAllelesAsMatrix2D(),
-										finalDiseaseStatus,
-										variant.getAlleles().length,
-										finalCovariates.rows());
-								conditional.add(unfilteredGenotypeData);
-
-								DoubleMatrix2D dosages = variant.getImputedDosagesAsMatrix2D();
-								conditionalDosages.add(dosages);
-								conditionalVariantIds.add(variant.getId());
-							}
-						}
-					}
-				} else if (currentLowestVariant != null) {
-					VCFVariant variant = currentLowestVariant;
-					Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
-							genotypeSamplesWithCovariatesAndDiseaseStatus,
-							variant.getGenotypeAllelesAsMatrix2D(),
-							finalDiseaseStatus,
-							variant.getAlleles().length,
-							finalCovariates.rows());
-					conditional.add(unfilteredGenotypeData);
-
-
-					DoubleMatrix2D dosages = variant.getImputedDosagesAsMatrix2D();
-					conditional.add(unfilteredGenotypeData);
-					conditionalDosages.add(dosages);
-					conditionalVariantIds.add(variant.getId());
-					System.out.println("Iteration: " + iter
-							+ "\tNr variants: " + variantCtr
-							+ "\tHighest P-val: " + highestLog10PProbs
-							+ "\tBy variant: " + variant.getId());
-
-				}
-
-				if (iter == 0) {
-					logout.close();
-				}
-
-				pvalout.close();
-				iter++;
+			for (Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> c : conditional) {
+				alleleOffsetGenotypes += c.getLeft().rows();
 			}
+			for (DoubleMatrix2D c : conditionalDosages) {
+				alleleOffsetDosages += c.columns();
+			}
+
+
+			while (variantCtr < variants.size()) {
+				VCFVariant variant = variants.get(variantCtr);
+				// throw into a thread
+				// TODO: conditional on dosages is separate from conditional on genotypes.. ?
+				LRTestTask task = new LRTestTask(null,
+						variant,
+						iter,
+						genotypeSamplesWithCovariatesAndDiseaseStatus,
+						finalDiseaseStatus,
+						finalCovariates,
+						conditional,
+						conditionalDosages,
+						alleleOffsetGenotypes,
+						alleleOffsetDosages,
+						options);
+				jobHandler.submit(task);
+				submitted++;
+			}
+
+			progressBar = new ProgressBar(submitted);
+			clearQueue(null, pvalout, iter, variants, jobHandler, null);
+			progressBar.close();
+			pvalout.close();
 			threadPool.shutdown();
 		}
+
 	}
 
 	private boolean initialize() throws IOException {
@@ -463,7 +284,7 @@ public class LRTest {
 			System.out.println("Problem with matching samples...");
 			return false;
 		} else {
-			finalDiseaseStatus = new double[sampleToIntGenotypes.size()];
+			finalDiseaseStatus = new DiseaseStatus[sampleToIntGenotypes.size()];
 			finalCovariates = new DenseDoubleMatrix2D(sampleToIntGenotypes.size(), covariates.columns());
 
 			TextFile sampleListOut = new TextFile(options.getOutputdir() + "samplelist.txt", TextFile.W);
@@ -496,25 +317,19 @@ public class LRTest {
 				}
 				if (id != null) {
 					Integer status = diseaseStatus.get(sample);
-					int remapstatus = (status - 1);
-					finalDiseaseStatus[id] = remapstatus;
+
 
 					if (status == 2) {
 						nrCases++;
+						finalDiseaseStatus[id] = DiseaseStatus.CASE;
 					} else if (status == 1) {
 						nrControls++;
+						finalDiseaseStatus[id] = DiseaseStatus.CONTROL;
 					} else {
 						nrUnknown++;
+						finalDiseaseStatus[id] = DiseaseStatus.UNKNOWN;
 					}
 
-					if (remapstatus > maxstatus) {
-						maxstatus = remapstatus;
-
-					}
-					if (remapstatus < minstatus) {
-						minstatus = remapstatus;
-
-					}
 					for (int col = 0; col < covariates.columns(); col++) {
 						finalCovariates.setQuick(id, col, covariates.getElement(sid, col));
 					}
@@ -527,7 +342,6 @@ public class LRTest {
 			System.out.println(nrUnknown + " unknown ");
 			System.out.println(nrTotal + " with covariates");
 
-			System.out.println("max/min status: " + maxstatus + "/" + minstatus);
 			return true;
 		}
 	}
@@ -732,7 +546,7 @@ public class LRTest {
 			jobHandler.submit(task);
 			linessubmitted++;
 			if (linessubmitted % 5000 == 0) {
-				System.out.print(linessubmitted + " lines read\r");
+				System.out.print(linessubmitted + " lines read.\r");
 			}
 			vcfLn = vcfIn.readLine();
 		}
@@ -922,11 +736,16 @@ public class LRTest {
 								variants.add(variant);
 							}
 							nrTested++;
+
+
 						}
 
 					}
 				}
 				returned++;
+				if (progressBar != null) {
+					progressBar.set(returned);
+				}
 //				System.out.print(returned + "/" + submitted);
 
 			} catch (InterruptedException e) {

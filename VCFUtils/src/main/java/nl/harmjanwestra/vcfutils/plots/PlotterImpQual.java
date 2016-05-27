@@ -51,7 +51,7 @@ public class PlotterImpQual {
 				"/Data/tmp/2016-05-23/T1D-HRC-HRC-w100kb.vcf.gz"
 		};
 
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-HRC-w100kb", "HRC-COSMO-w100kb"};
+		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-COSMO-w100kb", "HRC-HRC-w100kb"};
 		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
 
 		String[] files2 = new String[]{

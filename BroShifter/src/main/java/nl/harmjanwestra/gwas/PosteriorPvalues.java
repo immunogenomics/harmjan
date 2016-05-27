@@ -104,7 +104,7 @@ public class PosteriorPvalues {
 			csNames[v] = f.getChromosome().toString() + ":" + f.getStart() + "-" + f.getName();
 		}
 
-		line += "\t" + credibleSet.size();
+		line += credibleSet.size();
 		line += "\t" + Strings.concat(csNames, Strings.semicolon);
 		line += "\t" + Strings.concat(csPvals, Strings.semicolon);
 		line += "\t" + Strings.concat(csORs, Strings.semicolon);
