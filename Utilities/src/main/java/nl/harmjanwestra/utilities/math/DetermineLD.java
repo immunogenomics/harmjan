@@ -19,20 +19,19 @@ public class DetermineLD {
 	public final static int INCLUDE_CASES_AND_CONTROLS = 1;
 	public final static int INCLUDE_CASES = 2;
 	public final static int INCLUDE_CONTROLS = 3;
-	public final static int RETURN_R_SQUARED = 4;
-	public final static int RETURN_D_PRIME = 5;
-	public double h11 = 0;
-	public double h12 = 0;
-	public double h21 = 0;
-	public double h22 = 0;
-	public int nrCalledGenotypes = 0;
-
+	
 	public synchronized Pair<Double, Double> getLD(VCFVariant variant1, VCFVariant variant2) {
 		// convert to byte[]
-		return getLD(variant1.getGenotypesAsByteVector(),variant2.getGenotypesAsByteVector(), null, INCLUDE_CASES_AND_CONTROLS, false);
+		return getLD(variant1.getGenotypesAsByteVector(), variant2.getGenotypesAsByteVector(), null, INCLUDE_CASES_AND_CONTROLS, false);
 	}
 
 	public synchronized Pair<Double, Double> getLD(byte[] snp1Genotypes, byte[] snp2Genotypes, Boolean[] indIsCase, int individualsToInclude, boolean print) {
+
+		double h11 = 0;
+		double h12 = 0;
+		double h21 = 0;
+		double h22 = 0;
+		int nrCalledGenotypes = 0;
 
 		if (snp1Genotypes == null || snp2Genotypes == null) {
 			return new Pair<Double, Double>(0d, 0d);
@@ -89,10 +88,10 @@ public class DetermineLD {
 
 		if (print) {
 			System.out.println("Allele freq:");
-			System.out.println(alleleFreq[0][0]);
-			System.out.println(alleleFreq[0][1]);
-			System.out.println(alleleFreq[1][0]);
-			System.out.println(alleleFreq[1][1]);
+			System.out.println(alleleFreq[0][0] + "\tAA");
+			System.out.println(alleleFreq[0][1] + "\tAB");
+			System.out.println(alleleFreq[1][0] + "\tBA");
+			System.out.println(alleleFreq[1][1] + "\tBB");
 		}
 
 		//Precalculate triangles of non-double heterozygote:
@@ -103,10 +102,10 @@ public class DetermineLD {
 		genotypesTriangleFreq[2][2] = 2d * genotypesFreq[2][2] + genotypesFreq[1][2] + genotypesFreq[2][1];
 		if (print) {
 			System.out.println("Triangle freq:");
-			System.out.println(genotypesTriangleFreq[0][0]);
-			System.out.println(genotypesTriangleFreq[0][2]);
-			System.out.println(genotypesTriangleFreq[2][0]);
-			System.out.println(genotypesTriangleFreq[2][2]);
+			System.out.println(genotypesTriangleFreq[0][0] + "\tAA");
+			System.out.println(genotypesTriangleFreq[0][2] + "\tAB");
+			System.out.println(genotypesTriangleFreq[2][0] + "\tBA");
+			System.out.println(genotypesTriangleFreq[2][2] + "\tBB");
 		}
 
 		//Calculate expected genotypes, assuming equilibrium, take this as start:
@@ -180,7 +179,7 @@ public class DetermineLD {
          System.out.println(d + "\t" + dMax + "\t" + dPrime);
          }
          */
-		return new Pair<Double, Double>(Math.min(1, dPrime), rSquared);
+		return new Pair<Double, Double>(Math.min(1, dPrime), Math.min(1, rSquared));
 //        }
 	}
 

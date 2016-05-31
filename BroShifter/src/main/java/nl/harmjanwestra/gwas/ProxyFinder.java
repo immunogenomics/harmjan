@@ -147,6 +147,7 @@ public class ProxyFinder {
 					// correlate
 					VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL);
 					if (variant.getMAF() > 0.01 && variant.getAlleles().length == 2) {
+						variant.calculateHWEP();
 						variants.add(variant);
 					}
 					next = window.next();
@@ -155,7 +156,7 @@ public class ProxyFinder {
 
 
 				System.out.println(variants.size() + " variants in region " + f.toString());
-				DetermineLD ldcalc = new DetermineLD();
+
 
 
 				TextFile out = new TextFile(options.output + "-" + f.toString() + ".txt.gz", TextFile.W);
@@ -168,18 +169,19 @@ public class ProxyFinder {
 
 					VCFVariant variant1 = variants.get(i);
 					if (variant1.getAlleles().length == 2) {
-						String ln = variant1.getChr().toString() + "\t" + variant1.getPos() + "\t" + variant1.getId()
+						String variant1Str = variant1.getChr().toString() + "\t" + variant1.getPos() + "\t" + variant1.getId()
 								+ "\t" + Strings.concat(variant1.getAlleles(), Strings.comma) + "\t" + variant1.getMinorAllele() + "\t" + variant1.getMAF() + "\t" + variant1.getHwep();
 						for (int j = i + 1; j < variants.size(); j++) {
+							DetermineLD ldcalc = new DetermineLD();
 							VCFVariant variant2 = variants.get(j);
 							if (variant2.getAlleles().length == 2) {
 								Pair<Double, Double> ld = ldcalc.getLD(variant1, variant2);
 								if (ld.getRight() > options.threshold) {
-									ln += "\t" + variant2.getChr().toString() + "\t" + variant2.getPos() + "\t" + variant2.getId()
+									String variant2Str = "\t" + variant2.getChr().toString() + "\t" + variant2.getPos() + "\t" + variant2.getId()
 											+ "\t" + Strings.concat(variant2.getAlleles(), Strings.comma) + "\t" + variant2.getMinorAllele() + "\t" + variant2.getMAF() + "\t" + variant2.getHwep();
 
-									ln += "\t" + (variant2.getPos() - variant1.getPos()) + "\t" + ld.getRight() + "\t" + ld.getLeft();
-									out.writeln(ln);
+									variant2Str += "\t" + (variant2.getPos() - variant1.getPos()) + "\t" + ld.getRight() + "\t" + ld.getLeft();
+									out.writeln(variant1Str + variant2Str);
 								}
 							}
 						}
@@ -275,7 +277,10 @@ public class ProxyFinder {
 				double corr = Correlation.correlate(filtered.getLeft(), filtered.getRight());
 
 				double rsq = (corr * corr);
-				out.writeln(snp1 + "\t" + snp2 + "\t" + rsq);
+				DetermineLD ldcalc = new DetermineLD();
+				Pair<Double, Double> ldvals = ldcalc.getLD(variant1, variant2);
+				out.writeln(snp1 + "\t" + snp2 + "\t" + rsq + "\t" + ldvals.getRight() + "\t" + ldvals.getLeft());
+
 
 				if (rsq > options.threshold) {
 					nr++;
