@@ -41,7 +41,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	private LRTestOptions options;
 
 
-
 	public LRTestTask() {
 	}
 
@@ -460,6 +459,8 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 		}
 
+
+//
 		return new Pair<>(outputmatrixwgenotypes, outputdiseaseStatus);
 
 	}
@@ -581,61 +582,27 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 
 		if (nrRemaining > 0) {
-			// perform testNormal on full model
-			// remove genotypes and run testNormal on reduced model
-//				if (useR) {
-//					// debug: testNormal with R
-//					rConnection.assign("y", y);
-//					assignAsRMatrix(rConnection, x, "x", false);
-//					double[][] covarsOnly = removeGenotypes(x, colsToRemove);
-//					assignAsRMatrix(rConnection, covarsOnly, "z", false);
-//
-//					rConnection.voidEval("glm1 <- glm(y ~ x, family=binomial(logit))");
-//					rConnection.voidEval("glm2 <- glm(y ~ z, family=binomial(logit))");
-//					rConnection.voidEval("sum1 <- summary(glm1)");
-//					rConnection.voidEval("sum2 <- summary(glm2)");
-//					rConnection.voidEval("deva <- sum1$deviance");
-//					rConnection.voidEval("devn <- sum2$deviance");
-//					double devr = rConnection.eval("sum1$deviance").asDouble();
-//					rConnection.voidEval("deltaDeviance <- devn - deva");
-//
-//					rConnection.voidEval("altdf <- sum1$df[1]");
-//					rConnection.voidEval("nulldf <- sum2$df[1]");
-//					rConnection.voidEval("dfdiff <- altdf - nulldf");
-//					Double pvalR = rConnection.eval("pchisq(deltaDeviance, df = dfdiff, lower.tail = FALSE, log.p = FALSE)").asDouble();
-//					Double dfR = rConnection.eval("dfdiff").asDouble();
-//					Double deltaR = rConnection.eval("deltaDeviance").asDouble();
-//
-//					double[] betas = new double[nrRemaining];
-//
-//					int ctr = 0;
-//					for (int i = 0; i < alleleIndex.length; i++) {
-//						int idx = alleleIndex[i];
-//						if (idx != -1) {
-//							int idxplusone = idx + 1;
-//							betas[ctr] = rConnection.eval("as.vector(sum1$coefficients[" + idxplusone + ",])[1]").asDouble();
-//							ctr++;
-//						}
-//					}
-//
-//					String betaR = Strings.concat(betas, Strings.semicolon);
-//
-//
-//				} else {
 
 			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 			LogisticRegressionResult resultX = reg.univariate(y, x);
 			if (resultX == null) {
-				System.err.println("ERROR: did not converge. ");
-				System.err.println("Variant: " + snp.getChromosome().toString()
-						+ "\t" + snp.getStart()
-						+ "\t" + snp.getName()
-						+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
-						+ "\t" + snp.getMinorAllele()
-						+ "\t" + maf);
-				System.err.println("-----");
-				return null;
+
+				// try once more with some more iterations
+				LogisticRegressionOptimized reg2 = new LogisticRegressionOptimized(1000);
+				resultX = reg2.univariate(y, x);
+				if (resultX == null) {
+					System.err.println("ERROR: did not converge.");
+					System.err.println("Variant: " + snp.getChromosome().toString()
+							+ "\t" + snp.getStart()
+							+ "\t" + snp.getName()
+							+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
+							+ "\t" + snp.getMinorAllele()
+							+ "\t" + maf);
+					System.err.println("-----");
+					return null;
+				}
 			}
+
 			double devx = resultX.getDeviance();
 			DoubleMatrix2D covarsOnly = removeGenotypes(x, colsToRemove);
 			LogisticRegressionResult resultCovars = reg.univariate(y, covarsOnly);

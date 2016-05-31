@@ -2,14 +2,17 @@ package nl.harmjanwestra.gwas;
 
 import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.gwas.CLI.ProxyFinderOptions;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Correlation;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,12 +28,16 @@ public class ProxyFinder {
 	public ProxyFinder(ProxyFinderOptions options) throws IOException {
 		this.options = options;
 
-		if (options.pairwise) {
+		if (options.locusld) {
+			locusLD();
+		} else if (options.pairwise) {
 			pairwiseLD();
 		} else {
 			findProxies();
 		}
 	}
+
+	//
 
 	// use tabix to find proxies
 	public void findProxies() throws IOException {
@@ -104,6 +111,87 @@ public class ProxyFinder {
 
 		outFile.close();
 		threadPool.shutdown();
+	}
+
+	public void locusLD() throws IOException {
+
+		BedFileReader br = new BedFileReader();
+		ArrayList<Feature> regions = br.readAsList(options.regionfile);
+
+		System.out.println(regions.size() + " regions in " + options.regionfile);
+		// check whether the reference VCFs are here..
+
+		boolean allfilespresent = true;
+		for (Feature f : regions) {
+
+			Chromosome chr1 = f.getChromosome();
+
+			if (!Gpio.exists(options.tabixrefprefix + chr1.getNumber() + ".vcf.gz")) {
+				System.out.println("Could not find required file: " + options.tabixrefprefix + chr1.getNumber() + ".vcf.gz");
+				allfilespresent = false;
+			}
+
+
+		}
+
+		if (allfilespresent) {
+			for (Feature f : regions) {
+
+
+				ArrayList<VCFVariant> variants = new ArrayList<>();
+				String tabixfile = options.tabixrefprefix + f.getChromosome().getNumber() + ".vcf.gz";
+				TabixReader reader = new TabixReader(tabixfile);
+				TabixReader.Iterator window = reader.query(f.getChromosome().getNumber() + ":" + (f.getStart()) + "-" + (f.getStop()));
+				String next = window.next();
+				while (next != null) {
+					// correlate
+					VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL);
+					if (variant.getMAF() > 0.01 && variant.getAlleles().length == 2) {
+						variants.add(variant);
+					}
+					next = window.next();
+				}
+				reader.close();
+
+
+				System.out.println(variants.size() + " variants in region " + f.toString());
+				DetermineLD ldcalc = new DetermineLD();
+
+
+				TextFile out = new TextFile(options.output + "-" + f.toString() + ".txt.gz", TextFile.W);
+				out.writeln("snp1Chr\tsnp1Pos\tsnp1Id\tsnp1Alleles\tsnp1MinorAllele\tsnp1MAF\tsnp1HWEP\t" +
+						"snp2Chr\tsnp2Pos\tsnp2Id\tsnp2Alleles\tsnp2MinorAllele\tsnp2MAF\tsnp2HWEP\t" +
+						"distance\tR-squared\tDprime");
+
+				ProgressBar pb = new ProgressBar(variants.size(), f.toString());
+				for (int i = 0; i < variants.size(); i++) {
+
+					VCFVariant variant1 = variants.get(i);
+					if (variant1.getAlleles().length == 2) {
+						String ln = variant1.getChr().toString() + "\t" + variant1.getPos() + "\t" + variant1.getId()
+								+ "\t" + Strings.concat(variant1.getAlleles(), Strings.comma) + "\t" + variant1.getMinorAllele() + "\t" + variant1.getMAF() + "\t" + variant1.getHwep();
+						for (int j = i + 1; j < variants.size(); j++) {
+							VCFVariant variant2 = variants.get(j);
+							if (variant2.getAlleles().length == 2) {
+								Pair<Double, Double> ld = ldcalc.getLD(variant1, variant2);
+								if (ld.getRight() > options.threshold) {
+									ln += "\t" + variant2.getChr().toString() + "\t" + variant2.getPos() + "\t" + variant2.getId()
+											+ "\t" + Strings.concat(variant2.getAlleles(), Strings.comma) + "\t" + variant2.getMinorAllele() + "\t" + variant2.getMAF() + "\t" + variant2.getHwep();
+
+									ln += "\t" + (variant2.getPos() - variant1.getPos()) + "\t" + ld.getRight() + "\t" + ld.getLeft();
+									out.writeln(ln);
+								}
+							}
+						}
+					}
+					pb.set(i);
+
+				}
+				pb.close();
+				out.close();
+			}
+
+		}
 	}
 
 	// use tabix for pairwise LD calculations

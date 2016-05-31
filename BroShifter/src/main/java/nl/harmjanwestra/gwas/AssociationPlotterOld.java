@@ -192,10 +192,10 @@ public class AssociationPlotterOld {
 		grid.addPanel(genePanel, 0, 0);
 
 		// add annotations
-		ArrayList<Track> annotations = loadAnnotations(listOfAnnotationsFile, usepeakcenter, bptoextendannotation, mergeoverlapping);
-		AnnotationPanel annotPanel = new AnnotationPanel(1, 1);
-		annotPanel.setData(region, annotations);
-		grid.addPanel(annotPanel, 2, 0);
+//		ArrayList<Track> annotations = loadAnnotations(listOfAnnotationsFile, usepeakcenter, bptoextendannotation, mergeoverlapping);
+//		AnnotationPanel annotPanel = new AnnotationPanel(1, 1);
+//		annotPanel.setData(region, annotations);
+//		grid.addPanel(annotPanel, 2, 0);
 
 
 		// assocpvals
@@ -526,12 +526,12 @@ public class AssociationPlotterOld {
 		abfpanel.setMarkDifferentColor(mark);
 		grid.addPanel(abfpanel, 1, 1);
 
-		// add annotations
-		AnnotationPanel annotPanel = new AnnotationPanel(1, 1);
-		annotPanel.setData(region, annotations);
-		annotPanel.setOverlappingFeatures(snpFeatures);
-		grid.addPanel(annotPanel, 2, 0);
-		grid.addPanel(annotPanel, 2, 1);
+//		// add annotations
+//		AnnotationPanel annotPanel = new AnnotationPanel(1, 1);
+//		annotPanel.setData(region, annotations);
+//		annotPanel.setOverlappingFeatures(snpFeatures);
+//		grid.addPanel(annotPanel, 2, 0);
+//		grid.addPanel(annotPanel, 2, 1);
 
 		grid.draw(outfile);
 	}

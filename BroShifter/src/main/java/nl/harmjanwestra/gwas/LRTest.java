@@ -28,6 +28,30 @@ import java.util.stream.Collectors;
  */
 public class LRTest {
 
+	public static void main(String[] args) {
+
+		String[] args2 = new String[]{
+				"-c", "/Data/tmp/2016-05-27/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
+				"-d", "/Data/tmp/2016-05-27/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
+				"-f", "/Data/tmp/2016-05-27/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
+				"-i", "/Data/tmp/2016-05-27/filtered.vcf",
+				"-e", "/Data/tmp/2016-05-27/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
+				"-r", "/Data/tmp/2016-05-27/AllICLoci.bed",
+				"-t", "1",
+				"-q", "0.3",
+				"-o", "/Data/tmp/2016-05-27/testout.txt"
+		};
+
+		LRTestOptions options = new LRTestOptions(args2);
+
+		try {
+			LRTest t = new LRTest(options);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 //	boolean useR = false;
 
 	LRTestOptions options;
@@ -104,13 +128,6 @@ public class LRTest {
 			AssociationFile associationFile = new AssociationFile();
 			String header = associationFile.getHeader();
 
-			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
-
-
-			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
-			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
-			pvalout.writeln(header);
-
 			currentLowestVariant = null;
 
 			int variantCtr = 0;
@@ -130,9 +147,9 @@ public class LRTest {
 				alleleOffsetDosages += c.columns();
 			}
 
-
-			while (variantCtr < variants.size()) {
-				VCFVariant variant = variants.get(variantCtr);
+			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
+			for (int i = 0; i < variants.size(); i++) {
+				VCFVariant variant = variants.get(i);
 				// throw into a thread
 				// TODO: conditional on dosages is separate from conditional on genotypes.. ?
 				LRTestTask task = new LRTestTask(null,
@@ -147,9 +164,13 @@ public class LRTest {
 						alleleOffsetDosages,
 						options);
 				jobHandler.submit(task);
+
 				submitted++;
 			}
 
+			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
+			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
+			pvalout.writeln(header);
 			progressBar = new ProgressBar(submitted);
 			clearQueue(null, pvalout, iter, variants, jobHandler, null);
 			progressBar.close();
@@ -173,7 +194,7 @@ public class LRTest {
 			excl.close();
 			System.out.println("Loaded: " + excludeTheseSamples.size() + " samples to exclude from " + options.getSamplesToExclude());
 		}
-		HashMap<String, Integer> diseaseStatus = new HashMap<String, Integer>();
+		HashMap<String, DiseaseStatus> diseaseStatus = new HashMap<String, DiseaseStatus>();
 
 		// load disease status
 		TextFile tf = new TextFile(options.getDiseaseStatusFile(), TextFile.R);
@@ -181,9 +202,8 @@ public class LRTest {
 		while (elems != null) {
 			String sample = elems[0];
 			String statusStr = elems[1];
-			Integer status = Integer.parseInt(statusStr);
 			if (excludeTheseSamples == null || !excludeTheseSamples.contains(sample)) {
-				diseaseStatus.put(sample, status);
+				diseaseStatus.put(sample, DiseaseStatus.parseStatus(statusStr));
 			}
 			elems = tf.readLineElems(Strings.tab);
 		}
@@ -316,20 +336,14 @@ public class LRTest {
 					id = sampleToIntGenotypes.get(altToSample.get(sample));
 				}
 				if (id != null) {
-					Integer status = diseaseStatus.get(sample);
-
-
-					if (status == 2) {
-						nrCases++;
-						finalDiseaseStatus[id] = DiseaseStatus.CASE;
-					} else if (status == 1) {
+					finalDiseaseStatus[id] = diseaseStatus.get(sample);
+					if (finalDiseaseStatus[id].equals(DiseaseStatus.CONTROL)) {
 						nrControls++;
-						finalDiseaseStatus[id] = DiseaseStatus.CONTROL;
+					} else if (finalDiseaseStatus[id].equals(DiseaseStatus.CASE)) {
+						nrCases++;
 					} else {
 						nrUnknown++;
-						finalDiseaseStatus[id] = DiseaseStatus.UNKNOWN;
 					}
-
 					for (int col = 0; col < covariates.columns(); col++) {
 						finalCovariates.setQuick(id, col, covariates.getElement(sid, col));
 					}
@@ -337,6 +351,10 @@ public class LRTest {
 				}
 			}
 
+//			for (int id = 0; id < finalDiseaseStatus.length; id++) {
+//				System.out.println(id + "\t" + finalDiseaseStatus[id] + "\t" + finalDiseaseStatus[id].getNumber());
+//			}
+//			System.exit(-1);
 			System.out.println(nrCases + " cases ");
 			System.out.println(nrControls + " controls ");
 			System.out.println(nrUnknown + " unknown ");

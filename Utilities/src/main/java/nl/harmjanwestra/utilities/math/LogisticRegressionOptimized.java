@@ -13,7 +13,20 @@ import umcg.genetica.math.stats.ChiSquare;
 public class LogisticRegressionOptimized {
 
 	int max_iter = 50;
-	double EPSILON = 1E-6;
+	double EPSILON = 1E-3;
+
+	public LogisticRegressionOptimized(){
+
+	}
+
+	public LogisticRegressionOptimized(int maxiter) {
+		max_iter = maxiter;
+	}
+
+	public LogisticRegressionOptimized(int maxiter, double epsilon) {
+		max_iter = maxiter;
+		EPSILON = epsilon;
+	}
 
 	public LogisticRegressionResult univariate(DoubleMatrix2D y, DoubleMatrix2D x) {
 		if (x.rows() != y.rows()) {
@@ -89,6 +102,8 @@ public class LogisticRegressionOptimized {
 		double[] beta = new double[kJMinusOne];
 
 		double[] beta0 = new double[kJMinusOne];
+//		double[] diff = new double[kJMinusOne];
+//		boolean[] diffb = new boolean[kJMinusOne];
 		//double[] beta_inf = new double[kJMinusOne];
 		DoubleMatrix2D xtwx = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);
 
@@ -131,8 +146,11 @@ public class LogisticRegressionOptimized {
 			converged = true;
 			for (k = 0; k < kJMinusOne; k++) {
 				double beta0k = beta0[k];
+//				diff[k] = Math.abs(beta[k] - beta0k);
+//				diffb[k] = true;
 				if (Math.abs(beta[k] - beta0k) > EPSILON * Math.abs(beta0k)) {
 					converged = false;
+//					diffb[k] = false;
 					break;
 				}
 			}
@@ -142,6 +160,18 @@ public class LogisticRegressionOptimized {
 			}
 			iter++;
 		}
+
+//		for (int q = 0; q < diffb.length; q++) {
+//
+//			double[] bliep = new double[X.rows()];
+//			for (int row = 0; row < bliep.length; row++) {
+//				bliep[row] = X.getQuick(row, q);
+//			}
+//
+//			System.out.println(Descriptives.variance(bliep) + "\t" + diffb[q] + "\t" + diff[q]);
+//
+//
+//		}
 
 		double[] sigprms = new double[kJMinusOne];
 		double[] stderrs = new double[kJMinusOne];
@@ -155,7 +185,6 @@ public class LogisticRegressionOptimized {
 //			double chi2 = deviance[0];
 //			int df2 = (N * (J - 1)) - (K * (J - 1));
 //			double chiTest2 = 1 - ChiSquare.getP(df2, chi2);
-
 
 			for (i = 0; i < kJMinusOne; i++) {
 				double xtwxii = xtwx.get(i, i);

@@ -13,8 +13,8 @@ public class ProxyFinderOptions {
 		Option option = Option.builder().longOpt("proxy").build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder("r")
-				.longOpt("ref")
+		option = Option.builder()
+				.longOpt("tabix")
 				.hasArg()
 				.desc("Prefix for tabix file [format /path/to/chr$i.vcf.gz]")
 				.build();
@@ -41,9 +41,22 @@ public class ProxyFinderOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder("r")
+				.longOpt("regions")
+				.hasArg()
+				.desc("Region file")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder()
 				.longOpt("pairwise")
 				.desc("Perform Pairwise LD calculation (format Chr_pos_rsid)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("locusld")
+				.desc("Perform Pairwise LD calculation within a region")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -70,6 +83,8 @@ public class ProxyFinderOptions {
 	public String output;
 	public int nrthreads = 1;
 	public boolean pairwise;
+	public String regionfile;
+	public boolean locusld;
 
 
 	public ProxyFinderOptions(String[] args) {
@@ -79,8 +94,8 @@ public class ProxyFinderOptions {
 			CommandLineParser parser = new DefaultParser();
 			final CommandLine cmd = parser.parse(OPTIONS, args, false);
 
-			if (cmd.hasOption("r")) {
-				tabixrefprefix = cmd.getOptionValue("r");
+			if (cmd.hasOption("tabix")) {
+				tabixrefprefix = cmd.getOptionValue("tabix");
 			} else {
 				System.out.println("Provide reference");
 				run = false;
@@ -94,15 +109,20 @@ public class ProxyFinderOptions {
 				pairwise = true;
 			}
 
+			if (cmd.hasOption("locusld")) {
+				locusld = true;
+			}
+
 			if (cmd.hasOption("t")) {
 				threshold = Double.parseDouble(cmd.getOptionValue("t"));
 			}
 
 			if (cmd.hasOption("i")) {
 				snpfile = cmd.getOptionValue("i");
-			} else {
-				System.out.println("Provide input");
-				run = false;
+			}
+
+			if (cmd.hasOption("r")) {
+				regionfile = cmd.getOptionValue("r");
 			}
 
 			if (cmd.hasOption("o")) {

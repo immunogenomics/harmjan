@@ -40,8 +40,7 @@ public class AssociationFile {
 					if (f2.overlaps(region)) {
 						try {
 
-							Double pval = Double.parseDouble(elems[elems.length - 2]); // need to check position...
-							double log10 = -Math.log10(pval);
+							Double pval = Double.parseDouble(elems[3]); // need to check position...
 							variantHash.add(variant);
 
 							f2.setName(elems[0]);
@@ -51,7 +50,7 @@ public class AssociationFile {
 
 							output.add(r);
 						} catch (NumberFormatException e) {
-
+							e.printStackTrace();
 						}
 						pvalctr++;
 					}
@@ -102,7 +101,11 @@ public class AssociationFile {
 		return read(file, null);
 	}
 
+
 	public ArrayList<AssociationResult> read(String file, Feature region) throws IOException {
+		if (file.endsWith("tab")) {
+			return readVariantPValues(file, region);
+		}
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
 

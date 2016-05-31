@@ -130,6 +130,7 @@ public class AssociationPosteriorPlotter {
 				AssociationPanel associationPanel = new AssociationPanel(1, 1);
 				ArrayList<Pair<Integer, Double>> pvals = new ArrayList<Pair<Integer, Double>>();
 
+				System.out.println(associations.size() + " pvals loaded");
 				for (int a = 0; a < associations.size(); a++) {
 					AssociationResult r = associations.get(a);
 

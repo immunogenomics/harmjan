@@ -67,7 +67,7 @@ public class AssociationResult {
 		this.hwep = hwep;
 	}
 
-	public Feature getSnp() {
+	public SNPFeature getSnp() {
 		return snp;
 	}
 

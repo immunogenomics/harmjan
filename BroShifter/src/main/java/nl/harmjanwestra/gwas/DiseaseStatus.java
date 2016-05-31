@@ -5,8 +5,8 @@ package nl.harmjanwestra.gwas;
  */
 public enum DiseaseStatus {
 
-	CASE(0, "Case"),
-	CONTROL(1, "Control"),
+	CONTROL(0, "Control"),
+	CASE(1, "Case"),
 	UNKNOWN(-1, "Unknown");
 
 	private final int number;
@@ -49,5 +49,9 @@ public enum DiseaseStatus {
 
 	public boolean equals(DiseaseStatus other) {
 		return this.number == other.number;
+	}
+
+	public String toString() {
+		return name;
 	}
 }
