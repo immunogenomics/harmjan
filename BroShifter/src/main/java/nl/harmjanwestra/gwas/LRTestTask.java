@@ -16,6 +16,7 @@ import org.rosuda.REngine.REngineException;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.math.stats.ChiSquare;
+import umcg.genetica.math.stats.HWE;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
@@ -45,16 +46,16 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	public LRTestTask(String vcfLn,
-					  VCFVariant variant,
-					  int iter,
-					  boolean[] genotypesWithCovariatesAndDiseaseStatus,
-					  DiseaseStatus[] finalDiseaseStatus,
-					  DoubleMatrix2D finalCovariates,
-					  ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
-					  ArrayList<DoubleMatrix2D> conditionalDosages,
-					  int alleleOffsetGenotypes,
-					  int alleleOffsetDosages,
-					  LRTestOptions options) {
+	                  VCFVariant variant,
+	                  int iter,
+	                  boolean[] genotypesWithCovariatesAndDiseaseStatus,
+	                  DiseaseStatus[] finalDiseaseStatus,
+	                  DoubleMatrix2D finalCovariates,
+	                  ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
+	                  ArrayList<DoubleMatrix2D> conditionalDosages,
+	                  int alleleOffsetGenotypes,
+	                  int alleleOffsetDosages,
+	                  LRTestOptions options) {
 		this.variant = variant;
 
 		this.iter = iter;
@@ -311,55 +312,76 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		double[] freqs = new double[nrAlleles];
 		for (int i = 0; i < nrAlleles; i++) {
-			freqs[i] = Math.sqrt((double) nrHomozygous[i] / nrCalled);
-		}
-
-		ctr = 0;
-		double chisq = 0;
-		for (int i = 0; i < nrAlleles; i++) {
-			for (int j = i; j < nrAlleles; j++) {
-				double expectedFreq;
+			for (int j = 0; j < nrAlleles; j++) {
+				int id = index[i][j];
+				System.out.println(i + "\t" + j + "\t" + obs[id]);
 				if (i == j) {
-					expectedFreq = (freqs[i] * freqs[i]) * nrCalled; // homozygote freq
+					freqs[i] += (2 * obs[id]);
 				} else {
-					expectedFreq = (2 * (freqs[i] * freqs[j])) * nrCalled; // heterozygote freq
+					freqs[i] += obs[id];
 				}
-				double observedFreq = obs[ctr];
-				double oe = (observedFreq - expectedFreq);
-				if (oe > 0 && expectedFreq > 0) {
-					chisq += ((oe * oe) / expectedFreq);
-				}
-				ctr++;
 			}
 		}
+		for (int i = 0; i < nrAlleles; i++) {
+			freqs[i] /= (nrCalled * 2);
+		}
 
-		int df = (nrCombinations - nrAlleles);
-		double hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
+		double hwep = 0;
+		boolean debug = true;
+		if (nrAlleles == 2 && !debug) {
+			hwep = HWE.calculateExactHWEPValue(obs[1], obs[0], obs[2]);
+		} else {
 
-		int[] nrAllelesPresent = new int[tmpgenotypes.rows() + 1];
-		int called = 0;
-		for (int i = 0; i < tmpgenotypes.columns(); i++) { // individuals
-			int nrAllelesLeft = 2;
-			for (int j = 0; j < tmpgenotypes.rows(); j++) { // alleles
-				if (!genotypeMissing[i]) {
-					double gji = tmpgenotypes.getQuick(j, i);
-					called += 2;
 
-					if (gji == 2d) {
-						nrAllelesPresent[j + 1] += 2;
-						nrAllelesLeft -= 2;
-					} else if (gji == 1d) {
-						nrAllelesPresent[j + 1] += 1;
-						nrAllelesLeft -= 1;
+			ctr = 0;
+			double chisq = 0;
+			for (int i = 0; i < nrAlleles; i++) {
+				for (int j = i; j < nrAlleles; j++) {
+					double expectedFreq;
+					if (i == j) {
+						expectedFreq = (freqs[i] * freqs[i]) * nrCalled; // homozygote freq
+					} else {
+						expectedFreq = (2 * (freqs[i] * freqs[j])) * nrCalled; // heterozygote freq
 					}
+					double observedFreq = obs[ctr];
+					double oe = (observedFreq - expectedFreq);
+					if (oe != 0 && expectedFreq != 0) {
+						chisq += ((oe * oe) / expectedFreq);
+					}
+					ctr++;
 				}
 			}
-			nrAllelesPresent[0] += nrAllelesLeft;
+
+			int df = (nrCombinations - nrAlleles);
+
+			hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
 		}
+
+
+//		int[] nrAllelesPresent = new int[tmpgenotypes.rows() + 1];
+//		int called = 0;
+//		for (int i = 0; i < tmpgenotypes.columns(); i++) { // individuals
+//			int nrAllelesLeft = 2;
+//			for (int j = 0; j < tmpgenotypes.rows(); j++) { // alleles
+//				if (!genotypeMissing[i]) {
+//					double gji = tmpgenotypes.getQuick(j, i);
+//					called += 2;
+//
+//					if (gji == 2d) {
+//						nrAllelesPresent[j + 1] += 2;
+//						nrAllelesLeft -= 2;
+//					} else if (gji == 1d) {
+//						nrAllelesPresent[j + 1] += 1;
+//						nrAllelesLeft -= 1;
+//					}
+//				}
+//			}
+//			nrAllelesPresent[0] += nrAllelesLeft;
+//		}
 
 		double maf = 1;
-		for (int i = 0; i < nrAllelesPresent.length; i++) {
-			double d = (double) nrAllelesPresent[i] / called;
+		for (int i = 0; i < freqs.length; i++) {
+			double d = freqs[i];
 			if (d < maf) {
 				maf = d;
 			}
@@ -468,9 +490,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //	}
 
 	public DoubleMatrix2D prepareDosageMatrix(boolean[] includeGenotype,
-											  DoubleMatrix2D dosages,
-											  DoubleMatrix2D covariates,
-											  ArrayList<DoubleMatrix2D> conditional) {
+	                                          DoubleMatrix2D dosages,
+	                                          DoubleMatrix2D covariates,
+	                                          ArrayList<DoubleMatrix2D> conditional) {
 
 		int nrSamples = 0;
 		for (int i = 0; i < dosages.rows(); i++) {
@@ -526,11 +548,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-										   double[] y,
-										   int nrAlleles,
-										   int alleleOffset,
-										   VCFVariant variant,
-										   double maf) throws REXPMismatchException, REngineException, IOException {
+	                                       double[] y,
+	                                       int nrAlleles,
+	                                       int alleleOffset,
+	                                       VCFVariant variant,
+	                                       double maf) throws REXPMismatchException, REngineException, IOException {
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X

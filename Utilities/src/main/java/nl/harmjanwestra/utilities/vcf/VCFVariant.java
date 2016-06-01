@@ -8,6 +8,7 @@ import nl.harmjanwestra.utilities.matrix.ByteMatrix2D;
 import nl.harmjanwestra.utilities.matrix.ShortMatrix2D;
 import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
 import umcg.genetica.io.trityper.util.BaseAnnot;
+import umcg.genetica.math.stats.HWE;
 import umcg.genetica.text.Strings;
 
 import java.util.ArrayList;
@@ -188,9 +189,9 @@ public class VCFVariant {
 
 									} else {
 
-										if(gtElems.length < 2){
+										if (gtElems.length < 2) {
 											System.out.println(ln);
-											System.out.println(Strings.concat(gtElems,Strings.tab));
+											System.out.println(Strings.concat(gtElems, Strings.tab));
 											System.exit(-1);
 										}
 
@@ -854,63 +855,101 @@ public class VCFVariant {
 	}
 
 	public void calculateHWEP() {
+
+
 		int nrAlleles = alleles.length;
-		int nrCombinations = (nrAlleles * (nrAlleles + 1)) / 2;
-		int[] obs = new int[nrCombinations];
-		int[] nrHomozygous = new int[nrAlleles];
-		int nrCalled = 0;
-		int[][] index = new int[nrAlleles][nrAlleles];
+		if (nrAlleles == 2 && 1 == 2) {
 
-		int ctr = 0;
-		for (int i = 0; i < nrAlleles; i++) {
-			for (int j = i; j < nrAlleles; j++) {
-				index[i][j] = ctr;
-				index[j][i] = ctr;
-				ctr++;
-			}
-		}
+			int hets = 0;
+			int homs1 = 0;
+			int homs2 = 0;
 
-		// count the homozygous
-		for (int i = 0; i < genotypeAlleles.columns(); i++) {
-			byte a1 = genotypeAlleles.getQuick(0, i);
-			if (a1 != -1) {
-				byte a2 = genotypeAlleles.getQuick(1, i);
-				if (a1 == a2) {
-					nrHomozygous[a1]++;
+			for (int i = 0; i < genotypeAlleles.columns(); i++) {
+				byte a1 = genotypeAlleles.getQuick(0, i);
+				if (a1 != -1) {
+					byte a2 = genotypeAlleles.getQuick(1, i);
+					if (a1 == a2) {
+						if (a1 == 0) {
+							homs1++;
+						} else {
+							homs2++;
+						}
+					} else {
+						hets++;
+					}
 				}
-
-				int id = index[a1][a2];
-				obs[id]++;
-				nrCalled++;
 			}
-		}
 
-		double[] freqs = new double[nrAlleles];
-		for (int i = 0; i < nrAlleles; i++) {
-			freqs[i] = Math.sqrt((double) nrHomozygous[i] / nrCalled);
-		}
+			hwep = HWE.calculateExactHWEPValue(hets, homs1, homs2);
+		} else {
+			int nrCombinations = (nrAlleles * (nrAlleles + 1)) / 2;
+			int[] obs = new int[nrCombinations];
+			int[] nrHomozygous = new int[nrAlleles];
+			int nrCalled = 0;
+			int[][] index = new int[nrAlleles][nrAlleles];
 
-		ctr = 0;
-		double chisq = 0;
-		for (int i = 0; i < nrAlleles; i++) {
-			for (int j = i; j < nrAlleles; j++) {
-				double expectedFreq;
-				if (i == j) {
-					expectedFreq = (freqs[i] * freqs[i]) * nrCalled; // homozygote freq
-				} else {
-					expectedFreq = (2 * (freqs[i] * freqs[j])) * nrCalled; // heterozygote freq
+			int ctr = 0;
+			for (int i = 0; i < nrAlleles; i++) {
+				for (int j = i; j < nrAlleles; j++) {
+					index[i][j] = ctr;
+					index[j][i] = ctr;
+					ctr++;
 				}
-				double observedFreq = obs[ctr];
-				double oe = (observedFreq - expectedFreq);
-				if (oe > 0 && expectedFreq > 0) {
-					chisq += ((oe * oe) / expectedFreq);
-				}
-				ctr++;
 			}
+
+			// count the homozygous
+			for (int i = 0; i < genotypeAlleles.columns(); i++) {
+				byte a1 = genotypeAlleles.getQuick(0, i);
+				if (a1 != -1) {
+					byte a2 = genotypeAlleles.getQuick(1, i);
+					if (a1 == a2) {
+						nrHomozygous[a1]++;
+					}
+
+					int id = index[a1][a2];
+					obs[id]++;
+					nrCalled++;
+				}
+			}
+
+			double[] freqs = new double[nrAlleles];
+			for (int i = 0; i < nrAlleles; i++) {
+				for (int j = 0; j < nrAlleles; j++) {
+					int id = index[i][j];
+					if (i == j) {
+						freqs[i] += (2 * obs[id]);
+					} else {
+						freqs[i] += obs[id];
+					}
+				}
+			}
+			for (int i = 0; i < nrAlleles; i++) {
+				freqs[i] /= (nrCalled * 2);
+			}
+
+			ctr = 0;
+			double chisq = 0;
+			for (int i = 0; i < nrAlleles; i++) {
+				for (int j = i; j < nrAlleles; j++) {
+					double expectedFreq;
+					if (i == j) {
+						expectedFreq = (freqs[i] * freqs[i]) * nrCalled; // homozygote freq
+					} else {
+						expectedFreq = (2 * (freqs[i] * freqs[j])) * nrCalled; // heterozygote freq
+					}
+					double observedFreq = obs[ctr];
+					double oe = (observedFreq - expectedFreq);
+					if (oe != 0 && expectedFreq != 0) {
+						chisq += ((oe * oe) / expectedFreq);
+					}
+					ctr++;
+				}
+			}
+
+			int df = (nrCombinations - nrAlleles);
+			hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
 		}
 
-		int df = (nrCombinations - nrAlleles);
-		hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
 	}
 
 	public String getInfoString() {
