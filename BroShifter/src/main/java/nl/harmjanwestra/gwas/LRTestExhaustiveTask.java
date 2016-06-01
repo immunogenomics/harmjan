@@ -132,10 +132,10 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 
 		// calculate the ld between the variants :)
-		DetermineLD ldcalc = new DetermineLD();
-		Pair<Double, Double> ld = ldcalc.getLD(variant1, variant2);
-		output.setLDRSquared(ld.getRight());
-		output.setLdDprime(ld.getLeft());
+//		DetermineLD ldcalc = new DetermineLD();
+//		Pair<Double, Double> ld = ldcalc.getLD(variant1, variant2);
+		output.setLDRSquared(0d);
+		output.setLdDprime(0d);
 
 		return output;
 	}

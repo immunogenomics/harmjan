@@ -25,6 +25,12 @@ public class AssociationPlotterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder("b")
+				.hasArg()
+				.desc("Threshold for credible sets (default: 0.9)")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("a")
 				.hasArg()
 				.desc("GTF Annotation file")
@@ -63,6 +69,7 @@ public class AssociationPlotterOptions {
 	}
 
 	private Double maxp;
+	private double credibleSetThreshold = 0.9;
 
 	public Double getMaxp() {
 		return maxp;
@@ -140,6 +147,10 @@ public class AssociationPlotterOptions {
 				run = false;
 			}
 
+			if (cmd.hasOption("b")) {
+				credibleSetThreshold = Double.parseDouble(cmd.getOptionValue("b"));
+			}
+
 			if (cmd.hasOption("o")) {
 				outputprefix = cmd.getOptionValue("o");
 			} else {
@@ -175,5 +186,9 @@ public class AssociationPlotterOptions {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp(" ", OPTIONS);
 		System.exit(-1);
+	}
+
+	public double getCredibleSetThreshold() {
+		return credibleSetThreshold;
 	}
 }

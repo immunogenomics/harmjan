@@ -45,7 +45,7 @@ public class LRTest {
 		LRTestOptions options = new LRTestOptions(args2);
 
 		try {
-			LRTest t = new LRTest(options);
+			new LRTest(options);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -83,6 +83,8 @@ public class LRTest {
 	}
 
 	public void testNormal() throws IOException {
+		System.out.println("Will perform logistic regression analysis");
+
 		boolean initialized = initialize();
 
 		if (initialized) {
@@ -367,6 +369,8 @@ public class LRTest {
 
 	public void testConditional() throws IOException {
 
+		System.out.println("Will perform conditional analysis");
+
 		boolean initialized = initialize();
 
 		if (initialized) {
@@ -391,76 +395,94 @@ public class LRTest {
 
 			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
 
-			boolean initialMappingPerformed = false;
+
 			ArrayList<AssociationResult> assocResults = new ArrayList<>();
-			if (!initialMappingPerformed) {
-				int iter = 0;
-				System.out.println("Iteration " + iter + " starting. Model: y ~ SNP + covar.");
-				System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
-				TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
-				pvalout.writeln(header);
-
-				currentLowestVariant = null;
-				int variantCtr = 0;
-				nrTested = 0;
-				submitted = 0;
-				returned = 0;
-				highestLog10p = 0;
-				highestLog10PProbs = 0;
 
 
-				for (VCFVariant variant : allVariants) {
-					// throw into a thread
-					// TODO: conditional on dosages is separate from conditional on genotypes.. ?
-					ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional = new ArrayList<>();
-					ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
-					LRTestTask task = new LRTestTask(null,
-							variant,
-							iter,
-							genotypeSamplesWithCovariatesAndDiseaseStatus,
-							finalDiseaseStatus,
-							finalCovariates,
-							conditional,
-							conditionalDosages,
-							0,
-							0,
-							options);
-					jobHandler.submit(task);
-					submitted++;
+			System.out.println("Iteration " + 0 + " starting. Model: y ~ SNP + covar.");
+			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + 0 + ".txt");
+			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + 0 + ".txt", TextFile.W);
+			logout = new TextFile(options.getOutputdir() + "gwas-" + 0 + "-log.txt.gz", TextFile.W);
+			pvalout.writeln(header);
 
-					if (submitted % 1000 == 0) {
-						clearQueue(logout, pvalout, iter, null, jobHandler, assocResults);
+			currentLowestVariant = null;
+			int variantCtr = 0;
+			nrTested = 0;
+			submitted = 0;
+			returned = 0;
+			highestLog10p = 0;
+			highestLog10PProbs = 0;
+
+
+			for (VCFVariant variant : allVariants) {
+				// throw into a thread
+				// TODO: conditional on dosages is separate from conditional on genotypes.. ?
+				ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional = new ArrayList<>();
+				ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
+				LRTestTask task = new LRTestTask(null,
+						variant,
+						0,
+						genotypeSamplesWithCovariatesAndDiseaseStatus,
+						finalDiseaseStatus,
+						finalCovariates,
+						conditional,
+						conditionalDosages,
+						0,
+						0,
+						options);
+				jobHandler.submit(task);
+				submitted++;
+
+				if (submitted % 1000 == 0) {
+					clearQueue(logout, pvalout, 0, null, jobHandler, assocResults);
+				}
+			}
+
+			// clean up the queue
+			clearQueue(logout, pvalout, 0, null, jobHandler, assocResults);
+			pvalout.close();
+			logout.close();
+
+			System.out.println("Initial mapping done. Now performing conditional analysis");
+			// run conditional per region..
+			// get iter0 results
+			// get best associated variant in region
+			// testNormal conditional on best variant
+
+			HashSet<Feature> visitedRegions = new HashSet<Feature>();
+			for (VCFVariant v : allVariants) {
+				for (int f = 0; f < bedRegions.size(); f++) {
+					if (v.asFeature().overlaps(bedRegions.get(f))) {
+						visitedRegions.add(bedRegions.get(f));
 					}
 				}
+			}
 
-				// clean up the queue
-				clearQueue(logout, pvalout, iter, null, jobHandler, assocResults);
-				pvalout.close();
+			System.out.println(visitedRegions.size() + " regions are present in association output.");
+			if (visitedRegions.isEmpty()) {
+				System.out.println("No more work to do");
 			} else {
-				// run conditional per region..
-				// get iter0 results
-				// get best associated variant in region
-				// testNormal conditional on best variant
-
-				HashSet<Feature> visitedRegions = new HashSet<Feature>();
-				for (VCFVariant v : allVariants) {
-					for (int f = 0; f < bedRegions.size(); f++) {
-						if (v.asFeature().overlaps(bedRegions.get(f))) {
-							visitedRegions.add(bedRegions.get(f));
-						}
-					}
-				}
-
-				int iter = 1;
 				ArrayList<Feature> remainingRegions = new ArrayList<>();
 				remainingRegions.addAll(visitedRegions);
-				ArrayList<ArrayList<VCFVariant>> conditionalVariants = new ArrayList<>();
-				LRTestTask tasktmp = new LRTestTask();
-				for (int i = iter; i < options.getMaxIter(); i++) {
 
-					System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
-					TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
-					TextFile modelsout = new TextFile(options.getOutputdir() + "gwas-" + iter + "-models.txt", TextFile.W);
+
+				System.out.println("Total number of iterations to run: " + options.getMaxIter());
+				ArrayList<ArrayList<VCFVariant>> conditionalVariants = new ArrayList<>();
+				for (int i = 0; i < remainingRegions.size(); i++) {
+					conditionalVariants.add(new ArrayList<>());
+				}
+
+				LRTestTask tasktmp = new LRTestTask();
+				TextFile modelsout = new TextFile(options.getOutputdir() + "gwas-conditional-models.txt", TextFile.W);
+				modelsout.writeln("Region\tIter\tModel");
+				TextFile topvariantsout = new TextFile(options.getOutputdir() + "gwas-topvariants.txt", TextFile.W);
+				topvariantsout.writeln("Region\tIter\tVariant\tPval");
+
+				for (int i = 1; i < options.getMaxIter(); i++) {
+
+					System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + i + ".txt");
+					pvalout = new TextFile(options.getOutputdir() + "gwas-" + i + ".txt", TextFile.W);
+
 					pvalout.writeln(header);
 
 					// start new result array
@@ -469,8 +491,10 @@ public class LRTest {
 					for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
 						// get variants in region
 						ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
-						VCFVariant bestVariantLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion);
+						Pair<VCFVariant, AssociationResult> bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion);
 
+						VCFVariant bestVariantLastIter = bestAssocLastIter.getLeft();
+						topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (i - 1) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
 						// get conditional variants for this region
 						ArrayList<VCFVariant> conditionalVariantsForRegion = conditionalVariants.get(regionId);
 						if (conditionalVariantsForRegion == null) {
@@ -482,7 +506,7 @@ public class LRTest {
 						ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional = new ArrayList<>();
 						ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
 
-						String model = remainingRegions.get(regionId).toBedString() + "\ty ~ intercept ";
+						String model = "y ~ intercept ";
 
 						for (int c = 0; c < conditionalVariantsForRegion.size(); c++) {
 							VCFVariant variant = conditionalVariantsForRegion.get(c);
@@ -497,7 +521,7 @@ public class LRTest {
 							DoubleMatrix2D dosages = variant.getImputedDosagesAsMatrix2D();
 							conditionalDosages.add(dosages);
 						}
-						modelsout.writeln(model);
+						modelsout.writeln(remainingRegions.get(regionId).toString() + "\t" + i + "\t" + model);
 
 						int alleleOffsetGenotypes = 0;
 						int alleleOffsetDosages = 0;
@@ -516,7 +540,7 @@ public class LRTest {
 							VCFVariant variant = variantsInRegion.get(v);
 							LRTestTask task = new LRTestTask(null,
 									variant,
-									iter,
+									i,
 									genotypeSamplesWithCovariatesAndDiseaseStatus,
 									finalDiseaseStatus,
 									finalCovariates,
@@ -529,18 +553,28 @@ public class LRTest {
 							submitted++;
 
 							if (submitted % 1000 == 0) {
-								clearQueue(null, pvalout, iter, null, jobHandler, assocResultsIter);
+								clearQueue(null, pvalout, i, null, jobHandler, assocResultsIter);
 							}
 						}
 					}
 
-					clearQueue(null, pvalout, iter, null, jobHandler, assocResultsIter);
+					clearQueue(null, pvalout, i, null, jobHandler, assocResultsIter);
 					assocResults = assocResultsIter;
 					pvalout.close();
-					modelsout.close();
 				}
+				for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
+					// get variants in region
+					ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
+					Pair<VCFVariant, AssociationResult> bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion);
+					VCFVariant bestVariantLastIter = bestAssocLastIter.getLeft();
+					topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (options.getMaxIter() - 2) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
+				}
+				modelsout.close();
+				topvariantsout.close();
+				threadPool.shutdown();
 			}
-			threadPool.shutdown();
+
+
 		}
 	}
 
@@ -602,6 +636,7 @@ public class LRTest {
 	}
 
 	public void testExhaustivePairwise() throws IOException {
+		System.out.println("Will perform exhaustive pairwise analysis");
 		boolean initialized = initialize();
 		if (initialized) {
 			// get a list of variants for the region
@@ -672,7 +707,7 @@ public class LRTest {
 								}
 							}
 							returned++;
-							pb.set(returned);
+							pb.iterate();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						} catch (ExecutionException e) {
@@ -687,9 +722,9 @@ public class LRTest {
 		}
 	}
 
-	private VCFVariant getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-											 Feature region,
-											 ArrayList<VCFVariant> variantsInRegion) {
+	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
+																	  Feature region,
+																	  ArrayList<VCFVariant> variantsInRegion) {
 
 		AssociationResult topResult = null;
 		for (AssociationResult r : assocResults) {
@@ -708,8 +743,11 @@ public class LRTest {
 		// get the variant belonging to this assoc result
 		for (VCFVariant v : variantsInRegion) {
 			if (v.asFeature().overlaps(topResult.getSnp())) {
-				if (v.getId().equals(topResult.getSnp().getName())) {
-					return v;
+				String alleles1 = Strings.concat(v.getAlleles(), Strings.comma);
+				String alleles2 = Strings.concat(topResult.getSnp().getAlleles(), Strings.comma);
+
+				if (v.getId().equals(topResult.getSnp().getName()) && alleles1.equals(alleles2)) {
+					return new Pair<VCFVariant, AssociationResult>(v, topResult);
 				}
 			}
 		}
@@ -750,7 +788,7 @@ public class LRTest {
 							if (associationResults != null) {
 								associationResults.add(assoc);
 							}
-							if (variant != null && iter == 0 && options.getMaxIter() > 1) {
+							if (variant != null && variants != null && iter == 0 && options.getMaxIter() > 1) {
 								variants.add(variant);
 							}
 							nrTested++;

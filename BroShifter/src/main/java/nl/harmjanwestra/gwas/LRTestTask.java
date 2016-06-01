@@ -268,7 +268,13 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				byte b1 = genotypeAlleles.getQuick(0, i);
 				byte b2 = genotypeAlleles.getQuick(1, i);
 
-				if (b1 != -1) {
+				if (b1 == -1) {
+					for (int q = 0; q < tmpgenotypes.rows(); q++) {
+						tmpgenotypes.setQuick(q, individualCounter, Double.NaN);
+					}
+					nrWithMissingGenotypes++;
+					genotypeMissing[individualCounter] = true;
+				} else {
 					if (diseaseStatus[individualCounter].equals(DiseaseStatus.CONTROL)) { // controls
 						if (b1 == b2) {
 							nrHomozygous[b1]++;
@@ -278,16 +284,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						obs[id]++;
 						nrCalled++;
 					}
-
-				}
-
-				if (b1 == -1) {
-					for (int q = 0; q < tmpgenotypes.rows(); q++) {
-						tmpgenotypes.setQuick(q, individualCounter, Double.NaN);
-					}
-					nrWithMissingGenotypes++;
-					genotypeMissing[individualCounter] = true;
-				} else {
 					if (b1 == b2) {
 						// homozygote
 						if (b1 == 0) {

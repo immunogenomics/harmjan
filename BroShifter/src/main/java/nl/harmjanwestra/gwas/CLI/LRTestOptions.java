@@ -274,7 +274,7 @@ public class LRTestOptions {
 
 			if (cmd.hasOption("exhaustive")) {
 				exhaustivePairwiseAnalysis = true;
-			} else if (cmd.hasOption("conditonal")) {
+			} else if (cmd.hasOption("conditional")) {
 				conditionalAnalysis = true;
 			}
 

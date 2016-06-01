@@ -111,7 +111,7 @@ public class AssociationPosteriorPlotter {
 					AssociationPanel posteriorPanel = new AssociationPanel(1, 1);
 					ArrayList<Pair<Integer, Double>> posteriors = new ArrayList<Pair<Integer, Double>>();
 					ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
-					ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(associations, 0.95);
+					ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(associations, options.getCredibleSetThreshold());
 					credibleSetSet.addAll(credibleSet);
 					mark = new boolean[associations.size()];
 					for (int a = 0; a < associations.size(); a++) {
