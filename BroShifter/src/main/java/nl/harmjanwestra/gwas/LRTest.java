@@ -461,6 +461,7 @@ public class LRTest {
 			System.out.println(visitedRegions.size() + " regions are present in association output.");
 			if (visitedRegions.isEmpty()) {
 				System.out.println("No more work to do");
+
 			} else {
 				ArrayList<Feature> remainingRegions = new ArrayList<>();
 				remainingRegions.addAll(visitedRegions);
@@ -571,9 +572,8 @@ public class LRTest {
 				}
 				modelsout.close();
 				topvariantsout.close();
-				threadPool.shutdown();
 			}
-
+			threadPool.shutdown();
 
 		}
 	}
