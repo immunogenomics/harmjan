@@ -314,7 +314,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		for (int i = 0; i < nrAlleles; i++) {
 			for (int j = 0; j < nrAlleles; j++) {
 				int id = index[i][j];
-				System.out.println(i + "\t" + j + "\t" + obs[id]);
 				if (i == j) {
 					freqs[i] += (2 * obs[id]);
 				} else {
