@@ -67,6 +67,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 
 				maf = qc.getMiddle();
 				hwep = qc.getRight();
+
 				if (maf < options.getMafthresholdD() || hwep < options.getHWEPThreshold()) {
 					variant = null;
 				} else {
@@ -83,6 +84,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				+ "\t" + variantId
 				+ "\t" + maf
 				+ "\t" + hwep
+				+ "\t" + impqual
 				+ "\t" + overlap
 				+ "\t" + variantPassesQC;
 

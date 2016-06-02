@@ -82,6 +82,8 @@ public class LRTest {
 
 	}
 
+
+
 	public void testNormal() throws IOException {
 		System.out.println("Will perform logistic regression analysis");
 
@@ -94,8 +96,6 @@ public class LRTest {
 			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
 
 			TextFile log = new TextFile(options.getOutputdir() + "variantlog.txt", TextFile.W);
-			String logoutheader = "SNP\tChr\tPos\tAlleles\tMinorAllele\tImputationQual\tMAF\tHWEP\tTested";
-			log.writeln(logoutheader);
 			System.out.println("Log will be written here: " + log.getFileName());
 			ArrayList<VCFVariant> variants = readVariants(threadPool, log);
 			log.close();
@@ -579,6 +579,8 @@ public class LRTest {
 	}
 
 	public ArrayList<VCFVariant> readVariants(ExecutorService threadPool, TextFile log) throws IOException {
+
+		log.writeln("Chr\tPos\tId\tMAF\tHWEP\tImpQual\tOverlap\tPassQC");
 
 		CompletionService<Pair<VCFVariant, String>> jobHandler = new ExecutorCompletionService<Pair<VCFVariant, String>>(threadPool);
 		TextFile vcfIn = new TextFile(options.getVcf(), TextFile.R);

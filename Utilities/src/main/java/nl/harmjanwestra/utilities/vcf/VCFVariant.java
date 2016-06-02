@@ -64,9 +64,14 @@ public class VCFVariant {
 	private int dsCol = -1;
 	private int gpCol = -1;
 
+	public DenseDoubleMatrix2D getGenotypeProbabilies() {
+		return genotypeProbabilies;
+	}
+
 	private boolean ignoregender;
 	private ShortMatrix2D allelicDepth;
 	private int totalCalledAlleles;
+	private DenseDoubleMatrix2D genotypeProbabilies;
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
@@ -314,6 +319,7 @@ public class VCFVariant {
 							}
 						}
 					}
+					this.genotypeProbabilies = genotypeProbabilies;
 				}
 
 				if (filters != null) {
@@ -1081,10 +1087,6 @@ public class VCFVariant {
 		} else {
 			return imputedDosages;
 		}
-	}
-
-	public ByteMatrix2D getGenotypeAllelesAsByteMatrix2D() {
-		return genotypeAlleles;
 	}
 
 	public enum PARSE {
