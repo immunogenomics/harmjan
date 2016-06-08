@@ -32,7 +32,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 	private VCFVariant variant;
 	private int iter;
-	private boolean[] genotypesWithCovariatesAndDiseaseStatus;
 	private DiseaseStatus[] finalDiseaseStatus;
 	private DoubleMatrix2D finalCovariates;
 	private ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional;
@@ -45,21 +44,19 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	public LRTestTask() {
 	}
 
-	public LRTestTask(String vcfLn,
-	                  VCFVariant variant,
-	                  int iter,
-	                  boolean[] genotypesWithCovariatesAndDiseaseStatus,
-	                  DiseaseStatus[] finalDiseaseStatus,
-	                  DoubleMatrix2D finalCovariates,
-	                  ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
-	                  ArrayList<DoubleMatrix2D> conditionalDosages,
-	                  int alleleOffsetGenotypes,
-	                  int alleleOffsetDosages,
-	                  LRTestOptions options) {
+	public LRTestTask(VCFVariant variant,
+					  int iter,
+					  DiseaseStatus[] finalDiseaseStatus,
+					  DoubleMatrix2D finalCovariates,
+					  ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional,
+					  ArrayList<DoubleMatrix2D> conditionalDosages,
+					  int alleleOffsetGenotypes,
+					  int alleleOffsetDosages,
+					  LRTestOptions options) {
 		this.variant = variant;
 
 		this.iter = iter;
-		this.genotypesWithCovariatesAndDiseaseStatus = genotypesWithCovariatesAndDiseaseStatus;
+//		this.genotypesWithCovariatesAndDiseaseStatus = genotypesWithCovariatesAndDiseaseStatus;
 		this.finalDiseaseStatus = finalDiseaseStatus;
 		this.finalCovariates = finalCovariates;
 		this.conditional = conditional;
@@ -74,7 +71,8 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		// TODO: switch this around: make the ordering of the covariate table the same as the genotype file...
 		// recode the genotypes to the same ordering as the covariate table
-		Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = filterAndRecodeGenotypes(
+		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
+		Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = lrq.filterAndRecodeGenotypes(
 				genotypesWithCovariatesAndDiseaseStatus,
 				variant.getGenotypeAllelesAsMatrix2D(),
 				finalDiseaseStatus,
@@ -120,7 +118,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				result = pruneAndTest(x, y, nrAlleles, alleleOffsetGenotypes, variant, maf);
 			} else {
 				// recode to dosages
-				DoubleMatrix2D dosageMat = prepareDosageMatrix(genotypesWithCovariatesAndDiseaseStatus,
+				DoubleMatrix2D dosageMat = prepareDosageMatrix(
 						variant.getImputedDosagesAsMatrix2D(),
 						finalCovariates,
 						conditionalDosages);
@@ -233,163 +231,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		return output;
 	}
 
-	Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> filterAndRecodeGenotypes(
-			boolean[] includeGenotype,
-			ByteMatrix2D genotypeAlleles,
-			DiseaseStatus[] diseaseStatus,
-			int nrAlleles,
-			int nrsamples) {
-
-		DoubleMatrix2D tmpgenotypes = new DenseDoubleMatrix2D(nrAlleles - 1, nrsamples);
-		int individualCounter = 0;
-
-		// first iterate the genotyped samples to load the genotypes
-		// calculate maf and hwep
-
-		// initialize hwep stuff
-		int nrCombinations = (nrAlleles * (nrAlleles + 1)) / 2;
-		int[] obs = new int[nrCombinations];
-		int[] nrHomozygous = new int[nrAlleles];
-		int nrCalled = 0;
-		int[][] index = new int[nrAlleles][nrAlleles];
-
-		int ctr = 0;
-		for (int i = 0; i < nrAlleles; i++) {
-			for (int j = i; j < nrAlleles; j++) {
-				index[i][j] = ctr;
-				index[j][i] = ctr;
-				ctr++;
-			}
-		}
-
-		int nrWithMissingGenotypes = 0;
-		boolean[] genotypeMissing = new boolean[nrsamples];
-		for (int i = 0; i < genotypeAlleles.columns(); i++) {
-			if (includeGenotype[i]) { // this is set to false if the genotype doesn't have a disease status or covariate data.
-				byte b1 = genotypeAlleles.getQuick(0, i);
-				byte b2 = genotypeAlleles.getQuick(1, i);
-
-				if (b1 == -1) {
-					for (int q = 0; q < tmpgenotypes.rows(); q++) {
-						tmpgenotypes.setQuick(q, individualCounter, Double.NaN);
-					}
-					nrWithMissingGenotypes++;
-					genotypeMissing[individualCounter] = true;
-				} else {
-					if (diseaseStatus[individualCounter].equals(DiseaseStatus.CONTROL)) { // controls
-						if (b1 == b2) {
-							nrHomozygous[b1]++;
-						}
-
-						int id = index[b1][b2];
-						obs[id]++;
-						nrCalled++;
-					}
-					if (b1 == b2) {
-						// homozygote
-						if (b1 == 0) {
-							// do nothing
-						} else {
-							int allele = b1 - 1;
-							if (allele >= 0) {
-								tmpgenotypes.set(allele, individualCounter, 2);
-							}
-						}
-					} else {
-						int allele1 = b1 - 1;
-						int allele2 = b2 - 1;
-						if (allele1 >= 0) {
-							tmpgenotypes.set(allele1, individualCounter, 1);
-						}
-						if (allele2 >= 0) {
-							tmpgenotypes.set(allele2, individualCounter, 1);
-						}
-					}
-				}
-				individualCounter++;
-			}
-		}
-
-		double[] freqs = new double[nrAlleles];
-		for (int i = 0; i < nrAlleles; i++) {
-			for (int j = 0; j < nrAlleles; j++) {
-				int id = index[i][j];
-				if (i == j) {
-					freqs[i] += (2 * obs[id]);
-				} else {
-					freqs[i] += obs[id];
-				}
-			}
-		}
-		for (int i = 0; i < nrAlleles; i++) {
-			freqs[i] /= (nrCalled * 2);
-		}
-
-		double hwep = 0;
-		boolean debug = true;
-		if (nrAlleles == 2 && !debug) {
-			hwep = HWE.calculateExactHWEPValue(obs[1], obs[0], obs[2]);
-		} else {
-
-
-			ctr = 0;
-			double chisq = 0;
-			for (int i = 0; i < nrAlleles; i++) {
-				for (int j = i; j < nrAlleles; j++) {
-					double expectedFreq;
-					if (i == j) {
-						expectedFreq = (freqs[i] * freqs[i]) * nrCalled; // homozygote freq
-					} else {
-						expectedFreq = (2 * (freqs[i] * freqs[j])) * nrCalled; // heterozygote freq
-					}
-					double observedFreq = obs[ctr];
-					double oe = (observedFreq - expectedFreq);
-					if (oe != 0 && expectedFreq != 0) {
-						chisq += ((oe * oe) / expectedFreq);
-					}
-					ctr++;
-				}
-			}
-
-			int df = (nrCombinations - nrAlleles);
-
-			hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
-		}
-
-
-//		int[] nrAllelesPresent = new int[tmpgenotypes.rows() + 1];
-//		int called = 0;
-//		for (int i = 0; i < tmpgenotypes.columns(); i++) { // individuals
-//			int nrAllelesLeft = 2;
-//			for (int j = 0; j < tmpgenotypes.rows(); j++) { // alleles
-//				if (!genotypeMissing[i]) {
-//					double gji = tmpgenotypes.getQuick(j, i);
-//					called += 2;
-//
-//					if (gji == 2d) {
-//						nrAllelesPresent[j + 1] += 2;
-//						nrAllelesLeft -= 2;
-//					} else if (gji == 1d) {
-//						nrAllelesPresent[j + 1] += 1;
-//						nrAllelesLeft -= 1;
-//					}
-//				}
-//			}
-//			nrAllelesPresent[0] += nrAllelesLeft;
-//		}
-
-		double maf = 1;
-		for (int i = 0; i < freqs.length; i++) {
-			double d = freqs[i];
-			if (d < maf) {
-				maf = d;
-			}
-		}
-
-
-		return new Triple<>(tmpgenotypes, genotypeMissing, new Triple<>(nrWithMissingGenotypes, maf, hwep));
-	}
-
 	// output format genotypes+covariates, matched disease status, maf, cr
 	public Pair<DoubleMatrix2D, double[]> prepareGenotypeMatrix(
 			Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> genotypeData,
@@ -488,10 +329,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //		return umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
 //	}
 
-	public DoubleMatrix2D prepareDosageMatrix(boolean[] includeGenotype,
-	                                          DoubleMatrix2D dosages,
-	                                          DoubleMatrix2D covariates,
-	                                          ArrayList<DoubleMatrix2D> conditional) {
+	public DoubleMatrix2D prepareDosageMatrix(
+											  DoubleMatrix2D dosages,
+											  DoubleMatrix2D covariates,
+											  ArrayList<DoubleMatrix2D> conditional) {
 
 		int nrSamples = 0;
 		for (int i = 0; i < dosages.rows(); i++) {
@@ -547,11 +388,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-	                                       double[] y,
-	                                       int nrAlleles,
-	                                       int alleleOffset,
-	                                       VCFVariant variant,
-	                                       double maf) throws REXPMismatchException, REngineException, IOException {
+										   double[] y,
+										   int nrAlleles,
+										   int alleleOffset,
+										   VCFVariant variant,
+										   double maf) throws REXPMismatchException, REngineException, IOException {
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X
