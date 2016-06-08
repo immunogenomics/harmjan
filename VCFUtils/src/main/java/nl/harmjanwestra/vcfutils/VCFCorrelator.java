@@ -2,6 +2,7 @@ package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
@@ -20,7 +21,7 @@ import java.util.concurrent.*;
  */
 public class VCFCorrelator {
 
-	public void updateVCFInfoScore(String vcfin, String vcfOut) throws IOException {
+	public void updateVCFInfoScore(String vcfin, String vcfOut, boolean infoscore) throws IOException {
 		System.out.println("Will replace imputation quals.");
 		System.out.println("In: " + vcfin);
 		System.out.println("Out: " + vcfOut);
@@ -40,7 +41,7 @@ public class VCFCorrelator {
 			if (ln.startsWith("#")) {
 				out.writeln(ln);
 			} else {
-				VCFVariantInfoUpdater task = new VCFVariantInfoUpdater(ln);
+				VCFVariantInfoUpdater task = new VCFVariantInfoUpdater(ln, infoscore);
 				jobHandler.submit(task);
 				submitted++;
 				nrRead++;
@@ -239,7 +240,7 @@ public class VCFCorrelator {
 							double[] x = toArr(data.getLeft(), a);
 							double[] y = toArr(data.getRight(), a);
 
-							if(x.length > 0 && y.length > 0){
+							if (x.length > 0 && y.length > 0) {
 								double r = JSci.maths.ArrayMath.correlation(x, y);
 
 								// calculate betas
@@ -400,25 +401,35 @@ public class VCFCorrelator {
 	public class VCFVariantInfoUpdater implements Callable<String> {
 
 		private String in = null;
+		private boolean infoscore = false;
 
-		public VCFVariantInfoUpdater(String in) {
+		public VCFVariantInfoUpdater(String in, boolean infoscore) {
 			this.in = in;
+			this.infoscore = infoscore;
 		}
 
 		@Override
 		public String call() throws Exception {
 
 			VCFVariant variant = new VCFVariant(in);
+
 			int nrAlleles = variant.getAlleles().length;
 			double rsq = 0;
 			if (nrAlleles == 2) {
-				double[] probabilies = variant.getGenotypeDosages();
-				double[] bestguess = convertGenotypesToDouble(variant);
-				double r = JSci.maths.ArrayMath.correlation(bestguess, probabilies);
-				rsq = r * r;
+				if (infoscore) {
+					VCFImputationQualScoreImpute q = new VCFImputationQualScoreImpute();
+					q.computeAutosomal(variant);
+					rsq = q.getImpinfo();
+				} else {
+					double[] probabilies = variant.getGenotypeDosages();
+					double[] bestguess = convertGenotypesToDouble(variant);
+					double r = JSci.maths.ArrayMath.correlation(bestguess, probabilies);
+					rsq = r * r;
+				}
+
 			}
 
-			String[] elems = in.split("\t");
+			String[] elems = Strings.tab.split(in);
 			elems[7] = "INFO=" + rsq;
 
 			return Strings.concat(elems, Strings.tab);

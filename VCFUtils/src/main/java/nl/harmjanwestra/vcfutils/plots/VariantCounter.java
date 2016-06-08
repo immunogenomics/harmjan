@@ -34,6 +34,10 @@ public class VariantCounter {
 		ArrayList<VCFVariant> seqpanel = new ArrayList<>();
 		String ln = tf.readLine();
 
+		double mafthreshold = 0.05;
+		double upperthreshold = 1;
+		double infothreshold = 0.8;
+
 		boolean includeId = false;
 		boolean includeIndels = true;
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
@@ -46,7 +50,7 @@ public class VariantCounter {
 				Chromosome chr = Chromosome.parseChr(elems[0]);
 				if (chr.isAutosome()) {
 					VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
-					if (variant.getMAF() > 0.005) {
+					if (variant.getMAF() > mafthreshold && variant.getMAF() < upperthreshold) {
 						seqpanel.add(variant);
 						boolean varOnIc = isVariantOnIC(elems, variantsOnICHash, includeId);
 						boolean indel = isIndel(elems);
@@ -77,6 +81,10 @@ public class VariantCounter {
 				"/Data/tmp/2016-05-23/T1D/T1D-HRC-HRC-w100kb-merged.txt",
 		};
 
+
+		System.out.println("MAF> " + mafthreshold);
+		System.out.println("INFO> " + infothreshold);
+
 		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb"};
 
 		PlotterAccuracy p = new PlotterAccuracy();
@@ -104,13 +112,13 @@ public class VariantCounter {
 
 				if (sequenced) {
 					nrSequenced++;
-					if (maf > 0.005) {
+					if (maf > mafthreshold) {
 						nrSequencedPassingMaf++;
-						if (val > 0.8) {
+						if (val > infothreshold) {
 							nrSequencdPassingMafAndRSQ++;
 						}
 					}
-					if (val > 0.8) {
+					if (val > infothreshold) {
 						nrSequencedPassingRSQ++;
 					}
 				}
@@ -122,7 +130,7 @@ public class VariantCounter {
 			System.out.println(labels[f]);
 
 			System.out.println("nrSequenced\t" + nrSequenced + "\t" + ((double) nrSequenced / sequencedVariantsHash.size()));
-			System.out.println("nrSequencedPassingRSQ\t" + nrSequencedPassingRSQ + "\t" + ((double) nrSequencedPassingRSQ / sequencedVariantsHash.size()));
+			System.out.println("nrSequencedPassingRSQ\t" + nrSequencedPassingRSQ + "\t" + ((double) nrSequencedPassingRSQ / sequencedVariantsHash.size()) + "\t" + ((double) nrSequencedPassingRSQ / nrSequenced));
 			System.out.println("nrSequencedPassingMaf\t" + nrSequencedPassingMaf + "\t" + ((double) nrSequencedPassingMaf / sequencedVariantsHash.size()));
 			System.out.println("nrSequencdPassingMafAndRSQ\t" + nrSequencdPassingMafAndRSQ + "\t" + ((double) nrSequencdPassingMafAndRSQ / sequencedVariantsHash.size()));
 			System.out.println();

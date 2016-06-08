@@ -19,7 +19,7 @@ public class VCFTest {
 			while (ln != null) {
 				if (!ln.startsWith("#")) {
 					VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
-					VCFImputationQualScore q = new VCFImputationQualScore(variant, true);
+					VCFImputationQualScoreBeagle q = new VCFImputationQualScoreBeagle(variant, true);
 					System.out.println(variant.getId() + "\t" + q.allelicR2() + "\t" + q.doseR2());
 					System.out.println(q.toString());
 					System.out.println(variant.getMAF() + "\t" + variant.getMinorAllele());

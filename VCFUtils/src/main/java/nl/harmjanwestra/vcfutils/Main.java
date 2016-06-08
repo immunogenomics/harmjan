@@ -40,6 +40,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Strip the info field")
+				.longOpt("stripinfo")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Replace sample names from plink VCF")
 				.longOpt("samplereplaceplink")
 				.build();
@@ -585,7 +591,12 @@ public class Main {
 //				}
 //
 //			} else
-			if (cmd.hasOption("countoverlap")) {
+			if (cmd.hasOption("stripinfo")) {
+				if (cmd.hasOption("i")) {
+					StripInfo s = new StripInfo();
+					s.strip(cmd.getOptionValue("i"));
+				}
+			} else if (cmd.hasOption("countoverlap")) {
 
 				CompareOverlappingVariants q = new CompareOverlappingVariants();
 				if (cmd.hasOption("i2")) {
@@ -597,7 +608,9 @@ public class Main {
 			} else if (cmd.hasOption("updateimputationquals")) {
 
 				VCFCorrelator correlator = new VCFCorrelator();
-				correlator.updateVCFInfoScore(input, out);
+				boolean infoscore = true;
+				correlator.updateVCFInfoScore(input, out, infoscore);
+
 			} else if (cmd.hasOption("filtersampleoverlap")) {
 
 				VCFSampleFilter filter = new VCFSampleFilter();

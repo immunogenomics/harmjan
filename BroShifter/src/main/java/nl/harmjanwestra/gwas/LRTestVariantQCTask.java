@@ -3,6 +3,8 @@ package nl.harmjanwestra.gwas;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
+import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -44,17 +46,29 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		String variantChr = variant.getChr();
 		String variantId = variant.getId();
 		String variantPos = "" + variant.getPos();
-		Double impqual = variant.getImputationQualityScore();
+		boolean variantPassesQC = false;
 		double maf = 0;
 		double hwep = 0;
 		boolean overlap = false;
-		boolean variantPassesQC = false;
-		if (impqual == null || impqual > options.getImputationqualitythreshold()) {
-			if (!variantInRegion(variant)) {
-				variant = null;
+		Double impqual = 0d;
+		if (!variantInRegion(variant)) {
+			variant = null;
+		} else {
+			variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+			if (!variant.hasImputationDosages()) {
+				impqual = 1d;
+			} else if (variant.getAlleles().length > 2) {
+				VCFImputationQualScoreBeagle vbq = new VCFImputationQualScoreBeagle(variant, true);
+				impqual = vbq.doseR2();
 			} else {
+				VCFImputationQualScoreImpute vsq = new VCFImputationQualScoreImpute();
+				vsq.computeAutosomal(variant);
+				impqual = vsq.getImpinfo();
+			}
+
+			if (impqual == null || impqual > options.getImputationqualitythreshold()) {
 				overlap = true;
-				variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+
 				// parse the genotype, do some QC checks
 				Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
 						genotypeSamplesWithCovariatesAndDiseaseStatus,
@@ -74,8 +88,6 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 					variantPassesQC = true;
 				}
 			}
-		} else {
-			variant = null;
 		}
 
 		ln = null;

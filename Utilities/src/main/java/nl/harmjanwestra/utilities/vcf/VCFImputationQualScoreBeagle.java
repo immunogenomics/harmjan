@@ -35,7 +35,7 @@ import java.util.Arrays;
  * <p>
  * This file is part of Beagle
  */
-public class VCFImputationQualScore {
+public class VCFImputationQualScoreBeagle {
 
 	private static final double MIN_R2_DEN = 1e-8;
 
@@ -58,7 +58,7 @@ public class VCFImputationQualScore {
 	 *                                   {@code marker < 0 || marker >= gv.nMarkers()}
 	 * @throws NullPointerException      if {@code gv == null}
 	 */
-	public VCFImputationQualScore(VCFVariant variant, boolean useAlleleProbs) {
+	public VCFImputationQualScoreBeagle(VCFVariant variant, boolean useAlleleProbs) {
 		int nAlleles = variant.getAlleles().length;
 		this.marker = variant;
 		this.nSamples = variant.getGenotypeDosages().length;
