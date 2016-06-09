@@ -37,7 +37,7 @@ public class VCFVariant {
 
 
 	private int[] nrAllelesObserved;
-	private double[] genotypeDosages;
+	private DenseDoubleMatrix2D genotypeDosages;
 
 	private short[] genotypeQuals;
 	private short[] approximateDepth;
@@ -227,9 +227,14 @@ public class VCFVariant {
 									if (p.equals(PARSE.ALL)) {
 										try {
 											if (genotypeDosages == null) {
-												genotypeDosages = new double[nrSamples];
+												genotypeDosages = new DenseDoubleMatrix2D(nrSamples, alleles.length - 1);
 											}
-											genotypeDosages[includedSampleCtr] = Double.parseDouble(sampleToken);
+
+											String[] dsElems = Strings.comma.split(sampleToken);
+											for (int q = 0; q < dsElems.length; q++) {
+												genotypeDosages.set(includedSampleCtr, q, Double.parseDouble(dsElems[q]));
+											}
+
 										} catch (NumberFormatException e) {
 
 										}
@@ -602,12 +607,14 @@ public class VCFVariant {
 		int nrAlleles = getAlleles().length;
 		DoubleMatrix2D dosages = null;
 		if (imputedDosages == null) {
-			dosages = new DenseDoubleMatrix2D(genotypeAlleles.columns(), nrAlleles - 1);
-			for (int i = 0; i < genotypeAlleles.columns(); i++) {
-				for (int j = 0; j < genotypeAlleles.rows(); j++) {
-					dosages.setQuick(i, 0, genotypeAlleles.getQuick(j, i));
+			dosages = new DenseDoubleMatrix2D(genotypeAlleles.rows(), nrAlleles - 1);
+
+			for (int i = 0; i < genotypeAlleles.rows(); i++) {
+				for (int j = 0; j < genotypeAlleles.columns(); j++) {
+					dosages.setQuick(i, 0, genotypeAlleles.getQuick(i, j));
 				}
 			}
+			
 			return dosages;
 		} else {
 			return imputedDosages;
@@ -752,7 +759,7 @@ public class VCFVariant {
 //		return this.chr + "-" + this.pos;
 	}
 
-	public double[] getGenotypeDosages() {
+	public DoubleMatrix2D getGenotypeDosagesAsDoubleMatrix2D() {
 		return genotypeDosages;
 	}
 
@@ -777,7 +784,7 @@ public class VCFVariant {
 		int nrCalled = 0;
 		nrAllelesObserved = new int[nrAllelesObserved.length];
 		int[] nrAllelesObservedLocal = new int[nrAllelesObserved.length];
-		int nrIndividuals = genotypeAlleles.columns();
+		int nrIndividuals = genotypeAlleles.rows();
 		Chromosome chromosome = Chromosome.parseChr(chr);
 		if (individualIsFemale != null) {
 			int nrFemales = 0;
@@ -875,9 +882,6 @@ public class VCFVariant {
 
 		if (nrAllelesThatHaveAlleleFrequency == 2) {
 			biallelic = true;
-
-			// TODO: calculate HWE P
-			hwep = 0;
 		} else if (nrAllelesThatHaveAlleleFrequency > 2) {
 			multiallelic = true;
 		} else {

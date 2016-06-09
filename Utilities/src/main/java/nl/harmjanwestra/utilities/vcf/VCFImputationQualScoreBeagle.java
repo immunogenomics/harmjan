@@ -20,7 +20,6 @@
 package nl.harmjanwestra.utilities.vcf;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import nl.harmjanwestra.utilities.matrix.ByteMatrix2D;
 import umcg.genetica.text.Strings;
 
 import java.text.DecimalFormat;
@@ -61,7 +60,7 @@ public class VCFImputationQualScoreBeagle {
 	public VCFImputationQualScoreBeagle(VCFVariant variant, boolean useAlleleProbs) {
 		int nAlleles = variant.getAlleles().length;
 		this.marker = variant;
-		this.nSamples = variant.getGenotypeDosages().length;
+		this.nSamples = variant.getNrSamples();
 		this.alleleFreq = new double[nAlleles];
 		double[] alProbs = new double[nAlleles];
 		double[] gtProbs = new double[3];
@@ -105,7 +104,7 @@ public class VCFImputationQualScoreBeagle {
 	}
 
 	private void setProbs(int sample,
-	                      double[] gtProbs, double[] alProbs, boolean useAlleleProbs) {
+						  double[] gtProbs, double[] alProbs, boolean useAlleleProbs) {
 		Arrays.fill(gtProbs, 0.0f);
 		Arrays.fill(alProbs, 0.0f);
 		if (useAlleleProbs) {
@@ -113,7 +112,7 @@ public class VCFImputationQualScoreBeagle {
 			DoubleMatrix2D probs = marker.getGenotypeProbabilies();
 			for (int a2 = 0; a2 < alProbs.length; ++a2) {
 				for (int a1 = 0; a1 <= a2; ++a1) {
-					double gprob = probs.get(gt++, sample); // gv.value(marker, sample, gt++);
+					double gprob = probs.get(sample, gt++); // gv.value(marker, sample, gt++);
 					alProbs[a1] += gprob;
 					alProbs[a2] += gprob;
 					if (a2 == 0) {
@@ -138,9 +137,9 @@ public class VCFImputationQualScoreBeagle {
 		double[] gtProbs = new double[3];
 			 */
 
-			ByteMatrix2D probs = marker.getGenotypeAllelesAsMatrix2D();
-			byte a1 = probs.getQuick(0, sample);
-			byte a2 = probs.getQuick(1, sample);
+			DoubleMatrix2D probs = marker.getGenotypeAllelesAsMatrix2D();
+			byte a1 = (byte) probs.getQuick(sample, 0);
+			byte a2 = (byte) probs.getQuick(sample, 1);
 
 			alProbs[a1] += 0.5;
 			alProbs[a2] += 0.5;
