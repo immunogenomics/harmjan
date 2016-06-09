@@ -34,10 +34,10 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 	private DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 
 	public LRTestExhaustiveTask(ArrayList<VCFVariant> variants, int i, int j,
-	                            boolean[] genotypesWithCovariatesAndDiseaseStatus,
-	                            DiseaseStatus[] finalDiseaseStatus,
-	                            DoubleMatrix2D finalCovariates,
-	                            LRTestOptions options) {
+								boolean[] genotypesWithCovariatesAndDiseaseStatus,
+								DiseaseStatus[] finalDiseaseStatus,
+								DoubleMatrix2D finalCovariates,
+								LRTestOptions options) {
 		this.variants = variants;
 		this.snpid1 = i;
 		this.snpid2 = j;
@@ -124,18 +124,23 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 
 		// calculate the ld between the variants :)
-//		DetermineLD ldcalc = new DetermineLD();
-//		Pair<Double, Double> ld = ldcalc.getLD(variant1, variant2);
-		output.setLDRSquared(0d);
-		output.setLdDprime(0d);
+		DetermineLD ldcalc = new DetermineLD();
+		if (variant1.getNrAlleles() == 2 && variant2.getNrAlleles() == 2) {
+			Pair<Double, Double> ld = ldcalc.getLD(variant1, variant2);
+			output.setLDRSquared(ld.getRight());
+			output.setLdDprime(ld.getLeft());
+		} else {
+			output.setLDRSquared(Double.NaN);
+			output.setLdDprime(Double.NaN);
+		}
 
 		return output;
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-	                                       double[] y,
-	                                       int nrAlleles,
-	                                       LRTestTask testObj) throws IOException {
+										   double[] y,
+										   int nrAlleles,
+										   LRTestTask testObj) throws IOException {
 		Pair<DoubleMatrix2D, boolean[]> pruned = testObj.removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X

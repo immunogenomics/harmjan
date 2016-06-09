@@ -1,5 +1,6 @@
 package nl.harmjanwestra.utilities.vcf.filter;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 /**
@@ -17,14 +18,14 @@ public class GenotypeQualityFilter implements VCFGenotypeFilter {
 	}
 
 	public void filter(VCFVariant variant) {
-		byte[][] alleles = variant.getGenotypeAlleles();
+		DoubleMatrix2D alleles = variant.getGenotypeAllelesAsMatrix2D();
 		short[] genotypeQuals = variant.getGenotypeQuals();
 		if (genotypeQuals != null) {
 			for (int i = 0; i < genotypeQuals.length; i++) {
 				int qual = genotypeQuals[i];
 				if (qual < minimalGenotypeQual) {
-					alleles[0][i] = -1;
-					alleles[1][i] = -1;
+					alleles.set(i,0,-1);
+					alleles.set(i,1,-1);
 				}
 			}
 		} else {

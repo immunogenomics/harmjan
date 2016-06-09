@@ -1,5 +1,6 @@
 package nl.harmjanwestra.utilities.vcf;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
@@ -567,8 +568,8 @@ public class VCFFunctions {
 	}
 
 	public Pair<byte[][], String[]> loadVCFGenotypes(String vcf,
-	                                                 HashMap<String, Integer> sampleMap,
-	                                                 HashMap<Feature, Integer> variantMap) throws IOException {
+													 HashMap<String, Integer> sampleMap,
+													 HashMap<Feature, Integer> variantMap) throws IOException {
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -869,12 +870,12 @@ public class VCFFunctions {
 
 
 	public void filterLowFrequencyVariants(String sequencingVCF,
-	                                       String outputdir,
-	                                       String famfile, boolean filterGT,
-	                                       int minimalReadDepth,
-	                                       int minimalGenotypeQual,
-	                                       double callratethreshold,
-	                                       int minObservationsPerAllele) throws IOException {
+										   String outputdir,
+										   String famfile, boolean filterGT,
+										   int minimalReadDepth,
+										   int minimalGenotypeQual,
+										   double callratethreshold,
+										   int minObservationsPerAllele) throws IOException {
 
 
 		PedAndMapFunctions pm = new PedAndMapFunctions();
@@ -1026,15 +1027,17 @@ public class VCFFunctions {
 
 				double maf = variant.getMAF();
 				double[] alleleFrequencies = variant.getAlleleFrequencies();
-				byte[][] genotypes = variant.getGenotypeAlleles();
+
+
+				DoubleMatrix2D genotypes = variant.getGenotypeAllelesAsMatrix2D();
 				int[] variantAllelesObserved = variant.getNrAllelesObserved();
 				int nrCalled = 0;
-				for (int i = 0; i < genotypes[0].length; i++) {
-					if (genotypes[0][i] != -1) {
+				for (int i = 0; i < genotypes.rows(); i++) {
+					if (genotypes.getQuick(i, 0) != -1) {
 						nrCalled++;
 						allelesCalledPerSample[i]++;
 					}
-					if (genotypes[0][i] != -1) {
+					if (genotypes.getQuick(i, 1) != -1) {
 						nrCalled++;
 						allelesCalledPerSample[i]++;
 					}
@@ -1261,15 +1264,15 @@ public class VCFFunctions {
 					// multi allelic variants complicate things..... let's just output these
 					out.writeln(var.toVCFString());
 				} else {
-					byte[][] alleles = var.getGenotypeAlleles();
+					DoubleMatrix2D alleles = var.getGenotypeAllelesAsMatrix2D();
 					String[] allelesStr = var.getAlleles();
 					int nrErrors = 0;
 					int nrTested = 0;
 					for (int s = 0; s < samples.length; s++) {
 						if (hasParents[s]) {
 
-							byte s1allele = alleles[0][s];
-							byte s2allele = alleles[1][s];
+							byte s1allele = (byte) alleles.getQuick(s, 0); //alleles[0][s];
+							byte s2allele = (byte) alleles.getQuick(s, 1); //alleles[1][s];
 							if (s1allele != -1) {
 								int p1 = sampleToParentId[s][0];
 								int p2 = sampleToParentId[s][1];
@@ -1278,7 +1281,7 @@ public class VCFFunctions {
 								HashSet<Integer> allowedAlleles = new HashSet<Integer>();
 								boolean p1hasgenotype = false;
 								if (p1 != -1) {
-									byte allele1p1 = alleles[0][p1];
+									byte allele1p1 = (byte) alleles.getQuick(p1, 0); //alleles[0][p1];
 									if (allele1p1 == -1) {
 										p1hasgenotype = false;
 									} else {
@@ -1288,7 +1291,7 @@ public class VCFFunctions {
 
 								boolean p2hasgenotype = false;
 								if (p2 != -1) {
-									byte allele1p2 = alleles[0][p2];
+									byte allele1p2 = (byte) alleles.getQuick(p2, 0); // alleles[0][p2];
 									if (allele1p2 == -1) {
 										p2hasgenotype = false;
 									} else {
@@ -1303,13 +1306,15 @@ public class VCFFunctions {
 									if (p1hasgenotype && p2hasgenotype) {
 										for (int a = 0; a < 2; a++) {
 											for (int b = 0; b < 2; b++) {
-												allowedAlleles.add(alleles[a][p1] + alleles[b][p2]); // 0+0 0+1 1+0 1+1
+
+												allowedAlleles.add((byte) alleles.getQuick(p1, a) + (byte) alleles.getQuick(p2, b)); // 0+0 0+1 1+0 1+1
 												ctr++;
 											}
 
 										}
 									} else if (p1hasgenotype) { // other parent missing?
-										int sum = alleles[0][p1] + alleles[1][p1];
+
+										int sum = (byte) alleles.getQuick(p1, 0) + (byte) alleles.getQuick(p1, 1);
 										if (sum == 0 || sum == 2) {
 											allowedAlleles.add(sum); // allow homozygous parent allele
 											allowedAlleles.add(1); // allow hets if homozygous
@@ -1322,7 +1327,8 @@ public class VCFFunctions {
 										}
 
 									} else if (p2hasgenotype) {
-										int sum = alleles[0][p2] + alleles[1][p2];
+										int sum = (byte) alleles.getQuick(p2, 0) + (byte) alleles.getQuick(p2, 1);
+
 										if (sum == 0 || sum == 2) {
 											allowedAlleles.add(sum); // allow homozygous parent allele
 											allowedAlleles.add(1); // allow hets if homozygous
@@ -1351,12 +1357,12 @@ public class VCFFunctions {
 									String p1GenotypeStr = "./.";
 									int sum1 = -1;
 									if (p1hasgenotype) {
-										sum1 = alleles[0][p1] + alleles[1][p1];
-										p1GenotypeStr = allelesStr[alleles[0][p1]] + "/" + allelesStr[alleles[1][p1]];
+										sum1 = (byte) alleles.getQuick(p1, 0) + (byte) alleles.getQuick(p1, 1);
+										p1GenotypeStr = allelesStr[(byte) alleles.getQuick(p1, 0)] + "/" + allelesStr[(byte) alleles.getQuick(p1, 1)];
 									}
 									String p2GenotypeStr = "./.";
 									if (p2hasgenotype) {
-										p2GenotypeStr = allelesStr[alleles[0][p2]] + "/" + allelesStr[alleles[1][p2]];
+										p2GenotypeStr = allelesStr[(byte) alleles.getQuick(p2, 0)] + "/" + allelesStr[(byte) alleles.getQuick(p2, 1)];
 									}
 									String sampleStr = allelesStr[s1allele] + "/" + allelesStr[s2allele];
 
@@ -2220,35 +2226,35 @@ public class VCFFunctions {
 		output.append(Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length));
 		output.append("\t.\t.\t.\tGT");
 
-		byte[][] genotypeAlleles1 = var1.getGenotypeAlleles();
-		byte[][] genotypeAlleles2 = var2.getGenotypeAlleles();
+		DoubleMatrix2D genotypeAlleles1 = var1.getGenotypeAllelesAsMatrix2D();
+		DoubleMatrix2D genotypeAlleles2 = var2.getGenotypeAllelesAsMatrix2D();
 		if (separator == null) {
 			separator = "/";
 		}
 
-		for (int i = 0; i < genotypeAlleles1[0].length; i++) {
+		for (int i = 0; i < genotypeAlleles1.rows(); i++) {
 
-			String allele1 = "" + genotypeAlleles1[0][i];
-			String allele2 = "" + genotypeAlleles1[1][i];
+			String allele1 = "" + (byte) genotypeAlleles1.get(i, 0);
+			String allele2 = "" + (byte) genotypeAlleles1.get(i, 1);
 
-			if (genotypeAlleles1[0][i] == -1) {
+			if (genotypeAlleles1.get(i, 0) == -1) {
 				allele1 = ".";
 			}
-			if (genotypeAlleles1[1][i] == -1) {
+			if (genotypeAlleles1.get(i, 1) == -1) {
 				allele2 = ".";
 			}
 
 			output.append("\t").append(allele1).append(separator).append(allele2);
 		}
 
-		for (int i = 0; i < genotypeAlleles2[0].length; i++) {
-			String allele1 = "" + genotypeAlleles2[0][i];
-			String allele2 = "" + genotypeAlleles2[1][i];
+		for (int i = 0; i < genotypeAlleles2.rows(); i++) {
+			String allele1 = "" + genotypeAlleles2.getQuick(i, 0);
+			String allele2 = "" + genotypeAlleles2.getQuick(i, 1);
 
-			if (genotypeAlleles2[0][i] == -1) {
+			if (genotypeAlleles2.getQuick(i, 0) == -1) {
 				allele1 = ".";
 			}
-			if (genotypeAlleles2[1][i] == -1) {
+			if (genotypeAlleles2.getQuick(i, 1) == -1) {
 				allele2 = ".";
 			}
 
@@ -2276,7 +2282,7 @@ public class VCFFunctions {
 				} else {
 
 					// nrVariants = alleles.length-1
-					byte[][] genotypeAlleles = var.getGenotypeAlleles(); // [ind][0]/[ind][1]
+					DoubleMatrix2D genotypeAlleles = var.getGenotypeAllelesAsMatrix2D();
 
 
 					int nrLinesWritten = 0;
@@ -2292,9 +2298,9 @@ public class VCFFunctions {
 								+ "\t.\t.\t.\tGT";
 
 
-						for (int ind = 0; ind < genotypeAlleles[0].length; ind++) {
-							byte gt1 = genotypeAlleles[0][ind];
-							byte gt2 = genotypeAlleles[1][ind];
+						for (int ind = 0; ind < genotypeAlleles.rows(); ind++) {
+							byte gt1 = (byte) genotypeAlleles.getQuick(ind, 0);
+							byte gt2 = (byte) genotypeAlleles.getQuick(ind, 1);
 
 
 							if (gt1 == i) {

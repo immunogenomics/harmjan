@@ -1,10 +1,10 @@
 package nl.harmjanwestra.vcfutils;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
-import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.matrix.DoubleMatrixDataset;
 import umcg.genetica.text.Strings;
@@ -226,21 +226,22 @@ public class PseudoControls {
 
 		while (data.hasNext()) {
 			VCFVariant current = data.next();
-			byte[][] alleles = current.getGenotypeAlleles();
+			DoubleMatrix2D alleles = current.getGenotypeAllelesAsMatrix2D();
 
 
-			for (int kidId = 0; kidId < alleles[0].length; kidId++) {
+			for (int kidId = 0; kidId < alleles.rows(); kidId++) {
 
 				Boolean gender = genderPerSample.get(vcfSamples.get(kidId));
 
 				if (gender != null && gender) {
 					// person is male
-					if (alleles[0][kidId] != alleles[1][kidId]) {
+					if (alleles.getQuick(kidId, 0) != alleles.get(kidId, 1)) {
 						// if the person is homozygous
+						String b = (byte) alleles.getQuick(kidId, 0) + "/" + (byte) alleles.get(kidId, 1);
 						System.err.println("heterozygous male found for variant: " + current.getId()
 								+ "\t" + kidId
 								+ "\t" + vcfSamples.get(kidId)
-								+ "\t" + alleles[0][kidId] + "/" + alleles[1][kidId]);
+								+ "\t" + b);
 					}
 				}
 
@@ -363,23 +364,20 @@ public class PseudoControls {
 		while (data.hasNext()) {
 
 			VCFVariant current = data.next();
-			byte[][] alleles = current.getGenotypeAlleles();
+			DoubleMatrix2D alleles = current.getGenotypeAllelesAsMatrix2D();
 			byte[][] finalAlleles = new byte[2][finalNrSamples];
 
 
-			for (int kidId = 0; kidId < alleles[0].length; kidId++) {
-				if (kidId == 29509) {
-					System.out.println(alleles[0].length);
-					System.out.println(kidToPseudoIdArr.length);
-					System.out.println(vcfSamples.size());
-				}
+			for (int kidId = 0; kidId < alleles.rows(); kidId++) {
+
 				Integer pseudoId = kidToPseudoIdArr[kidId];
 				Integer momId = momAndDad[0][kidId];
 				Integer dadId = momAndDad[1][kidId];
 
 				// copy original alleles
-				finalAlleles[0][kidId] = alleles[0][kidId];
-				finalAlleles[1][kidId] = alleles[1][kidId];
+				finalAlleles[0][kidId] = (byte) alleles.getQuick(kidId, 0);
+				finalAlleles[1][kidId] = (byte) alleles.getQuick(kidId, 1);
+
 
 				if (pseudoId != null) {
 					// make the pseudo control
@@ -497,10 +495,10 @@ public class PseudoControls {
 		while (data.hasNext()) {
 
 			VCFVariant current = data.next();
-			byte[][] alleles = current.getGenotypeAlleles();
+			DoubleMatrix2D alleles = current.getGenotypeAllelesAsMatrix2D();
 			byte[][] finalAlleles = new byte[2][finalNrSamples];
 
-			for (int kidId = 0; kidId < alleles[0].length; kidId++) {
+			for (int kidId = 0; kidId < alleles.rows(); kidId++) {
 				Integer momId = momAndDad[0][kidId];
 				Integer dadId = momAndDad[1][kidId];
 				fixMendelianErrors(kidId, momId, dadId, alleles);
@@ -512,14 +510,14 @@ public class PseudoControls {
 				finalAlleles[1][i] = -1;
 			}
 
-			for (int kidId = 0; kidId < alleles[0].length; kidId++) {
+			for (int kidId = 0; kidId < alleles.rows(); kidId++) {
 				Integer pseudoId = kidToPseudoIdArr[kidId];
 				Integer momId = momAndDad[0][kidId];
 				Integer dadId = momAndDad[1][kidId];
 
 				// copy original alleles
-				finalAlleles[0][kidId] = alleles[0][kidId];
-				finalAlleles[1][kidId] = alleles[1][kidId];
+				finalAlleles[0][kidId] = (byte) alleles.getQuick(kidId, 0);
+				finalAlleles[1][kidId] = (byte) alleles.getQuick(kidId, 1);
 
 				// make the pseudo control
 				if (pseudoId != null) {
@@ -698,7 +696,7 @@ public class PseudoControls {
 
 	}
 
-	private void fixMendelianErrors(int kidId, Integer momId, Integer dadId, byte[][] alleles) {
+	private void fixMendelianErrors(int kidId, Integer momId, Integer dadId, DoubleMatrix2D alleles) {
 		if (momId == null || dadId == null) {
 			// incomplete trio..
 			// set pseudo to missing
@@ -755,14 +753,14 @@ public class PseudoControls {
 
 					// set pseudo and kid to missing
 
-					alleles[0][kidId] = -1;
-					alleles[1][kidId] = -1;
+					alleles.set(kidId, 0, -1);//[0][kidId] = -1;
+					alleles.set(kidId, 1, -1);// alleles[1][kidId] = -1;
 				}
 			}
 		}
 	}
 
-	private void makePseudoControl(int kidId, Integer momId, Integer dadId, int pseudoId, byte[][] alleles, byte[][] finalAlleles, VCFVariant current) {
+	private void makePseudoControl(int kidId, Integer momId, Integer dadId, int pseudoId, DoubleMatrix2D alleles, byte[][] finalAlleles, VCFVariant current) {
 		if (momId == null || dadId == null) {
 			// incomplete trio..
 			// set pseudo to missing
@@ -863,10 +861,10 @@ public class PseudoControls {
 		}
 	}
 
-	private byte[] getAlleles(byte[][] alleles, int id) {
+	private byte[] getAlleles(DoubleMatrix2D alleles, int id) {
 		byte[] al = new byte[2];
-		al[0] = alleles[0][id];
-		al[1] = alleles[1][id];
+		al[0] = (byte) alleles.getQuick(id, 0);
+		al[1] = (byte) alleles.getQuick(id, 1);
 		return al;
 	}
 

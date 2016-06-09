@@ -1,5 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
@@ -130,7 +131,7 @@ public class MixupTest {
 
 								}
 
-								if(variant1.getMAF() > 0.05 && variant2.getMAF() > 0.05) {
+								if (variant1.getMAF() > 0.05 && variant2.getMAF() > 0.05) {
 									variantsOverlap1.add(variant1);
 									variantsOverlap2.add(variant2);
 								}
@@ -313,12 +314,12 @@ public class MixupTest {
 	}
 
 	private void putInMatrix(byte[][] genotypematrix1, VCFVariant variant1, int[] sampleOrder, int variantId) {
-		byte[][] alleles = variant1.getGenotypeAlleles();
-		for (int i = 0; i < alleles[0].length; i++) {
-			if (alleles[0][i] == -1) {
+		DoubleMatrix2D alleles = variant1.getGenotypeAllelesAsMatrix2D();
+		for (int i = 0; i < alleles.rows(); i++) {
+			if (alleles.getQuick(i, 0) == -1) {
 				genotypematrix1[i][variantId] = -1;
 			} else {
-				byte genotype = (byte) (alleles[0][i] + alleles[1][i]);
+				byte genotype = (byte) (alleles.getQuick(i, 0)+alleles.getQuick(i, 1));
 				int sampleIndex = sampleOrder[i];
 
 				if (sampleIndex >= genotypematrix1.length) {

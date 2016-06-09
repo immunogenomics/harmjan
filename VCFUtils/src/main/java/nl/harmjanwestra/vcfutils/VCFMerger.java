@@ -1,5 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import com.gs.collections.api.list.MutableList;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
 import nl.harmjanwestra.utilities.features.Chromosome;
@@ -573,7 +574,6 @@ public class VCFMerger {
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
 											   String separatorInMergedFile) {
 
-
 		String[] refAlleles = refVariant.getAlleles();
 		String refMinorAllele = refVariant.getMinorAllele();
 		String[] testVariantAlleles = testVariant.getAlleles();
@@ -798,15 +798,15 @@ public class VCFMerger {
 					for (int i = 0; i < samples1.size(); i++) {
 						builder.append("\t").append("./.");
 					}
-					byte[][] alleles = var2.getGenotypeAlleles();
+					DoubleMatrix2D alleles = var2.getGenotypeAllelesAsMatrix2D();
 					for (int i = 0; i < samples2.size(); i++) {
 
-						if (alleles[0][i] == -1) {
+						if (alleles.get(i, 0) == -1) {
 							builder.append("\t").append("./.");
 						} else {
-							builder.append("\t").append(alleles[0][i])
+							builder.append("\t").append(alleles.getQuick(i, 0))
 									.append("/")
-									.append(alleles[1][i]);
+									.append(alleles.getQuick(i, 1));
 						}
 					}
 					outf.writeln(builder.toString());
@@ -872,20 +872,20 @@ public class VCFMerger {
 					builder.append("\t").append(".");
 					builder.append("\t").append("GT");
 
-					byte[][] alleles = var1.getGenotypeAlleles();
-					if (alleles[0].length != samples1.size()) {
-						System.err.println("ERROR: not enough alleles in file. Expected " + samples1.size() + " found " + alleles[0].length);
+					DoubleMatrix2D alleles = var1.getGenotypeAllelesAsMatrix2D();
+					if (alleles.rows() != samples1.size()) {
+						System.err.println("ERROR: not enough alleles in file. Expected " + samples1.size() + " found " + alleles.rows());
 						System.out.println(var1.toString());
 						System.exit(-1);
 					}
 					for (int i = 0; i < samples1.size(); i++) {
 
-						if (alleles[0][i] == -1) {
+						if (alleles.getQuick(i, 0) == -1) {
 							builder.append("\t").append("./.");
 						} else {
-							builder.append("\t").append(alleles[0][i])
+							builder.append("\t").append(alleles.getQuick(i, 0))
 									.append("/")
-									.append(alleles[1][i]);
+									.append(alleles.getQuick(i, 1));
 						}
 					}
 					for (int i = 0; i < samples2.size(); i++) {

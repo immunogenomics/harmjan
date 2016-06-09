@@ -54,10 +54,10 @@ public class VCFImputationQualScoreImpute {
 
 	// this only works for biallelic variants
 	public void computeAutosomal(VCFVariant variant) {
-		DoubleMatrix2D probs = variant.getGenotypeProbabilies(); // alleles | samples
+		DoubleMatrix2D probs = variant.getGenotypeProbabilies(); //  samples | ALLELES
 
 //		double theta_mle = 0; // sum gprob(AB)+ 2 * gprob(BB) / 2 * sum(gprob)
-		double theta_mle = (probs.viewRow(1).zSum() + 2.0 * probs.viewRow(2).zSum()) / (2.0 * probs.zSum());
+		double theta_mle = (probs.viewColumn(1).zSum() + 2.0 * probs.viewColumn(2).zSum()) / (2.0 * probs.zSum());
 		double[] imputeFallBackDist = new double[3];
 		double[] fallBackDist = new double[3];
 		fallBackDist[0] = (1 - theta_mle) * (1 - theta_mle);
@@ -88,8 +88,8 @@ public class VCFImputationQualScoreImpute {
 	private double compExpVar(DoubleMatrix2D probs, double[] fallBackDist) {
 
 		double result = 0;
-		for (int i = 0; i < probs.columns(); i++) { // probabilities.rows() == nrSamples
-			double c = probs.viewColumn(i).zSum();
+		for (int i = 0; i < probs.rows(); i++) { // probabilities.rows() == nrSamples
+			double c = probs.viewRow(i).zSum();
 			double[] indprobs = new double[3];
 			indprobs[0] = probs.getQuick(0, i) + (1 - c) * fallBackDist[0];
 			indprobs[1] = probs.getQuick(1, i) + (1 - c) * fallBackDist[1];

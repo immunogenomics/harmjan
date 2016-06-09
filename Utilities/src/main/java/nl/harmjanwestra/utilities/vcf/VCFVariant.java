@@ -70,10 +70,8 @@ public class VCFVariant {
 	private int dsCol = -1;
 	private int gpCol = -1;
 
-
 	private boolean ignoregender;
 	private int totalCalledAlleles;
-
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
@@ -570,36 +568,33 @@ public class VCFVariant {
 			System.out.println("WARNING: multi allelic allele flip not implemented at this point!");
 			return false;
 		}
-
-
 	}
 
-
 	//???
-	public double[][] getDosages() {
+	public DoubleMatrix2D getDosagesAsMatrix2D() {
 		int nrAlleles = getAlleles().length;
-		double[][] output = new double[genotypeAlleles.rows()][nrAlleles - 1]; // allow for multiple alleles
-		for (int i = 0; i < output.length; i++) {
+		DoubleMatrix2D output = new DenseDoubleMatrix2D(genotypeAlleles.rows(), nrAlleles - 1);
+		for (int i = 0; i < output.rows(); i++) {
 			for (int j = 0; j < genotypeAlleles.columns(); j++) {
 				int a = (int) genotypeAlleles.getQuick(i, j);
 				if (a == -1) {
 					// missing genotype
-					output[i][0] = Double.NaN;
+					output.setQuick(i, 0, Double.NaN);
 				} else if (a > 0) {
 					if (a > 0) {
 						a -= 1;
 					}
-					output[i][a]++;
+					double v = output.getQuick(i, a);
+					output.setQuick(i, a, v++);
 				}
-
 			}
 		}
 
 		return output;
 	}
 
-	public DoubleMatrix2D getDosagesAsMatrix2D() {
-		return DoubleFactory2D.dense.make(getDosages());
+	public double[][] getDosages() {
+		return getDosagesAsMatrix2D().toArray();
 	}
 
 	public DoubleMatrix2D getImputedDosagesAsMatrix2D() {
@@ -1100,6 +1095,28 @@ public class VCFVariant {
 
 	public DoubleMatrix2D getGenotypeAllelesAsMatrix2D() {
 		return genotypeAlleles;
+	}
+
+	public byte[] getGenotypesAsByteVector() {
+		if (alleles.length == 2) {
+			DoubleMatrix2D d = getDosagesAsMatrix2D();
+			byte[] arr = new byte[d.rows()];
+			for (int i = 0; i < arr.length; i++) {
+				arr[i] = (byte) d.get(i, 0);
+			}
+			return arr;
+		} else {
+			return null;
+		}
+
+	}
+
+	public int getNrAlleles() {
+		return alleles.length;
+	}
+
+	public int getNrSamples() {
+		return genotypeAlleles.rows();
 	}
 
 

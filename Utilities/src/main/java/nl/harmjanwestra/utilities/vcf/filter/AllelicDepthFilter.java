@@ -1,5 +1,6 @@
 package nl.harmjanwestra.utilities.vcf.filter;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 /**
@@ -23,16 +24,17 @@ public class AllelicDepthFilter implements VCFGenotypeFilter {
 
 		short[][] allelicDepth = variant.getAllelicDepth();
 		if (allelicDepth != null) {
-			byte[][] alleles = variant.getGenotypeAlleles();
-			for (int i = 0; i < alleles[0].length; i++) {
-				if (alleles[0][i] != -1) {
+			DoubleMatrix2D alleles = variant.getGenotypeAllelesAsMatrix2D();
+			for (int i = 0; i < variant.getNrSamples(); i++) {
+				if (alleles.getQuick(i, 0) != -1) {
 					int sum = 0;
 					for (int j = 0; j < allelicDepth.length; j++) {
 						sum += allelicDepth[j][i];
 					}
-					if (alleles[0][i] != alleles[1][i]) {
-						double ab1 = (double) allelicDepth[alleles[0][i]][i] / sum;
-						double ab2 = (double) allelicDepth[alleles[1][i]][i] / sum;
+					if (alleles.getQuick(i, 0) != alleles.getQuick(i, 1)) {
+
+						double ab1 = (double) allelicDepth[(byte) alleles.getQuick(i, 0)][i] / sum;
+						double ab2 = (double) allelicDepth[(byte) alleles.getQuick(i, 1)][i] / sum;
 						boolean ok = true;
 						if (ab1 < abCutoff || ab1 > (1 - abCutoff)) {
 							ok = false;
@@ -42,16 +44,15 @@ public class AllelicDepthFilter implements VCFGenotypeFilter {
 						}
 
 						if (!ok || sum < minimumReadDepth) {
-							alleles[0][i] = -1;
-							alleles[1][i] = -1;
+							alleles.setQuick(i, 0, -1);
+							alleles.setQuick(i, 1, -1);
 						}
 					} else {
 
-						if (allelicDepth[alleles[0][i]][i] < minimumReadDepth) {
-							alleles[0][i] = -1;
-							alleles[1][i] = -1;
+						if (allelicDepth[(byte) alleles.getQuick(i, 0)][i] < minimumReadDepth) {
+							alleles.setQuick(i, 0, -1);
+							alleles.setQuick(i, 1, -1);
 						}
-
 					}
 				}
 			}

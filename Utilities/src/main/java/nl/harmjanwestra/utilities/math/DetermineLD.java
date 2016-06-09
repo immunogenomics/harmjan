@@ -22,6 +22,8 @@ public class DetermineLD {
 	
 	public synchronized Pair<Double, Double> getLD(VCFVariant variant1, VCFVariant variant2) {
 		// convert to byte[]
+
+
 		return getLD(variant1.getGenotypesAsByteVector(), variant2.getGenotypesAsByteVector(), null, INCLUDE_CASES_AND_CONTROLS, false);
 	}
 

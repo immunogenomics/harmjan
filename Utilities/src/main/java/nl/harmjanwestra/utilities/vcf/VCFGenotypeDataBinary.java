@@ -2,7 +2,6 @@ package nl.harmjanwestra.utilities.vcf;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
-import nl.harmjanwestra.utilities.matrix.ByteMatrix2D;
 import umcg.genetica.io.BinaryFile;
 import umcg.genetica.text.Strings;
 
@@ -41,26 +40,27 @@ public class VCFGenotypeDataBinary extends BinaryFile {
 		byte nrAlleles = this.is.readByte();
 		boolean hasProbs = this.is.readBoolean();
 
-		ByteMatrix2D alleles = new ByteMatrix2D(nrAlleles, sampleNames.length);
-		for (int row = 0; row < alleles.rows(); row++) {
-			byte[] rowB = new byte[sampleNames.length];
-			this.is.read(rowB);
-			for (int col = 0; col < rowB.length; col++) {
-				alleles.setQuick(row, col, rowB[col]);
-			}
-		}
+		DoubleMatrix2D alleles = new DenseDoubleMatrix2D(sampleNames.length, nrAlleles);
+//		// read all
+//		for (int row = 0; row < alleles.rows(); row++) {
+//			byte[] rowB = new byte[sampleNames.length];
+//			this.is.read(rowB);
+//			for (int col = 0; col < rowB.length; col++) {
+//				alleles.setQuick(row, col, rowB[col]);
+//			}
+//		}
 		DoubleMatrix2D dosages = null;
-		if (hasProbs) {
-			dosages = new DenseDoubleMatrix2D(sampleNames.length, nrAlleles);
-			for (int col = 0; col < dosages.columns(); col++) {
-				byte[] b = new byte[sampleNames.length];
-				this.is.read(b);
-				for (int row = 0; row < dosages.rows(); row++) {
-					double d = (127d / 2) / b[row];
-					dosages.set(row, col, d);
-				}
-			}
-		}
+//		if (hasProbs) {
+//			dosages = new DenseDoubleMatrix2D(sampleNames.length, nrAlleles);
+//			for (int col = 0; col < dosages.columns(); col++) {
+//				byte[] b = new byte[sampleNames.length];
+//				this.is.read(b);
+//				for (int row = 0; row < dosages.rows(); row++) {
+//					double d = (127d / 2) / b[row];
+//					dosages.set(row, col, d);
+//				}
+//			}
+//		}
 
 		return new VCFVariant(chr, pos, id, alleleStr, info, alleles, dosages);
 
@@ -80,11 +80,11 @@ public class VCFGenotypeDataBinary extends BinaryFile {
 		this.os.writeByte(variant.getAlleles().length);
 		this.os.writeBoolean(variant.hasImputationDosages());
 
-		ByteMatrix2D alleles = variant.getGenotypeAllelesAsMatrix2D(); // format: [alleles][nrSamples]
+		DoubleMatrix2D alleles = variant.getGenotypeAllelesAsMatrix2D(); // format: [nrSamples][alleles]
 		for (int row = 0; row < alleles.rows(); row++) {
 			byte[] balleles = new byte[alleles.columns()];
 			for (int col = 0; col < alleles.columns(); col++) {
-				balleles[col] = alleles.getQuick(row, col);
+				balleles[col] = (byte) alleles.getQuick(row, col);
 			}
 			this.os.write(balleles);
 		}

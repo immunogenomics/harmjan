@@ -1,5 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
@@ -152,13 +153,13 @@ public class VariantLDMatrix {
 	}
 
 	public double[] convertToDouble(VCFVariant vcfVariant) {
-		byte[][] alleles = vcfVariant.getGenotypeAlleles();
-		double[] output = new double[alleles[0].length];
-		for (int i = 0; i < alleles[0].length; i++) {
-			if (alleles[0][i] == -1) {
+		DoubleMatrix2D alleles = vcfVariant.getGenotypeAllelesAsMatrix2D();
+		double[] output = new double[alleles.rows()];
+		for (int i = 0; i < alleles.rows(); i++) {
+			if (alleles.getQuick(i, 0) == -1) {
 				output[i] = -1;
 			} else {
-				output[i] = (alleles[0][i] + alleles[1][i]);
+				output[i] = (alleles.getQuick(i, 0) + alleles.getQuick(i, 1));
 			}
 		}
 

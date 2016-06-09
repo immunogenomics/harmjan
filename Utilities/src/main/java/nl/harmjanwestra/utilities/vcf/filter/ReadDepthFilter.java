@@ -1,5 +1,6 @@
 package nl.harmjanwestra.utilities.vcf.filter;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 /**
@@ -19,14 +20,16 @@ public class ReadDepthFilter implements VCFGenotypeFilter {
 	}
 
 	public void filter(VCFVariant variant) {
-		byte[][] alleles = variant.getGenotypeAlleles();
+
+		int nrSamples = variant.getNrSamples();
+		DoubleMatrix2D alleles = variant.getGenotypeAllelesAsMatrix2D();
 		short[][] allelicDepth = variant.getAllelicDepth();
 		short[] approximateDepth = variant.getApproximateDepth();
 
 		if (approximateDepth != null) {
 			if (allelicDepth != null) {
 				// account for a bug in newer GATK output
-				for (int i = 0; i < alleles[0].length; i++) {
+				for (int i = 0; i < nrSamples; i++) {
 					short indSum = 0;
 					for (int j = 0; j < allelicDepth.length; j++) {
 						indSum += allelicDepth[j][i];
@@ -37,11 +40,11 @@ public class ReadDepthFilter implements VCFGenotypeFilter {
 				}
 			}
 
-			for (int i = 0; i < alleles[0].length; i++) {
+			for (int i = 0; i < nrSamples; i++) {
 				int depth = approximateDepth[i];
 				if (depth < minimalReadDepth) {
-					alleles[0][i] = -1;
-					alleles[1][i] = -1;
+					alleles.setQuick(i, 0, -1);
+					alleles.setQuick(i, 1, -1);
 				}
 			}
 		} else {
