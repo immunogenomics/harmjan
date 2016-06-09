@@ -1,7 +1,6 @@
 package nl.harmjanwestra.gwas;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
@@ -19,19 +18,22 @@ import java.util.concurrent.Callable;
  */
 public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 
-	private final LRTestOptions options;
-	private final boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
-	private final DoubleMatrix2D finalCovariates;
-	private final DiseaseStatus[] finalDiseaseStatus;
+	private LRTestOptions options;
+	private boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
+	private DoubleMatrix2D finalCovariates;
+	private DiseaseStatus[] finalDiseaseStatus;
 	private String ln;
 	private ArrayList<Feature> regions;
 
+	public LRTestVariantQCTask() {
+	}
+
 	public LRTestVariantQCTask(String ln,
-							   ArrayList<Feature> regions,
-							   LRTestOptions options,
-							   boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
-							   DiseaseStatus[] finalDiseaseStatus,
-							   DoubleMatrix2D finalCovariates) {
+	                           ArrayList<Feature> regions,
+	                           LRTestOptions options,
+	                           boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
+	                           DiseaseStatus[] finalDiseaseStatus,
+	                           DoubleMatrix2D finalCovariates) {
 		this.regions = regions;
 		this.options = options;
 		this.ln = ln;
@@ -43,7 +45,6 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 	@Override
 	public Pair<VCFVariant, String> call() throws Exception {
 
-		LRTestTask tasktmp = new LRTestTask();
 		VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
 		String variantChr = variant.getChr();
 		String variantId = variant.getId();
@@ -56,7 +57,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		if (!variantInRegion(variant)) {
 			variant = null;
 		} else {
-			variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+			variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus);
 			if (!variant.hasImputationDosages()) {
 				impqual = 1d;
 			} else if (variant.getAlleles().length > 2) {
@@ -72,8 +73,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				overlap = true;
 
 				// parse the genotype, do some QC checks
-				Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
-						genotypeSamplesWithCovariatesAndDiseaseStatus,
+				Triple<int[], boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = filterAndRecodeGenotypes(
 						variant.getGenotypeAllelesAsMatrix2D(),
 						finalDiseaseStatus,
 						variant.getAlleles().length,
@@ -119,14 +119,13 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		return false;
 	}
 
-	Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> filterAndRecodeGenotypes(
-
+	// recalculate MAF, HWE, etc, using CASE/Control labels
+	Triple<int[], boolean[], Triple<Integer, Double, Double>> filterAndRecodeGenotypes(
 			DoubleMatrix2D genotypeAlleles,
 			DiseaseStatus[] diseaseStatus,
 			int nrAlleles,
 			int nrsamples) {
 
-		DoubleMatrix2D tmpgenotypes = new DenseDoubleMatrix2D(nrAlleles - 1, nrsamples);
 		int individualCounter = 0;
 
 		// first iterate the genotyped samples to load the genotypes
@@ -151,18 +150,13 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		int nrWithMissingGenotypes = 0;
 		boolean[] genotypeMissing = new boolean[nrsamples];
 		for (int i = 0; i < genotypeAlleles.rows(); i++) {
-
-			double b1 = genotypeAlleles.getQuick(i, 0);
-			double b2 = genotypeAlleles.getQuick(i, 1);
-
+			int b1 = (int) genotypeAlleles.getQuick(i, 0);
 			if (b1 == -1) {
-				for (int q = 0; q < tmpgenotypes.rows(); q++) {
-					tmpgenotypes.setQuick(q, individualCounter, Double.NaN);
-				}
 				nrWithMissingGenotypes++;
 				genotypeMissing[individualCounter] = true;
 			} else {
 				if (diseaseStatus[individualCounter].equals(DiseaseStatus.CONTROL)) { // controls
+					int b2 = (int) genotypeAlleles.getQuick(i, 1);
 					if (b1 == b2) {
 						nrHomozygous[b1]++;
 					}
@@ -171,30 +165,19 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 					obs[id]++;
 					nrCalled++;
 				}
-				if (b1 == b2) {
-					// homozygote
-					if (b1 == 0) {
-						// do nothing
-					} else {
-						int allele = b1 - 1;
-						if (allele >= 0) {
-							tmpgenotypes.set(allele, individualCounter, 2);
-						}
-					}
-				} else {
-					int allele1 = b1 - 1;
-					int allele2 = b2 - 1;
-					if (allele1 >= 0) {
-						tmpgenotypes.set(allele1, individualCounter, 1);
-					}
-					if (allele2 >= 0) {
-						tmpgenotypes.set(allele2, individualCounter, 1);
-					}
-				}
 			}
 			individualCounter++;
-
 		}
+
+		int[] missingGenotypeIds = new int[nrWithMissingGenotypes];
+		int missingctr = 0;
+		for (int i = 0; i < genotypeAlleles.rows(); i++) {
+			if (genotypeMissing[i]) {
+				missingGenotypeIds[missingctr] = i;
+				missingctr++;
+			}
+		}
+
 
 		double[] freqs = new double[nrAlleles];
 		for (int i = 0; i < nrAlleles; i++) {
@@ -216,8 +199,6 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		if (nrAlleles == 2 && !debug) {
 			hwep = HWE.calculateExactHWEPValue(obs[1], obs[0], obs[2]);
 		} else {
-
-
 			ctr = 0;
 			double chisq = 0;
 			for (int i = 0; i < nrAlleles; i++) {
@@ -238,31 +219,8 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 			}
 
 			int df = (nrCombinations - nrAlleles);
-
 			hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
 		}
-
-
-//		int[] nrAllelesPresent = new int[tmpgenotypes.rows() + 1];
-//		int called = 0;
-//		for (int i = 0; i < tmpgenotypes.columns(); i++) { // individuals
-//			int nrAllelesLeft = 2;
-//			for (int j = 0; j < tmpgenotypes.rows(); j++) { // alleles
-//				if (!genotypeMissing[i]) {
-//					double gji = tmpgenotypes.getQuick(j, i);
-//					called += 2;
-//
-//					if (gji == 2d) {
-//						nrAllelesPresent[j + 1] += 2;
-//						nrAllelesLeft -= 2;
-//					} else if (gji == 1d) {
-//						nrAllelesPresent[j + 1] += 1;
-//						nrAllelesLeft -= 1;
-//					}
-//				}
-//			}
-//			nrAllelesPresent[0] += nrAllelesLeft;
-//		}
 
 		double maf = 1;
 		for (int i = 0; i < freqs.length; i++) {
@@ -273,6 +231,6 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		}
 
 
-		return new Triple<>(tmpgenotypes, genotypeMissing, new Triple<>(nrWithMissingGenotypes, maf, hwep));
+		return new Triple<>(missingGenotypeIds, genotypeMissing, new Triple<>(nrWithMissingGenotypes, maf, hwep));
 	}
 }

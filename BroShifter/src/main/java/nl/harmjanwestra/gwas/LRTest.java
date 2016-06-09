@@ -1,6 +1,5 @@
 package nl.harmjanwestra.gwas;
 
-import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
@@ -28,33 +27,9 @@ import java.util.stream.Collectors;
  */
 public class LRTest {
 
-	public static void main(String[] args) {
-
-		String[] args2 = new String[]{
-				"-c", "/Data/tmp/2016-05-27/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
-				"-d", "/Data/tmp/2016-05-27/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
-				"-f", "/Data/tmp/2016-05-27/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
-				"-i", "/Data/tmp/2016-05-27/filtered.vcf",
-				"-e", "/Data/tmp/2016-05-27/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
-				"-r", "/Data/tmp/2016-05-27/AllICLoci.bed",
-				"-t", "1",
-				"-q", "0.3",
-				"-o", "/Data/tmp/2016-05-27/testout.txt"
-		};
-
-		LRTestOptions options = new LRTestOptions(args2);
-
-		try {
-			new LRTest(options);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-//	boolean useR = false;
-
 	LRTestOptions options;
+
+	//	boolean useR = false;
 	private int submitted;
 	private int returned;
 	private double highestLog10p;
@@ -82,7 +57,29 @@ public class LRTest {
 
 	}
 
+	public static void main(String[] args) {
 
+		String[] args2 = new String[]{
+				"-c", "/Data/tmp/2016-05-27/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
+				"-d", "/Data/tmp/2016-05-27/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
+				"-f", "/Data/tmp/2016-05-27/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
+				"-i", "/Data/tmp/2016-05-27/filtered.vcf",
+				"-e", "/Data/tmp/2016-05-27/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
+				"-r", "/Data/tmp/2016-05-27/AllICLoci.bed",
+				"-t", "1",
+				"-q", "0.3",
+				"-o", "/Data/tmp/2016-05-27/testout.txt"
+		};
+
+		LRTestOptions options = new LRTestOptions(args2);
+
+		try {
+			new LRTest(options);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void testNormal() throws IOException {
 		System.out.println("Will perform logistic regression analysis");
@@ -124,8 +121,8 @@ public class LRTest {
 
 			// keep a list of genotypes to condition on
 			int iter = 0;
-			ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional = new ArrayList<>();
-			ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
+			ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+
 			ArrayList<String> conditionalVariantIds = new ArrayList<String>();
 			AssociationFile associationFile = new AssociationFile();
 			String header = associationFile.getHeader();
@@ -142,28 +139,18 @@ public class LRTest {
 			highestLog10p = 0;
 			highestLog10PProbs = 0;
 
-			for (Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> c : conditional) {
-				alleleOffsetGenotypes += c.getLeft().rows();
-			}
-			for (DoubleMatrix2D c : conditionalDosages) {
-				alleleOffsetDosages += c.columns();
-			}
 
 			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
 			for (int i = 0; i < variants.size(); i++) {
 				VCFVariant variant = variants.get(i);
 				// throw into a thread
 				// TODO: conditional on dosages is separate from conditional on genotypes.. ?
-				LRTestTask task = new LRTestTask(null,
-						variant,
+				LRTestTask task = new LRTestTask(variant,
 						iter,
-						genotypeSamplesWithCovariatesAndDiseaseStatus,
 						finalDiseaseStatus,
 						finalCovariates,
 						conditional,
-						conditionalDosages,
 						alleleOffsetGenotypes,
-						alleleOffsetDosages,
 						options);
 				jobHandler.submit(task);
 
@@ -417,17 +404,13 @@ public class LRTest {
 			for (VCFVariant variant : allVariants) {
 				// throw into a thread
 				// TODO: conditional on dosages is separate from conditional on genotypes.. ?
-				ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional = new ArrayList<>();
-				ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
-				LRTestTask task = new LRTestTask(null,
-						variant,
+				ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+
+				LRTestTask task = new LRTestTask(variant,
 						0,
-						genotypeSamplesWithCovariatesAndDiseaseStatus,
 						finalDiseaseStatus,
 						finalCovariates,
 						conditional,
-						conditionalDosages,
-						0,
 						0,
 						options);
 				jobHandler.submit(task);
@@ -473,7 +456,7 @@ public class LRTest {
 					conditionalVariants.add(new ArrayList<>());
 				}
 
-				LRTestTask tasktmp = new LRTestTask();
+				LRTestVariantQCTask tasktmp = new LRTestVariantQCTask();
 				TextFile modelsout = new TextFile(options.getOutputdir() + "gwas-conditional-models.txt", TextFile.W);
 				modelsout.writeln("Region\tIter\tModel");
 				TextFile topvariantsout = new TextFile(options.getOutputdir() + "gwas-topvariants.txt", TextFile.W);
@@ -504,51 +487,37 @@ public class LRTest {
 						conditionalVariantsForRegion.add(bestVariantLastIter);
 
 						// now put the data in the correct data structure.. recode and whatever
-						ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional = new ArrayList<>();
-						ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
+						ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+
 
 						String model = "y ~ intercept ";
-
+						LRTestVariantQCTask lqr = new LRTestVariantQCTask();
+						int alleleOffsetGenotypes = 0;
 						for (int c = 0; c < conditionalVariantsForRegion.size(); c++) {
 							VCFVariant variant = conditionalVariantsForRegion.get(c);
+
 							model += " + " + variant.getId();
-							Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = tasktmp.filterAndRecodeGenotypes(
-									genotypeSamplesWithCovariatesAndDiseaseStatus,
-									variant.getGenotypeAllelesAsMatrix2D(),
-									finalDiseaseStatus,
-									variant.getAlleles().length,
-									finalCovariates.rows());
-							conditional.add(unfilteredGenotypeData);
-							DoubleMatrix2D dosages = variant.getImputedDosagesAsMatrix2D();
-							conditionalDosages.add(dosages);
+							conditional.add(new Pair<>(variant,
+									lqr.filterAndRecodeGenotypes(variant.getGenotypeAllelesAsMatrix2D(),
+											finalDiseaseStatus,
+											variant.getAlleles().length,
+											finalCovariates.rows())));
+							alleleOffsetGenotypes += variant.getAlleles().length - 1;
 						}
 						modelsout.writeln(remainingRegions.get(regionId).toString() + "\t" + i + "\t" + model);
 
-						int alleleOffsetGenotypes = 0;
 						int alleleOffsetDosages = 0;
-
-						for (Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> c : conditional) {
-							alleleOffsetGenotypes += c.getLeft().rows();
-						}
-						for (DoubleMatrix2D c : conditionalDosages) {
-							alleleOffsetDosages += c.columns();
-						}
-
 
 						for (int v = 0; v < variantsInRegion.size(); v++) {
 							// throw into a thread
 							// TODO: conditional on dosages is separate from conditional on genotypes.. ?
 							VCFVariant variant = variantsInRegion.get(v);
-							LRTestTask task = new LRTestTask(null,
-									variant,
+							LRTestTask task = new LRTestTask(variant,
 									i,
-									genotypeSamplesWithCovariatesAndDiseaseStatus,
 									finalDiseaseStatus,
 									finalCovariates,
 									conditional,
-									conditionalDosages,
 									alleleOffsetGenotypes,
-									alleleOffsetDosages,
 									options);
 							jobHandler.submit(task);
 							submitted++;
@@ -725,8 +694,8 @@ public class LRTest {
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-																	  Feature region,
-																	  ArrayList<VCFVariant> variantsInRegion) {
+	                                                                  Feature region,
+	                                                                  ArrayList<VCFVariant> variantsInRegion) {
 
 		AssociationResult topResult = null;
 		for (AssociationResult r : assocResults) {
@@ -764,9 +733,9 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-							int iter, ArrayList<VCFVariant> variants,
-							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
-							ArrayList<AssociationResult> associationResults) throws IOException {
+	                        int iter, ArrayList<VCFVariant> variants,
+	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
+	                        ArrayList<AssociationResult> associationResults) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {

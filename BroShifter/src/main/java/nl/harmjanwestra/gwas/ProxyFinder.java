@@ -1,5 +1,6 @@
 package nl.harmjanwestra.gwas;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.gwas.CLI.ProxyFinderOptions;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
@@ -156,7 +157,6 @@ public class ProxyFinder {
 
 
 				System.out.println(variants.size() + " variants in region " + f.toString());
-
 
 
 				TextFile out = new TextFile(options.output + "-" + f.toString() + ".txt.gz", TextFile.W);
@@ -341,13 +341,13 @@ public class ProxyFinder {
 	}
 
 	public double[] convertToDouble(VCFVariant vcfVariant) {
-		byte[][] alleles = vcfVariant.getGenotypeAlleles();
-		double[] output = new double[alleles[0].length];
-		for (int i = 0; i < alleles[0].length; i++) {
-			if (alleles[0][i] == -1) {
+		DoubleMatrix2D alleles = vcfVariant.getGenotypeAllelesAsMatrix2D();
+		double[] output = new double[alleles.rows()];
+		for (int i = 0; i < alleles.rows(); i++) {
+			if (alleles.getQuick(i, 0) == -1) {
 				output[i] = -1;
 			} else {
-				output[i] = (alleles[0][i] + alleles[1][i]);
+				output[i] = (alleles.getQuick(i, 0) + alleles.getQuick(i, 1));
 			}
 		}
 

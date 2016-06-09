@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
  */
 public class LogitTestR implements Callable<Boolean> {
 
+	private final static boolean lingpipe = false;
 	private final String vcf;
 	private final String outputdir;
 	private final String diseaseStatusFile;
@@ -37,23 +38,22 @@ public class LogitTestR implements Callable<Boolean> {
 	private final int threadnum;
 	private final String famfile;
 	private final HashSet<String> snpLimit;
-
-	private final static boolean lingpipe = false;
 	boolean skipMakingPseudoControls = false;
+	boolean runIterative = false;
 	private ArrayList<Feature> bedRegions;
 
 	public LogitTestR(String vcf,
-					  String outputdir,
-					  String diseaseStatusFile,
-					  String covariateFile,
-					  HashSet<String> covariatesToInclude,
-					  HashSet<String> snpLimit,
-					  String samplesToExclude,
-					  String famfile,
-					  boolean imputationqualityfilter,
-					  double imputationqualitythreshold,
-					  int minNObservedAllele,
-					  int threadnum) {
+	                  String outputdir,
+	                  String diseaseStatusFile,
+	                  String covariateFile,
+	                  HashSet<String> covariatesToInclude,
+	                  HashSet<String> snpLimit,
+	                  String samplesToExclude,
+	                  String famfile,
+	                  boolean imputationqualityfilter,
+	                  double imputationqualitythreshold,
+	                  int minNObservedAllele,
+	                  int threadnum) {
 		this.vcf = vcf;
 		this.outputdir = outputdir;
 		this.diseaseStatusFile = diseaseStatusFile;
@@ -67,8 +67,6 @@ public class LogitTestR implements Callable<Boolean> {
 		this.famfile = famfile;
 		this.snpLimit = snpLimit;
 	}
-
-	boolean runIterative = false;
 
 	public void setRunIterative(boolean b, ArrayList<Feature> bedRegions) {
 		this.bedRegions = bedRegions;
@@ -175,7 +173,6 @@ public class LogitTestR implements Callable<Boolean> {
 		String[] covariateColNames = covariates.getColObjects().toArray(new String[0]);
 
 		System.out.println(sampleToIntGenotypes.size() + " samples with disease status, covariates and genotypes");
-
 
 
 		if (sampleToIntGenotypes.size() == 0) {
@@ -472,18 +469,18 @@ public class LogitTestR implements Callable<Boolean> {
 								variantMafs.put(variantname, maf);
 							} else {
 								logout.writeln("variant skipped maf: " + maf + " below threshold " +
-												variant.getId()
-												+ "\t" + variant.getChr()
-												+ "\t" + variant.getPos()
-												+ "\t" + variant.getMAF()
+										variant.getId()
+										+ "\t" + variant.getChr()
+										+ "\t" + variant.getPos()
+										+ "\t" + variant.getMAF()
 								);
 							}
 						} else {
 							logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
-											variant.getId()
-											+ "\t" + variant.getChr()
-											+ "\t" + variant.getPos()
-											+ "\t" + variant.getMAF()
+									variant.getId()
+									+ "\t" + variant.getChr()
+									+ "\t" + variant.getPos()
+									+ "\t" + variant.getMAF()
 							);
 						}
 					}
@@ -811,10 +808,10 @@ public class LogitTestR implements Callable<Boolean> {
 							if (variantId % 50 == 0) {
 
 								System.out.println("thread:\t" + threadnum
-												+ "\titer: " + iteration
-												+ "\tnrVars processed: " + variantId + "/" + regionGenotypes.size()
-												+ "\t lowest P: " + lowestP
-												+ "\tmodel: " + modelStr
+										+ "\titer: " + iteration
+										+ "\tnrVars processed: " + variantId + "/" + regionGenotypes.size()
+										+ "\t lowest P: " + lowestP
+										+ "\tmodel: " + modelStr
 								);
 
 							}
@@ -1525,10 +1522,10 @@ public class LogitTestR implements Callable<Boolean> {
 										pvalout.writeln(outstr);
 									} else {
 										logout.writeln("variant genotypes aliased: " + imputationqualityscore + " below threshold " + mafthresholdD
-														+ "\t" + variant.getId()
-														+ "\t" + variant.getChr()
-														+ "\t" + variant.getPos()
-														+ "\t" + variant.getMAF()
+												+ "\t" + variant.getId()
+												+ "\t" + variant.getChr()
+												+ "\t" + variant.getPos()
+												+ "\t" + variant.getMAF()
 										);
 									}
 								} else {
@@ -1659,10 +1656,10 @@ public class LogitTestR implements Callable<Boolean> {
 										pvalout.writeln(outstr);
 									} else {
 										logout.writeln("variant genotypes aliased: " + imputationqualityscore + " below threshold " + mafthresholdD
-														+ "\t" + variant.getId()
-														+ "\t" + variant.getChr()
-														+ "\t" + variant.getPos()
-														+ "\t" + variant.getMAF()
+												+ "\t" + variant.getId()
+												+ "\t" + variant.getChr()
+												+ "\t" + variant.getPos()
+												+ "\t" + variant.getMAF()
 
 										);
 									}
@@ -1684,19 +1681,19 @@ public class LogitTestR implements Callable<Boolean> {
 
 							} else {
 								logout.writeln("variant skipped maf: " + maf + " below threshold " +
-												variant.getId()
-												+ "\t" + variant.getChr()
-												+ "\t" + variant.getPos()
-												+ "\t" + variant.getMAF()
+										variant.getId()
+										+ "\t" + variant.getChr()
+										+ "\t" + variant.getPos()
+										+ "\t" + variant.getMAF()
 
 								);
 							}
 						} else {
 							logout.writeln("variant skipped rsq: " + imputationqualityscore + " below threshold " +
-											variant.getId()
-											+ "\t" + variant.getChr()
-											+ "\t" + variant.getPos()
-											+ "\t" + variant.getMAF()
+									variant.getId()
+									+ "\t" + variant.getChr()
+									+ "\t" + variant.getPos()
+									+ "\t" + variant.getMAF()
 
 							);
 
@@ -1846,7 +1843,7 @@ public class LogitTestR implements Callable<Boolean> {
 	private Triple<double[][], Double, Integer> recodeGenotypes(
 			String variant,
 			boolean[] includeGenotype,
-			byte[][] genotypeAlleles,
+			double[][] genotypeAlleles,
 			int nrAlleles,
 			ArrayList<Integer> kidsInTrios,
 			Integer[][] sampleParents,
@@ -1861,8 +1858,8 @@ public class LogitTestR implements Callable<Boolean> {
 		// first iterate the genotyped samples to load the genotypes
 		for (int i = 0; i < genotypeAlleles[0].length; i++) {
 			if (includeGenotype[i]) { // this is set to false if the genotype doesn't have a disease status or covariate data.
-				byte b1 = genotypeAlleles[0][i];
-				byte b2 = genotypeAlleles[1][i];
+				byte b1 = (byte) genotypeAlleles[0][i];
+				byte b2 = (byte) genotypeAlleles[1][i];
 				if (b1 == -1) {
 					for (int q = 0; q < outputGenotypes.length; q++) {
 						outputGenotypes[q][individualCounter] = Double.NaN;
@@ -2093,12 +2090,12 @@ public class LogitTestR implements Callable<Boolean> {
 		return new Triple<double[][], Double, Integer>(outputGenotypes, maf, called / 2);
 	}
 
-	int[] recode(int id, byte[][] gt) {
+	int[] recode(int id, double[][] gt) {
 		int[] alleles = new int[2];
 
 
-		alleles[0] = gt[0][id];
-		alleles[1] = gt[1][id];
+		alleles[0] = (int) gt[0][id];
+		alleles[1] = (int) gt[1][id];
 		return alleles;
 	}
 

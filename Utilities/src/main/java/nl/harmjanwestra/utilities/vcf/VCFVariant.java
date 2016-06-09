@@ -31,9 +31,10 @@ public class VCFVariant {
 
 
 	private DoubleMatrix2D genotypeAlleles; // format [individuals][alleles] (save some memory by making only two individual-sized arrays)
+	private DoubleMatrix2D genotypeProbabilies;
 	private DoubleMatrix2D imputedDosages; // format [individuals][alleles] (save some memory by making only two individual-sized arrays)
 	private ShortMatrix2D allelicDepth;
-	private DoubleMatrix2D genotypeProbabilies;
+
 
 	private int[] nrAllelesObserved;
 	private double[] genotypeDosages;
@@ -345,8 +346,6 @@ public class VCFVariant {
 				recalculateMAFAndCallRate();
 			}
 		}
-
-
 	}
 
 
@@ -562,9 +561,6 @@ public class VCFVariant {
 		}
 	}
 
-	public double[][] getImputedDosages() {
-		return getImputedDosagesAsMatrix2D().toArray();
-	}
 
 	public Boolean alleleFlip(VCFVariant var2) {
 
@@ -600,6 +596,31 @@ public class VCFVariant {
 		}
 
 		return output;
+	}
+
+	public DoubleMatrix2D getDosagesAsMatrix2D() {
+		return DoubleFactory2D.dense.make(getDosages());
+	}
+
+	public DoubleMatrix2D getImputedDosagesAsMatrix2D() {
+		// parse genotype probs
+		int nrAlleles = getAlleles().length;
+		DoubleMatrix2D dosages = null;
+		if (imputedDosages == null) {
+			dosages = new DenseDoubleMatrix2D(genotypeAlleles.columns(), nrAlleles - 1);
+			for (int i = 0; i < genotypeAlleles.columns(); i++) {
+				for (int j = 0; j < genotypeAlleles.rows(); j++) {
+					dosages.setQuick(i, 0, genotypeAlleles.getQuick(j, i));
+				}
+			}
+			return dosages;
+		} else {
+			return imputedDosages;
+		}
+	}
+
+	public double[][] getImputedDosages() {
+		return getImputedDosagesAsMatrix2D().toArray();
 	}
 
 	public String allelesAsString() {
@@ -1081,22 +1102,6 @@ public class VCFVariant {
 		return genotypeAlleles;
 	}
 
-	public DoubleMatrix2D getImputedDosagesAsMatrix2D() {
-		// parse genotype probs
-		int nrAlleles = getAlleles().length;
-		DoubleMatrix2D dosages = null;
-		if (imputedDosages == null) {
-			dosages = new DenseDoubleMatrix2D(genotypeAlleles.columns(), nrAlleles - 1);
-			for (int i = 0; i < genotypeAlleles.columns(); i++) {
-				for (int j = 0; j < genotypeAlleles.rows(); j++) {
-					dosages.setQuick(i, 0, genotypeAlleles.getQuick(j, i));
-				}
-			}
-			return dosages;
-		} else {
-			return imputedDosages;
-		}
-	}
 
 	public enum PARSE {
 		HEADER,

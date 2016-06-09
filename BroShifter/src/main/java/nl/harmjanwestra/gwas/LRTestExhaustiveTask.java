@@ -1,6 +1,7 @@
 package nl.harmjanwestra.gwas;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.features.Chromosome;
@@ -30,12 +31,13 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 	private int snpid1;
 	private int snpid2;
 	private ArrayList<VCFVariant> variants;
+	private DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 
 	public LRTestExhaustiveTask(ArrayList<VCFVariant> variants, int i, int j,
-								boolean[] genotypesWithCovariatesAndDiseaseStatus,
-								DiseaseStatus[] finalDiseaseStatus,
-								DoubleMatrix2D finalCovariates,
-								LRTestOptions options) {
+	                            boolean[] genotypesWithCovariatesAndDiseaseStatus,
+	                            DiseaseStatus[] finalDiseaseStatus,
+	                            DoubleMatrix2D finalCovariates,
+	                            LRTestOptions options) {
 		this.variants = variants;
 		this.snpid1 = i;
 		this.snpid2 = j;
@@ -52,55 +54,45 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 		VCFVariant variant2 = variants.get(snpid2);
 		LRTestTask taskObj = new LRTestTask();
 
-		Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData1 = taskObj.filterAndRecodeGenotypes(
-				genotypesWithCovariatesAndDiseaseStatus,
+		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
+		Triple<int[], boolean[], Triple<Integer, Double, Double>> qcdata1 = lrq.filterAndRecodeGenotypes(
 				variant1.getGenotypeAllelesAsMatrix2D(),
 				finalDiseaseStatus,
 				variant1.getAlleles().length,
 				finalCovariates.rows());
 
-		Triple<Integer, Double, Double> stats1 = unfilteredGenotypeData1.getRight();
+		Triple<Integer, Double, Double> stats1 = qcdata1.getRight();
 		double maf1 = stats1.getMiddle();
 		double hwep1 = stats1.getRight();
 
-		Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData2 = taskObj.filterAndRecodeGenotypes(
-				genotypesWithCovariatesAndDiseaseStatus,
+
+		Triple<int[], boolean[], Triple<Integer, Double, Double>> qcdata2 = lrq.filterAndRecodeGenotypes(
 				variant2.getGenotypeAllelesAsMatrix2D(),
 				finalDiseaseStatus,
 				variant2.getAlleles().length,
 				finalCovariates.rows());
 
-		Triple<Integer, Double, Double> stats2 = unfilteredGenotypeData2.getRight();
+		Triple<Integer, Double, Double> stats2 = qcdata2.getRight();
 		double maf2 = stats2.getMiddle();
 		double hwep2 = stats2.getRight();
 
-		ArrayList<Triple<DoubleMatrix2D, boolean[], Triple<Integer, Double, Double>>> conditional = new ArrayList<>();
-		ArrayList<DoubleMatrix2D> conditionalDosages = new ArrayList<>();
-		conditional.add(unfilteredGenotypeData2);
-		DoubleMatrix2D dosages2 = variant2.getImputedDosagesAsMatrix2D();
-		conditionalDosages.add(dosages2);
 
-		Pair<DoubleMatrix2D, double[]> genotypedata = taskObj.prepareGenotypeMatrix(
-				unfilteredGenotypeData1,
+		ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+		conditional.add(new Pair<>(variant2, qcdata2));
+
+		Pair<DoubleMatrix2D, double[]> xandy = taskObj.prepareMatrices(
+				variant1,
+				qcdata1.getLeft(),
 				conditional,
 				finalDiseaseStatus,
-				finalCovariates,
-				finalCovariates.rows());
+				finalCovariates
+		);
 
 		int nrAlleles = variant1.getAlleles().length + variant2.getAlleles().length;
-		double[] y = genotypedata.getRight();
-		DoubleMatrix2D x = genotypedata.getLeft();
+		double[] y = xandy.getRight();
+		DoubleMatrix2D x = xandy.getLeft();
 
-		AssociationResult output = null;
-		if (!variant1.hasImputationDosages() || !variant2.hasImputationDosages()) {
-			output = pruneAndTest(x, y, nrAlleles, taskObj);
-		} else {
-			DoubleMatrix2D dosageMat = taskObj.prepareDosageMatrix(genotypesWithCovariatesAndDiseaseStatus,
-					variant1.getImputedDosagesAsMatrix2D(),
-					finalCovariates,
-					conditionalDosages);
-			output = pruneAndTest(dosageMat, y, nrAlleles, taskObj);
-		}
+		AssociationResult output = pruneAndTest(x, y, nrAlleles, taskObj);
 
 		if (output == null) {
 			return null;
@@ -141,9 +133,9 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-										   double[] y,
-										   int nrAlleles,
-										   LRTestTask testObj) throws IOException {
+	                                       double[] y,
+	                                       int nrAlleles,
+	                                       LRTestTask testObj) throws IOException {
 		Pair<DoubleMatrix2D, boolean[]> pruned = testObj.removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X
@@ -161,10 +153,12 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 		}
 
 		int newXIndex = 0;
+		int newLastAllele = 0;
 		for (int i = 0; i < notaliased.length; i++) {
 			if (notaliased[i]) {
 				if (i >= firstAllele && i < lastAllele) {
 					alleleIndex[i - firstAllele] = newXIndex;
+					newLastAllele = newXIndex;
 					colsToRemove[newXIndex] = true;
 					nrRemaining++;
 				}
@@ -175,9 +169,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			}
 		}
 
-		double log10p = 0;
 		AssociationResult result = new AssociationResult();
-
 
 		if (nrRemaining > 0) {
 			// perform testNormal on full model
@@ -210,8 +202,8 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			}
 
 			double devx = resultX.getDeviance();
-			DoubleMatrix2D covarsOnly = testObj.removeGenotypes(x, colsToRemove);
-			LogisticRegressionResult resultCovars = reg.univariate(y, covarsOnly);
+			DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows(), newLastAllele, x.columns());
+			LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
 			if (resultCovars == null) {
 				System.err.println("ERROR: covariate regression did not converge. ");
 				return null;
@@ -244,7 +236,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			}
 
 			double deltaDeviance = devnull - devx;
-			int df = x.columns() - covarsOnly.columns();
+			int df = x.columns() - xprime.columns();
 			double p = ChiSquare.getP(df, deltaDeviance);
 
 			result.setDevianceNull(devnull);
