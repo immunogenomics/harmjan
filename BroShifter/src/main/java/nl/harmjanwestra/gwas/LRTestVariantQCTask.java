@@ -29,11 +29,11 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 	}
 
 	public LRTestVariantQCTask(String ln,
-	                           ArrayList<Feature> regions,
-	                           LRTestOptions options,
-	                           boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
-	                           DiseaseStatus[] finalDiseaseStatus,
-	                           DoubleMatrix2D finalCovariates) {
+							   ArrayList<Feature> regions,
+							   LRTestOptions options,
+							   boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
+							   DiseaseStatus[] finalDiseaseStatus,
+							   DoubleMatrix2D finalCovariates) {
 		this.regions = regions;
 		this.options = options;
 		this.ln = ln;
@@ -48,6 +48,9 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
 		String variantChr = variant.getChr();
 		String variantId = variant.getId();
+		if (variantId.equals("rs184303210")) {
+			System.out.println("Found it :D");
+		}
 		String variantPos = "" + variant.getPos();
 		boolean variantPassesQC = false;
 		double maf = 0;
@@ -68,10 +71,9 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				vsq.computeAutosomal(variant);
 				impqual = vsq.getImpinfo();
 			}
+			overlap = true;
 
 			if (impqual == null || impqual > options.getImputationqualitythreshold()) {
-				overlap = true;
-
 				// parse the genotype, do some QC checks
 				Triple<int[], boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = filterAndRecodeGenotypes(
 						variant.getGenotypeAllelesAsMatrix2D(),
@@ -89,6 +91,8 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				} else {
 					variantPassesQC = true;
 				}
+			} else {
+				variant = null;
 			}
 		}
 

@@ -43,12 +43,12 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	public LRTestTask(VCFVariant variant,
-	                  int iter,
-	                  DiseaseStatus[] finalDiseaseStatus,
-	                  DoubleMatrix2D finalCovariates,
-	                  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-	                  int alleleOffsetGenotypes,
-	                  LRTestOptions options) {
+					  int iter,
+					  DiseaseStatus[] finalDiseaseStatus,
+					  DoubleMatrix2D finalCovariates,
+					  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+					  int alleleOffsetGenotypes,
+					  LRTestOptions options) {
 		this.variant = variant;
 		this.iter = iter;
 		this.finalDiseaseStatus = finalDiseaseStatus;
@@ -84,6 +84,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		int nrAlleles = variant.getAlleles().length;
 		double[] y = xandy.getRight(); // get the phenotypes for all non-missing genotypes
 		DoubleMatrix2D x = xandy.getLeft();
+
 
 		AssociationResult result = pruneAndTest(x, y, nrAlleles, alleleOffsetGenotypes, variant, maf);
 
@@ -140,7 +141,12 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		// now append covariates
 		x = DoubleFactory2D.dense.appendColumns(x, finalCovariates);
 
-		if (!missingGenotypeIds.isEmpty()) {
+		// add intercept column
+		DoubleMatrix2D vector = DoubleFactory2D.dense.make(x.rows(), 1);
+		vector.assign(1);
+		x = DoubleFactory2D.dense.appendColumns(vector, x);
+
+		if (missingGenotypeIds.isEmpty()) {
 			double[] y = new double[finalDiseaseStatus.length];
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
 				y[i] = finalDiseaseStatus[i].getNumber();
@@ -151,7 +157,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			Integer[] rowIndexesArr = missingGenotypeIds.toArray(new Integer[0]);
 			int[] rowIndexes = Primitives.toPrimitiveArr(rowIndexesArr);
 
-			x = dda.subMatrix(x, rowIndexes, 0, x.columns());
+			x = dda.subMatrix(x, rowIndexes, 0, x.columns() - 1);
 
 			double[] y = new double[finalDiseaseStatus.length - missingGenotypeIds.size()];
 			int ctr = 0;
@@ -203,16 +209,16 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		int[] colindexes = Primitives.toPrimitiveArr(remaining.toArray(new Integer[0]));
 		// remove correlated variables
-		DoubleMatrix2D matOut = dda.subMatrix(mat, 0, mat.rows(), colindexes);
+		DoubleMatrix2D matOut = dda.subMatrix(mat, 0, mat.rows() - 1, colindexes);
 		return new Pair<>(matOut, includeCol);
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-	                                       double[] y,
-	                                       int nrAlleles,
-	                                       int alleleOffset,
-	                                       VCFVariant variant,
-	                                       double maf) {
+										   double[] y,
+										   int nrAlleles,
+										   int alleleOffset,
+										   VCFVariant variant,
+										   double maf) {
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 		boolean[] notaliased = pruned.getRight(); // length of original X
@@ -280,10 +286,19 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 
 			double devx = resultX.getDeviance();
-			DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows(), newLastAllele, x.columns());
+			DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, newLastAllele, x.columns() - 1);
 			LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
 			if (resultCovars == null) {
-				System.err.println("ERROR: covariate regression did not converge. ");
+				System.err.println("ERROR: null-model regression did not converge. ");
+				System.err.println("Variant: " + snp.getChromosome().toString()
+						+ "\t" + snp.getStart()
+						+ "\t" + snp.getName()
+						+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
+						+ "\t" + snp.getMinorAllele()
+						+ "\t" + maf);
+				System.err.println(x.rows() + "\t" + x.columns());
+				System.err.println(xprime.rows() + "\t" + xprime.columns());
+				System.err.println("-----");
 				return null;
 			}
 			double devnull = resultCovars.getDeviance();
