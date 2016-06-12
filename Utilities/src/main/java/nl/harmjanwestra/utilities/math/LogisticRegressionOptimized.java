@@ -6,6 +6,8 @@ package nl.harmjanwestra.utilities.math;
  */
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
+import cern.colt.matrix.tdouble.algo.decomposition.DenseDoubleCholeskyDecomposition;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.jet.stat.Gamma;
 import umcg.genetica.math.stats.ChiSquare;
@@ -14,8 +16,13 @@ public class LogisticRegressionOptimized {
 
 	int max_iter = 50;
 	double EPSILON = 1E-3;
+	DoubleMatrix2D xtwx;
+	private double[] g;
+	private double[] numer;
+	private DoubleMatrix2D pi;
+	private DoubleMatrix2D H;
 
-	public LogisticRegressionOptimized(){
+	public LogisticRegressionOptimized() {
 
 	}
 
@@ -105,7 +112,15 @@ public class LogisticRegressionOptimized {
 //		double[] diff = new double[kJMinusOne];
 //		boolean[] diffb = new boolean[kJMinusOne];
 		//double[] beta_inf = new double[kJMinusOne];
-		DoubleMatrix2D xtwx = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);
+		if (xtwx == null) {
+			xtwx = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);
+		} else {
+			if (xtwx.rows() != kJMinusOne) {
+				xtwx = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);
+			} else {
+				xtwx.assign(0);
+			}
+		}
 
 
 		double[] loglike = new double[1];
@@ -203,10 +218,7 @@ public class LogisticRegressionOptimized {
 		}
 	}
 
-	private double[] g;
-	private double[] numer;
-	private DoubleMatrix2D pi;
-	private DoubleMatrix2D H;
+
 
 	private int nr(
 			DoubleMatrix2D X,
@@ -224,39 +236,36 @@ public class LogisticRegressionOptimized {
 		int kJMinusOne = (K * (J - 1));
 
 		// if this is the first iteration, initialize (and save some GC time in the following iterations)
-		if (pi != null) {
-			// check the size
-			if (pi.rows() != N || pi.columns() != J) {
-				pi = new DenseDoubleMatrix2D(N, J);
-			}
-			if (H.rows() != kJMinusOne || H.columns() != kJMinusOne) {
-				H = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);
-			}
-			if (g.length != kJMinusOne) {
-				g = new double[kJMinusOne];
-			}
-			if (numer.length != J) {
-				numer = new double[J];
-			}
-		}
-
 		if (pi == null) {
 			pi = new DenseDoubleMatrix2D(N, J);
 			H = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);
 			g = new double[kJMinusOne];
 			numer = new double[J];
 		} else {
-			// set everything to null
-			for (int i = 0; i < kJMinusOne; i++) {
-				for (int j = 0; j < kJMinusOne; j++) {
-					pi.setQuick(i, j, 0);
-					H.setQuick(i, j, 0);
-				}
-				g[i] = 0;
-
+			// check the size
+			if (pi.rows() != N || pi.columns() != J) {
+				pi = new DenseDoubleMatrix2D(N, J);
+			} else {
+				pi.assign(0);
 			}
-			for (int i = 0; i < numer.length; i++) {
-				numer[i] = 0d;
+			if (H.rows() != kJMinusOne || H.columns() != kJMinusOne) {
+				H = new DenseDoubleMatrix2D(kJMinusOne, kJMinusOne);
+			} else {
+				H.assign(0);
+			}
+			if (g.length != kJMinusOne) {
+				g = new double[kJMinusOne];
+			} else {
+				for (int i = 0; i < g.length; i++) {
+					g[i] = 0;
+				}
+			}
+			if (numer.length != J) {
+				numer = new double[J];
+			} else {
+				for (int i = 0; i < numer.length; i++) {
+					numer[i] = 0;
+				}
 			}
 		}
 
@@ -368,7 +377,14 @@ public class LogisticRegressionOptimized {
 		}
 
 		/* invert xtwx */
-		if (cholesky(H)) return -1;
+
+		DenseDoubleCholeskyDecomposition chol = dda.chol(H);
+		H = chol.getL();
+
+//		LinearSystemSolver solver =
+//				a.withSolver(LinearAlgebra.FORWARD_BACK_SUBSTITUTION);
+
+//		if (cholesky(H)) return -1;
 		if (backsub(H)) return -2;
 		if (trimult(H, xtwx)) return -3;
 
@@ -383,6 +399,8 @@ public class LogisticRegressionOptimized {
 
 		return 0;
 	}
+
+	private DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 
 	private boolean trimult(DoubleMatrix2D in, DoubleMatrix2D out) {
 		int i, j, k, m;
