@@ -48,9 +48,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
 		String variantChr = variant.getChr();
 		String variantId = variant.getId();
-		if (variantId.equals("rs184303210")) {
-			System.out.println("Found it :D");
-		}
+
 		String variantPos = "" + variant.getPos();
 		boolean variantPassesQC = false;
 		double maf = 0;
@@ -59,6 +57,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		Double impqual = 0d;
 		if (!variantInRegion(variant)) {
 			variant = null;
+			ln = null;
 		} else {
 			variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus);
 			if (!variant.hasImputationDosages()) {
@@ -91,12 +90,14 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				} else {
 					variantPassesQC = true;
 				}
+				ln = null;
 			} else {
 				variant = null;
+				ln = null;
 			}
 		}
 
-		ln = null;
+
 		String logln = variantChr
 				+ "\t" + variantPos
 				+ "\t" + variantId

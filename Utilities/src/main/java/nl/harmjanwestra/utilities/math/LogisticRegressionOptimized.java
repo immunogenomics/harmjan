@@ -7,7 +7,6 @@ package nl.harmjanwestra.utilities.math;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
-import cern.colt.matrix.tdouble.algo.decomposition.DenseDoubleCholeskyDecomposition;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.jet.stat.Gamma;
 import umcg.genetica.math.stats.ChiSquare;
@@ -377,14 +376,7 @@ public class LogisticRegressionOptimized {
 		}
 
 		/* invert xtwx */
-
-		DenseDoubleCholeskyDecomposition chol = dda.chol(H);
-		H = chol.getL();
-
-//		LinearSystemSolver solver =
-//				a.withSolver(LinearAlgebra.FORWARD_BACK_SUBSTITUTION);
-
-//		if (cholesky(H)) return -1;
+		if (cholesky(H)) return -1;
 		if (backsub(H)) return -2;
 		if (trimult(H, xtwx)) return -3;
 

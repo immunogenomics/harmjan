@@ -1,6 +1,7 @@
 package nl.harmjanwestra.gwas;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
@@ -19,9 +20,12 @@ import umcg.genetica.text.Strings;
 
 import java.io.Console;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+
+//import java.util.concurrent.Executors;
 
 /**
  * Created by hwestra on 11/7/15.
@@ -29,25 +33,22 @@ import java.util.stream.Collectors;
 public class LRTest {
 
 	LRTestOptions options;
-
-	//	boolean useR = false;
 	private int submitted;
 	private int returned;
 	private double highestLog10p;
-	private VCFVariant currentLowestVariant;
-	private double highestLog10PProbs;
-	private int nrTested;
-	private int maxNrOfResultsInBuffer = 10000;
 	private HashMap<String, Integer> sampleToIntGenotypes;
 	private HashSet<String> snpLimit;
 	private ArrayList<Feature> bedRegions = null;
 	private boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
-	private DenseDoubleMatrix2D finalCovariates;
+	private DoubleMatrix2D finalCovariates;
 	private DiseaseStatus[] finalDiseaseStatus;
 	private ProgressBar progressBar;
+	private final ExecutorService exService;
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
+		System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
+		exService = Executors.newFixedThreadPool(options.getNrThreads());
 		if (options.isConditionalAnalysis()) {
 			testConditional();
 		} else if (options.isExhaustivePairwiseAnalysis()) {
@@ -55,7 +56,7 @@ public class LRTest {
 		} else {
 			testNormal();
 		}
-
+		exService.shutdown();
 	}
 
 	public static void main(String[] args) {
@@ -110,19 +111,14 @@ public class LRTest {
 
 		boolean initialized = initialize();
 
-		waitForEnter("Waiting for a response...");
+		// waitForEnter("Waiting for a response...");
 
 		if (initialized) {
 
-			TextFile log = new TextFile(options.getOutputdir() + "variantlog.txt", TextFile.W);
-			System.out.println("Log will be written here: " + log.getFileName());
-			ArrayList<VCFVariant> variants = readVariants(log);
-			log.close();
+			ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt");
+
 
 			// boot up threadpool
-			System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
-			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
-
 			String condition = options.getConditional();
 			HashMap<Feature, Integer> conditionsPerIter = null;
 			if (condition != null) {
@@ -143,7 +139,6 @@ public class LRTest {
 				System.out.println("Setting max iter to: " + maxNrIter);
 			}
 
-			// TODO: other VCF info scores...
 
 			// keep a list of genotypes to condition on
 			int iter = 0;
@@ -153,20 +148,14 @@ public class LRTest {
 			AssociationFile associationFile = new AssociationFile();
 			String header = associationFile.getHeader();
 
-			currentLowestVariant = null;
-
-			int variantCtr = 0;
-			nrTested = 0;
 			submitted = 0;
 			returned = 0;
 
 			int alleleOffsetGenotypes = 0;
-			int alleleOffsetDosages = 0;
 			highestLog10p = 0;
-			highestLog10PProbs = 0;
 
 
-			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
+			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
 			for (int i = 0; i < variants.size(); i++) {
 				VCFVariant variant = variants.get(i);
 				// throw into a thread
@@ -190,9 +179,7 @@ public class LRTest {
 			clearQueue(null, pvalout, iter, variants, jobHandler, null);
 			progressBar.close();
 			pvalout.close();
-			threadPool.shutdown();
 		}
-
 	}
 
 	private boolean initialize() throws IOException {
@@ -388,26 +375,15 @@ public class LRTest {
 
 		if (initialized) {
 
-			// TODO: other VCF info scores...
-
-			// keep a list of genotypes to condition on
-
-
 			AssociationFile associationFile = new AssociationFile();
 			String header = associationFile.getHeader();
 
-
 			// boot up threadpool
-			System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
+
+			ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt");
 
 
-			TextFile logout = new TextFile(options.getOutputdir() + "variantlog.txt", TextFile.W);
-			System.out.println("Variant log is here: " + logout.getFileName());
-			ArrayList<VCFVariant> allVariants = readVariants(logout);
-			logout.close();
-
-			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
-			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(threadPool);
+			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
 
 
 			ArrayList<AssociationResult> assocResults = new ArrayList<>();
@@ -416,21 +392,16 @@ public class LRTest {
 			System.out.println("Iteration " + 0 + " starting. Model: y ~ SNP + covar.");
 			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + 0 + ".txt");
 			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + 0 + ".txt", TextFile.W);
-			logout = new TextFile(options.getOutputdir() + "gwas-" + 0 + "-log.txt.gz", TextFile.W);
+			TextFile logout = new TextFile(options.getOutputdir() + "gwas-" + 0 + "-log.txt.gz", TextFile.W);
 			pvalout.writeln(header);
 
-			currentLowestVariant = null;
 			int variantCtr = 0;
-			nrTested = 0;
 			submitted = 0;
 			returned = 0;
 			highestLog10p = 0;
-			highestLog10PProbs = 0;
 
 
 			for (VCFVariant variant : allVariants) {
-				// throw into a thread
-				// TODO: conditional on dosages is separate from conditional on genotypes.. ?
 				ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
 
 				LRTestTask task = new LRTestTask(variant,
@@ -440,9 +411,10 @@ public class LRTest {
 						conditional,
 						0,
 						options);
-				jobHandler.submit(task);
-				submitted++;
 
+				jobHandler.submit(task);
+
+				submitted++;
 				if (submitted % 1000 == 0) {
 					clearQueue(logout, pvalout, 0, null, jobHandler, assocResults);
 				}
@@ -546,8 +518,10 @@ public class LRTest {
 									conditional,
 									alleleOffsetGenotypes,
 									options);
+
 							jobHandler.submit(task);
 							submitted++;
+
 
 							if (submitted % 1000 == 0) {
 								clearQueue(null, pvalout, i, null, jobHandler, assocResultsIter);
@@ -569,20 +543,18 @@ public class LRTest {
 				modelsout.close();
 				topvariantsout.close();
 			}
-			threadPool.shutdown();
-
 		}
 	}
 
-	public ArrayList<VCFVariant> readVariants(TextFile log) throws IOException {
+	public ArrayList<VCFVariant> readVariants(String logfile) throws IOException {
 
+		TextFile log = new TextFile(logfile, TextFile.W);
+		System.out.println("Log will be written here: " + log.getFileName());
 		log.writeln("Chr\tPos\tId\tMAF\tHWEP\tImpQual\tOverlap\tPassQC");
 
-
 		int maxQueueSize = options.getNrThreads() * 10;
-		LinkedBlockingQueue queue = new LinkedBlockingQueue<Runnable>(maxQueueSize);
-		ExecutorService exService = new ThreadPoolExecutor(options.getNrThreads(), options.getNrThreads(), 0L, TimeUnit.MILLISECONDS, queue);
 		CompletionService<Pair<VCFVariant, String>> jobHandler = new ExecutorCompletionService<Pair<VCFVariant, String>>(exService);
+
 		TextFile vcfIn = new TextFile(options.getVcf(), TextFile.R);
 		String vcfLn = vcfIn.readLine();
 		while (vcfLn != null && vcfLn.startsWith("#")) {
@@ -590,37 +562,60 @@ public class LRTest {
 		}
 		int linessubmitted = 0;
 		System.out.println("Parsing: " + options.getVcf());
+
+
+		int totalsubmitted = 0;
+		ArrayList<VCFVariant> variants = new ArrayList<>();
 		while (vcfLn != null) {
+
+			if (linessubmitted == maxQueueSize) {
+
+				// get some of the output
+				int returned = 0;
+				while (returned < linessubmitted) {
+					try {
+						Future<Pair<VCFVariant, String>> future = jobHandler.take();
+						if (future != null) {
+							Pair<VCFVariant, String> result = future.get();
+
+							if (log != null) {
+								String logStr = result.getRight();
+								log.writeln(logStr);
+							}
+							if (result.getLeft() != null) {
+								variants.add(result.getLeft());
+							}
+						}
+						returned++;
+
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						e.printStackTrace();
+					}
+
+				}
+				linessubmitted = 0;
+
+				System.out.println(totalsubmitted + " submitted. clearing queue. " + variants.size() + " variants in memory " + ManagementFactory.getThreadMXBean().getThreadCount());
+			}
+
 			LRTestVariantQCTask task = new LRTestVariantQCTask(vcfLn,
 					bedRegions,
 					options,
 					genotypeSamplesWithCovariatesAndDiseaseStatus,
 					finalDiseaseStatus,
 					finalCovariates);
-
-			while (queue.size() >= maxQueueSize) {
-				try {
-					Thread.sleep(1);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			if (queue.size() < maxQueueSize) {
-				jobHandler.submit(task);
-				linessubmitted++;
-			}
-
-			if (linessubmitted % 5000 == 0) {
-				System.out.print(linessubmitted + " lines read.\r");
-			}
+			jobHandler.submit(task);
+			linessubmitted++;
+			totalsubmitted++;
 			vcfLn = vcfIn.readLine();
 		}
 		System.out.println();
-		System.out.println(linessubmitted + " total lines read.");
+		System.out.println(totalsubmitted + " total lines read.");
 		vcfIn.close();
 
 		int returned = 0;
-		ArrayList<VCFVariant> variants = new ArrayList<>();
 		while (returned < linessubmitted) {
 			try {
 				Future<Pair<VCFVariant, String>> future = jobHandler.take();
@@ -645,9 +640,7 @@ public class LRTest {
 		}
 		System.out.println(variants.size() + " variants included.");
 
-
-		exService.shutdown();
-
+		log.close();
 		return variants;
 
 	}
@@ -661,13 +654,8 @@ public class LRTest {
 			HashSet<Feature> availableRegions = new HashSet<Feature>();
 
 
-			TextFile logout = new TextFile(options.getOutputdir() + "-variantlog.txt", TextFile.W);
-			System.out.println("Variant log is here: " + logout.getFileName());
-			ArrayList<VCFVariant> allVariants = readVariants(logout);
-			logout.close();
+			ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt");
 
-			System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
-			ExecutorService threadPool = Executors.newFixedThreadPool(options.getNrThreads());
 			if (allVariants.isEmpty()) {
 				System.out.println("Sorry. No work.");
 			} else {
@@ -691,7 +679,7 @@ public class LRTest {
 					// print some fancy error message;
 					System.out.println("Sorry. No work.");
 				} else {
-					CompletionService<AssociationResult> jobHandler = new ExecutorCompletionService<AssociationResult>(threadPool);
+					CompletionService<AssociationResult> jobHandler = new ExecutorCompletionService<AssociationResult>(exService);
 
 					int submitted = 0;
 					for (Feature region : availableRegions) {
@@ -700,8 +688,10 @@ public class LRTest {
 							for (int j = i + 1; j < variants.size(); j++) {
 								// submit job to queue;
 								LRTestExhaustiveTask lrtet = new LRTestExhaustiveTask(variants, i, j, genotypeSamplesWithCovariatesAndDiseaseStatus, finalDiseaseStatus, finalCovariates, options);
+
 								jobHandler.submit(lrtet);
 								submitted++;
+
 							}
 						}
 					}
@@ -733,7 +723,6 @@ public class LRTest {
 					}
 					pvalOut.close();
 					pb.close();
-					threadPool.shutdown();
 				}
 			}
 		}
@@ -799,7 +788,6 @@ public class LRTest {
 							double p = assoc.getLog10Pval();
 							if (p > highestLog10p) {
 								highestLog10p = p;
-								currentLowestVariant = variant;
 							}
 							pvalout.writeln(assoc.toString());
 							if (associationResults != null) {
@@ -808,9 +796,6 @@ public class LRTest {
 							if (variant != null && variants != null && iter == 0 && options.getMaxIter() > 1) {
 								variants.add(variant);
 							}
-							nrTested++;
-
-
 						}
 
 					}
