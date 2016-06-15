@@ -872,7 +872,7 @@ public class VCFVariant {
 
 
 		int nrAlleles = alleles.length;
-		if (nrAlleles == 2 && 1 == 2) {
+		if (nrAlleles == 2) {
 
 			int hets = 0;
 			int homs1 = 0;
@@ -881,7 +881,7 @@ public class VCFVariant {
 			for (int i = 0; i < genotypeAlleles.rows(); i++) {
 				int a1 = (int) genotypeAlleles.getQuick(i, 0);
 				if (a1 != -1) {
-					int a2 = (int) genotypeAlleles.getQuick(i, 0);
+					int a2 = (int) genotypeAlleles.getQuick(i, 1);
 					if (a1 == a2) {
 						if (a1 == 0) {
 							homs1++;
@@ -915,7 +915,7 @@ public class VCFVariant {
 			for (int i = 0; i < genotypeAlleles.rows(); i++) {
 				int a1 = (int) genotypeAlleles.getQuick(i, 0);
 				if (a1 != -1) {
-					int a2 = (int) genotypeAlleles.getQuick(i, 0);
+					int a2 = (int) genotypeAlleles.getQuick(i, 1);
 					if (a1 == a2) {
 						nrHomozygous[a1]++;
 					}

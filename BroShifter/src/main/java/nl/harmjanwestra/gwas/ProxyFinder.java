@@ -135,8 +135,11 @@ public class ProxyFinder {
 
 		}
 
+		System.out.println("All files are here. ");
+
 		if (allfilespresent) {
 			for (Feature f : regions) {
+				System.out.println(f.toString());
 
 
 				ArrayList<VCFVariant> variants = new ArrayList<>();
@@ -144,12 +147,19 @@ public class ProxyFinder {
 				TabixReader reader = new TabixReader(tabixfile);
 				TabixReader.Iterator window = reader.query(f.getChromosome().getNumber() + ":" + (f.getStart()) + "-" + (f.getStop()));
 				String next = window.next();
+				int ctr = 0;
 				while (next != null) {
 					// correlate
 					VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL);
 					if (variant.getMAF() > 0.01 && variant.getAlleles().length == 2) {
 						variant.calculateHWEP();
+						System.out.println(variant.getId() + "\t" + variant.getHwep());
+
 						variants.add(variant);
+					}
+					ctr++;
+					if (ctr % 100 == 0) {
+						System.out.println(ctr + " variants parsed. " + variants.size() + " in memory");
 					}
 					next = window.next();
 				}
