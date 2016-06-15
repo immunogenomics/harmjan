@@ -80,8 +80,8 @@ public class LRTest {
 //				"-i", "/Data/tmp/2016-06-10/RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-chr22.vcf.gz",
 				"-i", "/Data/tmp/2016-06-10/test.vcf",
 				"-r", "/Data/tmp/2016-06-10/loci.bed",
-				"--exhaustive",
-				"--maxiter", "5",
+//				"--exhaustive",
+//				"--maxiter", "5",
 				"-t", "1",
 				"-q", "0.3",
 				"-o", "/Data/tmp/2016-06-10/testout.txt"

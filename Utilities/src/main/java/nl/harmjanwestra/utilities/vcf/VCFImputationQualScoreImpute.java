@@ -29,6 +29,7 @@ public class VCFImputationQualScoreImpute {
 		String f = "/Data/tmp/2016-06-06/test-sorted.vcf";
 		VCFImputationQualScoreImpute c = new VCFImputationQualScoreImpute();
 		try {
+			int ctr = 0;
 			TextFile tf = new TextFile(f, TextFile.R);
 			String ln = tf.readLine();
 			while (ln != null) {
@@ -39,7 +40,12 @@ public class VCFImputationQualScoreImpute {
 
 				}
 
-				ln = tf.readLine();
+				if (ctr > 10) {
+					ln = null;
+				} else {
+					ln = tf.readLine();
+				}
+				ctr++;
 			}
 
 
@@ -76,8 +82,8 @@ public class VCFImputationQualScoreImpute {
 			impinfo = 0;
 		}
 
-//		VCFImputationQualScoreBeagle vbs = new VCFImputationQualScoreBeagle(variant, true);
-//		System.out.println(variant.toString() + "\t" + info + "\t" + impinfo + "\t" + vbs.allelicR2() + "\t" + vbs.doseR2());
+		VCFImputationQualScoreBeagle vbs = new VCFImputationQualScoreBeagle(variant, true);
+		System.out.println(variant.toString() + "\t" + info + "\t" + impinfo + "\t" + vbs.allelicR2() + "\t" + vbs.doseR2());
 
 
 	}
@@ -91,14 +97,14 @@ public class VCFImputationQualScoreImpute {
 		for (int i = 0; i < probs.rows(); i++) { // probabilities.rows() == nrSamples
 			double c = probs.viewRow(i).zSum();
 			double[] indprobs = new double[3];
-			indprobs[0] = probs.getQuick(0, i) + (1 - c) * fallBackDist[0];
-			indprobs[1] = probs.getQuick(1, i) + (1 - c) * fallBackDist[1];
-			indprobs[2] = probs.getQuick(2, i) + (1 - c) * fallBackDist[2];
+			indprobs[0] = probs.getQuick(i, 0) + (1 - c) * fallBackDist[0];
+			indprobs[1] = probs.getQuick(i, 1) + (1 - c) * fallBackDist[1];
+			indprobs[2] = probs.getQuick(i, 2) + (1 - c) * fallBackDist[2];
 			double v = compVar(indprobs);
 			result += v;
 		}
 
-		double output = result / probs.columns();
+		double output = result / probs.rows();
 		if (Double.isNaN(output)) {
 			return 1;
 		} else {

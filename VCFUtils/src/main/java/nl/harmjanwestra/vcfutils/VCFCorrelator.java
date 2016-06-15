@@ -23,6 +23,15 @@ import java.util.concurrent.*;
  */
 public class VCFCorrelator {
 
+	public static void main(String[] args) {
+		VCFCorrelator c = new VCFCorrelator();
+		try {
+			c.updateVCFInfoScore("/Data/tmp/2016-06-10/test.vcf", "/Data/tmp/2016-06-10/testo.vcf", true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void updateVCFInfoScore(String vcfin, String vcfOut, boolean infoscore) throws IOException {
 		System.out.println("Will replace imputation quals.");
 		System.out.println("In: " + vcfin);
