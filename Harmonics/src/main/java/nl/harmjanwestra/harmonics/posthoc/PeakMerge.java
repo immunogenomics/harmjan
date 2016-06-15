@@ -9,7 +9,7 @@ import nl.harmjanwestra.utilities.graphics.panels.BoxPlotPanel;
 import nl.harmjanwestra.utilities.graphics.panels.HeatmapPanel;
 import nl.harmjanwestra.utilities.graphics.panels.HistogramPanel;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
-import nl.harmjanwestra.utilities.peakfiles.SafFile;
+
 import nl.harmjanwestra.utilities.peakfiles.XLSFile;
 import nl.harmjanwestra.utilities.peakfiles.ZinbaPeaksFile;
 import umcg.genetica.containers.Pair;
@@ -549,9 +549,9 @@ x 14  stDevCoverageCoveredBases
 															  String outdir) throws IOException {
 
 
-		SafFile mergedPeaksFile = new SafFile(mergedPeakFile, SafFile.R);
-		ArrayList<Feature> mergedPeaks = mergedPeaksFile.read();
-		mergedPeaksFile.close();
+//		SafFile mergedPeaksFile = new SafFile(mergedPeakFile, SafFile.R);
+//		ArrayList<Feature> mergedPeaks = mergedPeaksFile.read();
+//		mergedPeaksFile.close();
 
 		Pair<String[], String[]> samplecombo = loadSamplePairs(sampleFileName, samplecol, filecol);
 		String[] peakFiles = samplecombo.getRight();
@@ -561,7 +561,7 @@ x 14  stDevCoverageCoveredBases
 
 		ArrayList<Track> tracksPerSample = convertToTracks(featuresPerSample, sampleNames);
 		Track mergedTrack = new Track("merged");
-		mergedTrack.addFeatures(mergedPeaks);
+//		mergedTrack.addFeatures(mergedPeaks);
 
 
 		int nrCols = 3;
@@ -721,7 +721,7 @@ x 14  stDevCoverageCoveredBases
 			for (int j = 0; j < featuresPerSample.size(); j++) {
 				HistogramPanel panel = new HistogramPanel(1, 1);
 				panel.setTitle(sampleNames[i] + " - " + sampleNames[j]);
-				panel.setLabels("Distance", "Log10(Frequency)");
+//				panel.setLabels("Distance", "Log10(Frequency)");
 
 				panel.setData(logTransform(peakDistanceHistogram[j]));
 				peakDistanceDistributions.addPanel(panel, i, j);
@@ -735,20 +735,20 @@ x 14  stDevCoverageCoveredBases
 			int overlap = 0;
 			int nr = 0;
 			int total = 0;
-			for (int p = 0; p < mergedPeaks.size(); p++) {
-				Feature feat1 = mergedPeaks.get(p);
-
-				NavigableSet<Feature> set = sampleTrack.getFeatureSet(feat1);
-
-				// determine overlap with all peaks overlapping feat 1
-				if (set.size() > 0) {
-					for (Feature f : set) {
-						overlap += f.determineBaseOverlap(feat1);
-					}
-					nr += set.size();
-					total += feat1.getStop() - feat1.getStart();
-				}
-			}
+//			for (int p = 0; p < mergedPeaks.size(); p++) {
+//				Feature feat1 = mergedPeaks.get(p);
+//
+//				NavigableSet<Feature> set = sampleTrack.getFeatureSet(feat1);
+//
+//				// determine overlap with all peaks overlapping feat 1
+//				if (set.size() > 0) {
+//					for (Feature f : set) {
+//						overlap += f.determineBaseOverlap(feat1);
+//					}
+//					nr += set.size();
+//					total += feat1.getStop() - feat1.getStart();
+//				}
+//			}
 
 			double jaccard = (double) overlap / total;
 			jaccardbaseoverlap.writeln(sampleNames[i] + "\t" + jaccard);

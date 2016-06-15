@@ -164,7 +164,7 @@ public class PolyPeak {
 	// this method currently uses the Chromosome object, which cannot account for weird contig names
 	private Track loadRegionsFromFile(String regionListFile) throws IOException {
 		BedFileReader reader = new BedFileReader();
-		return reader.readAsTrack(regionListFile, "");
+		return null; //reader.readAsTrack(regionListFile, "");
 	}
 
 	private void initializeSamples(String sampleFileName) throws IOException {

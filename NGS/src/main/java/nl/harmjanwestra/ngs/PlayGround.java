@@ -29,7 +29,6 @@ public class PlayGround {
 		PlayGround g = new PlayGround();
 
 
-
 //		g.prepareImputationPanels();
 		// g.prepareGWASDatasets();
 //		try {
@@ -2146,10 +2145,10 @@ public class PlayGround {
 				String id = var.getId();
 				String pos = var.getChr() + "_" + var.getPos();
 				if (vars == null || !vars.contains(pos)) {
-					HashMap<String, Double> info = var.getInfo();
-					Double ar2 = info.get("AR2");
-					Double dr2 = info.get("DR2");
-					Double af = info.get("AF");
+					HashMap<String, String> info = var.getInfo();
+					Double ar2 = Double.parseDouble(info.get("AR2"));
+					Double dr2 = Double.parseDouble(info.get("DR2"));
+					Double af = Double.parseDouble(info.get("AF"));
 
 
 					if (ar2 > 1 || dr2 > 1) {
@@ -3383,7 +3382,7 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 				tfout.writeln(ln);
 			} else {
 				VCFVariant var = new VCFVariant(ln);
-				Double ar2 = var.getInfo().get("AR2");
+				Double ar2 = Double.parseDouble(var.getInfo().get("AR2"));
 				if (ar2 != null && ar2 >= 0.8) {
 					tfout.writeln(ln);
 				}

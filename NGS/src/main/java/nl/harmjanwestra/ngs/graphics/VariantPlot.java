@@ -551,7 +551,7 @@ public class VariantPlot extends DefaultGraphics {
 			double maf = v.getMAF();
 			if (maf > mafthreshold && maf < 1) {
 
-				Double ar2 = v.getInfo().get("AR2");
+				Double ar2 = v.getImputationQualityScore();
 				if (ar2 != null) {
 
 					variants.add(f);

@@ -136,7 +136,7 @@ public class VCFFilter {
 						String[] elems = ln.split("\t");
 						int gtcol = varFiltered.getGTCol();
 						String sep = varFiltered.getSeparator();
-						byte[][] alleles = varFiltered.getGenotypeAlleles();
+						double[][] alleles = varFiltered.getGenotypeAlleles();
 						// write back, keep annotations..
 						for (int i = 9; i < elems.length; i++) {
 							int indid = i - 9;

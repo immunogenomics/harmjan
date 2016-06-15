@@ -1,6 +1,6 @@
 package nl.harmjanwestra.miscscripts;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.matrix.DoubleMatrixDataset;
 import umcg.genetica.text.Strings;
@@ -8,7 +8,6 @@ import umcg.genetica.text.Strings;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 /**

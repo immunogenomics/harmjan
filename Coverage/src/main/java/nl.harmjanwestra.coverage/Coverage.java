@@ -762,7 +762,7 @@ public class Coverage {
 
 			HistogramPanel panel1 = new HistogramPanel(1, 1);
 			panel1.setData(insertSizeDist);
-			panel1.setLabels("Insert size", "Density");
+//			panel1.setLabels("Insert size", "Density");
 			panel1.setTitle(sequence.getSequenceName());
 
 			gridInsert.addPanel(panel1);
@@ -770,7 +770,7 @@ public class Coverage {
 			HistogramPanel panel2 = new HistogramPanel(1, 1);
 //			panel2.setAxisLog(HistogramPanel.LOG.TEN, HistogramPanel.LOG.TEN);
 			panel2.setData(log10(coverageDist));
-			panel2.setLabels("Coverage", "log10(Density)");
+//			panel2.setLabels("Coverage", "log10(Density)");
 			panel2.setTitle(sequence.getSequenceName());
 			gridCoverage.addPanel(panel2);
 
@@ -852,13 +852,13 @@ public class Coverage {
 
 		HistogramPanel panel1 = new HistogramPanel(1, 1);
 		panel1.setData(globalInsertSizeDist);
-		panel1.setLabels("Insert size", "Density");
+//		panel1.setLabels("Insert size", "Density");
 		panel1.setTitle("Global");
 		gridInsert.addPanel(panel1);
 
 		HistogramPanel panel2 = new HistogramPanel(1, 1);
 		panel2.setData(log10(globalCoverageDist));
-		panel2.setLabels("Coverage", "log10(Density)");
+//		panel2.setLabels("Coverage", "log10(Density)");
 		panel2.setTitle("Global");
 		gridCoverage.addPanel(panel2);
 

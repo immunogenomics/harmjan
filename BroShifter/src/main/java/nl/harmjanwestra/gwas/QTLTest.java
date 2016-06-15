@@ -777,7 +777,7 @@ public class QTLTest {
 
 
 		private void updateX(double[][] x, VCFVariant variant, boolean[] includeGenotypeSample) {
-			double[][] dosages = variant.getImputedDosages(); // [samples][alleles]
+			double[][] dosages = variant.getDosage(); // [samples][alleles]
 			int ctr = 0;
 			for (int i = 0; i < dosages.length; i++) {
 				if (includeGenotypeSample[i]) {
