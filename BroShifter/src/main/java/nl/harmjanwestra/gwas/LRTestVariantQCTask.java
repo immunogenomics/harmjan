@@ -156,7 +156,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		boolean[] genotypeMissing = new boolean[nrsamples];
 		for (int i = 0; i < genotypeAlleles.rows(); i++) {
 			int b1 = (int) genotypeAlleles.getQuick(i, 0);
-			if (b1 == -1) {
+			if (b1 == -1 || Double.isNaN(b1)) {
 				nrWithMissingGenotypes++;
 				genotypeMissing[individualCounter] = true;
 			} else {

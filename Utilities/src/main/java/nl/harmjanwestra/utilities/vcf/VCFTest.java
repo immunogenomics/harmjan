@@ -1,11 +1,9 @@
 package nl.harmjanwestra.utilities.vcf;
 
-import org.apache.tools.ant.util.StringUtils;
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import umcg.genetica.io.text.TextFile;
-import umcg.genetica.util.RunTimer;
 
 import java.io.IOException;
-import java.util.Vector;
 
 /**
  * Created by Harm-Jan on 06/02/16.
@@ -37,49 +35,24 @@ public class VCFTest {
 //			tf.close();
 
 		try {
-			String f = "/Data/tmp/2016-06-10/RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-chr22.vcf.gz";
-			RunTimer t = new RunTimer();
-			t.start();
+			String f = "/Data/tmp/2016-06-10/test.vcf";
 
-			for (int i = 0; i < 3; i++) {
-				TextFile tf = new TextFile(f, TextFile.R);
-				String ln = tf.readLine();
-				long sum = 0;
-				while (ln != null) {
-					if (!ln.startsWith("#")) {
-						String[] elems = ln.split("\t");
-						for (int j = 0; j < elems.length; j++) {
-							sum++;
-						}
+			TextFile tf = new TextFile(f, TextFile.R);
+			String ln = tf.readLine();
+			while (ln != null) {
+				if (!ln.startsWith("#")) {
+					VCFVariant var = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+					DoubleMatrix2D d1 = var.getGenotypeDosagesAsMatrix2D();
+					DoubleMatrix2D d2 = var.getDosagesAsMatrix2D();
+
+					for (int i = 0; i < d1.rows(); i++) {
+						System.out.println(d1.get(i, 0) + "\t" + d2.get(i, 0));
 					}
-					ln = tf.readLine();
+
 				}
-				System.out.println(i + "/" + 1000 + "\t1\t" + sum);
+				ln = tf.readLine();
 			}
-			String time1 = t.stop();
-
-			t.start();
-			for (int i = 0; i < 3; i++) {
-				TextFile tf = new TextFile(f, TextFile.R);
-				String ln = tf.readLine();
-				long sum = 0;
-				while (ln != null) {
-					if (!ln.startsWith("#")) {
-						Vector numbers = StringUtils.split(ln, '\t');
-						for (int j = 0; j < numbers.size(); j++) {
-							sum++;
-						}
-
-
-					}
-					ln = tf.readLine();
-				}
-				System.out.println(i + "/" + 1000 + "\t2\t" + sum);
-			}
-			String time2 = t.stop();
-
-			System.out.println(time1);
-			System.out.println(time2);
+			tf.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

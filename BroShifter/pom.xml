@@ -52,8 +52,8 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <!--<mainClass>nl.harmjanwestra.broshifter.Main</mainClass>-->
-                            <mainClass>nl.harmjanwestra.gwas.LRTest</mainClass>
+                            <mainClass>nl.harmjanwestra.broshifter.Main</mainClass>
+                            <!--<mainClass>nl.harmjanwestra.gwas.LRTest</mainClass>-->
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>

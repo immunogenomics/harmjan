@@ -14,6 +14,7 @@ import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.math.stats.ChiSquare;
 import umcg.genetica.text.Strings;
+import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -88,11 +89,11 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 				finalCovariates
 		);
 
-		int nrAlleles = variant1.getAlleles().length + variant2.getAlleles().length;
+		int numberOfColumns = variant1.getAlleles().length - 1 + variant2.getAlleles().length - 1;
 		double[] y = xandy.getRight();
 		DoubleMatrix2D x = xandy.getLeft();
 
-		AssociationResult output = pruneAndTest(x, y, nrAlleles, taskObj);
+		AssociationResult output = pruneAndTest(x, y, 1, 1 + numberOfColumns, taskObj);
 
 		if (output == null) {
 			return null;
@@ -122,7 +123,6 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 		output.setPairWise(true);
 
-
 		// calculate the ld between the variants :)
 		DetermineLD ldcalc = new DetermineLD();
 		if (variant1.getNrAlleles() == 2 && variant2.getNrAlleles() == 2) {
@@ -139,36 +139,34 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
 										   double[] y,
-										   int nrAlleles,
+										   int firstColumnToRemove,
+										   int lastColumnToRemove,
 										   LRTestTask testObj) throws IOException {
-		Pair<DoubleMatrix2D, boolean[]> pruned = testObj.removeCollinearVariables(x);
+		LRTestTask lrt = new LRTestTask();
+		Pair<DoubleMatrix2D, boolean[]> pruned = lrt.removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
+
 		boolean[] notaliased = pruned.getRight(); // length of original X
 
 		// check if the alleles we put in are aliased
-		int firstAllele = 1; // intercept (first column) + allleles we conditioned on (original X indexing)
-		int lastAllele = 1 + (nrAlleles - 2); // intercept + allleles we conditioned on + alleles for this variant (original X indexing)
+		int firstAllele = firstColumnToRemove; // intercept + allleles we conditioned on (original X indexing)
+		int lastAllele = lastColumnToRemove;   // intercept + allleles we conditioned on + alleles for this variant (original X indexing)
 
-		// index new position in X
 		int nrRemaining = 0;
-		int[] alleleIndex = new int[nrAlleles - 2];
-		boolean[] colsToRemove = new boolean[x.columns()];
+		int[] alleleIndex = new int[lastColumnToRemove - firstColumnToRemove];
 		for (int i = 0; i < alleleIndex.length; i++) {
 			alleleIndex[i] = -1;
 		}
 
 		int newXIndex = 0;
-		int newLastAllele = 0;
+		ArrayList<Integer> colIndexArr = new ArrayList<>(x.columns());
 		for (int i = 0; i < notaliased.length; i++) {
 			if (notaliased[i]) {
 				if (i >= firstAllele && i < lastAllele) {
 					alleleIndex[i - firstAllele] = newXIndex;
-					newLastAllele = newXIndex;
-					colsToRemove[newXIndex] = true;
 					nrRemaining++;
-				}
-				if (i == 0) {
-					colsToRemove[newXIndex] = false;
+				} else {
+					colIndexArr.add(newXIndex);
 				}
 				newXIndex++;
 			}
@@ -176,10 +174,11 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 
 		AssociationResult result = new AssociationResult();
 
-		if (nrRemaining > 0) {
+		if (nrRemaining == 0) {
+			return result;
+		} else {
 			// perform testNormal on full model
 			// remove genotypes and run testNormal on reduced model
-
 			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 			LogisticRegressionResult resultX = reg.univariate(y, x);
 			if (resultX == null) {
@@ -207,7 +206,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			}
 
 			double devx = resultX.getDeviance();
-			DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows(), newLastAllele, x.columns());
+			DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
 			LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
 			if (resultCovars == null) {
 				System.err.println("ERROR: covariate regression did not converge. ");
@@ -250,8 +249,6 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			result.setBeta(betasmlelr);
 			result.setSe(stderrsmlelr);
 			result.setPval(p);
-			return result;
-		} else {
 			return result;
 		}
 	}

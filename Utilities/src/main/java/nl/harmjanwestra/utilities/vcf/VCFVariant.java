@@ -33,7 +33,7 @@ public class VCFVariant {
 
 	private DoubleMatrix2D genotypeAlleles; // format [individuals][alleles] (save some memory by making only two individual-sized arrays)
 	private DoubleMatrix2D genotypeProbabilies;
-	private DoubleMatrix2D imputedDosages; // format [individuals][alleles] (save some memory by making only two individual-sized arrays)
+	private DoubleMatrix2D dosages; // this can hold the imputed dosages, or if they are not set, the dosages from the genotypes
 	private ShortMatrix2D allelicDepth;
 	private int[] nrAllelesObserved;
 	private short[] genotypeQuals;
@@ -102,7 +102,7 @@ public class VCFVariant {
 		this.alleles = allelesElems;
 		parseInfoString(info);
 		this.genotypeAlleles = alleles;
-		this.imputedDosages = dosages;
+		this.dosages = dosages;
 
 		recalculateMAFAndCallRate();
 
@@ -223,13 +223,13 @@ public class VCFVariant {
 									// dosages
 									if (p.equals(PARSE.ALL)) {
 										try {
-											if (imputedDosages == null) {
-												imputedDosages = new DenseDoubleMatrix2D(nrSamples, alleles.length - 1);
+											if (dosages == null) {
+												dosages = new DenseDoubleMatrix2D(nrSamples, alleles.length - 1);
 											}
 
 											String[] dsElems = Strings.comma.split(sampleToken);
 											for (int q = 0; q < dsElems.length; q++) {
-												imputedDosages.set(includedSampleCtr, q, Double.parseDouble(dsElems[q]));
+												dosages.set(includedSampleCtr, q, Double.parseDouble(dsElems[q]));
 											}
 
 										} catch (NumberFormatException e) {
@@ -318,19 +318,19 @@ public class VCFVariant {
 
 				}
 
-				if (genotypeProbabilies != null && imputedDosages == null) {
+				if (genotypeProbabilies != null && dosages == null) {
 					int nrAlleles = alleles.length;
-					imputedDosages = new DenseDoubleMatrix2D(genotypeProbabilies.rows(), nrAlleles - 1);
+					dosages = new DenseDoubleMatrix2D(genotypeProbabilies.rows(), nrAlleles - 1);
 					for (int i = 0; i < genotypeProbabilies.rows(); i++) {
 						int alctr = 0;
 						for (int a1 = 0; a1 < nrAlleles; a1++) {
 							for (int a2 = a1; a2 < nrAlleles; a2++) {
 								double dosageval = genotypeProbabilies.getQuick(i, alctr);
 								if (a1 > 0) {
-									imputedDosages.setQuick(i, a1 - 1, imputedDosages.getQuick(i, a1 - 1) + dosageval);
+									dosages.setQuick(i, a1 - 1, dosages.getQuick(i, a1 - 1) + dosageval);
 								}
 								if (a2 > 0) {
-									imputedDosages.setQuick(i, a2 - 1, imputedDosages.getQuick(i, a2 - 1) + dosageval);
+									dosages.setQuick(i, a2 - 1, dosages.getQuick(i, a2 - 1) + dosageval);
 								}
 								alctr++;
 							}
@@ -572,54 +572,39 @@ public class VCFVariant {
 		}
 	}
 
-	//???
-	public DoubleMatrix2D getDosagesAsMatrix2D() {
-		int nrAlleles = getAlleles().length;
-		DoubleMatrix2D output = new DenseDoubleMatrix2D(genotypeAlleles.rows(), nrAlleles - 1);
-		for (int i = 0; i < output.rows(); i++) {
+	public DoubleMatrix2D getGenotypeDosagesAsMatrix2D() {
+		DoubleMatrix2D gtdosage = new DenseDoubleMatrix2D(genotypeAlleles.rows(), alleles.length - 1);
+
+		for (int i = 0; i < genotypeAlleles.rows(); i++) {
 			for (int j = 0; j < genotypeAlleles.columns(); j++) {
-				int a = (int) genotypeAlleles.getQuick(i, j);
-				if (a == -1) {
-					// missing genotype
-					output.setQuick(i, 0, Double.NaN);
-				} else if (a > 0) {
-					if (a > 0) {
-						a -= 1;
-					}
-					double v = output.getQuick(i, a);
-					output.setQuick(i, a, v++);
+				int allele = (int) genotypeAlleles.getQuick(i, j);
+				if (allele > 0) {
+					allele -= 1;
+					double ct = gtdosage.getQuick(i, allele);
+					ct++;
+					gtdosage.setQuick(i, allele, ct);
 				}
 			}
 		}
 
-		return output;
+		return gtdosage;
 	}
 
-	public double[][] getDosages() {
-		return getDosagesAsMatrix2D().toArray();
+	public double[][] getGenotypeDosage() {
+		return getGenotypeDosagesAsMatrix2D().toArray();
 	}
 
-	public DoubleMatrix2D getImputedDosagesAsMatrix2D() {
+	public DoubleMatrix2D getDosagesAsMatrix2D() {
 		// parse genotype probs
-		int nrAlleles = getAlleles().length;
-		DoubleMatrix2D dosages = null;
-		if (imputedDosages == null) {
-			dosages = new DenseDoubleMatrix2D(genotypeAlleles.rows(), nrAlleles - 1);
-
-			for (int i = 0; i < genotypeAlleles.rows(); i++) {
-				for (int j = 0; j < genotypeAlleles.columns(); j++) {
-					dosages.setQuick(i, 0, genotypeAlleles.getQuick(i, j));
-				}
-			}
-
-			return dosages;
+		if (this.dosages == null) {
+			return getGenotypeDosagesAsMatrix2D();
 		} else {
-			return imputedDosages;
+			return this.dosages;
 		}
 	}
 
 	public double[][] getImputedDosages() {
-		return getImputedDosagesAsMatrix2D().toArray();
+		return getDosagesAsMatrix2D().toArray();
 	}
 
 	public String allelesAsString() {
@@ -736,11 +721,11 @@ public class VCFVariant {
 
 				// samples x alleles
 				builder.append(":");
-				for (int a = 0; a < imputedDosages.columns(); a++) {
+				for (int a = 0; a < dosages.columns(); a++) {
 					if (a == 0) {
-						builder.append(imputedDosages.getQuick(i, a));
+						builder.append(dosages.getQuick(i, a));
 					} else {
-						builder.append(",").append(imputedDosages.getQuick(i, a));
+						builder.append(",").append(dosages.getQuick(i, a));
 					}
 				}
 
@@ -757,7 +742,6 @@ public class VCFVariant {
 	}
 
 
-
 //	public double[][] getGenotypeProbabilies() {
 //		return genotypeProbabilies.toArray();
 //	}
@@ -767,7 +751,7 @@ public class VCFVariant {
 	}
 
 	public boolean hasImputationDosages() {
-		return imputedDosages != null;
+		return dosages != null;
 	}
 
 	public void recalculateMAFAndCallRate() {
@@ -1098,7 +1082,7 @@ public class VCFVariant {
 
 	public byte[] getGenotypesAsByteVector() {
 		if (alleles.length == 2) {
-			DoubleMatrix2D d = getDosagesAsMatrix2D();
+			DoubleMatrix2D d = getGenotypeDosagesAsMatrix2D();
 			byte[] arr = new byte[d.rows()];
 			for (int i = 0; i < arr.length; i++) {
 				arr[i] = (byte) d.get(i, 0);

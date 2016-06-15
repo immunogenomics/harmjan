@@ -90,7 +90,7 @@ public class VCFGenotypeDataBinary extends BinaryFile {
 		}
 
 		if (variant.hasImputationDosages()) {
-			DoubleMatrix2D dosages = variant.getImputedDosagesAsMatrix2D(); // format: [nrSamples][alleles];
+			DoubleMatrix2D dosages = variant.getGenotypeDosagesAsMatrix2D(); // format: [nrSamples][alleles];
 
 			// flip for more efficient storage.
 			for (int col = 0; col < dosages.columns(); col++) {

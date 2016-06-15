@@ -397,12 +397,13 @@ public class AssociationFile {
 		}
 
 		if (pairWise) {
-			str += "#Chromosome" +
+			str += "#Chr1" +
 					"\tPos1" +
 					"\tId1" +
+					"\tCombinedId1" +
+					"\tChr2" +
 					"\tPos2" +
 					"\tId2" +
-					"\tCombinedId1" +
 					"\tCombinedId2" +
 					"\tAlleles1" +
 					"\tAlleles2" +
