@@ -864,7 +864,7 @@ public class VariantPlot extends DefaultGraphics {
 //		for (int dataset = 0; dataset < datasetFiles.length; dataset++) {
 //			String file = datasetFiles[dataset];
 //			if (Gpio.exists(file)) {
-//				Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> pair = readVariantPValues(file, region);
+//				Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> pair = readTabFile(file, region);
 //				ArrayList<Pair<Integer, Double>> pvals = pair.getRight();
 //				for (Pair<Integer, Double> p : pvals) {
 //					if (p.getRight() > maxPval) {
@@ -1035,7 +1035,7 @@ public class VariantPlot extends DefaultGraphics {
 //
 //	}
 
-//	public Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> readVariantPValues(String pvaluefile, Feature region) throws IOException {
+//	public Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> readTabFile(String pvaluefile, Feature region) throws IOException {
 //		HashSet<String> variantHash = new HashSet<String>();
 //		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
 //

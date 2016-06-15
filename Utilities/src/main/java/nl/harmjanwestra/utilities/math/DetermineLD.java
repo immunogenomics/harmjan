@@ -19,13 +19,16 @@ public class DetermineLD {
 	public final static int INCLUDE_CASES_AND_CONTROLS = 1;
 	public final static int INCLUDE_CASES = 2;
 	public final static int INCLUDE_CONTROLS = 3;
-	
-	public synchronized Pair<Double, Double> getLD(VCFVariant variant1, VCFVariant variant2) {
+
+	public Pair<Double, Double> getLD(VCFVariant variant1, VCFVariant variant2) {
 		// convert to byte[]
+		if (variant1 == null || variant2 == null || variant1.getNrAlleles() > 2 || variant2.getNrAlleles() > 2) {
+			return new Pair<>(Double.NaN, Double.NaN);
+		}
 		return getLD(variant1.getGenotypesAsByteVector(), variant2.getGenotypesAsByteVector(), null, INCLUDE_CASES_AND_CONTROLS, false);
 	}
 
-	public synchronized Pair<Double, Double> getLD(byte[] snp1Genotypes, byte[] snp2Genotypes, Boolean[] indIsCase, int individualsToInclude, boolean print) {
+	public Pair<Double, Double> getLD(byte[] snp1Genotypes, byte[] snp2Genotypes, Boolean[] indIsCase, int individualsToInclude, boolean print) {
 
 		double h11 = 0;
 		double h12 = 0;

@@ -30,13 +30,22 @@ public class AssociationResult {
 	private double posterior;
 	private double ldRSquared;
 	private Double ldDprime;
+	private double[] OR;
 
 	public SNPFeature getSnp2() {
 		return snp2;
 	}
 
+	public void setSnp2(SNPFeature snp2) {
+		this.snp2 = snp2;
+	}
+
 	public double getMaf2() {
 		return maf2;
+	}
+
+	public void setMaf2(double maf2) {
+		this.maf2 = maf2;
 	}
 
 	public double getHwep() {
@@ -239,7 +248,6 @@ public class AssociationResult {
 		return -Math.log10(pval);
 	}
 
-
 	public double[] getConfHi() {
 		if (beta != null && se != null) {
 			double[] output = new double[beta.length];
@@ -271,22 +279,15 @@ public class AssociationResult {
 				output[i] = Math.exp(beta[i]);
 			}
 			return output;
+		} else if (OR != null) {
+			return OR;
 		} else {
 			return null;
 		}
 	}
 
-
 	public void setHWEP2(double HWEP2) {
 		this.hwep2 = HWEP2;
-	}
-
-	public void setMaf2(double maf2) {
-		this.maf2 = maf2;
-	}
-
-	public void setSnp2(SNPFeature snp2) {
-		this.snp2 = snp2;
 	}
 
 	public void setLDRSquared(double LD) {
@@ -295,5 +296,9 @@ public class AssociationResult {
 
 	public void setLdDprime(Double ldDprime) {
 		this.ldDprime = ldDprime;
+	}
+
+	public void setOR(double[] OR) {
+		this.OR = OR;
 	}
 }

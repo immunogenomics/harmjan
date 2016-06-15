@@ -3945,7 +3945,7 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 //
 //				if (!chr.equals(Chromosome.X)) {
 //					VariantPlot variantPlot = new VariantPlot();
-//					Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> icPvalsData = variantPlot.readVariantPValues(ic, region);
+//					Pair<HashSet<String>, ArrayList<Pair<Integer, Double>>> icPvalsData = variantPlot.readTabFile(ic, region);
 //					ArrayList<Pair<Integer, Double>> icPvals = icPvalsData.getRight();
 //					String[] outputStr = new String[icPvals.size()];
 //					String[] outputStrSubsets = new String[icPvals.size()];

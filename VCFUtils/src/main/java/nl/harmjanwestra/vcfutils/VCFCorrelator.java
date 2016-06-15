@@ -3,6 +3,7 @@ package nl.harmjanwestra.vcfutils;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
@@ -210,19 +211,9 @@ public class VCFCorrelator {
 //						System.out.println(var2.toString());
 //					}
 
-					double[][] gprobs1 = null;
-					if (var1.hasImputationDosages()) {
-						gprobs1 = var1.getImputedDosages();
-					} else {
-						gprobs1 = var1.getDosages();
-					}
+					double[][] gprobs1 = var1.getDosage();
 
-					double[][] gprobs2 = null;
-					if (var2.hasImputationDosages()) {
-						gprobs2 = var2.getImputedDosages(); // format [samples][alleles]
-					} else {
-						gprobs2 = var2.getDosages();
-					}
+					double[][] gprobs2 = var2.getDosage(); // format [samples][alleles]
 
 
 					// check if variants have the same number of alleles
@@ -422,12 +413,14 @@ public class VCFCorrelator {
 					q.computeAutosomal(variant);
 					rsq = q.getImpinfo();
 				} else {
-					double[] probabilies = variant.getGenotypeDosages();
+					double[] dosageArr = convertToProbsToDouble(variant);
 					double[] bestguess = convertGenotypesToDouble(variant);
-					double r = JSci.maths.ArrayMath.correlation(bestguess, probabilies);
+					double r = JSci.maths.ArrayMath.correlation(bestguess, dosageArr);
 					rsq = r * r;
 				}
-
+			} else {
+				VCFImputationQualScoreBeagle q = new VCFImputationQualScoreBeagle(variant, true);
+				rsq = q.doseR2();
 			}
 
 			String[] elems = Strings.tab.split(in);
@@ -437,7 +430,7 @@ public class VCFCorrelator {
 		}
 
 		private double[] convertToProbsToDouble(VCFVariant vcfVariant) {
-			double[][] dosages = vcfVariant.getImputedDosages(); // [samples][alleles];
+			double[][] dosages = vcfVariant.getDosage(); // [samples][alleles];
 			double[] output = new double[dosages.length];
 			for (int i = 0; i < output.length; i++) {
 				output[i] = dosages[i][0];

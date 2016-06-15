@@ -1,4 +1,4 @@
-package nl.harmjanwestra.vcfutils.plots;
+package nl.harmjanwestra.finemapping.plots;
 
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;

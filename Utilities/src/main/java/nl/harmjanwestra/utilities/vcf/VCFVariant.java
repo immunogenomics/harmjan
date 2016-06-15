@@ -590,6 +590,10 @@ public class VCFVariant {
 		return gtdosage;
 	}
 
+	public double[][] getDosage(){
+		return dosages.toArray();
+	}
+
 	public double[][] getGenotypeDosage() {
 		return getGenotypeDosagesAsMatrix2D().toArray();
 	}
@@ -601,10 +605,6 @@ public class VCFVariant {
 		} else {
 			return this.dosages;
 		}
-	}
-
-	public double[][] getImputedDosages() {
-		return getDosagesAsMatrix2D().toArray();
 	}
 
 	public String allelesAsString() {

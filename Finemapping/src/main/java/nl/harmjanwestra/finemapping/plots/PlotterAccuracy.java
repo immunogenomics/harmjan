@@ -1,4 +1,4 @@
-package nl.harmjanwestra.vcfutils.plots;
+package nl.harmjanwestra.finemapping.plots;
 
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;

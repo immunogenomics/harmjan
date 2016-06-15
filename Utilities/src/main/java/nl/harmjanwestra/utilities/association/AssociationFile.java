@@ -16,71 +16,112 @@ import java.util.HashSet;
 public class AssociationFile {
 
 	private boolean pairWise;
+	private String model = null;
 
-	public ArrayList<AssociationResult> readVariantPValues(String pvaluefile, Feature region) throws IOException {
+	public ArrayList<AssociationResult> readTabFile(String pvaluefile, Feature region) throws IOException {
 		HashSet<String> variantHash = new HashSet<String>();
 		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
 
 		ArrayList<AssociationResult> output = new ArrayList<AssociationResult>();
 
 		// skip header
-		textfile.readLine();
+		String[] headerelems = textfile.readLineElems(TextFile.tab);
+
+		// Marker	Chr	Position	PValue	OR(MinAllele)	LowerOR	UpperOR	Alleles(Maj>Min)
+		int markercol = 0;
+		int chrcol = 0;
+		int poscol = 0;
+		int pvalcol = 0;
+		int orcol = 0;
+		int lowerorcol = 0;
+		int upperorcol = 0;
+		int allelescol = 0;
+
+		for (int c = 0; c < headerelems.length; c++) {
+			String elem = headerelems[c].toLowerCase();
+			if (elem.equals("marker")) {
+				markercol = c;
+			} else if (elem.equals("chr")) {
+				chrcol = c;
+			} else if (elem.equals("position")) {
+				poscol = c;
+			} else if (elem.equals("pvalue")) {
+				pvalcol = c;
+			} else if (elem.equals("OR(MinAllele)".toLowerCase())) {
+				orcol = c;
+			} else if (elem.equals("LowerOR".toLowerCase())) {
+				lowerorcol = c;
+			} else if (elem.equals("UpperOR".toLowerCase())) {
+				upperorcol = c;
+			} else if (elem.equals("Alleles(Maj>Min)".toLowerCase())) {
+				allelescol = c;
+			}
+		}
+
 		String[] elems = textfile.readLineElems(TextFile.tab);
 		int pvalctr = 0;
 		while (elems != null) {
 			// Marker	Chr	Position	PValue	Odds Ratio
-			if (pvaluefile.endsWith(".tab")) {
-				Chromosome chr = Chromosome.parseChr(elems[1]);
-				if (region.getChromosome().equals(chr)) {
-					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
-					SNPFeature f2 = new SNPFeature();
-					f2.setChromosome(chr);
-					f2.setStart(Integer.parseInt(elems[2]));
-					f2.setStop(Integer.parseInt(elems[2]));
-					if (f2.overlaps(region)) {
-						try {
 
-							Double pval = Double.parseDouble(elems[3]); // need to check position...
-							variantHash.add(variant);
+			Chromosome chr = Chromosome.parseChr(elems[1]);
+			if (region.getChromosome().equals(chr)) {
+				String variant = elems[chrcol] + "_" + elems[poscol] + "_" + elems[markercol];
+				SNPFeature f2 = new SNPFeature();
+				f2.setChromosome(chr);
+				f2.setStart(Integer.parseInt(elems[poscol]));
+				f2.setStop(Integer.parseInt(elems[poscol]));
+				if (f2.overlaps(region)) {
+					try {
 
-							f2.setName(elems[0]);
-							AssociationResult r = new AssociationResult();
-							r.setSnp(f2);
-							r.setPval(pval);
+						String alleles = elems[allelescol];
+						String[] allelesArr = alleles.split(">");
+						f2.setAlleles(allelesArr);
+						f2.setMinorAllele(allelesArr[1]);
+						Double or = Double.parseDouble(elems[orcol]);
 
-							output.add(r);
-						} catch (NumberFormatException e) {
-							e.printStackTrace();
-						}
-						pvalctr++;
-					}
-
-				}
-			} else {
-				Chromosome chr = Chromosome.parseChr(elems[1]);
-				if (region.getChromosome().equals(chr)) {
-					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
-					SNPFeature f2 = new SNPFeature();
-					f2.setChromosome(chr);
-					Integer position = Integer.parseInt(elems[2]);
-					f2.setStart(position);
-					f2.setStop(position);
-					if (f2.overlaps(region)) {
-
-						Double pval = Double.parseDouble(elems[elems.length - 1]); // need to check position...
+						Double pval = Double.parseDouble(elems[pvalcol]); // need to check position...
 						variantHash.add(variant);
 
+						f2.setName(elems[markercol]);
 						AssociationResult r = new AssociationResult();
 						r.setSnp(f2);
 						r.setPval(pval);
-
+						r.setOR(new double[]{or});
 
 						output.add(r);
-						pvalctr++;
+					} catch (NumberFormatException e) {
+						e.printStackTrace();
 					}
-
+					pvalctr++;
 				}
+
 			}
+
+//			else {
+//				Chromosome chr = Chromosome.parseChr(elems[1]);
+//				if (region.getChromosome().equals(chr)) {
+//					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
+//					SNPFeature f2 = new SNPFeature();
+//					f2.setChromosome(chr);
+//					Integer position = Integer.parseInt(elems[2]);
+//					f2.setStart(position);
+//					f2.setStop(position);
+//					if (f2.overlaps(region)) {
+//
+//						Double pval = Double.parseDouble(elems[elems.length - 1]); // need to check position...
+//						variantHash.add(variant);
+//
+//						AssociationResult r = new AssociationResult();
+//						r.setSnp(f2);
+//						r.setPval(pval);
+//
+//
+//						output.add(r);
+//						pvalctr++;
+//					}
+//
+//				}
+//			}
 			elems = textfile.readLineElems(TextFile.tab);
 		}
 		textfile.close();
@@ -90,8 +131,6 @@ public class AssociationFile {
 		return output;
 
 	}
-
-	private String model = null;
 
 	public String getModel() {
 		return model;
@@ -104,7 +143,7 @@ public class AssociationFile {
 
 	public ArrayList<AssociationResult> read(String file, Feature region) throws IOException {
 		if (file.endsWith("tab")) {
-			return readVariantPValues(file, region);
+			return readTabFile(file, region);
 		}
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
@@ -138,6 +177,7 @@ public class AssociationFile {
 
 
 		ArrayList<AssociationResult> results = new ArrayList<AssociationResult>();
+		int nr = 0;
 		while (ln != null) {
 			if (ln.startsWith("#Chromosome") || ln.startsWith("Chr\tPos")) {
 // skip header
@@ -380,6 +420,7 @@ public class AssociationFile {
 						result.setRegion(assocregion);
 
 						results.add(result);
+
 					}
 				}
 			}
@@ -387,6 +428,7 @@ public class AssociationFile {
 			ln = tf.readLine();
 		}
 		tf.close();
+		System.out.println(results.size() + " associations loaded from file: " + file);
 		return results;
 	}
 

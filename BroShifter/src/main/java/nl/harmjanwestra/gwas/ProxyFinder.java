@@ -153,7 +153,7 @@ public class ProxyFinder {
 					VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL);
 					if (variant.getMAF() > 0.01 && variant.getAlleles().length == 2) {
 						variant.calculateHWEP();
-						System.out.println(variant.getId() + "\t" + variant.getHwep());
+//						System.out.println(variant.getId() + "\t" + variant.getHwep());
 
 						variants.add(variant);
 					}

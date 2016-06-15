@@ -47,12 +47,16 @@ public class SNPFeature extends Feature {
 		this.minorAllele = minorAllele;
 	}
 
+	public double getP() {
+		return p;
+	}
 
 	public void setP(double p) {
 		this.p = p;
 	}
 
-	public double getP() {
-		return p;
+	@Override
+	public String toString() {
+		return getChromosome().getName() + "_" + getStart() + "_" + name;
 	}
 }

@@ -646,7 +646,7 @@ public class AssociationPlotterOld {
 				// load IC p-values
 
 				AssociationFile f = new AssociationFile();
-				ArrayList<AssociationResult> icData = f.readVariantPValues(ic, region);
+				ArrayList<AssociationResult> icData = f.readTabFile(ic, region);
 
 				ArrayList<Pair<Integer, Double>> icPvals = convertToPairs(icData, true);
 
