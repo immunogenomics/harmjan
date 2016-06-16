@@ -82,15 +82,12 @@ public class VCFImputationQualScoreImpute {
 			impinfo = 0;
 		}
 
-<<<<<<< HEAD
-		VCFImputationQualScoreBeagle vbs = new VCFImputationQualScoreBeagle(variant, true);
-		System.out.println(variant.toString() + "\t" + info + "\t" + impinfo + "\t" + vbs.allelicR2() + "\t" + vbs.doseR2());
-=======
+
 //		VCFImputationQualScoreBeagle vbs = new VCFImputationQualScoreBeagle(variant, true);
 //		System.out.println(variant.toString() + "\t" + info + "\t" + impinfo + "\t" + vbs.allelicR2() + "\t" + vbs.doseR2());
 
 
->>>>>>> 63c092f1c90dc91dc2afe27c656748399710d543
+
 	}
 
 	final double[] levels = new double[]{0, 1, 2};
