@@ -93,7 +93,7 @@ public class MakeTableWithICResults {
 			// get the variants in Cosmo
 			Pair<VCFVariant, VCFVariant> variants = getVariants(tabixprefix, region, bestICResult.getSnp(), bestFMResult.getSnp());
 			DetermineLD ldcalc = new DetermineLD();
-			Pair<Double,Double> ld = ldcalc.getLD(variants.getLeft(), variants.getRight());
+			Pair<Double, Double> ld = ldcalc.getLD(variants.getLeft(), variants.getRight());
 
 			AssociationResult bestICResultInFM = findResult(bestICResult, fmResults);
 			AssociationResult bestFMResultInIC = findResult(bestFMResult, icResults);
@@ -121,11 +121,12 @@ public class MakeTableWithICResults {
 
 		String tabixfile = tabixrefprefix + region.getChromosome().getNumber() + ".vcf.gz";
 		TabixReader reader = new TabixReader(tabixfile);
-		TabixReader.Iterator window = reader.query(region.getChromosome().getNumber() + ":" + (region.getStart() - 1000) + "-" + (region.getStart() + 1000));
+		TabixReader.Iterator window = reader.query(region.getChromosome().getNumber() + ":" + (region.getStart() - 10) + "-" + (region.getStop() + 10));
 		String next = window.next();
 		VCFVariant variant1 = null;
 		VCFVariant variant2 = null;
 
+		int nr = 0;
 		while (next != null) {
 			VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.HEADER);
 			if (variant.asFeature().overlaps(snp1)) {
@@ -139,8 +140,11 @@ public class MakeTableWithICResults {
 				}
 			}
 			next = window.next();
+			nr++;
 		}
 		reader.close();
+		System.out.println(nr + " variants total for region in vcf: " + tabixfile);
+		System.out.println((variant1 != null) + "\t" + (variant2 != null));
 		return new Pair<>(variant1, variant2);
 	}
 

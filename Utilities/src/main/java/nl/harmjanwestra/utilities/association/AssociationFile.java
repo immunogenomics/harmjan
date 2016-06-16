@@ -463,14 +463,16 @@ public class AssociationFile {
 					"\tLD(D')" +
 					"\tDevianceNull" +
 					"\tDevianceGeno" +
+					"\tDfNull" +
 					"\tDfAlt" +
+					"\tDiffDf" +
 					"\tBeta(Genotype)" +
 					"\tSE(Genotype)" +
 					"\tOR" +
 					"\tOR-Hi" +
 					"\tOR-Lo" +
 					"\tPval" +
-					"\t-Log10(pval)";
+					"\tLog10(p)";
 		} else {
 			str += "#Chromosome" +
 					"\tPos" +
@@ -484,14 +486,16 @@ public class AssociationFile {
 					"\tHWEP" +
 					"\tDevianceNull" +
 					"\tDevianceGeno" +
+					"\tDfNull" +
 					"\tDfAlt" +
+					"\tDiffDf" +
 					"\tBeta(Genotype)" +
 					"\tSE(Genotype)" +
 					"\tOR" +
 					"\tOR-Hi" +
 					"\tOR-Lo" +
 					"\tPval" +
-					"\t-Log10(pval)";
+					"\tLog10(p)";
 		}
 
 		return str;

@@ -135,12 +135,19 @@ public class LRTestOptions {
 				.desc("Test only variants that were imputed")
 				.build();
 		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("nomissing")
+				.desc("Assume there is no missing data (aka calculate the null model only once).")
+				.build();
+		OPTIONS.addOption(option);
 	}
 
 	private String conditional;
 	private double HWEPThreshold = 1E-5;
 	private boolean exhaustivePairwiseAnalysis;
 	private boolean conditionalAnalysis;
+	public boolean assumeNoMissingData;
 
 	public String getConditional() {
 		return conditional;
@@ -178,6 +185,10 @@ public class LRTestOptions {
 
 			if (cmd.hasOption("r")) {
 				bedfile = cmd.getOptionValue("r");
+			}
+
+			if(cmd.hasOption("nomissing")){
+				assumeNoMissingData = true;
 			}
 
 			if (cmd.hasOption("o")) {

@@ -246,6 +246,8 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			result.setDevianceNull(devnull);
 			result.setDevianceGeno(devx);
 			result.setDf(df);
+			result.setDfalt(x.columns());
+			result.setDfnull(xprime.columns());
 			result.setBeta(betasmlelr);
 			result.setSe(stderrsmlelr);
 			result.setPval(p);

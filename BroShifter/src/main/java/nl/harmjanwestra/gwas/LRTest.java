@@ -1,7 +1,8 @@
 package nl.harmjanwestra.gwas;
 
-import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
+import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
@@ -9,6 +10,8 @@ import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
+import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
+import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.console.ProgressBar;
@@ -17,6 +20,7 @@ import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.matrix2.DoubleMatrixDataset;
 import umcg.genetica.text.Strings;
+import umcg.genetica.util.Primitives;
 
 import java.io.Console;
 import java.io.IOException;
@@ -32,6 +36,7 @@ import java.util.stream.Collectors;
  */
 public class LRTest {
 
+	private final ExecutorService exService;
 	LRTestOptions options;
 	private int submitted;
 	private int returned;
@@ -43,7 +48,7 @@ public class LRTest {
 	private DoubleMatrix2D finalCovariates;
 	private DiseaseStatus[] finalDiseaseStatus;
 	private ProgressBar progressBar;
-	private final ExecutorService exService;
+	private Object nullModel;
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
@@ -155,6 +160,14 @@ public class LRTest {
 
 			int alleleOffsetGenotypes = 0;
 			highestLog10p = 0;
+			LogisticRegressionResult nullmodelresult = null;
+			Integer nrNullColumns = null;
+			if (options.assumeNoMissingData) {
+				Pair<LogisticRegressionResult, Integer> nullmodelresultpair = getNullModel(variants.get(0), conditional, 1, 1 + (variants.get(0).getNrAlleles() - 1));
+				nrNullColumns = nullmodelresultpair.getRight();
+				nullmodelresult = nullmodelresultpair.getLeft();
+
+			}
 
 
 			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
@@ -169,6 +182,9 @@ public class LRTest {
 						conditional,
 						alleleOffsetGenotypes,
 						options);
+
+				task.setResultNullmodel(nullmodelresult, nrNullColumns);
+
 				jobHandler.submit(task);
 
 				submitted++;
@@ -599,8 +615,9 @@ public class LRTest {
 				}
 				linessubmitted = 0;
 
-				System.out.println(totalsubmitted + " submitted. clearing queue. " + variants.size() + " variants in memory " + ManagementFactory.getThreadMXBean().getThreadCount());
+				System.out.print(totalsubmitted + " submitted. " + variants.size() + " variants in memory " + ManagementFactory.getThreadMXBean().getThreadCount() + " threads\r");
 			}
+
 
 			LRTestVariantQCTask task = new LRTestVariantQCTask(vcfLn,
 					bedRegions,
@@ -640,7 +657,7 @@ public class LRTest {
 				e.printStackTrace();
 			}
 		}
-		System.out.println(variants.size() + " variants included.");
+		System.out.println(variants.size() + " finally variants included.");
 
 		log.close();
 		return variants;
@@ -731,8 +748,8 @@ public class LRTest {
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-																	  Feature region,
-																	  ArrayList<VCFVariant> variantsInRegion) {
+	                                                                  Feature region,
+	                                                                  ArrayList<VCFVariant> variantsInRegion) {
 
 		AssociationResult topResult = null;
 		for (AssociationResult r : assocResults) {
@@ -770,9 +787,9 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-							int iter, ArrayList<VCFVariant> variants,
-							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
-							ArrayList<AssociationResult> associationResults) throws IOException {
+	                        int iter, ArrayList<VCFVariant> variants,
+	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
+	                        ArrayList<AssociationResult> associationResults) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -895,4 +912,68 @@ public class LRTest {
 	}
 
 
+	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
+	                                                            ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+	                                                            int firstColumnToRemove,
+	                                                            int lastColumnToRemove) {
+		// get a random variant
+		// prepare the matrix
+		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
+		Triple<int[], boolean[], Triple<Integer, Double, Double>> qcdata = lrq.filterAndRecodeGenotypes(
+				variant.getGenotypeAllelesAsMatrix2D(),
+				finalDiseaseStatus,
+				variant.getAlleles().length,
+				finalCovariates.rows());
+
+		Triple<Integer, Double, Double> stats = qcdata.getRight();
+		double maf = stats.getMiddle();
+		double hwep = stats.getRight();
+
+		// generate pseudocontrol genotypes
+		LRTestTask lrt = new LRTestTask();
+		Pair<DoubleMatrix2D, double[]> xandy = lrt.prepareMatrices(
+				variant,
+				qcdata.getLeft(),
+				conditional,
+				finalDiseaseStatus,
+				finalCovariates
+		);
+
+		// remove collinear variables and prune
+		Pair<DoubleMatrix2D, boolean[]> pruned = lrt.removeCollinearVariables(xandy.getLeft());
+
+
+		DoubleMatrix2D x = pruned.getLeft(); // x is now probably shorter than original X
+		DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
+		boolean[] notaliased = pruned.getRight(); // length of original X
+
+		// check if the alleles we put in are aliased
+		int firstAllele = firstColumnToRemove; // intercept + allleles we conditioned on (original X indexing)
+		int lastAllele = lastColumnToRemove;   // intercept + allleles we conditioned on + alleles for this variant (original X indexing)
+
+
+		int nrRemaining = 0;
+		int[] alleleIndex = new int[lastColumnToRemove - firstColumnToRemove];
+		for (int i = 0; i < alleleIndex.length; i++) {
+			alleleIndex[i] = -1;
+		}
+
+		int newXIndex = 0;
+		ArrayList<Integer> colIndexArr = new ArrayList<>(x.columns());
+		for (int i = 0; i < notaliased.length; i++) {
+			if (notaliased[i]) {
+				if (i >= firstAllele && i < lastAllele) {
+					alleleIndex[i - firstAllele] = newXIndex;
+					nrRemaining++;
+				} else {
+					colIndexArr.add(newXIndex);
+				}
+				newXIndex++;
+			}
+		}
+
+		DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
+		LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
+		return new Pair<>(reg.univariate(xandy.getRight(), xprime), xprime.columns());
+	}
 }

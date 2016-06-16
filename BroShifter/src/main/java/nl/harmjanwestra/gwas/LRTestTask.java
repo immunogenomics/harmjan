@@ -38,18 +38,20 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	private int alleleOffsetGenotypes;
 	private LRTestOptions options;
 	private DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
+	private LogisticRegressionResult resultCovars;
+	private int nrCovars;
 
 
 	public LRTestTask() {
 	}
 
 	public LRTestTask(VCFVariant variant,
-					  int iter,
-					  DiseaseStatus[] finalDiseaseStatus,
-					  DoubleMatrix2D finalCovariates,
-					  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-					  int alleleOffsetGenotypes,
-					  LRTestOptions options) {
+	                  int iter,
+	                  DiseaseStatus[] finalDiseaseStatus,
+	                  DoubleMatrix2D finalCovariates,
+	                  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+	                  int alleleOffsetGenotypes,
+	                  LRTestOptions options) {
 		this.variant = variant;
 		this.iter = iter;
 		this.finalDiseaseStatus = finalDiseaseStatus;
@@ -218,15 +220,13 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-										   double[] y,
-										   int firstColumnToRemove,
-										   int lastColumnToRemove,
-										   VCFVariant variant,
-										   double maf) {
+	                                       double[] y,
+	                                       int firstColumnToRemove,
+	                                       int lastColumnToRemove,
+	                                       VCFVariant variant,
+	                                       double maf) {
 
-		if (conditional.size() > 1 && this.variant.getId().equals("rs861840")) {
-			System.out.println("check this");
-		}
+
 
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
@@ -299,25 +299,26 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 
 			double devx = resultX.getDeviance();
-			DoubleMatrix2D xprime = null;
 
-			xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
-
-
-			LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
 			if (resultCovars == null) {
-				System.err.println("ERROR: null-model regression did not converge. ");
-				System.err.println("Variant: " + snp.getChromosome().toString()
-						+ "\t" + snp.getStart()
-						+ "\t" + snp.getName()
-						+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
-						+ "\t" + snp.getMinorAllele()
-						+ "\t" + maf);
-				System.err.println(x.rows() + "\t" + x.columns());
-				System.err.println(xprime.rows() + "\t" + xprime.columns());
-				System.err.println("-----");
-				return null;
+				DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
+				resultCovars = reg.univariate(y, xprime);
+				if (resultCovars == null) {
+					System.err.println("ERROR: null-model regression did not converge. ");
+					System.err.println("Variant: " + snp.getChromosome().toString()
+							+ "\t" + snp.getStart()
+							+ "\t" + snp.getName()
+							+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
+							+ "\t" + snp.getMinorAllele()
+							+ "\t" + maf);
+					System.err.println(x.rows() + "\t" + x.columns());
+					System.err.println(xprime.rows() + "\t" + xprime.columns());
+					System.err.println("-----");
+					return null;
+				}
+				nrCovars = xprime.columns();
 			}
+
 			double devnull = resultCovars.getDeviance();
 			double[] betasmlelr = new double[nrRemaining];
 			double[] stderrsmlelr = new double[nrRemaining];
@@ -346,7 +347,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 
 			double deltaDeviance = devnull - devx;
-			int df = x.columns() - xprime.columns();
+			int df = x.columns() - nrCovars;
 			double p = ChiSquare.getP(df, deltaDeviance);
 //				log10p = Math.abs((-Math.log10(p)));
 
@@ -354,12 +355,20 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			result.setDevianceNull(devnull);
 			result.setDevianceGeno(devx);
 			result.setDf(df);
+			result.setDfalt(x.columns());
+			result.setDfnull(nrCovars);
 
 			result.setBeta(betasmlelr);
 			result.setSe(stderrsmlelr);
 			result.setPval(p);
 			return result;
 		}
+	}
+
+	public void setResultNullmodel(LogisticRegressionResult r, int nrvars) {
+		this.resultCovars = r;
+		this.nrCovars = nrvars;
+
 	}
 }
 

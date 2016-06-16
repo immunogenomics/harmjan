@@ -26,6 +26,8 @@ public class AssociationResult {
 	private int n;
 	private double devianceNull;
 	private double devianceGeno;
+	private int dfnull;
+	private int dfalt;
 	private int df;
 	private double posterior;
 	private double ldRSquared;
@@ -164,6 +166,14 @@ public class AssociationResult {
 		this.df = df;
 	}
 
+	public void setDfnull(int dfnull) {
+		this.dfnull = dfnull;
+	}
+
+	public void setDfalt(int dfalt) {
+		this.dfalt = dfalt;
+	}
+
 	public double getPosterior() {
 		return posterior;
 	}
@@ -214,6 +224,8 @@ public class AssociationResult {
 		// Chr     Pos     Id      CombinedId      N       MAF     DevianceNull    DevianceGeno    Df      Beta(Genotype)  SE(Genotype)    OR      OR-Hi   OR-Lo   Pval    -Log10(pval)
 		str += "\t" + devianceNull
 				+ "\t" + devianceGeno
+				+ "\t" + dfnull
+				+ "\t" + dfalt
 				+ "\t" + df;
 
 		if (beta != null) {
