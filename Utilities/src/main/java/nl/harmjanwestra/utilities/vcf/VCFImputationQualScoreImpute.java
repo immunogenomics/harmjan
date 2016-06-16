@@ -82,8 +82,8 @@ public class VCFImputationQualScoreImpute {
 			impinfo = 0;
 		}
 
-		VCFImputationQualScoreBeagle vbs = new VCFImputationQualScoreBeagle(variant, true);
-		System.out.println(variant.toString() + "\t" + info + "\t" + impinfo + "\t" + vbs.allelicR2() + "\t" + vbs.doseR2());
+//		VCFImputationQualScoreBeagle vbs = new VCFImputationQualScoreBeagle(variant, true);
+//		System.out.println(variant.toString() + "\t" + info + "\t" + impinfo + "\t" + vbs.allelicR2() + "\t" + vbs.doseR2());
 
 
 	}
