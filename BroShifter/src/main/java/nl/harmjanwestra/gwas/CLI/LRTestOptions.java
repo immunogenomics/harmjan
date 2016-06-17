@@ -141,6 +141,18 @@ public class LRTestOptions {
 				.desc("Assume there is no missing data (aka calculate the null model only once).")
 				.build();
 		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("splitmultiallelicposthoc")
+				.desc("Output associations per allele for multi-allelic variants")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("splitmultiallelic")
+				.desc("Output associations per allele for multi-allelic variants")
+				.build();
+		OPTIONS.addOption(option);
 	}
 
 	private String conditional;
@@ -148,6 +160,8 @@ public class LRTestOptions {
 	private boolean exhaustivePairwiseAnalysis;
 	private boolean conditionalAnalysis;
 	public boolean assumeNoMissingData;
+	public boolean splitMultiAllelic;
+	public boolean splitMultiAllelicIntoMultipleVariants;
 
 	public String getConditional() {
 		return conditional;
@@ -189,6 +203,13 @@ public class LRTestOptions {
 
 			if(cmd.hasOption("nomissing")){
 				assumeNoMissingData = true;
+			}
+			if(cmd.hasOption("splitmultiallelicposthoc")){
+				splitMultiAllelic = true;
+			}
+
+			if(cmd.hasOption("splitmultiallelic")){
+				splitMultiAllelicIntoMultipleVariants = true;
 			}
 
 			if (cmd.hasOption("o")) {

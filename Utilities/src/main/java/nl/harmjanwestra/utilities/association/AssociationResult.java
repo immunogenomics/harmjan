@@ -33,6 +33,7 @@ public class AssociationResult {
 	private double ldRSquared;
 	private Double ldDprime;
 	private double[] OR;
+	private AssociationResult[] subresults;
 
 	public SNPFeature getSnp2() {
 		return snp2;
@@ -312,5 +313,13 @@ public class AssociationResult {
 
 	public void setOR(double[] OR) {
 		this.OR = OR;
+	}
+
+	public void setSubresults(AssociationResult[] subresults) {
+		this.subresults = subresults;
+	}
+
+	public AssociationResult[] getSubresults() {
+		return subresults;
 	}
 }

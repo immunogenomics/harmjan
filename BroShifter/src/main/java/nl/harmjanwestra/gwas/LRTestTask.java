@@ -227,7 +227,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	                                       double maf) {
 
 
-
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 
@@ -280,25 +279,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			return result;
 		} else {
 			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
-			LogisticRegressionResult resultX = reg.univariate(y, x);
-			if (resultX == null) {
-				// try once more with some more iterations
-				LogisticRegressionOptimized reg2 = new LogisticRegressionOptimized(1000);
-				resultX = reg2.univariate(y, x);
-				if (resultX == null) {
-					System.err.println("ERROR: did not converge.");
-					System.err.println("Variant: " + snp.getChromosome().toString()
-							+ "\t" + snp.getStart()
-							+ "\t" + snp.getName()
-							+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
-							+ "\t" + snp.getMinorAllele()
-							+ "\t" + maf);
-					System.err.println("-----");
-					return null;
-				}
-			}
-
-			double devx = resultX.getDeviance();
 
 			if (resultCovars == null) {
 				DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
@@ -319,6 +299,117 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				nrCovars = xprime.columns();
 			}
 
+			if (nrRemaining > 1) {
+				// multi allelic variant...
+
+				AssociationResult[] subresults = new AssociationResult[nrRemaining];
+				System.out.println(nrRemaining + " results remaining");
+				int nrAlleles = variant.getNrAlleles() - 1;
+				int allelectr = 0;
+				for (int a = 0; a < nrAlleles; a++) {
+					// get index of allele
+					int idx = alleleIndex[a];
+					if (idx != -1) {
+						System.out.println("Allele " + a);
+
+						// make a new x-matrix using the original x-matrix
+						ArrayList<Integer> colIndexArrAllele = new ArrayList<>(x.columns());
+						newXIndex = 0;
+						int suballeleindex = -1;
+						for (int i = 0; i < notaliased.length; i++) {
+							if (notaliased[i]) {
+								if (i >= firstAllele && i < lastAllele) {
+									if (newXIndex == idx) {
+										colIndexArrAllele.add(newXIndex);
+										suballeleindex = newXIndex;
+									}
+									nrRemaining++;
+								} else {
+									colIndexArrAllele.add(newXIndex);
+								}
+								newXIndex++;
+							}
+						}
+
+						DoubleMatrix2D xallele = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArrAllele.toArray(new Integer[0])));
+						LogisticRegressionResult resultX = reg.univariate(y, xallele);
+						AssociationResult subresult = new AssociationResult();
+
+						SNPFeature subsnp = new SNPFeature();
+						subsnp.setChromosome(snp.getChromosome());
+						subsnp.setStart(snp.getStart());
+						subsnp.setStop(snp.getStop());
+						subsnp.setMinorAllele("NA");
+						subsnp.setAlleles(new String[]{snp.getAlleles()[0], snp.getAlleles()[a + 1]});
+						subsnp.setName(snp.getName() + "_" + snp.getAlleles()[a + 1]);
+						subresult.setSnp(subsnp);
+						subresult.setN(x.rows());
+						subresult.setMaf(maf);
+
+						double devx = resultX.getDeviance();
+						double devnull = resultCovars.getDeviance();
+						double[] betasmlelr = new double[1];
+						double[] stderrsmlelr = new double[1];
+						double[] or = new double[1];
+						double[] orhi = new double[1];
+						double[] orlo = new double[1];
+
+						int ctr = 0;
+
+						double beta = -resultX.getBeta()[suballeleindex];
+						double se = resultX.getStderrs()[suballeleindex];
+						betasmlelr[ctr] = beta;
+						stderrsmlelr[ctr] = se;
+
+						double OR = Math.exp(beta);
+						double orLow = Math.exp(beta - 1.96 * se);
+						double orHigh = Math.exp(beta + 1.96 * se);
+						or[ctr] = OR;
+						orhi[ctr] = orHigh;
+						orlo[ctr] = orLow;
+
+						double deltaDeviance = devnull - devx;
+						int df = xallele.columns() - nrCovars;
+						double p = ChiSquare.getP(df, deltaDeviance);
+
+						subresult.setDevianceNull(devnull);
+						subresult.setDevianceGeno(devx);
+						subresult.setDf(df);
+						subresult.setDfalt(xallele.columns());
+						subresult.setDfnull(nrCovars);
+
+						subresult.setBeta(betasmlelr);
+						subresult.setSe(stderrsmlelr);
+						subresult.setPval(p);
+
+						subresults[allelectr] = subresult;
+						allelectr++;
+					}
+				}
+
+				result.setSubresults(subresults);
+			}
+
+
+			LogisticRegressionResult resultX = reg.univariate(y, x);
+			if (resultX == null) {
+				// try once more with some more iterations
+				LogisticRegressionOptimized reg2 = new LogisticRegressionOptimized(1000);
+				resultX = reg2.univariate(y, x);
+				if (resultX == null) {
+					System.err.println("ERROR: did not converge.");
+					System.err.println("Variant: " + snp.getChromosome().toString()
+							+ "\t" + snp.getStart()
+							+ "\t" + snp.getName()
+							+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
+							+ "\t" + snp.getMinorAllele()
+							+ "\t" + maf);
+					System.err.println("-----");
+					return null;
+				}
+			}
+
+			double devx = resultX.getDeviance();
 			double devnull = resultCovars.getDeviance();
 			double[] betasmlelr = new double[nrRemaining];
 			double[] stderrsmlelr = new double[nrRemaining];

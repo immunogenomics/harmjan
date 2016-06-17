@@ -2,8 +2,8 @@ package nl.harmjanwestra.utilities.vcf;
 
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
-
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.matrix.ShortMatrix2D;
@@ -53,6 +53,8 @@ public class VCFVariant {
 	private String filter = null;
 	private double MAF;
 	private String separator = "/";
+	private boolean ignoregender;
+	private int totalCalledAlleles;
 
 
 	// GT:AB:AD:DP:GQ:PL
@@ -66,9 +68,6 @@ public class VCFVariant {
 	private int pgtCol = -1; // ?
 	private int dsCol = -1;
 	private int gpCol = -1;
-
-	private boolean ignoregender;
-	private int totalCalledAlleles;
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
@@ -590,7 +589,7 @@ public class VCFVariant {
 		return gtdosage;
 	}
 
-	public double[][] getDosage(){
+	public double[][] getDosage() {
 		return dosages.toArray();
 	}
 
@@ -1102,6 +1101,66 @@ public class VCFVariant {
 		return genotypeAlleles.rows();
 	}
 
+	public VCFVariant variantFromAllele(int allele) {
+		if (allele == 0) {
+			throw new IllegalArgumentException("allele should be bigger than 0");
+		}
+		if (allele > alleles.length) {
+			throw new IllegalArgumentException("allele not present");
+		}
+
+
+
+		/*
+			private DoubleMatrix2D genotypeAlleles; // format [individuals][alleles] (save some memory by making only two individual-sized arrays)
+	private DoubleMatrix2D genotypeProbabilies;
+	private DoubleMatrix2D dosages; // this can hold the imputed dosages, or if they are not set, the dosages from the genotypes
+	private ShortMatrix2D allelicDepth;
+	private int[] nrAllelesObserved;
+	private short[] genotypeQuals;
+	private short[] approximateDepth;
+	private boolean monomorphic;
+	private double callrate;
+	private boolean multiallelic;
+	private double hwep;
+	private boolean biallelic = false;
+	private double[] alleleFrequencies;
+	private String minorAllele;
+	private String[] alleles = null;
+	private String chr = null;
+	private int pos = -1;
+	private String id = null;
+	private int qual = -1;
+	private String filter = null;
+	private double MAF;
+	private String separator = "/";
+	private boolean ignoregender;
+	private int totalCalledAlleles;
+		 */
+
+
+		DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
+
+
+		DoubleMatrix2D odosages = dda.subMatrix(dosages, 0, genotypeProbabilies.rows() - 1, allele - 1, allele);
+		DoubleMatrix2D ogenotypeAlleles = new DenseDoubleMatrix2D(genotypeAlleles.rows(), genotypeAlleles.columns());
+		int alleleindex = allele - 1;
+		for (int r = 0; r < genotypeAlleles.rows(); r++) {
+			for (int c = 0; c < genotypeAlleles.columns(); c++) {
+				if (genotypeAlleles.getQuick(r, c) == alleleindex) {
+					ogenotypeAlleles.set(r, c, 1);
+				}
+			}
+		}
+		String[] oalleles = new String[]{alleles[0], alleles[allele]};
+		String ochr = chr;
+		int opos = pos;
+		String oid = id;
+
+		VCFVariant output = new VCFVariant(chr, pos, id + "_" + alleles[allele], getInfoString(), Strings.concat(oalleles, Strings.comma), ogenotypeAlleles, odosages);
+
+		return output;
+	}
 
 	public enum PARSE {
 		HEADER,

@@ -166,7 +166,6 @@ public class LRTest {
 				Pair<LogisticRegressionResult, Integer> nullmodelresultpair = getNullModel(variants.get(0), conditional, 1, 1 + (variants.get(0).getNrAlleles() - 1));
 				nrNullColumns = nullmodelresultpair.getRight();
 				nullmodelresult = nullmodelresultpair.getLeft();
-
 			}
 
 
@@ -601,7 +600,15 @@ public class LRTest {
 								log.writeln(logStr);
 							}
 							if (result.getLeft() != null) {
-								variants.add(result.getLeft());
+								VCFVariant variant = result.getLeft();
+								int nrAlleles = variant.getNrAlleles();
+								if (options.splitMultiAllelicIntoMultipleVariants && nrAlleles > 2) {
+									for (int a = 1; a < nrAlleles; a++) {
+										variants.add(variant.variantFromAllele(a));
+									}
+								} else {
+									variants.add(variant);
+								}
 							}
 						}
 						returned++;
@@ -808,7 +815,17 @@ public class LRTest {
 							if (p > highestLog10p) {
 								highestLog10p = p;
 							}
-							pvalout.writeln(assoc.toString());
+
+							if (options.splitMultiAllelic && variant.getNrAlleles() > 2) {
+								AssociationResult[] subresults = assoc.getSubresults();
+								for (AssociationResult r : subresults) {
+									pvalout.writeln(r.toString());
+								}
+							} else {
+								pvalout.writeln(assoc.toString());
+							}
+
+
 							if (associationResults != null) {
 								associationResults.add(assoc);
 							}
