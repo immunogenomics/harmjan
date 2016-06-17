@@ -299,7 +299,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				nrCovars = xprime.columns();
 			}
 
-			if (nrRemaining > 1) {
+			if (nrRemaining > 1 && options.testMultiAllelicVariantsIndependently) {
 				// multi allelic variant...
 
 				AssociationResult[] subresults = new AssociationResult[nrRemaining];

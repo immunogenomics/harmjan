@@ -603,6 +603,8 @@ public class LRTest {
 								VCFVariant variant = result.getLeft();
 								int nrAlleles = variant.getNrAlleles();
 								if (options.splitMultiAllelicIntoMultipleVariants && nrAlleles > 2) {
+									System.out.println("Splitting alleles");
+
 									for (int a = 1; a < nrAlleles; a++) {
 										variants.add(variant.variantFromAllele(a));
 									}
@@ -653,7 +655,17 @@ public class LRTest {
 						log.writeln(logStr);
 					}
 					if (result.getLeft() != null) {
-						variants.add(result.getLeft());
+						VCFVariant variant = result.getLeft();
+						int nrAlleles = variant.getNrAlleles();
+						if (options.splitMultiAllelicIntoMultipleVariants && nrAlleles > 2) {
+							System.out.println("Splitting alleles");
+
+							for (int a = 1; a < nrAlleles; a++) {
+								variants.add(variant.variantFromAllele(a));
+							}
+						} else {
+							variants.add(variant);
+						}
 					}
 				}
 				returned++;
@@ -664,7 +676,7 @@ public class LRTest {
 				e.printStackTrace();
 			}
 		}
-		System.out.println(variants.size() + " finally variants included.");
+		System.out.println(variants.size() + "  variants finally included.");
 
 		log.close();
 		return variants;
@@ -755,8 +767,8 @@ public class LRTest {
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-	                                                                  Feature region,
-	                                                                  ArrayList<VCFVariant> variantsInRegion) {
+																	  Feature region,
+																	  ArrayList<VCFVariant> variantsInRegion) {
 
 		AssociationResult topResult = null;
 		for (AssociationResult r : assocResults) {
@@ -794,9 +806,9 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-	                        int iter, ArrayList<VCFVariant> variants,
-	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
-	                        ArrayList<AssociationResult> associationResults) throws IOException {
+							int iter, ArrayList<VCFVariant> variants,
+							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
+							ArrayList<AssociationResult> associationResults) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -816,7 +828,7 @@ public class LRTest {
 								highestLog10p = p;
 							}
 
-							if (options.splitMultiAllelic && variant.getNrAlleles() > 2) {
+							if (options.testMultiAllelicVariantsIndependently && variant.getNrAlleles() > 2) {
 								AssociationResult[] subresults = assoc.getSubresults();
 								for (AssociationResult r : subresults) {
 									pvalout.writeln(r.toString());
@@ -930,9 +942,9 @@ public class LRTest {
 
 
 	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
-	                                                            ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-	                                                            int firstColumnToRemove,
-	                                                            int lastColumnToRemove) {
+																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+																int firstColumnToRemove,
+																int lastColumnToRemove) {
 		// get a random variant
 		// prepare the matrix
 		LRTestVariantQCTask lrq = new LRTestVariantQCTask();

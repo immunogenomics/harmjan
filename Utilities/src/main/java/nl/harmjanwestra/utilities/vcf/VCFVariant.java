@@ -99,6 +99,7 @@ public class VCFVariant {
 		this.id = id;
 		String[] allelesElems = alleleStr.split(",");
 		this.alleles = allelesElems;
+		System.out.println(this.alleles.length + " alleles for variant " + id);
 		parseInfoString(info);
 		this.genotypeAlleles = alleles;
 		this.dosages = dosages;
@@ -760,6 +761,9 @@ public class VCFVariant {
 	public void recalculateMAFAndCallRate(Boolean[] individualIsFemale) {
 
 		int nrCalled = 0;
+		if (nrAllelesObserved == null) {
+			nrAllelesObserved = new int[alleles.length];
+		}
 		nrAllelesObserved = new int[nrAllelesObserved.length];
 		int[] nrAllelesObservedLocal = new int[nrAllelesObserved.length];
 		int nrIndividuals = genotypeAlleles.rows();
@@ -1142,7 +1146,8 @@ public class VCFVariant {
 		DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 
 
-		DoubleMatrix2D odosages = dda.subMatrix(dosages, 0, genotypeProbabilies.rows() - 1, allele - 1, allele);
+		DoubleMatrix2D odosages = dda.subMatrix(dosages, 0, genotypeProbabilies.rows() - 1, allele - 1, allele - 1);
+		System.out.println(odosages.rows() + " x " + odosages.columns());
 		DoubleMatrix2D ogenotypeAlleles = new DenseDoubleMatrix2D(genotypeAlleles.rows(), genotypeAlleles.columns());
 		int alleleindex = allele - 1;
 		for (int r = 0; r < genotypeAlleles.rows(); r++) {
@@ -1153,11 +1158,13 @@ public class VCFVariant {
 			}
 		}
 		String[] oalleles = new String[]{alleles[0], alleles[allele]};
-		String ochr = chr;
-		int opos = pos;
-		String oid = id;
 
-		VCFVariant output = new VCFVariant(chr, pos, id + "_" + alleles[allele], getInfoString(), Strings.concat(oalleles, Strings.comma), ogenotypeAlleles, odosages);
+		VCFVariant output = new VCFVariant(chr,
+				pos,
+				id + "_" + alleles[allele],
+				Strings.concat(oalleles, Strings.comma),
+				getInfoString(),
+				ogenotypeAlleles, odosages);
 
 		return output;
 	}

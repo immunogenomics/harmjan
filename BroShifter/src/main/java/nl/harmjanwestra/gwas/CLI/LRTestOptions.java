@@ -143,14 +143,14 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.longOpt("splitmultiallelicposthoc")
-				.desc("Output associations per allele for multi-allelic variants")
+				.longOpt("testmultiallelicindepently")
+				.desc("Test each allele in a multiple allelic variant independently. Does not split variant.")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("splitmultiallelic")
-				.desc("Output associations per allele for multi-allelic variants")
+				.desc("Split multi-allelic variants before testing.")
 				.build();
 		OPTIONS.addOption(option);
 	}
@@ -160,7 +160,7 @@ public class LRTestOptions {
 	private boolean exhaustivePairwiseAnalysis;
 	private boolean conditionalAnalysis;
 	public boolean assumeNoMissingData;
-	public boolean splitMultiAllelic;
+	public boolean testMultiAllelicVariantsIndependently;
 	public boolean splitMultiAllelicIntoMultipleVariants;
 
 	public String getConditional() {
@@ -204,8 +204,8 @@ public class LRTestOptions {
 			if(cmd.hasOption("nomissing")){
 				assumeNoMissingData = true;
 			}
-			if(cmd.hasOption("splitmultiallelicposthoc")){
-				splitMultiAllelic = true;
+			if(cmd.hasOption("testmultiallelicindepently")){
+				testMultiAllelicVariantsIndependently = true;
 			}
 
 			if(cmd.hasOption("splitmultiallelic")){
