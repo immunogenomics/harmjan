@@ -506,13 +506,14 @@ public class LRTest {
 						ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
 
 
-						String model = "y ~ intercept ";
+//						String model = "";
 						LRTestVariantQCTask lqr = new LRTestVariantQCTask();
 						int alleleOffsetGenotypes = 0;
+						ArrayList<String> modelgenes = new ArrayList<>();
 						for (int c = 0; c < conditionalVariantsForRegion.size(); c++) {
 							VCFVariant variant = conditionalVariantsForRegion.get(c);
-
-							model += " + " + variant.getId();
+							modelgenes.add(variant.toString());
+//							model += " + " + variant.getId();
 							conditional.add(new Pair<>(variant,
 									lqr.filterAndRecodeGenotypes(variant.getGenotypeAllelesAsMatrix2D(),
 											finalDiseaseStatus,
@@ -520,7 +521,7 @@ public class LRTest {
 											finalCovariates.rows())));
 							alleleOffsetGenotypes += variant.getAlleles().length - 1;
 						}
-						modelsout.writeln(remainingRegions.get(regionId).toString() + "\t" + i + "\t" + model);
+						modelsout.writeln(remainingRegions.get(regionId).toString() + "\t" + i + "\t" + Strings.concat(modelgenes, Strings.semicolon));
 
 						int alleleOffsetDosages = 0;
 
@@ -555,7 +556,7 @@ public class LRTest {
 					ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
 					Pair<VCFVariant, AssociationResult> bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion);
 					VCFVariant bestVariantLastIter = bestAssocLastIter.getLeft();
-					topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (options.getMaxIter() - 2) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
+					topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (options.getMaxIter() - 1) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
 				}
 				modelsout.close();
 				topvariantsout.close();
@@ -603,8 +604,6 @@ public class LRTest {
 								VCFVariant variant = result.getLeft();
 								int nrAlleles = variant.getNrAlleles();
 								if (options.splitMultiAllelicIntoMultipleVariants && nrAlleles > 2) {
-									System.out.println("Splitting alleles");
-
 									for (int a = 1; a < nrAlleles; a++) {
 										variants.add(variant.variantFromAllele(a));
 									}
@@ -719,6 +718,16 @@ public class LRTest {
 				} else {
 					CompletionService<AssociationResult> jobHandler = new ExecutorCompletionService<AssociationResult>(exService);
 
+					LogisticRegressionResult nullmodelresult = null;
+					Integer nrNullColumns = null;
+					if (options.assumeNoMissingData) {
+						String[] regionsStr = availableRegions.toArray(new String[0]);
+						ArrayList<VCFVariant> variants = variantsInRegions.get(regionsStr[0]);
+						Pair<LogisticRegressionResult, Integer> nullmodelresultpair = getNullModel(variants.get(0), null, 1, 1 + (variants.get(0).getNrAlleles() - 1));
+						nrNullColumns = nullmodelresultpair.getRight();
+						nullmodelresult = nullmodelresultpair.getLeft();
+					}
+
 					int submitted = 0;
 					for (Feature region : availableRegions) {
 						ArrayList<VCFVariant> variants = variantsInRegions.get(region);
@@ -726,7 +735,7 @@ public class LRTest {
 							for (int j = i + 1; j < variants.size(); j++) {
 								// submit job to queue;
 								LRTestExhaustiveTask lrtet = new LRTestExhaustiveTask(variants, i, j, genotypeSamplesWithCovariatesAndDiseaseStatus, finalDiseaseStatus, finalCovariates, options);
-
+								lrtet.setResultNullmodel(nullmodelresult, nrNullColumns);
 								jobHandler.submit(lrtet);
 								submitted++;
 
@@ -955,8 +964,6 @@ public class LRTest {
 				finalCovariates.rows());
 
 		Triple<Integer, Double, Double> stats = qcdata.getRight();
-		double maf = stats.getMiddle();
-		double hwep = stats.getRight();
 
 		// generate pseudocontrol genotypes
 		LRTestTask lrt = new LRTestTask();

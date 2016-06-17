@@ -99,7 +99,6 @@ public class VCFVariant {
 		this.id = id;
 		String[] allelesElems = alleleStr.split(",");
 		this.alleles = allelesElems;
-		System.out.println(this.alleles.length + " alleles for variant " + id);
 		parseInfoString(info);
 		this.genotypeAlleles = alleles;
 		this.dosages = dosages;
@@ -1146,8 +1145,8 @@ public class VCFVariant {
 		DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 
 
-		DoubleMatrix2D odosages = dda.subMatrix(dosages, 0, genotypeProbabilies.rows() - 1, allele - 1, allele - 1);
-		System.out.println(odosages.rows() + " x " + odosages.columns());
+		DoubleMatrix2D odosages = dda.subMatrix(dosages, 0, genotypeProbabilies.rows() - 1, allele - 1, allele-1);
+
 		DoubleMatrix2D ogenotypeAlleles = new DenseDoubleMatrix2D(genotypeAlleles.rows(), genotypeAlleles.columns());
 		int alleleindex = allele - 1;
 		for (int r = 0; r < genotypeAlleles.rows(); r++) {

@@ -33,6 +33,8 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 	private int snpid2;
 	private ArrayList<VCFVariant> variants;
 	private DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
+	private LogisticRegressionResult resultCovars;
+	private int nrCovars;
 
 	public LRTestExhaustiveTask(ArrayList<VCFVariant> variants, int i, int j,
 								boolean[] genotypesWithCovariatesAndDiseaseStatus,
@@ -177,9 +179,24 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 		if (nrRemaining == 0) {
 			return result;
 		} else {
+
+			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
+			if (resultCovars == null) {
+				DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
+				resultCovars = reg.univariate(y, xprime);
+				if (resultCovars == null) {
+					System.err.println("ERROR: null-model regression did not converge. ");
+					System.err.println(x.rows() + "\t" + x.columns());
+					System.err.println(xprime.rows() + "\t" + xprime.columns());
+					System.err.println("-----");
+					return null;
+				}
+				nrCovars = xprime.columns();
+			}
+
 			// perform testNormal on full model
 			// remove genotypes and run testNormal on reduced model
-			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
+
 			LogisticRegressionResult resultX = reg.univariate(y, x);
 			if (resultX == null) {
 				System.err.println("ERROR: did not converge. ");
@@ -206,12 +223,12 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			}
 
 			double devx = resultX.getDeviance();
-			DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
-			LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
-			if (resultCovars == null) {
-				System.err.println("ERROR: covariate regression did not converge. ");
-				return null;
-			}
+//			DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
+//			LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+//			if (resultCovars == null) {
+//				System.err.println("ERROR: covariate regression did not converge. ");
+//				return null;
+//			}
 			double devnull = resultCovars.getDeviance();
 			double[] betasmlelr = new double[nrRemaining];
 			double[] stderrsmlelr = new double[nrRemaining];
@@ -240,18 +257,23 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			}
 
 			double deltaDeviance = devnull - devx;
-			int df = x.columns() - xprime.columns();
+			int df = x.columns() - nrCovars;
 			double p = ChiSquare.getP(df, deltaDeviance);
 
 			result.setDevianceNull(devnull);
 			result.setDevianceGeno(devx);
 			result.setDf(df);
 			result.setDfalt(x.columns());
-			result.setDfnull(xprime.columns());
+			result.setDfnull(nrCovars);
 			result.setBeta(betasmlelr);
 			result.setSe(stderrsmlelr);
 			result.setPval(p);
 			return result;
 		}
+	}
+
+	public void setResultNullmodel(LogisticRegressionResult r, int nrvars) {
+		this.resultCovars = r;
+		this.nrCovars = nrvars;
 	}
 }
