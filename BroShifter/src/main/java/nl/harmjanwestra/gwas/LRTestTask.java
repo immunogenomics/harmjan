@@ -46,12 +46,12 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	public LRTestTask(VCFVariant variant,
-	                  int iter,
-	                  DiseaseStatus[] finalDiseaseStatus,
-	                  DoubleMatrix2D finalCovariates,
-	                  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-	                  int alleleOffsetGenotypes,
-	                  LRTestOptions options) {
+					  int iter,
+					  DiseaseStatus[] finalDiseaseStatus,
+					  DoubleMatrix2D finalCovariates,
+					  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+					  int alleleOffsetGenotypes,
+					  LRTestOptions options) {
 		this.variant = variant;
 		this.iter = iter;
 		this.finalDiseaseStatus = finalDiseaseStatus;
@@ -110,7 +110,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //		} // end maf > threshold
 	}
 
-	public Pair<DoubleMatrix2D, double[]> prepareMatrices(VCFVariant variant, int[] left, ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional, DiseaseStatus[] finalDiseaseStatus, DoubleMatrix2D finalCovariates) {
+	public Pair<DoubleMatrix2D, double[]> prepareMatrices(VCFVariant variant,
+														  int[] left,
+														  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+														  DiseaseStatus[] finalDiseaseStatus,
+														  DoubleMatrix2D finalCovariates) {
 
 		// prepare genotype matrix
 		DoubleMatrix2D x = variant.getDosagesAsMatrix2D();
@@ -119,19 +123,20 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			missingGenotypeIds.add(i);
 		}
 
-		for (int c = 0; c < conditional.size(); c++) {
-			Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>> conditionalData = conditional.get(c);
-			VCFVariant var2 = conditionalData.getLeft();
-			int[] left2 = conditionalData.getRight().getLeft();
+		if (conditional != null && !conditional.isEmpty()) {
+			for (int c = 0; c < conditional.size(); c++) {
+				Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>> conditionalData = conditional.get(c);
+				VCFVariant var2 = conditionalData.getLeft();
+				int[] left2 = conditionalData.getRight().getLeft();
 
-			DoubleMatrix2D dosages = var2.getDosagesAsMatrix2D();
+				DoubleMatrix2D dosages = var2.getDosagesAsMatrix2D();
 
-			for (int i : left2) {
-				missingGenotypeIds.add(i);
+				for (int i : left2) {
+					missingGenotypeIds.add(i);
+				}
+				x = DoubleFactory2D.dense.appendColumns(x, dosages);
 			}
-			x = DoubleFactory2D.dense.appendColumns(x, dosages);
 		}
-
 		// now append covariates
 		x = DoubleFactory2D.dense.appendColumns(x, finalCovariates);
 
@@ -220,11 +225,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-	                                       double[] y,
-	                                       int firstColumnToRemove,
-	                                       int lastColumnToRemove,
-	                                       VCFVariant variant,
-	                                       double maf) {
+										   double[] y,
+										   int firstColumnToRemove,
+										   int lastColumnToRemove,
+										   VCFVariant variant,
+										   double maf) {
 
 
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);

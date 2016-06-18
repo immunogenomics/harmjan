@@ -716,18 +716,21 @@ public class LRTest {
 					// print some fancy error message;
 					System.out.println("Sorry. No work.");
 				} else {
+					System.out.println(availableRegions.size() + " regions to query.");
 					CompletionService<AssociationResult> jobHandler = new ExecutorCompletionService<AssociationResult>(exService);
 
 					LogisticRegressionResult nullmodelresult = null;
 					Integer nrNullColumns = null;
 					if (options.assumeNoMissingData) {
-						String[] regionsStr = availableRegions.toArray(new String[0]);
+						System.out.println("Generating null model.");
+						Feature[] regionsStr = availableRegions.toArray(new Feature[0]);
 						ArrayList<VCFVariant> variants = variantsInRegions.get(regionsStr[0]);
 						Pair<LogisticRegressionResult, Integer> nullmodelresultpair = getNullModel(variants.get(0), null, 1, 1 + (variants.get(0).getNrAlleles() - 1));
 						nrNullColumns = nullmodelresultpair.getRight();
 						nullmodelresult = nullmodelresultpair.getLeft();
 					}
 
+					System.out.println("Submitting jobs");
 					int submitted = 0;
 					for (Feature region : availableRegions) {
 						ArrayList<VCFVariant> variants = variantsInRegions.get(region);
@@ -746,7 +749,7 @@ public class LRTest {
 					System.out.println("Submitted a total of " + submitted + " jobs");
 					ProgressBar pb = new ProgressBar(submitted);
 					int returned = 0;
-					TextFile pvalOut = new TextFile(options.getOutputdir() + "-pairwise.txt.gz", TextFile.W);
+					TextFile pvalOut = new TextFile(options.getOutputdir() + "pairwise.txt.gz", TextFile.W);
 					AssociationFile assocFile = new AssociationFile();
 					assocFile.setPairWise(true);
 					pvalOut.writeln(assocFile.getHeader());
