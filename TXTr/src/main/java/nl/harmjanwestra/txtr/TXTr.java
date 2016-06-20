@@ -41,6 +41,12 @@ public class TXTr {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("comma")
+				.desc("input is comma separated (in stead of a single file with locations)")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("n")
 				.desc("Nr lines for splitting")
 				.hasArg()
@@ -62,11 +68,15 @@ public class TXTr {
 
 			String input = "";
 			String output = "";
+			boolean commaseparated = false;
 			if (cmd.hasOption("i")) {
 				input = cmd.getOptionValue("i");
 			}
 			if (cmd.hasOption("o")) {
 				output = cmd.getOptionValue("o");
+			}
+			if (cmd.hasOption("comma")) {
+				commaseparated = true;
 			}
 
 			if (cmd.hasOption("split")) {
@@ -93,7 +103,7 @@ public class TXTr {
 					if (cmd.hasOption("multilineheader")) {
 						multilineheader = true;
 					}
-					t.mergeSkipHeader(input, output, multilineheader);
+					t.mergeSkipHeader(input, output, multilineheader, commaseparated);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -136,11 +146,16 @@ public class TXTr {
 		in.close();
 	}
 
-	public void mergeSkipHeader(String fileList, String output, boolean multilinehashtagheader) throws IOException {
+	public void mergeSkipHeader(String fileList, String output, boolean multilinehashtagheader, boolean commasep) throws IOException {
 
-		TextFile tf1 = new TextFile(fileList, TextFile.R);
-		String[] files = tf1.readAsArray();
-		tf1.close();
+		String[] files = null;
+		if (commasep) {
+			files = fileList.split(",");
+		} else {
+			TextFile tf1 = new TextFile(fileList, TextFile.R);
+			files = tf1.readAsArray();
+			tf1.close();
+		}
 
 		boolean headerwritten = false;
 

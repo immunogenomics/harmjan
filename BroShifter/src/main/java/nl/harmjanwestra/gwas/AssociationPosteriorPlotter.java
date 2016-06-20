@@ -66,7 +66,7 @@ public class AssociationPosteriorPlotter {
 //
 //			}
 
-			TreeSet<Gene> genes = annotation.getGeneTree();
+
 //			for (Gene g : genes) {
 //				String geneid = g.getGeneId();
 //				if(geneid.equals("PUS10")){
@@ -75,7 +75,7 @@ public class AssociationPosteriorPlotter {
 //
 //			}
 
-
+			TreeSet<Gene> genes = annotation.getGeneTree();
 			Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
 			Gene geneStop = new Gene("", region.getChromosome(), Strand.POS, region.getStop(), region.getStop());
 			SortedSet<Gene> overlappingGenes = genes.subSet(geneStart, true, geneStop, true);

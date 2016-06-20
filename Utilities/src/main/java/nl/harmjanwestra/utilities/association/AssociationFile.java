@@ -19,6 +19,7 @@ public class AssociationFile {
 	private String model = null;
 
 	public ArrayList<AssociationResult> readTabFile(String pvaluefile, Feature region) throws IOException {
+		System.out.println("Reading tab file: " + pvaluefile);
 		HashSet<String> variantHash = new HashSet<String>();
 		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
 
@@ -76,10 +77,20 @@ public class AssociationFile {
 						String alleles = elems[allelescol];
 						String[] allelesArr = alleles.split(">");
 						f2.setAlleles(allelesArr);
-						f2.setMinorAllele(allelesArr[1]);
+						if(allelesArr.length < 2){
+							f2.setMinorAllele(allelesArr[0]);
+						} else {
+							f2.setMinorAllele(allelesArr[1]);
+						}
+
 						Double or = Double.parseDouble(elems[orcol]);
 
-						Double pval = Double.parseDouble(elems[pvalcol]); // need to check position...
+						Double pval = 1d;
+						try {
+							pval = Double.parseDouble(elems[pvalcol]);
+						} catch (NumberFormatException e) {
+
+						}
 						variantHash.add(variant);
 
 						f2.setName(elems[markercol]);
@@ -142,9 +153,10 @@ public class AssociationFile {
 
 
 	public ArrayList<AssociationResult> read(String file, Feature region) throws IOException {
-		if (file.endsWith("tab")) {
+		if (file.endsWith("tab") || file.endsWith("tab.gz")) {
 			return readTabFile(file, region);
 		}
+		System.out.println("Reading assoc file: " + file);
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
 
