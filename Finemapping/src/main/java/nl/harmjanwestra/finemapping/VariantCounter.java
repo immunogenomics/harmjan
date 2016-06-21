@@ -1,5 +1,6 @@
-package nl.harmjanwestra.finemapping.plots;
+package nl.harmjanwestra.finemapping;
 
+import nl.harmjanwestra.finemapping.plots.PlotterAccuracy;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -34,12 +35,13 @@ public class VariantCounter {
 		ArrayList<VCFVariant> seqpanel = new ArrayList<>();
 		String ln = tf.readLine();
 
-		double mafthreshold = 0.05;
+		double mafthreshold = 0.01;
 		double upperthreshold = 1;
 		double infothreshold = 0.8;
 
 		boolean includeId = false;
 		boolean includeIndels = true;
+
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
 		System.out.println(variantsOnICHash.size() + " total on IC");
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = new ArrayList<>();

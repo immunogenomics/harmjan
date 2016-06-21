@@ -1,4 +1,4 @@
-package nl.harmjanwestra.miscscripts;
+package nl.harmjanwestra.finemapping;
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;

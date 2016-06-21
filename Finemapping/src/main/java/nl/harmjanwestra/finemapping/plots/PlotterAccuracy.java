@@ -32,12 +32,12 @@ public class PlotterAccuracy {
 	int cr1col = 4;
 	int minorallele2col = 5;
 	int aleleles2col = 6;
-	int maf2col = 7;
+	public int maf2col = 7;
 	int cr2col = 8;
 	int dfcol = 9;
 	int samplecol = 10;
 	int rcol = 11;
-	int rsqlcol = 12;
+	public int rsqlcol = 12;
 	int betacol = 13;
 	int secol = 14;
 	int impqual1 = 15;
