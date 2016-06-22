@@ -69,21 +69,24 @@ public class BedFileReader {
 		TextFile tf = new TextFile(file, TextFile.R);
 
 		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
-		String[] elems = tf.readLineElems(splitpattern);
+		String ln = tf.readLine();
 
 		ArrayList<Feature> allFeatures = new ArrayList<Feature>();
-		while (elems != null) {
-			Feature f = parseElems(elems);
-			if (f != null) {
-				allFeatures.add(f);
+		while (ln != null) {
+			if (ln.startsWith("#") || ln.startsWith("track")) {
+
+			} else {
+				String[] elems = splitpattern.split(ln);
+				Feature f = parseElems(elems);
+				if (f != null) {
+					allFeatures.add(f);
+				}
 			}
-			elems = tf.readLineElems(splitpattern);
+			ln = tf.readLine();
 		}
 
 		tf.close();
-
 		Collections.sort(allFeatures, new FeatureComparator(false));
-
 		return allFeatures;
 	}
 

@@ -195,6 +195,7 @@ public class VCFCorrelator {
 		TextFile tfVCF2 = new TextFile(vcf2, TextFile.R);
 		String ln = tfVCF2.readLine();
 
+
 		while (ln != null) {
 			if (!ln.startsWith("#")) {
 
@@ -278,12 +279,13 @@ public class VCFCorrelator {
 				}
 				ctr2++;
 				if (ctr2 % 1000 == 0) {
-					System.out.println(ctr2 + " variants parsed from vcf2");
+					System.out.print(ctr2 + " variants parsed from vcf2\r");
 				}
 			}
 			ln = tfVCF2.readLine();
 		}
 		tfVCF2.close();
+		System.out.println();
 
 		// write variants that are not in variantlist
 		if (varsToTest != null) {

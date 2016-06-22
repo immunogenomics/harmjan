@@ -590,7 +590,7 @@ public class VCFVariant {
 	}
 
 	public double[][] getDosage() {
-		return dosages.toArray();
+		return getDosagesAsMatrix2D().toArray();
 	}
 
 	public double[][] getGenotypeDosage() {
@@ -1145,7 +1145,7 @@ public class VCFVariant {
 		DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 
 
-		DoubleMatrix2D odosages = dda.subMatrix(dosages, 0, genotypeProbabilies.rows() - 1, allele - 1, allele-1);
+		DoubleMatrix2D odosages = dda.subMatrix(dosages, 0, genotypeProbabilies.rows() - 1, allele - 1, allele - 1);
 
 		DoubleMatrix2D ogenotypeAlleles = new DenseDoubleMatrix2D(genotypeAlleles.rows(), genotypeAlleles.columns());
 		int alleleindex = allele - 1;
