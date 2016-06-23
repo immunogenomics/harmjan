@@ -33,6 +33,12 @@ public class LRTestOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("haplotype")
+				.desc("Determine haplotypes from variants and perform haplotype based test (warning: can only handle a limited number of haplotypes!)")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("i")
 				.hasArg()
 				.desc("Input VCF")
@@ -43,6 +49,13 @@ public class LRTestOptions {
 				.longOpt("maf")
 				.hasArg()
 				.desc("MAF threshold (default: 0.005)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("hapfreq")
+				.hasArg()
+				.desc("Haplotype frequency threshold (default: 0.01)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -110,6 +123,7 @@ public class LRTestOptions {
 
 		option = Option.builder("s")
 				.hasArg()
+				.longOpt("snplimit")
 				.desc("Limit to list of SNPs")
 				.build();
 		OPTIONS.addOption(option);
@@ -155,27 +169,13 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 	}
 
-	public enum ANALYSIS {
-		CONDITIONAL,
-		EXHAUSTIVE,
-		HAPLOTYPE,
-		NORMAL
-	}
-
-	private ANALYSIS analysisType = ANALYSIS.NORMAL;
-
-	private String conditional;
-	private double HWEPThreshold = 1E-5;
-
 	public boolean assumeNoMissingData;
 	public boolean testMultiAllelicVariantsIndependently;
 	public boolean splitMultiAllelicIntoMultipleVariants;
+	private ANALYSIS analysisType = ANALYSIS.NORMAL;
+	private String conditional;
+	private double HWEPThreshold = 1E-5;
 	private boolean haplotypeAnalysis;
-
-	public String getConditional() {
-		return conditional;
-	}
-
 	private String vcf;
 	private String outputdir;
 	private String diseaseStatusFile;
@@ -191,7 +191,7 @@ public class LRTestOptions {
 	private String covariatesToInclude;
 	private String bedfile;
 	private int nrThreads = 1;
-
+	private double haplotypeFrequencyThreshold = 0.01;
 	public LRTestOptions(String[] args) {
 
 		boolean run = true;
@@ -334,6 +334,10 @@ public class LRTestOptions {
 				covariatesToInclude = cmd.getOptionValue("includecov");
 			}
 
+			if (cmd.hasOption("hapfreq")) {
+				haplotypeFrequencyThreshold = Double.parseDouble(cmd.getOptionValue("hapfreq"));
+			}
+
 
 		} catch (ParseException e) {
 			e.printStackTrace();
@@ -345,6 +349,14 @@ public class LRTestOptions {
 			System.exit(-1);
 		}
 
+	}
+
+	public double getHaplotypeFrequencyThreshold() {
+		return haplotypeFrequencyThreshold;
+	}
+
+	public String getConditional() {
+		return conditional;
 	}
 
 	public int getNrThreads() {
@@ -399,6 +411,10 @@ public class LRTestOptions {
 		return maxIter;
 	}
 
+	public void setMaxIter(int maxIter) {
+		this.maxIter = maxIter;
+	}
+
 	public double getMafthresholdD() {
 		return mafthresholdD;
 	}
@@ -413,16 +429,19 @@ public class LRTestOptions {
 		System.exit(-1);
 	}
 
-	public void setMaxIter(int maxIter) {
-		this.maxIter = maxIter;
-	}
-
 	public double getHWEPThreshold() {
 		return HWEPThreshold;
 	}
 
 	public ANALYSIS getAnalysisType() {
 		return analysisType;
+	}
+
+	public enum ANALYSIS {
+		CONDITIONAL,
+		EXHAUSTIVE,
+		HAPLOTYPE,
+		NORMAL
 	}
 
 

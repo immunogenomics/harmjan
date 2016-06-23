@@ -792,7 +792,7 @@ public class AssociationPlotterOld {
 
 								ArrayList<Pair<Integer, Double>> mafs = new ArrayList<Pair<Integer, Double>>();
 								for (AssociationResult p : associationResults) {
-									Pair<Integer, Double> maf = new Pair<Integer, Double>(p.getSnp().getStart(), p.getMaf());
+									Pair<Integer, Double> maf = new Pair<Integer, Double>(p.getSnp().getStart(), p.getSnp().getMaf());
 									mafs.add(maf);
 								}
 

@@ -12,6 +12,7 @@ import umcg.genetica.containers.Triple;
 import umcg.genetica.math.stats.HWE;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.concurrent.Callable;
 
 /**
@@ -25,22 +26,25 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 	private DiseaseStatus[] finalDiseaseStatus;
 	private String ln;
 	private ArrayList<Feature> regions;
+	private HashSet<String> limitVariants;
 
 	public LRTestVariantQCTask() {
 	}
 
 	public LRTestVariantQCTask(String ln,
-							   ArrayList<Feature> regions,
-							   LRTestOptions options,
-							   boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
-							   DiseaseStatus[] finalDiseaseStatus,
-							   DoubleMatrix2D finalCovariates) {
+	                           ArrayList<Feature> regions,
+	                           LRTestOptions options,
+	                           boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
+	                           DiseaseStatus[] finalDiseaseStatus,
+	                           DoubleMatrix2D finalCovariates,
+	                           HashSet<String> limitVariants) {
 		this.regions = regions;
 		this.options = options;
 		this.ln = ln;
 		this.genotypeSamplesWithCovariatesAndDiseaseStatus = genotypeSamplesWithCovariatesAndDiseaseStatus;
 		this.finalDiseaseStatus = finalDiseaseStatus;
 		this.finalCovariates = finalCovariates;
+		this.limitVariants = limitVariants;
 	}
 
 	@Override
@@ -50,54 +54,62 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 		String variantChr = variant.getChr();
 		String variantId = variant.getId();
 
+		String varStr = variant.toString();
+
+
 		String variantPos = "" + variant.getPos();
 		boolean variantPassesQC = false;
 		double maf = 0;
 		double hwep = 0;
 		boolean overlap = false;
 		Double impqual = 0d;
-		if (!variantInRegion(variant)) {
-			variant = null;
-			ln = null;
-		} else {
-			variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus);
-			if (!variant.hasImputationDosages()) {
-				impqual = 1d;
-			} else if (variant.getAlleles().length > 2) {
-				VCFImputationQualScoreBeagle vbq = new VCFImputationQualScoreBeagle(variant, true);
-				impqual = vbq.doseR2();
-			} else {
-				VCFImputationQualScoreImpute vsq = new VCFImputationQualScoreImpute();
-				vsq.computeAutosomal(variant);
-				impqual = vsq.getImpinfo();
-			}
-			overlap = true;
-
-			if (impqual == null || impqual > options.getImputationqualitythreshold()) {
-				// parse the genotype, do some QC checks
-				Triple<int[], boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = filterAndRecodeGenotypes(
-						variant.getGenotypeAllelesAsMatrix2D(),
-						finalDiseaseStatus,
-						variant.getAlleles().length,
-						finalCovariates.rows());
-
-				Triple<Integer, Double, Double> qc = unfilteredGenotypeData.getRight();
-
-				maf = qc.getMiddle();
-				hwep = qc.getRight();
-
-				if (maf < options.getMafthresholdD() || hwep < options.getHWEPThreshold()) {
-					variant = null;
-				} else {
-					variantPassesQC = true;
-				}
-				ln = null;
-			} else {
+		boolean includedinlist = false;
+		if (limitVariants == null || limitVariants.contains(varStr)) {
+			if (!variantInRegion(variant)) {
 				variant = null;
 				ln = null;
-			}
-		}
+			} else {
+				variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus);
+				if (!variant.hasImputationDosages()) {
+					impqual = 1d;
+				} else if (variant.getAlleles().length > 2) {
+					VCFImputationQualScoreBeagle vbq = new VCFImputationQualScoreBeagle(variant, true);
+					impqual = vbq.doseR2();
+				} else {
+					VCFImputationQualScoreImpute vsq = new VCFImputationQualScoreImpute();
+					vsq.computeAutosomal(variant);
+					impqual = vsq.getImpinfo();
+				}
+				overlap = true;
 
+				if (impqual == null || impqual > options.getImputationqualitythreshold()) {
+					// parse the genotype, do some QC checks
+					Triple<int[], boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = filterAndRecodeGenotypes(
+							variant.getGenotypeAllelesAsMatrix2D(),
+							finalDiseaseStatus,
+							variant.getAlleles().length,
+							finalCovariates.rows());
+
+					Triple<Integer, Double, Double> qc = unfilteredGenotypeData.getRight();
+
+					maf = qc.getMiddle();
+					hwep = qc.getRight();
+
+					if (maf < options.getMafthresholdD() || hwep < options.getHWEPThreshold()) {
+						variant = null;
+					} else {
+						variantPassesQC = true;
+					}
+					ln = null;
+				} else {
+					variant = null;
+					ln = null;
+				}
+			}
+		} else {
+			variant = null;
+			ln = null;
+		}
 
 		String logln = variantChr
 				+ "\t" + variantPos

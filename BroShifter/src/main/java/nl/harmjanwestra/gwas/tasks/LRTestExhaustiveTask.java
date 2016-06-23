@@ -38,10 +38,10 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 	private int nrCovars;
 
 	public LRTestExhaustiveTask(ArrayList<VCFVariant> variants, int i, int j,
-								boolean[] genotypesWithCovariatesAndDiseaseStatus,
-								DiseaseStatus[] finalDiseaseStatus,
-								DoubleMatrix2D finalCovariates,
-								LRTestOptions options) {
+	                            boolean[] genotypesWithCovariatesAndDiseaseStatus,
+	                            DiseaseStatus[] finalDiseaseStatus,
+	                            DoubleMatrix2D finalCovariates,
+	                            LRTestOptions options) {
 		this.variants = variants;
 		this.snpid1 = i;
 		this.snpid2 = j;
@@ -139,10 +139,10 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 	}
 
 	private AssociationResultPairwise pruneAndTest(DoubleMatrix2D x,
-												   double[] y,
-												   int firstColumnToRemove,
-												   int lastColumnToRemove,
-												   LRTestTask testObj) throws IOException {
+	                                               double[] y,
+	                                               int firstColumnToRemove,
+	                                               int lastColumnToRemove,
+	                                               LRTestTask testObj) throws IOException {
 		LRTestTask lrt = new LRTestTask();
 		Pair<DoubleMatrix2D, boolean[]> pruned = lrt.removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X

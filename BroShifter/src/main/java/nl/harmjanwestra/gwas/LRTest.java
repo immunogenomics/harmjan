@@ -1,10 +1,12 @@
 package nl.harmjanwestra.gwas;
 
+import cern.colt.matrix.tbit.BitVector;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.gwas.tasks.LRTestExhaustiveTask;
+import nl.harmjanwestra.gwas.tasks.LRTestHaploTask;
 import nl.harmjanwestra.gwas.tasks.LRTestTask;
 import nl.harmjanwestra.gwas.tasks.LRTestVariantQCTask;
 import nl.harmjanwestra.utilities.association.AssociationFile;
@@ -90,33 +92,24 @@ public class LRTest {
 
 	public static void main(String[] args) {
 
-		String[] args2 = new String[]{
-				"-c", "/Data/tmp/2016-05-27/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
-				"-d", "/Data/tmp/2016-05-27/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
-				"-f", "/Data/tmp/2016-05-27/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
-				"-i", "/Data/tmp/2016-05-27/test.vcf",
-				"-e", "/Data/tmp/2016-05-27/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
-				"-r", "/Data/tmp/2016-05-27/AllICLoci.bed",
-				"-t", "1",
+
+		String[] args4 = new String[]{
+				"--gwas",
+				"--haplotype",
+				"-c", "D:\\tmp\\2016-06-23\\2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
+				"-d", "D:\\tmp\\2016-06-23\\2016-03-11-T1D-diseaseStatusWithPseudos.txt",
+				"-f", "D:\\tmp\\2016-06-23\\T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
+				"-i", "D:\\tmp\\2016-06-23\\T1DVCF.vcf",
+				"-e", "D:\\tmp\\2016-06-23\\T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
+				"-r", "D:\\tmp\\2016-06-23\\il2ra.txt",
+				"--snplimit","D:\\tmp\\2016-06-23\\limit.txt",
+				"-t", "4",
 				"-q", "0.3",
-				"-o", "/Data/tmp/2016-05-27/testout.txt"
+				"--splitmultiallelic",
+				"-o", "D:\\tmp\\2016-06-23\\testout.txt"
 		};
 
-		String[] args3 = new String[]{
-				"-c", "/Data/tmp/2016-06-10/covarmerged.txtmergedCovariates.txt",
-				"-d", "/Data/tmp/2016-06-10/covarmerged.txtmergeddisease.txt",
-				"-f", "/Data/tmp/2016-06-10/covarmerged.txtmergedfam.fam",
-//				"-i", "/Data/tmp/2016-06-10/RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-chr22.vcf.gz",
-				"-i", "/Data/tmp/2016-06-10/test.vcf",
-				"-r", "/Data/tmp/2016-06-10/loci.bed",
-//				"--exhaustive",
-//				"--maxiter", "5",
-				"-t", "1",
-				"-q", "0.3",
-				"-o", "/Data/tmp/2016-06-10/testout.txt"
-		};
-
-		LRTestOptions options = new LRTestOptions(args3);
+		LRTestOptions options = new LRTestOptions(args4);
 
 		try {
 			new LRTest(options);
@@ -140,10 +133,112 @@ public class LRTest {
 	private void testHaplotype() throws IOException {
 
 		ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt");
+//
+//		// scan all possible haplotypes
+//		for(int i=0;i<variants.size();i++){
+//
+//			BitMatrix matrix = new BitMatrix(variants.size(), 1);
+//			matrix.
+//		}
 
-		
+		System.out.println("Generating haplotype pairs from: " + variants.size() + " variants.");
+		// get a list of available haplotypes
+		ArrayList<BitVector[]> availableHaplotypePairs = new ArrayList<>();
+		HashSet<BitVector> availableHaplotypes = new HashSet<BitVector>();
+		CompletionService<BitVector[]> jobHandler = new ExecutorCompletionService<BitVector[]>(exService);
+		for (int i = 0; i < finalDiseaseStatus.length; i++) {
+			jobHandler.submit(new LRTestHaploTask(i, variants));
+		}
+
+		int returned = 0;
+		while (returned < finalDiseaseStatus.length) {
+			BitVector[] fut = new BitVector[0];
+			try {
+				fut = jobHandler.take().get();
+				availableHaplotypePairs.add(fut);
+				availableHaplotypes.add(fut[0]);
+				availableHaplotypes.add(fut[1]);
+
+				returned++;
+				if (availableHaplotypes.size() > 1E5) {
+					System.out.println("Can't work with this number of haplotypes..");
+					System.exit(-1);
+				}
 
 
+				System.out.print("Individual: " + returned + "\t" + availableHaplotypes.size() + " available haplotypes so far.\r");
+
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+
+
+		}
+
+		System.out.println("Individual: " + returned + "\t" + availableHaplotypes.size() + " available haplotypes so far.");
+
+		// now we have a collection of all haplotypes available in the data..
+		// determine their frequencies
+		// index haplotyoes
+		ArrayList<BitVector> haplotypelist = new ArrayList<>();
+		haplotypelist.addAll(availableHaplotypes);
+		HashMap<BitVector, Integer> index = new HashMap<BitVector, Integer>();
+		for (int b = 0; b < haplotypelist.size(); b++) {
+			index.put(haplotypelist.get(b), b);
+		}
+
+		double[] frequencies = new double[availableHaplotypes.size()];
+		for (int i = 0; i < finalDiseaseStatus.length; i++) {
+			BitVector[] haps = availableHaplotypePairs.get(i);
+			Integer index1 = index.get(haps[0]);
+			Integer index2 = index.get(haps[1]);
+			frequencies[index1]++;
+			frequencies[index2]++;
+		}
+
+		int totalalleles = finalDiseaseStatus.length * 2;
+		double frequencythreshold = options.getHaplotypeFrequencyThreshold();
+		int nrAboveThreshold = 0;
+		ArrayList<BitVector> selectedHaplotypes = new ArrayList<>();
+		for (int i = 0; i < frequencies.length; i++) {
+			double ctr = frequencies[i];
+
+			frequencies[i] /= totalalleles;
+			BitVector hap = haplotypelist.get(i);
+			int[] hapint = new int[variants.size()];
+			for (int q = 0; q < variants.size(); q++) {
+				if (hap.get(q)) {
+					hapint[q] = 1;
+				}
+			}
+			System.out.println(Strings.concat(hapint, Strings.space) + "\t" + frequencies[i] + "\t" + ctr);
+			if (frequencies[i] > frequencythreshold) {
+				nrAboveThreshold++;
+			}
+		}
+
+		System.out.println(nrAboveThreshold + " haplotypes with frequency > " + frequencythreshold);
+
+		System.out.println();
+
+		System.out.println("Allele frequencies: ");
+		for (int i = 0; i < variants.size(); i++) {
+			VCFVariant var = variants.get(i);
+			System.out.println(var.getAlleleFrequencies()[0] + "\t" + var.getAlleleFrequencies()[1]);
+		}
+
+		// perform univariate test
+		for(int i=0;i<selectedHaplotypes.size();i++){
+
+		}
+
+
+		// perform multivariate test
+
+		System.exit(0);
 	}
 
 	public void testNormal() throws IOException {
@@ -571,6 +666,7 @@ public class LRTest {
 				clearQueue(null, pvalout, i, null, jobHandler, assocResultsIter);
 				assocResults = assocResultsIter;
 				pvalout.close();
+				System.out.println("Done");
 			}
 			for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
 				// get variants in region
@@ -653,7 +749,8 @@ public class LRTest {
 					options,
 					genotypeSamplesWithCovariatesAndDiseaseStatus,
 					finalDiseaseStatus,
-					finalCovariates);
+					finalCovariates,
+					snpLimit);
 			jobHandler.submit(task);
 			linessubmitted++;
 			totalsubmitted++;
@@ -802,8 +899,8 @@ public class LRTest {
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-																	  Feature region,
-																	  ArrayList<VCFVariant> variantsInRegion) {
+	                                                                  Feature region,
+	                                                                  ArrayList<VCFVariant> variantsInRegion) {
 
 		AssociationResult topResult = null;
 		for (AssociationResult r : assocResults) {
@@ -841,9 +938,9 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-							int iter, ArrayList<VCFVariant> variants,
-							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
-							ArrayList<AssociationResult> associationResults) throws IOException {
+	                        int iter, ArrayList<VCFVariant> variants,
+	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
+	                        ArrayList<AssociationResult> associationResults) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -977,9 +1074,9 @@ public class LRTest {
 
 
 	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
-																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-																int firstColumnToRemove,
-																int lastColumnToRemove) {
+	                                                            ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+	                                                            int firstColumnToRemove,
+	                                                            int lastColumnToRemove) {
 		// get a random variant
 		// prepare the matrix
 		LRTestVariantQCTask lrq = new LRTestVariantQCTask();

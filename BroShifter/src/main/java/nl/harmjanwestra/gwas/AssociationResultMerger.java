@@ -243,7 +243,7 @@ public class AssociationResultMerger {
 				AssociationResult r = matrix[ref][index];
 				if (r != null) {
 					ln.append("\t").append(r.getSnp().getImputationQualityScore());
-					ln.append("\t").append(r.getMaf());
+					ln.append("\t").append(r.getSnp().getMaf());
 					ln.append("\t").append(Strings.concat(r.getBeta(), Strings.semicolon));
 					ln.append("\t").append(Strings.concat(r.getSe(), Strings.semicolon));
 					ln.append("\t").append(Strings.concat(r.getORs(), Strings.semicolon));

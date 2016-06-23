@@ -38,7 +38,6 @@ public class DeterminePositionWithinExhaustiveResults {
 //			outputfile = "D:\\tmp\\2016-06-19\\T1D-exhaustive-PositionOfTopConditionalEffects.txt";
 //			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
-
 			regionfile = "/Data/tmp/2016-06-20/TNFAIP3.bed";
 			assocfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-TNFAIP3-chr";
 			modelfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-chr";
