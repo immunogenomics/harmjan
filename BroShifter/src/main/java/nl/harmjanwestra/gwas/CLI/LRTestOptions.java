@@ -23,13 +23,13 @@ public class LRTestOptions {
 
 		option = Option.builder()
 				.longOpt("exhaustive")
-				.desc("Run pairwise conditional analysis (on all pairs in regions); pair vs null model that includes only covariates")
+				.desc("Run pairwise conditional analysisType (on all pairs in regions); pair vs null model that includes only covariates")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("conditional")
-				.desc("Run single variant conditional analysis (on all pairs in regions); null model includes conditional variant")
+				.desc("Run single variant conditional analysisType (on all pairs in regions); null model includes conditional variant")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -118,7 +118,7 @@ public class LRTestOptions {
 		option = Option.builder()
 				.longOpt("maxiter")
 				.hasArg()
-				.desc("Run iterative analysis until this number of iters")
+				.desc("Run iterative analysisType until this number of iters")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -155,13 +155,22 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 	}
 
+	public enum ANALYSIS {
+		CONDITIONAL,
+		EXHAUSTIVE,
+		HAPLOTYPE,
+		NORMAL
+	}
+
+	private ANALYSIS analysisType = ANALYSIS.NORMAL;
+
 	private String conditional;
 	private double HWEPThreshold = 1E-5;
-	private boolean exhaustivePairwiseAnalysis;
-	private boolean conditionalAnalysis;
+
 	public boolean assumeNoMissingData;
 	public boolean testMultiAllelicVariantsIndependently;
 	public boolean splitMultiAllelicIntoMultipleVariants;
+	private boolean haplotypeAnalysis;
 
 	public String getConditional() {
 		return conditional;
@@ -201,14 +210,14 @@ public class LRTestOptions {
 				bedfile = cmd.getOptionValue("r");
 			}
 
-			if(cmd.hasOption("nomissing")){
+			if (cmd.hasOption("nomissing")) {
 				assumeNoMissingData = true;
 			}
-			if(cmd.hasOption("testmultiallelicindepently")){
+			if (cmd.hasOption("testmultiallelicindepently")) {
 				testMultiAllelicVariantsIndependently = true;
 			}
 
-			if(cmd.hasOption("splitmultiallelic")){
+			if (cmd.hasOption("splitmultiallelic")) {
 				splitMultiAllelicIntoMultipleVariants = true;
 			}
 
@@ -305,9 +314,11 @@ public class LRTestOptions {
 			}
 
 			if (cmd.hasOption("exhaustive")) {
-				exhaustivePairwiseAnalysis = true;
+				analysisType = ANALYSIS.EXHAUSTIVE;
 			} else if (cmd.hasOption("conditional")) {
-				conditionalAnalysis = true;
+				analysisType = ANALYSIS.CONDITIONAL;
+			} else if (cmd.hasOption("haplotype")) {
+				analysisType = ANALYSIS.HAPLOTYPE;
 			}
 
 			if (cmd.hasOption("maxiter")) {
@@ -410,11 +421,9 @@ public class LRTestOptions {
 		return HWEPThreshold;
 	}
 
-	public boolean isExhaustivePairwiseAnalysis() {
-		return exhaustivePairwiseAnalysis;
+	public ANALYSIS getAnalysisType() {
+		return analysisType;
 	}
 
-	public boolean isConditionalAnalysis() {
-		return conditionalAnalysis;
-	}
+
 }

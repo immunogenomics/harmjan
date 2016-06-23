@@ -1168,6 +1168,10 @@ public class VCFVariant {
 		return output;
 	}
 
+	public boolean isPhased() {
+		return separator.equals("|");
+	}
+
 	public enum PARSE {
 		HEADER,
 		GENOTYPES,

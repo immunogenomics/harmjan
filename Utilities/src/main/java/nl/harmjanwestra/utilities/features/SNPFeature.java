@@ -9,6 +9,41 @@ public class SNPFeature extends Feature {
 	private double imputationQualScore;
 	private String[] alleles;
 	private String minorAllele;
+	private double maf;
+	private double hwep;
+	private double cr;
+
+	public double getImputationQualScore() {
+		return imputationQualScore;
+	}
+
+	public void setImputationQualScore(double imputationQualScore) {
+		this.imputationQualScore = imputationQualScore;
+	}
+
+	public double getMaf() {
+		return maf;
+	}
+
+	public void setMaf(double maf) {
+		this.maf = maf;
+	}
+
+	public double getHwep() {
+		return hwep;
+	}
+
+	public void setHwep(double hwep) {
+		this.hwep = hwep;
+	}
+
+	public double getCr() {
+		return cr;
+	}
+
+	public void setCr(double cr) {
+		this.cr = cr;
+	}
 
 	public SNPFeature() {
 

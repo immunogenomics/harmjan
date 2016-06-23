@@ -4,8 +4,13 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
+import nl.harmjanwestra.gwas.tasks.LRTestExhaustiveTask;
+import nl.harmjanwestra.gwas.tasks.LRTestTask;
+import nl.harmjanwestra.gwas.tasks.LRTestVariantQCTask;
 import nl.harmjanwestra.utilities.association.AssociationFile;
+import nl.harmjanwestra.utilities.association.AssociationFilePairwise;
 import nl.harmjanwestra.utilities.association.AssociationResult;
+import nl.harmjanwestra.utilities.association.AssociationResultPairwise;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
@@ -14,6 +19,7 @@ import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -48,21 +54,39 @@ public class LRTest {
 	private DoubleMatrix2D finalCovariates;
 	private DiseaseStatus[] finalDiseaseStatus;
 	private ProgressBar progressBar;
-	private Object nullModel;
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
 		System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
+
+		if (!initialize()) {
+			System.err.println("Something went wrong during initialization.. Please check the input.");
+			System.exit(-1);
+		}
+
 		exService = Executors.newFixedThreadPool(options.getNrThreads());
-		if (options.isConditionalAnalysis()) {
-			testConditional();
-		} else if (options.isExhaustivePairwiseAnalysis()) {
-			testExhaustivePairwise();
-		} else {
-			testNormal();
+		switch (options.getAnalysisType()) {
+			case CONDITIONAL:
+				System.out.println("Will perform conditional logistic regression");
+				testConditional();
+				break;
+			case EXHAUSTIVE:
+				System.out.println("Will perform exhaustive pairwise logistic regression");
+				testExhaustivePairwise();
+				break;
+			case HAPLOTYPE:
+				System.out.println("Will perform haplotype logistic regression");
+				testHaplotype();
+				break;
+			case NORMAL:
+				System.out.println("Will perform normal logistic regression");
+				testNormal();
+				break;
 		}
 		exService.shutdown();
+		System.exit(0);
 	}
+
 
 	public static void main(String[] args) {
 
@@ -113,90 +137,92 @@ public class LRTest {
 		}
 	}
 
+	private void testHaplotype() throws IOException {
+
+		ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt");
+
+		
+
+
+	}
+
 	public void testNormal() throws IOException {
-		System.out.println("Will perform logistic regression analysis");
 
-		boolean initialized = initialize();
-
-		// waitForEnter("Waiting for a response...");
-
-		if (initialized) {
-
-			ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt");
+		ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt");
 
 
-			// boot up threadpool
-			String condition = options.getConditional();
-			HashMap<Feature, Integer> conditionsPerIter = null;
-			if (condition != null) {
-				conditionsPerIter = new HashMap<Feature, Integer>();
-				String[] conditionalSNPs = condition.split(",");
-				for (int c = 0; c < conditionalSNPs.length; c++) {
-					String[] snpelems = conditionalSNPs[c].split("-");
-					Feature f = new Feature();
-					f.setChromosome(Chromosome.parseChr(snpelems[0]));
-					f.setStart(Integer.parseInt(snpelems[1]));
-					f.setStop(Integer.parseInt(snpelems[1]));
-					f.setName(snpelems[2]);
-					conditionsPerIter.put(f, c + 1);
-					System.out.println("Will condition on " + f.toString() + "-" + f.getName() + " in iteration " + (c + 1));
-				}
-				int maxNrIter = conditionsPerIter.size() + 1;
-				options.setMaxIter(maxNrIter);
-				System.out.println("Setting max iter to: " + maxNrIter);
+		// boot up threadpool
+		String condition = options.getConditional();
+		HashMap<Feature, Integer> conditionsPerIter = null;
+		if (condition != null) {
+			conditionsPerIter = new HashMap<Feature, Integer>();
+			String[] conditionalSNPs = condition.split(",");
+			for (int c = 0; c < conditionalSNPs.length; c++) {
+				String[] snpelems = conditionalSNPs[c].split("-");
+				Feature f = new Feature();
+				f.setChromosome(Chromosome.parseChr(snpelems[0]));
+				f.setStart(Integer.parseInt(snpelems[1]));
+				f.setStop(Integer.parseInt(snpelems[1]));
+				f.setName(snpelems[2]);
+				conditionsPerIter.put(f, c + 1);
+				System.out.println("Will condition on " + f.toString() + "-" + f.getName() + " in iteration " + (c + 1));
 			}
-
-
-			// keep a list of genotypes to condition on
-			int iter = 0;
-			ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
-
-			ArrayList<String> conditionalVariantIds = new ArrayList<String>();
-			AssociationFile associationFile = new AssociationFile();
-			String header = associationFile.getHeader();
-
-			submitted = 0;
-			returned = 0;
-
-			int alleleOffsetGenotypes = 0;
-			highestLog10p = 0;
-			LogisticRegressionResult nullmodelresult = null;
-			Integer nrNullColumns = null;
-			if (options.assumeNoMissingData) {
-				Pair<LogisticRegressionResult, Integer> nullmodelresultpair = getNullModel(variants.get(0), conditional, 1, 1 + (variants.get(0).getNrAlleles() - 1));
-				nrNullColumns = nullmodelresultpair.getRight();
-				nullmodelresult = nullmodelresultpair.getLeft();
-			}
-
-
-			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
-			for (int i = 0; i < variants.size(); i++) {
-				VCFVariant variant = variants.get(i);
-				// throw into a thread
-				// TODO: conditional on dosages is separate from conditional on genotypes.. ?
-				LRTestTask task = new LRTestTask(variant,
-						iter,
-						finalDiseaseStatus,
-						finalCovariates,
-						conditional,
-						alleleOffsetGenotypes,
-						options);
-
-				task.setResultNullmodel(nullmodelresult, nrNullColumns);
-
-				jobHandler.submit(task);
-
-				submitted++;
-			}
-
-			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
-			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
-			pvalout.writeln(header);
-			progressBar = new ProgressBar(submitted);
-			clearQueue(null, pvalout, iter, variants, jobHandler, null);
-			progressBar.close();
-			pvalout.close();
+			int maxNrIter = conditionsPerIter.size() + 1;
+			options.setMaxIter(maxNrIter);
+			System.out.println("Setting max iter to: " + maxNrIter);
 		}
+
+
+		// keep a list of genotypes to condition on
+		int iter = 0;
+		ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+
+		ArrayList<String> conditionalVariantIds = new ArrayList<String>();
+		AssociationFile associationFile = new AssociationFile();
+		String header = associationFile.getHeader();
+
+		submitted = 0;
+		returned = 0;
+
+		int alleleOffsetGenotypes = 0;
+		highestLog10p = 0;
+		LogisticRegressionResult nullmodelresult = null;
+		Integer nrNullColumns = null;
+		if (options.assumeNoMissingData) {
+			Pair<LogisticRegressionResult, Integer> nullmodelresultpair = getNullModel(variants.get(0), conditional, 1, 1 + (variants.get(0).getNrAlleles() - 1));
+			nrNullColumns = nullmodelresultpair.getRight();
+			nullmodelresult = nullmodelresultpair.getLeft();
+		}
+
+
+		CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
+		for (int i = 0; i < variants.size(); i++) {
+			VCFVariant variant = variants.get(i);
+			// throw into a thread
+			// TODO: conditional on dosages is separate from conditional on genotypes.. ?
+			LRTestTask task = new LRTestTask(variant,
+					iter,
+					finalDiseaseStatus,
+					finalCovariates,
+					conditional,
+					alleleOffsetGenotypes,
+					options);
+
+			task.setResultNullmodel(nullmodelresult, nrNullColumns);
+
+			jobHandler.submit(task);
+
+			submitted++;
+		}
+
+		TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
+		System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
+		pvalout.writeln(header);
+		progressBar = new ProgressBar(submitted);
+		clearQueue(null, pvalout, iter, variants, jobHandler, null);
+		progressBar.close();
+		pvalout.close();
+
 	}
 
 	private boolean initialize() throws IOException {
@@ -386,182 +412,177 @@ public class LRTest {
 
 	public void testConditional() throws IOException {
 
-		System.out.println("Will perform conditional analysis");
 
-		boolean initialized = initialize();
+		AssociationFile associationFile = new AssociationFile();
+		String header = associationFile.getHeader();
 
-		if (initialized) {
+		// boot up threadpool
 
-			AssociationFile associationFile = new AssociationFile();
-			String header = associationFile.getHeader();
-
-			// boot up threadpool
-
-			ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt");
+		ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt");
 
 
-			CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
+		CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
 
 
-			ArrayList<AssociationResult> assocResults = new ArrayList<>();
+		ArrayList<AssociationResult> assocResults = new ArrayList<>();
 
 
-			System.out.println("Iteration " + 0 + " starting. Model: y ~ SNP + covar.");
-			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + 0 + ".txt");
-			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + 0 + ".txt", TextFile.W);
-			TextFile logout = new TextFile(options.getOutputdir() + "gwas-" + 0 + "-log.txt.gz", TextFile.W);
-			pvalout.writeln(header);
+		System.out.println("Iteration " + 0 + " starting. Model: y ~ SNP + covar.");
+		System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + 0 + ".txt");
+		TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + 0 + ".txt", TextFile.W);
+		TextFile logout = new TextFile(options.getOutputdir() + "gwas-" + 0 + "-log.txt.gz", TextFile.W);
+		pvalout.writeln(header);
 
-			int variantCtr = 0;
-			submitted = 0;
-			returned = 0;
-			highestLog10p = 0;
+		int variantCtr = 0;
+		submitted = 0;
+		returned = 0;
+		highestLog10p = 0;
 
 
-			for (VCFVariant variant : allVariants) {
-				ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+		for (VCFVariant variant : allVariants) {
+			ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
 
-				LRTestTask task = new LRTestTask(variant,
-						0,
-						finalDiseaseStatus,
-						finalCovariates,
-						conditional,
-						0,
-						options);
+			LRTestTask task = new LRTestTask(variant,
+					0,
+					finalDiseaseStatus,
+					finalCovariates,
+					conditional,
+					0,
+					options);
 
-				jobHandler.submit(task);
+			jobHandler.submit(task);
 
-				submitted++;
-				if (submitted % 1000 == 0) {
-					clearQueue(logout, pvalout, 0, null, jobHandler, assocResults);
+			submitted++;
+			if (submitted % 1000 == 0) {
+				clearQueue(logout, pvalout, 0, null, jobHandler, assocResults);
+			}
+		}
+
+		// clean up the queue
+		clearQueue(logout, pvalout, 0, null, jobHandler, assocResults);
+		pvalout.close();
+		logout.close();
+
+		System.out.println("Initial mapping done. Now performing conditional analysis");
+		// run conditional per region..
+		// get iter0 results
+		// get best associated variant in region
+		// testNormal conditional on best variant
+
+		HashSet<Feature> visitedRegions = new HashSet<Feature>();
+		for (VCFVariant v : allVariants) {
+			for (int f = 0; f < bedRegions.size(); f++) {
+				if (v.asFeature().overlaps(bedRegions.get(f))) {
+					visitedRegions.add(bedRegions.get(f));
 				}
 			}
+		}
 
-			// clean up the queue
-			clearQueue(logout, pvalout, 0, null, jobHandler, assocResults);
-			pvalout.close();
-			logout.close();
+		System.out.println(visitedRegions.size() + " regions are present in association output.");
+		if (visitedRegions.isEmpty()) {
+			System.out.println("No more work to do");
 
-			System.out.println("Initial mapping done. Now performing conditional analysis");
-			// run conditional per region..
-			// get iter0 results
-			// get best associated variant in region
-			// testNormal conditional on best variant
+		} else {
+			ArrayList<Feature> remainingRegions = new ArrayList<>();
+			remainingRegions.addAll(visitedRegions);
 
-			HashSet<Feature> visitedRegions = new HashSet<Feature>();
-			for (VCFVariant v : allVariants) {
-				for (int f = 0; f < bedRegions.size(); f++) {
-					if (v.asFeature().overlaps(bedRegions.get(f))) {
-						visitedRegions.add(bedRegions.get(f));
-					}
-				}
+
+			System.out.println("Total number of iterations to run: " + options.getMaxIter());
+			ArrayList<ArrayList<VCFVariant>> conditionalVariants = new ArrayList<>();
+			for (int i = 0; i < remainingRegions.size(); i++) {
+				conditionalVariants.add(new ArrayList<>());
 			}
 
-			System.out.println(visitedRegions.size() + " regions are present in association output.");
-			if (visitedRegions.isEmpty()) {
-				System.out.println("No more work to do");
+			LRTestVariantQCTask tasktmp = new LRTestVariantQCTask();
+			TextFile modelsout = new TextFile(options.getOutputdir() + "gwas-conditional-models.txt", TextFile.W);
+			modelsout.writeln("Region\tIter\tModel");
+			TextFile topvariantsout = new TextFile(options.getOutputdir() + "gwas-topvariants.txt", TextFile.W);
+			topvariantsout.writeln("Region\tIter\tVariant\tPval");
 
-			} else {
-				ArrayList<Feature> remainingRegions = new ArrayList<>();
-				remainingRegions.addAll(visitedRegions);
+			for (int i = 1; i < options.getMaxIter(); i++) {
 
+				System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + i + ".txt");
+				pvalout = new TextFile(options.getOutputdir() + "gwas-" + i + ".txt", TextFile.W);
 
-				System.out.println("Total number of iterations to run: " + options.getMaxIter());
-				ArrayList<ArrayList<VCFVariant>> conditionalVariants = new ArrayList<>();
-				for (int i = 0; i < remainingRegions.size(); i++) {
-					conditionalVariants.add(new ArrayList<>());
-				}
+				pvalout.writeln(header);
 
-				LRTestVariantQCTask tasktmp = new LRTestVariantQCTask();
-				TextFile modelsout = new TextFile(options.getOutputdir() + "gwas-conditional-models.txt", TextFile.W);
-				modelsout.writeln("Region\tIter\tModel");
-				TextFile topvariantsout = new TextFile(options.getOutputdir() + "gwas-topvariants.txt", TextFile.W);
-				topvariantsout.writeln("Region\tIter\tVariant\tPval");
-
-				for (int i = 1; i < options.getMaxIter(); i++) {
-
-					System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + i + ".txt");
-					pvalout = new TextFile(options.getOutputdir() + "gwas-" + i + ".txt", TextFile.W);
-
-					pvalout.writeln(header);
-
-					// start new result array
-					ArrayList<AssociationResult> assocResultsIter = new ArrayList<>();
-					submitted = 0;
-					for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
-						// get variants in region
-						ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
-						Pair<VCFVariant, AssociationResult> bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion);
-
-						VCFVariant bestVariantLastIter = bestAssocLastIter.getLeft();
-						topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (i - 1) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
-						// get conditional variants for this region
-						ArrayList<VCFVariant> conditionalVariantsForRegion = conditionalVariants.get(regionId);
-						if (conditionalVariantsForRegion == null) {
-							conditionalVariantsForRegion = new ArrayList<>();
-						}
-						conditionalVariantsForRegion.add(bestVariantLastIter);
-
-						// now put the data in the correct data structure.. recode and whatever
-						ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
-
-
-//						String model = "";
-						LRTestVariantQCTask lqr = new LRTestVariantQCTask();
-						int alleleOffsetGenotypes = 0;
-						ArrayList<String> modelgenes = new ArrayList<>();
-						for (int c = 0; c < conditionalVariantsForRegion.size(); c++) {
-							VCFVariant variant = conditionalVariantsForRegion.get(c);
-							modelgenes.add(variant.toString());
-//							model += " + " + variant.getId();
-							conditional.add(new Pair<>(variant,
-									lqr.filterAndRecodeGenotypes(variant.getGenotypeAllelesAsMatrix2D(),
-											finalDiseaseStatus,
-											variant.getAlleles().length,
-											finalCovariates.rows())));
-							alleleOffsetGenotypes += variant.getAlleles().length - 1;
-						}
-						modelsout.writeln(remainingRegions.get(regionId).toString() + "\t" + i + "\t" + Strings.concat(modelgenes, Strings.semicolon));
-
-						int alleleOffsetDosages = 0;
-
-						for (int v = 0; v < variantsInRegion.size(); v++) {
-							// throw into a thread
-							// TODO: conditional on dosages is separate from conditional on genotypes.. ?
-							VCFVariant variant = variantsInRegion.get(v);
-							LRTestTask task = new LRTestTask(variant,
-									i,
-									finalDiseaseStatus,
-									finalCovariates,
-									conditional,
-									alleleOffsetGenotypes,
-									options);
-
-							jobHandler.submit(task);
-							submitted++;
-
-
-							if (submitted % 1000 == 0) {
-								clearQueue(null, pvalout, i, null, jobHandler, assocResultsIter);
-							}
-						}
-					}
-
-					clearQueue(null, pvalout, i, null, jobHandler, assocResultsIter);
-					assocResults = assocResultsIter;
-					pvalout.close();
-				}
+				// start new result array
+				ArrayList<AssociationResult> assocResultsIter = new ArrayList<>();
+				submitted = 0;
 				for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
 					// get variants in region
 					ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
 					Pair<VCFVariant, AssociationResult> bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion);
+
 					VCFVariant bestVariantLastIter = bestAssocLastIter.getLeft();
-					topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (options.getMaxIter() - 1) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
+					topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (i - 1) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
+					// get conditional variants for this region
+					ArrayList<VCFVariant> conditionalVariantsForRegion = conditionalVariants.get(regionId);
+					if (conditionalVariantsForRegion == null) {
+						conditionalVariantsForRegion = new ArrayList<>();
+					}
+					conditionalVariantsForRegion.add(bestVariantLastIter);
+
+					// now put the data in the correct data structure.. recode and whatever
+					ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+
+
+//						String model = "";
+					LRTestVariantQCTask lqr = new LRTestVariantQCTask();
+					int alleleOffsetGenotypes = 0;
+					ArrayList<String> modelgenes = new ArrayList<>();
+					for (int c = 0; c < conditionalVariantsForRegion.size(); c++) {
+						VCFVariant variant = conditionalVariantsForRegion.get(c);
+						modelgenes.add(variant.toString());
+//							model += " + " + variant.getId();
+						conditional.add(new Pair<>(variant,
+								lqr.filterAndRecodeGenotypes(variant.getGenotypeAllelesAsMatrix2D(),
+										finalDiseaseStatus,
+										variant.getAlleles().length,
+										finalCovariates.rows())));
+						alleleOffsetGenotypes += variant.getAlleles().length - 1;
+					}
+					modelsout.writeln(remainingRegions.get(regionId).toString() + "\t" + i + "\t" + Strings.concat(modelgenes, Strings.semicolon));
+
+					int alleleOffsetDosages = 0;
+
+					for (int v = 0; v < variantsInRegion.size(); v++) {
+						// throw into a thread
+						// TODO: conditional on dosages is separate from conditional on genotypes.. ?
+						VCFVariant variant = variantsInRegion.get(v);
+						LRTestTask task = new LRTestTask(variant,
+								i,
+								finalDiseaseStatus,
+								finalCovariates,
+								conditional,
+								alleleOffsetGenotypes,
+								options);
+
+						jobHandler.submit(task);
+						submitted++;
+
+
+						if (submitted % 1000 == 0) {
+							clearQueue(null, pvalout, i, null, jobHandler, assocResultsIter);
+						}
+					}
 				}
-				modelsout.close();
-				topvariantsout.close();
+
+				clearQueue(null, pvalout, i, null, jobHandler, assocResultsIter);
+				assocResults = assocResultsIter;
+				pvalout.close();
 			}
+			for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
+				// get variants in region
+				ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
+				Pair<VCFVariant, AssociationResult> bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion);
+				VCFVariant bestVariantLastIter = bestAssocLastIter.getLeft();
+				topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (options.getMaxIter() - 1) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
+			}
+			modelsout.close();
+			topvariantsout.close();
 		}
+
 	}
 
 	public ArrayList<VCFVariant> readVariants(String logfile) throws IOException {
@@ -678,104 +699,106 @@ public class LRTest {
 		System.out.println(variants.size() + "  variants finally included.");
 
 		log.close();
+
+		// why not sort :)
+		Collections.sort(variants, new VCFVariantComparator());
 		return variants;
 
 	}
 
 	public void testExhaustivePairwise() throws IOException {
 		System.out.println("Will perform exhaustive pairwise analysis");
-		boolean initialized = initialize();
-		if (initialized) {
-			// get a list of variants for the region
-			HashMap<Feature, ArrayList<VCFVariant>> variantsInRegions = new HashMap<Feature, ArrayList<VCFVariant>>();
-			HashSet<Feature> availableRegions = new HashSet<Feature>();
+
+		// get a list of variants for the region
+		HashMap<Feature, ArrayList<VCFVariant>> variantsInRegions = new HashMap<Feature, ArrayList<VCFVariant>>();
+		HashSet<Feature> availableRegions = new HashSet<Feature>();
 
 
-			ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt");
+		ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt");
 
-			if (allVariants.isEmpty()) {
-				System.out.println("Sorry. No work.");
-			} else {
-				for (int f = 0; f < bedRegions.size(); f++) {
-					Feature region = bedRegions.get(f);
-					for (VCFVariant variant : allVariants) {
-						if (variant.asFeature().overlaps(region)) {
-							ArrayList<VCFVariant> variants = variantsInRegions.get(region);
-							if (variants == null) {
-								variants = new ArrayList<>();
-							}
-							variants.add(variant);
-							variantsInRegions.put(region, variants);
-							availableRegions.add(region);
-						}
-					}
-				}
-
-				// combinatorial madness!
-				if (availableRegions.isEmpty() || variantsInRegions.isEmpty()) {
-					// print some fancy error message;
-					System.out.println("Sorry. No work.");
-				} else {
-					System.out.println(availableRegions.size() + " regions to query.");
-					CompletionService<AssociationResult> jobHandler = new ExecutorCompletionService<AssociationResult>(exService);
-
-					LogisticRegressionResult nullmodelresult = null;
-					Integer nrNullColumns = null;
-					if (options.assumeNoMissingData) {
-						System.out.println("Generating null model.");
-						Feature[] regionsStr = availableRegions.toArray(new Feature[0]);
-						ArrayList<VCFVariant> variants = variantsInRegions.get(regionsStr[0]);
-						Pair<LogisticRegressionResult, Integer> nullmodelresultpair = getNullModel(variants.get(0), null, 1, 1 + (variants.get(0).getNrAlleles() - 1));
-						nrNullColumns = nullmodelresultpair.getRight();
-						nullmodelresult = nullmodelresultpair.getLeft();
-					}
-
-					System.out.println("Submitting jobs");
-					int submitted = 0;
-					for (Feature region : availableRegions) {
+		if (allVariants.isEmpty()) {
+			System.out.println("Sorry. No work.");
+		} else {
+			for (int f = 0; f < bedRegions.size(); f++) {
+				Feature region = bedRegions.get(f);
+				for (VCFVariant variant : allVariants) {
+					if (variant.asFeature().overlaps(region)) {
 						ArrayList<VCFVariant> variants = variantsInRegions.get(region);
-						for (int i = 0; i < variants.size(); i++) {
-							for (int j = i + 1; j < variants.size(); j++) {
-								// submit job to queue;
-								LRTestExhaustiveTask lrtet = new LRTestExhaustiveTask(variants, i, j, genotypeSamplesWithCovariatesAndDiseaseStatus, finalDiseaseStatus, finalCovariates, options);
-								lrtet.setResultNullmodel(nullmodelresult, nrNullColumns);
-								jobHandler.submit(lrtet);
-								submitted++;
-
-							}
+						if (variants == null) {
+							variants = new ArrayList<>();
 						}
+						variants.add(variant);
+						variantsInRegions.put(region, variants);
+						availableRegions.add(region);
 					}
-
-					System.out.println("Submitted a total of " + submitted + " jobs");
-					ProgressBar pb = new ProgressBar(submitted);
-					int returned = 0;
-					TextFile pvalOut = new TextFile(options.getOutputdir() + "pairwise.txt.gz", TextFile.W);
-					AssociationFile assocFile = new AssociationFile();
-					assocFile.setPairWise(true);
-					pvalOut.writeln(assocFile.getHeader());
-					while (returned < submitted) {
-						try {
-							Future<AssociationResult> future = jobHandler.take();
-							if (future != null) {
-								AssociationResult result = future.get();
-								if (result != null) {
-									// write to disk
-									pvalOut.writeln(result.toString());
-								}
-							}
-							returned++;
-							pb.iterate();
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							e.printStackTrace();
-						}
-					}
-					pvalOut.close();
-					pb.close();
 				}
 			}
+
+			// combinatorial madness!
+			if (availableRegions.isEmpty() || variantsInRegions.isEmpty()) {
+				// print some fancy error message;
+				System.out.println("Sorry. No work.");
+			} else {
+				System.out.println(availableRegions.size() + " regions to query.");
+				CompletionService<AssociationResultPairwise> jobHandler = new ExecutorCompletionService<AssociationResultPairwise>(exService);
+
+				LogisticRegressionResult nullmodelresult = null;
+				Integer nrNullColumns = null;
+				if (options.assumeNoMissingData) {
+					System.out.println("Generating null model.");
+					Feature[] regionsStr = availableRegions.toArray(new Feature[0]);
+					ArrayList<VCFVariant> variants = variantsInRegions.get(regionsStr[0]);
+					Pair<LogisticRegressionResult, Integer> nullmodelresultpair = getNullModel(variants.get(0), null, 1, 1 + (variants.get(0).getNrAlleles() - 1));
+					nrNullColumns = nullmodelresultpair.getRight();
+					nullmodelresult = nullmodelresultpair.getLeft();
+				}
+
+				System.out.println("Submitting jobs");
+				int submitted = 0;
+				for (Feature region : availableRegions) {
+					ArrayList<VCFVariant> variants = variantsInRegions.get(region);
+					for (int i = 0; i < variants.size(); i++) {
+						for (int j = i + 1; j < variants.size(); j++) {
+							// submit job to queue;
+							LRTestExhaustiveTask lrtet = new LRTestExhaustiveTask(variants, i, j, genotypeSamplesWithCovariatesAndDiseaseStatus, finalDiseaseStatus, finalCovariates, options);
+							lrtet.setResultNullmodel(nullmodelresult, nrNullColumns);
+							jobHandler.submit(lrtet);
+							submitted++;
+
+						}
+					}
+				}
+
+				System.out.println("Submitted a total of " + submitted + " jobs");
+				ProgressBar pb = new ProgressBar(submitted);
+				int returned = 0;
+				TextFile pvalOut = new TextFile(options.getOutputdir() + "pairwise.txt.gz", TextFile.W);
+				AssociationFilePairwise assocFile = new AssociationFilePairwise();
+
+				pvalOut.writeln(assocFile.getHeader());
+				while (returned < submitted) {
+					try {
+						Future<AssociationResultPairwise> future = jobHandler.take();
+						if (future != null) {
+							AssociationResult result = future.get();
+							if (result != null) {
+								// write to disk
+								pvalOut.writeln(result.toString());
+							}
+						}
+						returned++;
+						pb.iterate();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						e.printStackTrace();
+					}
+				}
+				pvalOut.close();
+				pb.close();
+			}
 		}
+
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,

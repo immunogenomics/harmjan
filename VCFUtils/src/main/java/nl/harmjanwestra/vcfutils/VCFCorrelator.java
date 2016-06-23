@@ -104,7 +104,7 @@ public class VCFCorrelator {
 		threadPool.shutdown();
 	}
 
-	public void run(String vcf1, String vcf2, String variantsToTestFile, String out) throws IOException {
+	public void run(String vcf1, String vcf2, String variantsToTestFile, String out, boolean writemissingvariants) throws IOException {
 
 		// get samples in vcf1 and 2
 		// index samples
@@ -167,6 +167,7 @@ public class VCFCorrelator {
 		}
 
 		HashMap<String, VCFVariant> variantMap = new HashMap<String, VCFVariant>();
+		ArrayList<VCFVariant> variants1 = new ArrayList<VCFVariant>();
 		int ctr1 = 0;
 		while (data1.hasNext()) {
 			VCFVariant var = data1.next();
@@ -176,6 +177,7 @@ public class VCFCorrelator {
 				String varStr = var.toString();
 				if (varsToTest == null || varsToTest.contains(varStr)) {
 					variantMap.put(var.toString(), var);
+					variants1.add(var);
 				}
 			}
 			ctr1++;
@@ -288,6 +290,7 @@ public class VCFCorrelator {
 		System.out.println();
 
 		// write variants that are not in variantlist
+
 		if (varsToTest != null) {
 			for (String variant : varsToTest) {
 
@@ -324,8 +327,25 @@ public class VCFCorrelator {
 				}
 
 			}
-		}
+		} else if (writemissingvariants) {
+			for (VCFVariant var1 : variants1) {
+				String varstr = var1.toString();
+				if (!writtenVariants.contains(varstr)) {
+					String var1Str = "";
+					String var2Str = "";
+					String infoStr1 = null;
+					String infoStr2 = null;
 
+					varstr = var1.toString();
+					infoStr1 = "" + var1.getInfo().get("AR2");
+					var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
+					var2Str = null + "\t" + null + "\t" + 0;
+
+					ln = varstr + "\t" + var1Str + "\t" + var2Str + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + infoStr1 + "\t" + infoStr2;
+					tfot.writeln(ln);
+				}
+			}
+		}
 
 		tfot.close();
 	}

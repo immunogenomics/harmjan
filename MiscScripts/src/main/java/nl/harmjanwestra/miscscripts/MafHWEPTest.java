@@ -1,14 +1,4 @@
-package nl.harmjanwestra.gwas;
-
-import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Triple;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.FisherExactTest;
-
-import java.io.IOException;
-import java.util.ArrayList;
+package nl.harmjanwestra.miscscripts;
 
 /**
  * Created by Harm-Jan on 06/01/16.

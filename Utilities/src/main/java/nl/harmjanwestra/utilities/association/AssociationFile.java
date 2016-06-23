@@ -15,7 +15,7 @@ import java.util.HashSet;
  */
 public class AssociationFile {
 
-	private boolean pairWise;
+
 	private String model = null;
 
 	public ArrayList<AssociationResult> readTabFile(String pvaluefile, Feature region) throws IOException {
@@ -77,7 +77,7 @@ public class AssociationFile {
 						String alleles = elems[allelescol];
 						String[] allelesArr = alleles.split(">");
 						f2.setAlleles(allelesArr);
-						if(allelesArr.length < 2){
+						if (allelesArr.length < 2) {
 							f2.setMinorAllele(allelesArr[0]);
 						} else {
 							f2.setMinorAllele(allelesArr[1]);
@@ -107,32 +107,6 @@ public class AssociationFile {
 				}
 
 			}
-
-//			else {
-//				Chromosome chr = Chromosome.parseChr(elems[1]);
-//				if (region.getChromosome().equals(chr)) {
-//					String variant = elems[0] + "_" + elems[1] + "_" + elems[2];
-//					SNPFeature f2 = new SNPFeature();
-//					f2.setChromosome(chr);
-//					Integer position = Integer.parseInt(elems[2]);
-//					f2.setStart(position);
-//					f2.setStop(position);
-//					if (f2.overlaps(region)) {
-//
-//						Double pval = Double.parseDouble(elems[elems.length - 1]); // need to check position...
-//						variantHash.add(variant);
-//
-//						AssociationResult r = new AssociationResult();
-//						r.setSnp(f2);
-//						r.setPval(pval);
-//
-//
-//						output.add(r);
-//						pvalctr++;
-//					}
-//
-//				}
-//			}
 			elems = textfile.readLineElems(TextFile.tab);
 		}
 		textfile.close();
@@ -419,7 +393,7 @@ public class AssociationFile {
 						AssociationResult result = new AssociationResult();
 						result.setSnp(snp);
 						result.setN(n);
-						result.setMaf(maf);
+						snp.setMaf(maf);
 						result.setDevianceNull(deviancenull);
 						result.setDevianceGeno(deviancegeno);
 						result.setDf(df);
@@ -427,7 +401,7 @@ public class AssociationFile {
 						result.setSe(se);
 						result.setPval(pval);
 						result.setBf(bf);
-						result.setHWEP(hwep);
+						snp.setHwep(hwep);
 						result.setPosterior(posterior);
 						result.setRegion(assocregion);
 
@@ -445,75 +419,35 @@ public class AssociationFile {
 	}
 
 	public String getHeader() {
+
 		String str = "";
 		if (model != null) {
 			str = model + "\n";
 		}
-
-		if (pairWise) {
-			str += "#Chr1" +
-					"\tPos1" +
-					"\tId1" +
-					"\tCombinedId1" +
-					"\tChr2" +
-					"\tPos2" +
-					"\tId2" +
-					"\tCombinedId2" +
-					"\tAlleles1" +
-					"\tAlleles2" +
-					"\tMinorAllele1" +
-					"\tMinorAllele2" +
-					"\tImputationQualScore" +
-					"\tImputationQualScore2" +
-					"\tN" +
-					"\tMAF1" +
-					"\tMAF2" +
-					"\tHWEP" +
-					"\tHWEP2" +
-					"\tDistance" +
-					"\tLD(RSQ)" +
-					"\tLD(D')" +
-					"\tDevianceNull" +
-					"\tDevianceGeno" +
-					"\tDfNull" +
-					"\tDfAlt" +
-					"\tDiffDf" +
-					"\tBeta(Genotype)" +
-					"\tSE(Genotype)" +
-					"\tOR" +
-					"\tOR-Hi" +
-					"\tOR-Lo" +
-					"\tPval" +
-					"\tLog10(p)";
-		} else {
-			str += "#Chromosome" +
-					"\tPos" +
-					"\tId" +
-					"\tCombinedId" +
-					"\tAlleles" +
-					"\tMinorAllele" +
-					"\tImputationQualScore" +
-					"\tN" +
-					"\tMAF" +
-					"\tHWEP" +
-					"\tDevianceNull" +
-					"\tDevianceGeno" +
-					"\tDfNull" +
-					"\tDfAlt" +
-					"\tDiffDf" +
-					"\tBeta(Genotype)" +
-					"\tSE(Genotype)" +
-					"\tOR" +
-					"\tOR-Hi" +
-					"\tOR-Lo" +
-					"\tPval" +
-					"\tLog10(p)";
-		}
+		str += "#Chromosome" +
+				"\tPos" +
+				"\tId" +
+				"\tCombinedId" +
+				"\tAlleles" +
+				"\tMinorAllele" +
+				"\tImputationQualScore" +
+				"\tN" +
+				"\tMAF" +
+				"\tHWEP" +
+				"\tDevianceNull" +
+				"\tDevianceGeno" +
+				"\tDfNull" +
+				"\tDfAlt" +
+				"\tDiffDf" +
+				"\tBeta(Genotype)" +
+				"\tSE(Genotype)" +
+				"\tOR" +
+				"\tOR-Hi" +
+				"\tOR-Lo" +
+				"\tPval" +
+				"\tLog10(p)";
 
 		return str;
 	}
 
-	public void setPairWise(boolean pairWise) {
-		this.pairWise = pairWise;
-	}
 }

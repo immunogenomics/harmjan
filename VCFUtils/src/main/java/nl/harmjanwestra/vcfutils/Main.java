@@ -221,7 +221,6 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
-
 		option = Option.builder()
 				.desc("Chr splitter")
 				.longOpt("splitchr")
@@ -482,6 +481,13 @@ public class Main {
 				.desc("Keep overlapping variants or samples (for --merge or --filtersample; default: no)")
 				.build();
 		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("writemissing")
+				.desc("Write missing variants for --correlatevcf")
+				.build();
+		OPTIONS.addOption(option);
+
 
 		option = Option.builder()
 				.longOpt("updateimputationquals")
@@ -828,7 +834,7 @@ public class Main {
 				if (run) {
 					VCFCorrelator c = new VCFCorrelator();
 
-					c.run(input, v2, li, out);
+					c.run(input, v2, li, out, cmd.hasOption("writemissing"));
 
 				} else {
 					printHelp();

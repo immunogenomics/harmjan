@@ -1,7 +1,8 @@
-package nl.harmjanwestra.gwas;
+package nl.harmjanwestra.gwas.tasks;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
+import nl.harmjanwestra.gwas.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
@@ -125,7 +126,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 	}
 
 	// recalculate MAF, HWE, etc, using CASE/Control labels
-	Triple<int[], boolean[], Triple<Integer, Double, Double>> filterAndRecodeGenotypes(
+	public Triple<int[], boolean[], Triple<Integer, Double, Double>> filterAndRecodeGenotypes(
 			DoubleMatrix2D genotypeAlleles,
 			DiseaseStatus[] diseaseStatus,
 			int nrAlleles,

@@ -1,9 +1,10 @@
-package nl.harmjanwestra.gwas;
+package nl.harmjanwestra.gwas.tasks;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
-import nl.harmjanwestra.utilities.association.AssociationResult;
+import nl.harmjanwestra.gwas.DiseaseStatus;
+import nl.harmjanwestra.utilities.association.AssociationResultPairwise;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.math.DetermineLD;
@@ -23,7 +24,7 @@ import java.util.concurrent.Callable;
 /**
  * Created by hwestra on 5/24/16.
  */
-public class LRTestExhaustiveTask implements Callable<AssociationResult> {
+public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise> {
 
 	private final boolean[] genotypesWithCovariatesAndDiseaseStatus;
 	private final DiseaseStatus[] finalDiseaseStatus;
@@ -51,7 +52,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 	}
 
 	@Override
-	public AssociationResult call() throws Exception {
+	public AssociationResultPairwise call() throws Exception {
 
 		VCFVariant variant1 = variants.get(snpid1);
 		VCFVariant variant2 = variants.get(snpid2);
@@ -95,7 +96,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 		double[] y = xandy.getRight();
 		DoubleMatrix2D x = xandy.getLeft();
 
-		AssociationResult output = pruneAndTest(x, y, 1, 1 + numberOfColumns, taskObj);
+		AssociationResultPairwise output = pruneAndTest(x, y, 1, 1 + numberOfColumns, taskObj);
 
 		if (output == null) {
 			return null;
@@ -107,8 +108,8 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 		snp.setName(variant1.getId());
 		output.setSnp(snp);
 		output.setN(x.rows());
-		output.setMaf(maf1);
-		output.setHWEP(hwep1);
+		snp.setMaf(maf1);
+		snp.setHwep(hwep1);
 		snp.setImputationQualityScore(imputationqualityscore);
 		snp.setAlleles(variant1.getAlleles());
 		snp.setMinorAllele(variant1.getMinorAllele());
@@ -117,13 +118,11 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 		Double imputationqualityscore2 = variant2.getImputationQualityScore();
 		snp2.setName(variant2.getId());
 		output.setSnp2(snp2);
-		output.setMaf2(maf2);
-		output.setHWEP2(hwep2);
+		snp2.setMaf(maf2);
+		snp2.setHwep(hwep2);
 		snp2.setImputationQualityScore(imputationqualityscore2);
 		snp2.setAlleles(variant2.getAlleles());
 		snp2.setMinorAllele(variant2.getMinorAllele());
-
-		output.setPairWise(true);
 
 		// calculate the ld between the variants :)
 		DetermineLD ldcalc = new DetermineLD();
@@ -139,11 +138,11 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 		return output;
 	}
 
-	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-										   double[] y,
-										   int firstColumnToRemove,
-										   int lastColumnToRemove,
-										   LRTestTask testObj) throws IOException {
+	private AssociationResultPairwise pruneAndTest(DoubleMatrix2D x,
+												   double[] y,
+												   int firstColumnToRemove,
+												   int lastColumnToRemove,
+												   LRTestTask testObj) throws IOException {
 		LRTestTask lrt = new LRTestTask();
 		Pair<DoubleMatrix2D, boolean[]> pruned = lrt.removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
@@ -174,7 +173,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResult> {
 			}
 		}
 
-		AssociationResult result = new AssociationResult();
+		AssociationResultPairwise result = new AssociationResultPairwise();
 
 		if (nrRemaining == 0) {
 			return result;

@@ -23,7 +23,7 @@ import java.util.concurrent.Callable;
 /**
  * Created by hwestra on 6/1/15.
  */
-public class LogitTestR implements Callable<Boolean> {
+public class LRTestR implements Callable<Boolean> {
 
 	private final static boolean lingpipe = false;
 	private final String vcf;
@@ -42,18 +42,18 @@ public class LogitTestR implements Callable<Boolean> {
 	boolean runIterative = false;
 	private ArrayList<Feature> bedRegions;
 
-	public LogitTestR(String vcf,
-	                  String outputdir,
-	                  String diseaseStatusFile,
-	                  String covariateFile,
-	                  HashSet<String> covariatesToInclude,
-	                  HashSet<String> snpLimit,
-	                  String samplesToExclude,
-	                  String famfile,
-	                  boolean imputationqualityfilter,
-	                  double imputationqualitythreshold,
-	                  int minNObservedAllele,
-	                  int threadnum) {
+	public LRTestR(String vcf,
+				   String outputdir,
+				   String diseaseStatusFile,
+				   String covariateFile,
+				   HashSet<String> covariatesToInclude,
+				   HashSet<String> snpLimit,
+				   String samplesToExclude,
+				   String famfile,
+				   boolean imputationqualityfilter,
+				   double imputationqualitythreshold,
+				   int minNObservedAllele,
+				   int threadnum) {
 		this.vcf = vcf;
 		this.outputdir = outputdir;
 		this.diseaseStatusFile = diseaseStatusFile;

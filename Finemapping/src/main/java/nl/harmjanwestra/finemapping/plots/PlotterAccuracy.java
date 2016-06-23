@@ -101,22 +101,31 @@ public class PlotterAccuracy {
 
 	public void plotCorr() throws IOException, DocumentException {
 		String[] files = new String[]{
-				"/Data/tmp/2016-05-23/T1D/T1D-EUR-merged.txt",
-				"/Data/tmp/2016-05-23/T1D/T1D-COSMO-merged.txt",
-				"/Data/tmp/2016-05-23/T1D/T1D-HRC-COSMO-merged.txt",
-				"/Data/tmp/2016-05-23/T1D/T1D-HRC-HRC-w100kb-merged.txt",
-				"/Data/tmp/2016-05-23/T1D/T1D-HRC-COSMO-w100kb-merged.txt"
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/T1D-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/T1D-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/T1D-HRC-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/T1D-HRC-w100kb.txt"
 		};
+		String diseaseprefix = "T1D";
 
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-HRC-w100kb", "HRC-COSMO-w100kb"};
+//		files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/RA-EUR.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/RA-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/RA-HRC-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/RA-HRC-w100kb.txt"
+//		};
+//		diseaseprefix = "RA";
+
+		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-COSMO-w100kb"};
 		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
 
 		String[] files2 = new String[]{
 				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
 		};
-		String bedregions = "/Data/tmp/2016-05-23/AllICLoci.bed";
-		String outdir = "/Data/tmp/2016-05-23/T1D-plotsAccuracy/";
-
+		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
+		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/AccuracyPlots/";
+		double mafthreshold = 0.0;
 
 		boolean windows = false;
 
@@ -160,38 +169,87 @@ public class PlotterAccuracy {
 		boolean usemafthreshold = false;
 		boolean requireabovemaf = false;
 		boolean plotOnlyImputed = false;
-		double mafthreshold = 0.005;
 
 
 		includeindels = true;
 		usemafthreshold = true;
 		requireabovemaf = true;
 		plotOnlyImputed = true;
-		out = outdir + "plot1-rsquared-withindels-mafgt0.005." + ext;
+		out = outdir + diseaseprefix + "-plot1-imputedonly-rsquared-withindels-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 		includeindels = false;
 		usemafthreshold = true;
 		requireabovemaf = true;
 		plotOnlyImputed = true;
-		out = outdir + "plot1-rsquared-withoutindels-mafgt0.005." + ext;
+		out = outdir + diseaseprefix + "-plot1-imputedonly-rsquared-withoutindels-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 		includeindels = true;
 		usemafthreshold = true;
 		requireabovemaf = true;
 		plotOnlyImputed = true;
-		out = outdir + "plot1-impqual-withindels-mafgt0.005." + ext;
+		out = outdir + diseaseprefix + "-plot1-imputedonly-impqual-withindels-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 		includeindels = false;
 		usemafthreshold = true;
 		requireabovemaf = true;
 		plotOnlyImputed = true;
-		out = outdir + "plot1-impqual-withoutindels-mafgt0.005." + ext;
+		out = outdir + diseaseprefix + "-plot1-imputedonly-impqual-withoutindels-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
-//		out = outdir + "plot1-rsquared-unfiltered." + ext;
+
+		// include unimputed variants as well
+		includeindels = true;
+		usemafthreshold = true;
+		requireabovemaf = true;
+		plotOnlyImputed = false;
+		out = outdir + diseaseprefix + "-plot1-rsquared-withindels-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+
+		includeindels = false;
+		usemafthreshold = true;
+		requireabovemaf = true;
+		plotOnlyImputed = false;
+		out = outdir + diseaseprefix + "-plot1-rsquared-withoutindels-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+
+		includeindels = true;
+		usemafthreshold = true;
+		requireabovemaf = true;
+		plotOnlyImputed = false;
+		out = outdir + diseaseprefix + "-plot1-impqual-withindels-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+
+		includeindels = false;
+		usemafthreshold = true;
+		requireabovemaf = true;
+		plotOnlyImputed = false;
+		out = outdir + diseaseprefix + "-plot1-impqual-withoutindels-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+// out = outdir + "plot1-rsquared-unfiltered." + ext;
 //		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 //
 //		out = outdir + "plot2-rsquared-unfiltered." + ext;
@@ -444,13 +502,13 @@ public class PlotterAccuracy {
 	}
 
 	public void plot1(String[] files, String[] labels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
@@ -521,8 +579,8 @@ public class PlotterAccuracy {
 		vals = null;
 		Grid grid = new Grid(width, height, 1, 1, 100, 100);
 		ScatterplotPanel panel = new ScatterplotPanel(1, 1);
-		panel.setData(x, y);
-		Range range = new Range(0, 0, maxSize, 1);
+		panel.setData(y, x);
+		Range range = new Range(0, 0, 1, maxSize);
 		range.roundX();
 		panel.setDataRange(range);
 		panel.setDatasetLabels(labels);
@@ -552,13 +610,13 @@ public class PlotterAccuracy {
 	}
 
 	public void plot2(String[] files, String[] datasetLabels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 2: x-axis maf, y-axis correlation (boxplot)
 
@@ -688,13 +746,13 @@ public class PlotterAccuracy {
 	}
 
 	public void plot3(String[] files, String[] datasetLabels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions) throws IOException, DocumentException {
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions) throws IOException, DocumentException {
 		//			// plot 3: maf vs maf
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {
@@ -752,13 +810,13 @@ public class PlotterAccuracy {
 	}
 
 	public void plot4(String[] files, String[] datasetLabels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions) throws IOException, DocumentException {
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions) throws IOException, DocumentException {
 		//			// plot 3: impqual vs beta
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {
@@ -814,13 +872,13 @@ public class PlotterAccuracy {
 	}
 
 	public void plot5(String[] files, String[] datasetLabels, String out, int col,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions) throws IOException, DocumentException {
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions) throws IOException, DocumentException {
 		//			// plot 3: impqual vs beta
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {

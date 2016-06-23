@@ -1,4 +1,4 @@
-package nl.harmjanwestra.gwas;
+package nl.harmjanwestra.gwas.tasks;
 
 import JSci.maths.ArrayMath;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
@@ -6,6 +6,7 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
+import nl.harmjanwestra.gwas.DiseaseStatus;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.features.Chromosome;
 import nl.harmjanwestra.utilities.features.SNPFeature;
@@ -94,7 +95,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		if (result == null) {
 			return new Triple<>(null, null, null);
 		}
-		result.setHWEP(hwep);
+
+		result.getSnp().setHwep(hwep);
+
 		//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
 		String output = variant.getId()
 				+ "\t" + variant.getChr()
@@ -267,7 +270,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		snp.setName(variant.getId());
 		result.setSnp(snp);
 		result.setN(x.rows());
-		result.setMaf(maf);
+		snp.setMaf(maf);
 
 		Double imputationqualityscore = variant.getImputationQualityScore();
 		snp.setImputationQualityScore(imputationqualityscore);
@@ -349,7 +352,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						subsnp.setName(snp.getName() + "_" + snp.getAlleles()[a + 1]);
 						subresult.setSnp(subsnp);
 						subresult.setN(x.rows());
-						subresult.setMaf(maf);
+						subsnp.setMaf(maf);
 
 						double devx = resultX.getDeviance();
 						double devnull = resultCovars.getDeviance();
@@ -445,8 +448,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			double deltaDeviance = devnull - devx;
 			int df = x.columns() - nrCovars;
 			double p = ChiSquare.getP(df, deltaDeviance);
-//				log10p = Math.abs((-Math.log10(p)));
-
 
 			result.setDevianceNull(devnull);
 			result.setDevianceGeno(devx);

@@ -175,11 +175,12 @@ public class VCFBedFilter {
 				e.printStackTrace();
 			}
 		}
+		System.out.print(lnnum + " lines parsed. " + submitted + " submitted. " + written + " written. " + returned + " returned \r");
 
 		vcfoutf.close();
 		vcfoutf2.close();
 		vcftf.close();
-
+		threadPool.shutdown();
 
 	}
 
