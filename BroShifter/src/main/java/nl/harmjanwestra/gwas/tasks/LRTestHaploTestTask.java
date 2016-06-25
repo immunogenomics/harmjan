@@ -32,6 +32,7 @@ public class LRTestHaploTestTask {
 
 	public Triple<String, AssociationResult, VCFVariant> calc(
 			BitVector haplotypeToTest,
+			BitVector re,
 			ArrayList<BitVector> allHaplotypes,
 			ArrayList<BitVector[]> sampleData,
 			DiseaseStatus[] finalDiseaseStatus,
@@ -351,6 +352,7 @@ public class LRTestHaploTestTask {
 
 		DoubleMatrix2D haplotypeData = null;
 		if (haplotypeToTest == null) {
+			// multivariate test
 			haplotypeData = new DenseDoubleMatrix2D(sampleData.size(), 1);
 			for (int i = 0; i < sampleData.size(); i++) {
 				BitVector[] haps = sampleData.get(i);
@@ -365,6 +367,7 @@ public class LRTestHaploTestTask {
 				}
 			}
 		} else {
+			// univariate test
 			haplotypeData = new DenseDoubleMatrix2D(sampleData.size(), allHaplotypes.size());
 			for (int i = 0; i < sampleData.size(); i++) {
 				BitVector[] haps = sampleData.get(i);

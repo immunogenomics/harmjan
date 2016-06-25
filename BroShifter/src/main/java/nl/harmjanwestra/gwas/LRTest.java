@@ -102,11 +102,27 @@ public class LRTest {
 				"-i", "D:\\tmp\\2016-06-23\\T1DVCF.vcf",
 				"-e", "D:\\tmp\\2016-06-23\\T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
 				"-r", "D:\\tmp\\2016-06-23\\il2ra.txt",
-				"--snplimit","D:\\tmp\\2016-06-23\\limit.txt",
+				"--snplimit", "D:\\tmp\\2016-06-23\\limit.txt",
 				"-t", "4",
 				"-q", "0.3",
 				"--splitmultiallelic",
 				"-o", "D:\\tmp\\2016-06-23\\testout.txt"
+		};
+
+		args4 = new String[]{
+				"--gwas",
+				"--haplotype",
+				"-c", "/Data/tmp/2016-06-24/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
+				"-d", "/Data/tmp/2016-06-24/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
+				"-f", "/Data/tmp/2016-06-24/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
+				"-i", "/Data/tmp/2016-06-24/T1DVCF.vcf",
+				"-e", "/Data/tmp/2016-06-24/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
+				"-r", "/Data/tmp/2016-06-24/il2ra.bed",
+				"--snplimit", "/Data/tmp/2016-06-24/limit.txt",
+				"-t", "4",
+				"-q", "0.3",
+				"--splitmultiallelic",
+				"-o", "/Data/tmp/2016-06-24/testout.txt"
 		};
 
 		LRTestOptions options = new LRTestOptions(args4);
@@ -147,7 +163,7 @@ public class LRTest {
 		HashSet<BitVector> availableHaplotypes = new HashSet<BitVector>();
 		CompletionService<BitVector[]> jobHandler = new ExecutorCompletionService<BitVector[]>(exService);
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
-			jobHandler.submit(new LRTestHaploTask(i, variants));
+			jobHandler.submit(new LRTestHaploTask(i, variants, 1d));
 		}
 
 		int returned = 0;
@@ -231,7 +247,7 @@ public class LRTest {
 		}
 
 		// perform univariate test
-		for(int i=0;i<selectedHaplotypes.size();i++){
+		for (int i = 0; i < selectedHaplotypes.size(); i++) {
 
 		}
 
@@ -899,8 +915,8 @@ public class LRTest {
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-	                                                                  Feature region,
-	                                                                  ArrayList<VCFVariant> variantsInRegion) {
+																	  Feature region,
+																	  ArrayList<VCFVariant> variantsInRegion) {
 
 		AssociationResult topResult = null;
 		for (AssociationResult r : assocResults) {
@@ -938,9 +954,9 @@ public class LRTest {
 
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-	                        int iter, ArrayList<VCFVariant> variants,
-	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
-	                        ArrayList<AssociationResult> associationResults) throws IOException {
+							int iter, ArrayList<VCFVariant> variants,
+							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
+							ArrayList<AssociationResult> associationResults) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -1074,9 +1090,9 @@ public class LRTest {
 
 
 	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
-	                                                            ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-	                                                            int firstColumnToRemove,
-	                                                            int lastColumnToRemove) {
+																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+																int firstColumnToRemove,
+																int lastColumnToRemove) {
 		// get a random variant
 		// prepare the matrix
 		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
