@@ -5,10 +5,7 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
-import nl.harmjanwestra.gwas.tasks.LRTestExhaustiveTask;
-import nl.harmjanwestra.gwas.tasks.LRTestHaploTask;
-import nl.harmjanwestra.gwas.tasks.LRTestTask;
-import nl.harmjanwestra.gwas.tasks.LRTestVariantQCTask;
+import nl.harmjanwestra.gwas.tasks.*;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationFilePairwise;
 import nl.harmjanwestra.utilities.association.AssociationResult;
@@ -79,6 +76,9 @@ public class LRTest {
 			case HAPLOTYPE:
 				System.out.println("Will perform haplotype logistic regression");
 				testHaplotype();
+				testHaplotype();
+				testHaplotype();
+				testHaplotype();
 				break;
 			case NORMAL:
 				System.out.println("Will perform normal logistic regression");
@@ -113,6 +113,7 @@ public class LRTest {
 				"--gwas",
 				"--haplotype",
 				"-c", "/Data/tmp/2016-06-24/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
+				"-c", "/Data/tmp/2016-06-24/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
 				"-d", "/Data/tmp/2016-06-24/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
 				"-f", "/Data/tmp/2016-06-24/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
 				"-i", "/Data/tmp/2016-06-24/T1DVCF.vcf",
@@ -122,7 +123,7 @@ public class LRTest {
 				"-t", "4",
 				"-q", "0.3",
 				"--splitmultiallelic",
-				"-o", "/Data/tmp/2016-06-24/testout.txt"
+				"-o", "/Data/tmp/2016-06-24/testoutnormal.txt"
 		};
 
 		LRTestOptions options = new LRTestOptions(args4);
@@ -148,41 +149,53 @@ public class LRTest {
 
 	private void testHaplotype() throws IOException {
 
+		options.setSplitMultiAllelic(true);
 		ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt");
-//
-//		// scan all possible haplotypes
-//		for(int i=0;i<variants.size();i++){
-//
-//			BitMatrix matrix = new BitMatrix(variants.size(), 1);
-//			matrix.
-//		}
 
 		System.out.println("Generating haplotype pairs from: " + variants.size() + " variants.");
 		// get a list of available haplotypes
-		ArrayList<BitVector[]> availableHaplotypePairs = new ArrayList<>();
-		HashSet<BitVector> availableHaplotypes = new HashSet<BitVector>();
-		CompletionService<BitVector[]> jobHandler = new ExecutorCompletionService<BitVector[]>(exService);
+
+		HashSet<BitVector> availableHaplotypeHash = new HashSet<BitVector>();
+		ArrayList<BitVector> availableHaplotypesList = new ArrayList<>();
+
+		CompletionService<Triple<BitVector[], Integer, Boolean>> jobHandler = new ExecutorCompletionService<Triple<BitVector[],Integer, Boolean>>(exService);
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
-			jobHandler.submit(new LRTestHaploTask(i, variants, 1d));
+			jobHandler.submit(new LRTestHaploTask(i, variants, options.getGenotypeProbThreshold()));
 		}
 
 		int returned = 0;
+		BitVector[][] haplotypePairs = new BitVector[finalDiseaseStatus.length][];
 		while (returned < finalDiseaseStatus.length) {
-			BitVector[] fut = new BitVector[0];
+
 			try {
-				fut = jobHandler.take().get();
-				availableHaplotypePairs.add(fut);
-				availableHaplotypes.add(fut[0]);
-				availableHaplotypes.add(fut[1]);
+				Triple<BitVector[], Integer, Boolean> fut = jobHandler.take().get();
+				BitVector[] haps = fut.getLeft();
+
+				if (!fut.getRight()) {
+					haplotypePairs[fut.getMiddle()] = haps;
+
+
+					if(!availableHaplotypeHash.contains(haps[0])){
+						availableHaplotypesList.add(haps[0]);
+						availableHaplotypeHash.add(haps[0]);
+					}
+					if(!availableHaplotypeHash.contains(haps[1])){
+						availableHaplotypesList.add(haps[1]);
+						availableHaplotypeHash.add(haps[1]);
+					}
+
+				} else {
+					haplotypePairs[fut.getMiddle()] = null;
+				}
 
 				returned++;
-				if (availableHaplotypes.size() > 1E5) {
+				if (availableHaplotypeHash.size() > 1E5) {
 					System.out.println("Can't work with this number of haplotypes..");
 					System.exit(-1);
 				}
 
 
-				System.out.print("Individual: " + returned + "\t" + availableHaplotypes.size() + " available haplotypes so far.\r");
+				System.out.print("Individual: " + returned + "\t" + availableHaplotypeHash.size() + " available haplotypes so far.\r");
 
 
 			} catch (InterruptedException e) {
@@ -190,49 +203,60 @@ public class LRTest {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
-
-
 		}
 
-		System.out.println("Individual: " + returned + "\t" + availableHaplotypes.size() + " available haplotypes so far.");
+		System.out.println("Individual: " + returned + "\t" + availableHaplotypeHash.size() + " available haplotypes so far.");
 
 		// now we have a collection of all haplotypes available in the data..
 		// determine their frequencies
 		// index haplotyoes
-		ArrayList<BitVector> haplotypelist = new ArrayList<>();
-		haplotypelist.addAll(availableHaplotypes);
+
+
 		HashMap<BitVector, Integer> index = new HashMap<BitVector, Integer>();
-		for (int b = 0; b < haplotypelist.size(); b++) {
-			index.put(haplotypelist.get(b), b);
+		for (int b = 0; b < availableHaplotypesList.size(); b++) {
+			index.put(availableHaplotypesList.get(b), b);
 		}
 
-		double[] frequencies = new double[availableHaplotypes.size()];
+		double[] haplotypeFrequencies = new double[availableHaplotypesList.size()];
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
-			BitVector[] haps = availableHaplotypePairs.get(i);
-			Integer index1 = index.get(haps[0]);
-			Integer index2 = index.get(haps[1]);
-			frequencies[index1]++;
-			frequencies[index2]++;
+			BitVector[] haps = haplotypePairs[i];
+			if (haps != null) {
+				Integer index1 = index.get(haps[0]);
+				Integer index2 = index.get(haps[1]);
+				haplotypeFrequencies[index1]++;
+				haplotypeFrequencies[index2]++;
+			}
 		}
 
 		int totalalleles = finalDiseaseStatus.length * 2;
 		double frequencythreshold = options.getHaplotypeFrequencyThreshold();
 		int nrAboveThreshold = 0;
-		ArrayList<BitVector> selectedHaplotypes = new ArrayList<>();
-		for (int i = 0; i < frequencies.length; i++) {
-			double ctr = frequencies[i];
 
-			frequencies[i] /= totalalleles;
-			BitVector hap = haplotypelist.get(i);
+
+		Double maxFreq = 0d;
+		BitVector referenceHaplotype = null;
+		LRTestHaploTestTask lrht = new LRTestHaploTestTask();
+		ArrayList<BitVector> haplotypeWithFrequencyAboveThreshold = new ArrayList<>();
+		for (int i = 0; i < availableHaplotypesList.size(); i++) {
+			double ctr = haplotypeFrequencies[i];
+
+			haplotypeFrequencies[i] /= totalalleles;
+			BitVector hap = availableHaplotypesList.get(i);
 			int[] hapint = new int[variants.size()];
 			for (int q = 0; q < variants.size(); q++) {
 				if (hap.get(q)) {
 					hapint[q] = 1;
 				}
 			}
-			System.out.println(Strings.concat(hapint, Strings.space) + "\t" + frequencies[i] + "\t" + ctr);
-			if (frequencies[i] > frequencythreshold) {
+
+			System.out.println(lrht.getHaplotypeDesc(availableHaplotypesList.get(i), variants) + "\t" + haplotypeFrequencies[i] + "\t" + ctr);
+			if (haplotypeFrequencies[i] > frequencythreshold) {
 				nrAboveThreshold++;
+				haplotypeWithFrequencyAboveThreshold.add(availableHaplotypesList.get(i));
+				if (haplotypeFrequencies[i] > maxFreq) {
+					referenceHaplotype = availableHaplotypesList.get(i);
+					maxFreq = haplotypeFrequencies[i];
+				}
 			}
 		}
 
@@ -243,19 +267,61 @@ public class LRTest {
 		System.out.println("Allele frequencies: ");
 		for (int i = 0; i < variants.size(); i++) {
 			VCFVariant var = variants.get(i);
-			System.out.println(var.getAlleleFrequencies()[0] + "\t" + var.getAlleleFrequencies()[1]);
+			System.out.println(var.getId() + "\t" + var.getAlleleFrequencies()[0] + "\t" + var.getAlleleFrequencies()[1]);
 		}
 
-		// perform univariate test
-		for (int i = 0; i < selectedHaplotypes.size(); i++) {
 
+		int start = variants.get(0).getPos();
+		int stop = variants.get(variants.size() - 1).getPos();
+		Chromosome chr = variants.get(0).getChrObj();
+
+
+		// perform univariate test
+		TextFile out = new TextFile(options.getOutputdir() + "haptest.txt", TextFile.W);
+		AssociationFile f = new AssociationFile();
+		out.writeln(f.getHeader());
+
+
+		for (int i = 0; i < haplotypeWithFrequencyAboveThreshold.size(); i++) {
+			BitVector haplotypetotest = haplotypeWithFrequencyAboveThreshold.get(i);
+			if (!haplotypetotest.equals(referenceHaplotype)) {
+				String haplotypename = lrht.getHaplotypeDesc(haplotypetotest, variants);
+				Triple<String, AssociationResult, VCFVariant> result = lrht.calc(haplotypetotest,
+						referenceHaplotype,
+						haplotypeWithFrequencyAboveThreshold,
+						haplotypePairs,
+						finalDiseaseStatus,
+						finalCovariates,
+						null,
+						start,
+						stop,
+						chr,
+						variants);
+				System.out.println(haplotypename + "\t" + haplotypeFrequencies[i] + "\t" + result.getMiddle().getLog10Pval());
+				out.writeln(result.getMiddle().toString());
+			}
 		}
 
 
 		// perform multivariate test
 
-		System.exit(0);
+		Triple<String, AssociationResult, VCFVariant> result = lrht.calc(null,
+				referenceHaplotype,
+				haplotypeWithFrequencyAboveThreshold,
+				haplotypePairs,
+				finalDiseaseStatus,
+				finalCovariates,
+				null,
+				start,
+				stop,
+				chr,
+				variants);
+		out.writeln(result.getMiddle().toString());
+		System.out.println("multivariate:\t" + result.getMiddle().getLog10Pval());
+		out.close();
+
 	}
+
 
 	public void testNormal() throws IOException {
 
@@ -319,7 +385,9 @@ public class LRTest {
 					alleleOffsetGenotypes,
 					options);
 
-			task.setResultNullmodel(nullmodelresult, nrNullColumns);
+			if (nullmodelresult != null) {
+				task.setResultNullmodel(nullmodelresult, nrNullColumns);
+			}
 
 			jobHandler.submit(task);
 

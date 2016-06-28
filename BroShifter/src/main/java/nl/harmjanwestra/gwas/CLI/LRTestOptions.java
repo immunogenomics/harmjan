@@ -99,6 +99,14 @@ public class LRTestOptions {
 
 		option = Option.builder("q")
 				.hasArg()
+				.longOpt("genotypeprobthreshold")
+				.desc("Genotype probability threshold for haplotype test")
+				.build();
+		OPTIONS.addOption(option);
+
+
+		option = Option.builder("q")
+				.hasArg()
 				.desc("Imputation quality threshold (default = 0.8)")
 				.build();
 		OPTIONS.addOption(option);
@@ -192,6 +200,8 @@ public class LRTestOptions {
 	private String bedfile;
 	private int nrThreads = 1;
 	private double haplotypeFrequencyThreshold = 0.01;
+	private double genotypeProbThreshold = 0;
+
 	public LRTestOptions(String[] args) {
 
 		boolean run = true;
@@ -257,6 +267,10 @@ public class LRTestOptions {
 
 			if (cmd.hasOption("e")) {
 				samplesToExclude = cmd.getOptionValue("e");
+			}
+
+			if (cmd.hasOption("genotypeprobthreshold")) {
+				genotypeProbThreshold = Double.parseDouble(cmd.getOptionValue("genotypeprobthreshold"));
 			}
 
 			if (cmd.hasOption("q")) {
@@ -435,6 +449,14 @@ public class LRTestOptions {
 
 	public ANALYSIS getAnalysisType() {
 		return analysisType;
+	}
+
+	public double getGenotypeProbThreshold() {
+		return genotypeProbThreshold;
+	}
+
+	public void setSplitMultiAllelic(boolean splitMultiAllelic) {
+		this.splitMultiAllelicIntoMultipleVariants = splitMultiAllelic;
 	}
 
 	public enum ANALYSIS {

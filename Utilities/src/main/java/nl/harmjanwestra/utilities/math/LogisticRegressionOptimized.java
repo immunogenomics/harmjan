@@ -13,8 +13,8 @@ import umcg.genetica.math.stats.ChiSquare;
 
 public class LogisticRegressionOptimized {
 
-	int max_iter = 50;
-	double EPSILON = 1E-3;
+	int max_iter = 100;
+	double EPSILON = 1E-6;
 	DoubleMatrix2D xtwx;
 	private double[] g;
 	private double[] numer;
@@ -23,6 +23,14 @@ public class LogisticRegressionOptimized {
 
 	public LogisticRegressionOptimized() {
 
+	}
+
+	public void setMax_iter(int max_iter) {
+		this.max_iter = max_iter;
+	}
+
+	public void setEPSILON(double EPSILON) {
+		this.EPSILON = EPSILON;
 	}
 
 	public LogisticRegressionOptimized(int maxiter) {
