@@ -76,9 +76,6 @@ public class LRTest {
 			case HAPLOTYPE:
 				System.out.println("Will perform haplotype logistic regression");
 				testHaplotype();
-				testHaplotype();
-				testHaplotype();
-				testHaplotype();
 				break;
 			case NORMAL:
 				System.out.println("Will perform normal logistic regression");
