@@ -5,7 +5,7 @@
  */
 package nl.harmjanwestra.goscializer;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import htsjdk.tribble.readers.TabixReader;
 import java.io.File;

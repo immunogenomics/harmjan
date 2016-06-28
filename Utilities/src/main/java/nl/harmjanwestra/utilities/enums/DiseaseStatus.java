@@ -1,4 +1,4 @@
-package nl.harmjanwestra.gwas;
+package nl.harmjanwestra.utilities.enums;
 
 /**
  * Created by hwestra on 5/27/16.

@@ -3,7 +3,7 @@ package nl.harmjanwestra.ngs;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;

@@ -1,7 +1,7 @@
 package nl.harmjanwestra.broshifter;
 
 import nl.harmjanwestra.broshifter.CLI.GoShifterOptions;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.features.Track;

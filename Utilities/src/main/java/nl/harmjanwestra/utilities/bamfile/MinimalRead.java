@@ -1,8 +1,8 @@
 package nl.harmjanwestra.utilities.bamfile;
 
 import htsjdk.samtools.Cigar;
-import nl.harmjanwestra.utilities.features.Chromosome;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 
 import java.util.Objects;
 

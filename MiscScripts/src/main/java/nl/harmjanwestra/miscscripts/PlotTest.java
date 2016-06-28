@@ -1,9 +1,9 @@
 package nl.harmjanwestra.miscscripts;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;

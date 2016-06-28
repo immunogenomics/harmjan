@@ -2,7 +2,7 @@ package nl.harmjanwestra.finemapping.plots;
 
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;

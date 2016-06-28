@@ -1,6 +1,6 @@
 package nl.harmjanwestra.polypeak.containers;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 
 /**
  * Created by hwestra on 1/7/15.

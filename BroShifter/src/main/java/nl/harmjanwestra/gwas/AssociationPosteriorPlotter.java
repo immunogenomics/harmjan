@@ -8,7 +8,7 @@ import nl.harmjanwestra.utilities.association.approximatebayesposterior.Approxim
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.AssociationPanel;
 import nl.harmjanwestra.utilities.graphics.panels.GenePanel;

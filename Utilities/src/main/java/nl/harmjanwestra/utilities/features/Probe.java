@@ -5,9 +5,7 @@
  */
 package nl.harmjanwestra.utilities.features;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.SortedSet;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 
 /**
  *

@@ -1,4 +1,4 @@
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;

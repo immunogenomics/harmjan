@@ -8,6 +8,8 @@ import nl.harmjanwestra.utilities.association.PosteriorPValFile;
 import nl.harmjanwestra.utilities.association.VCFRSquares;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.*;

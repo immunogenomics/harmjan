@@ -1,5 +1,7 @@
 package nl.harmjanwestra.utilities.graphics.panels;
 
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import umcg.genetica.containers.Pair;

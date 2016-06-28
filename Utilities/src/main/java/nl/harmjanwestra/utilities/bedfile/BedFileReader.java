@@ -5,6 +5,8 @@
  */
 package nl.harmjanwestra.utilities.bedfile;
 
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;

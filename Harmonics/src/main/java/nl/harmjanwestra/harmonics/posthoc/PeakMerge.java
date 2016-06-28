@@ -2,6 +2,8 @@ package nl.harmjanwestra.harmonics.posthoc;
 
 import JSci.maths.ArrayMath;
 import com.itextpdf.text.DocumentException;
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;

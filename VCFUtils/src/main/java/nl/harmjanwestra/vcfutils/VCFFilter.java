@@ -1,6 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.vcf.filter.AllelicDepthFilter;
 import nl.harmjanwestra.utilities.vcf.filter.GenotypeQualityFilter;

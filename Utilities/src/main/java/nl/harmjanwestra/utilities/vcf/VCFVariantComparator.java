@@ -1,6 +1,6 @@
 package nl.harmjanwestra.utilities.vcf;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 
 import java.util.Comparator;
 

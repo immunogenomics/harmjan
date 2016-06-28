@@ -1,10 +1,10 @@
 package nl.harmjanwestra.utilities.graphics;
 
 import com.itextpdf.text.DocumentException;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.graphics.themes.ComplementaryColor;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 import umcg.genetica.io.text.TextFile;

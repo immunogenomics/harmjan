@@ -3,7 +3,7 @@ package nl.harmjanwestra.finemapping;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;

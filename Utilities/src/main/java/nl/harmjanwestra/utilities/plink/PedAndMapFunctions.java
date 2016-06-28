@@ -1,6 +1,6 @@
 package nl.harmjanwestra.utilities.plink;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.Gpio;

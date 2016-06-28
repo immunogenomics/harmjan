@@ -1,7 +1,7 @@
 package nl.harmjanwestra.finemapping;
 
 import nl.harmjanwestra.finemapping.plots.PlotterAccuracy;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.io.text.TextFile;

@@ -18,7 +18,7 @@ import nl.harmjanwestra.utilities.bamfile.BamFileReader;
 import nl.harmjanwestra.utilities.bamfile.filters.FailsVendorQualityCheckFilter;
 import nl.harmjanwestra.utilities.bamfile.filters.MappingQualityUnavailableFilter;
 import nl.harmjanwestra.utilities.bamfile.filters.UnmappedReadFilter;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 

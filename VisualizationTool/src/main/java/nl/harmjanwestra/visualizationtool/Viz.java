@@ -6,9 +6,8 @@
 package nl.harmjanwestra.visualizationtool;
 
 import nl.harmjanwestra.utilities.features.Track;
-import nl.harmjanwestra.utilities.features.BedFileFeature;
-import nl.harmjanwestra.utilities.features.Chromosome;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.features.Feature;

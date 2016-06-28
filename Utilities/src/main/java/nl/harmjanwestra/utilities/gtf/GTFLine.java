@@ -5,8 +5,8 @@
  */
 package nl.harmjanwestra.utilities.gtf;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;

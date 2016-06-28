@@ -1,5 +1,8 @@
 package nl.harmjanwestra.utilities.features;
 
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
+
 import java.util.ArrayList;
 import java.util.NavigableSet;
 import java.util.TreeSet;

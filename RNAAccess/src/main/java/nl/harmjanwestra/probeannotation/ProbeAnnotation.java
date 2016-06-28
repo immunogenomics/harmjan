@@ -6,12 +6,12 @@
 package nl.harmjanwestra.probeannotation;
 
 import nl.harmjanwestra.utilities.features.Probe;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Exon;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Transcript;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import java.io.File;

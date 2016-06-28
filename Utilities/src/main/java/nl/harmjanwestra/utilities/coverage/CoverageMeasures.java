@@ -4,7 +4,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.filter.AggregateFilter;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.containers.Pair;
 

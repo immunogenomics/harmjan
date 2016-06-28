@@ -6,14 +6,12 @@
 package nl.harmjanwestra.polypeak;
 
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import java.io.File;
 import java.io.IOException;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
-import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import umcg.genetica.util.RunTimer;

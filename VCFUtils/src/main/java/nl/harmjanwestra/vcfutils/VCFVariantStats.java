@@ -1,7 +1,7 @@
 package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureTree;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;

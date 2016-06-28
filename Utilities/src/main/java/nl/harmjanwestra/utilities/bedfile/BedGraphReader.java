@@ -1,7 +1,7 @@
 package nl.harmjanwestra.utilities.bedfile;
 
 import nl.harmjanwestra.utilities.features.BedGraphFeature;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.io.text.TextFile;
 

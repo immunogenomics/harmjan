@@ -1,7 +1,7 @@
 package nl.harmjanwestra.vcfutils;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;

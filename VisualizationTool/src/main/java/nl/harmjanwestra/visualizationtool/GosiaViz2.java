@@ -6,7 +6,8 @@
 package nl.harmjanwestra.visualizationtool;
 
 import com.itextpdf.text.DocumentException;
-import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.io.Gpio;

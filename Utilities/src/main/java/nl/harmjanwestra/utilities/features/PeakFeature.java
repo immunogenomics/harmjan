@@ -1,5 +1,7 @@
 package nl.harmjanwestra.utilities.features;
 
+import nl.harmjanwestra.utilities.enums.Chromosome;
+
 /**
  * Created by hwestra on 8/31/15.
  */

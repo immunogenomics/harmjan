@@ -1,6 +1,6 @@
 package nl.harmjanwestra.utilities.genotypes;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.plink.PedAndMapFunctions;
 import nl.harmjanwestra.utilities.sets.FeatureSets;

@@ -1,8 +1,8 @@
 package nl.harmjanwestra.utilities.bedfile;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 
 /**
  * Created by hwestra on 1/6/15.

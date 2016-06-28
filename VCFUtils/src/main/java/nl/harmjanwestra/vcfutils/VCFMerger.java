@@ -3,7 +3,7 @@ package nl.harmjanwestra.vcfutils;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import com.gs.collections.api.list.MutableList;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;

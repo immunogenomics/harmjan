@@ -1,6 +1,6 @@
 package nl.harmjanwestra.miscscripts;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;

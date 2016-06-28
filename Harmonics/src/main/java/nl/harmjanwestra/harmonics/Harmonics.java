@@ -18,7 +18,7 @@ import nl.harmjanwestra.utilities.coverage.Coverage;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureMerger;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.CoveragePanel;

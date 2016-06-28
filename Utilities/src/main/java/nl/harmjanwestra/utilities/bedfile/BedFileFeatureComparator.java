@@ -6,7 +6,7 @@
 package nl.harmjanwestra.utilities.bedfile;
 
 import nl.harmjanwestra.utilities.features.BedFileFeature;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import java.util.Comparator;
 
 /**

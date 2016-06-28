@@ -1,6 +1,8 @@
 package nl.harmjanwestra.ngs.graphics;
 
 import com.itextpdf.text.DocumentException;
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;

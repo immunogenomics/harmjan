@@ -5,6 +5,7 @@ import nl.harmjanwestra.broshifter.CLI.BroShifterOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.*;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;

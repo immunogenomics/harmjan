@@ -1,7 +1,7 @@
 package nl.harmjanwestra.finemapping;
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;

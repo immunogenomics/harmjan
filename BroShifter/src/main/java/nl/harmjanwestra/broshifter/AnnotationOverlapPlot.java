@@ -7,6 +7,7 @@ import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.bedfile.BedGraphReader;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.*;

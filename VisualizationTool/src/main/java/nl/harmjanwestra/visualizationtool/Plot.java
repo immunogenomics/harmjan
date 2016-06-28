@@ -6,11 +6,11 @@
 package nl.harmjanwestra.visualizationtool;
 
 import com.itextpdf.text.DocumentException;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Exon;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Track;
 import nl.harmjanwestra.utilities.features.Transcript;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;

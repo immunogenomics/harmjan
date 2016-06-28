@@ -3,7 +3,7 @@ package nl.harmjanwestra.ngs;
 import htsjdk.samtools.*;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.FeatureMerger;

@@ -1,8 +1,8 @@
 package nl.harmjanwestra.utilities.peakfiles;
 
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.PeakFeature;
-import nl.harmjanwestra.utilities.features.Strand;
+import nl.harmjanwestra.utilities.enums.Strand;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 

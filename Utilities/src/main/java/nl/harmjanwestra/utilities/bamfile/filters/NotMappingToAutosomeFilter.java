@@ -2,7 +2,7 @@ package nl.harmjanwestra.utilities.bamfile.filters;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.filter.SamRecordFilter;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 
 /**
  * Created by hwestra on 10/13/15.

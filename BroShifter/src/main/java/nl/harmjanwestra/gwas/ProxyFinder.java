@@ -4,7 +4,7 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.gwas.CLI.ProxyFinderOptions;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;

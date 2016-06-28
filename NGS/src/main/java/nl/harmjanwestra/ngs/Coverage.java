@@ -9,7 +9,7 @@ import nl.harmjanwestra.utilities.bamfile.filters.FailsVendorQualityCheckFilter;
 import nl.harmjanwestra.utilities.bamfile.filters.MappingQualityUnavailableFilter;
 import nl.harmjanwestra.utilities.bamfile.filters.UnmappedReadFilter;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureMerger;
 import nl.harmjanwestra.utilities.graphics.Grid;

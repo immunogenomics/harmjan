@@ -3,7 +3,7 @@ package nl.harmjanwestra.utilities.graphics.panels;
 import JSci.maths.ArrayMath;
 import nl.harmjanwestra.utilities.coverage.Coverage;
 import nl.harmjanwestra.utilities.bamfile.MinimalRead;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;

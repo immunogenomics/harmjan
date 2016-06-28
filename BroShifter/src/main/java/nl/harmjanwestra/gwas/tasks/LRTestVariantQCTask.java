@@ -2,7 +2,7 @@ package nl.harmjanwestra.gwas.tasks;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
-import nl.harmjanwestra.gwas.DiseaseStatus;
+import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;

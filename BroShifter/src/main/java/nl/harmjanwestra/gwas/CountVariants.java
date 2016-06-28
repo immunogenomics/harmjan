@@ -2,7 +2,7 @@ package nl.harmjanwestra.gwas;
 
 import nl.harmjanwestra.gwas.CLI.CountVariantsOptions;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.io.text.TextFile;
 

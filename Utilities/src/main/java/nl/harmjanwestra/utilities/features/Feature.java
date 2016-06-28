@@ -5,6 +5,9 @@
  */
 package nl.harmjanwestra.utilities.features;
 
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
+
 import java.util.Objects;
 
 /**

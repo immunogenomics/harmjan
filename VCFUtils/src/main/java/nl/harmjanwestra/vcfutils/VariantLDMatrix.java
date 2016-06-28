@@ -2,7 +2,7 @@ package nl.harmjanwestra.vcfutils;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import com.itextpdf.text.DocumentException;
-import nl.harmjanwestra.utilities.features.Chromosome;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.LDPanel;

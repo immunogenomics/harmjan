@@ -3,6 +3,8 @@ package nl.harmjanwestra.gwas;
 import cern.jet.random.tdouble.StudentT;
 import nl.harmjanwestra.gwas.CLI.QTLTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationResult;
+import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
