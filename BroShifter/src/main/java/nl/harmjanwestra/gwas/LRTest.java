@@ -158,7 +158,7 @@ public class LRTest {
 		HashSet<BitVector> availableHaplotypeHash = new HashSet<BitVector>();
 		ArrayList<BitVector> availableHaplotypesList = new ArrayList<>();
 
-		CompletionService<Triple<BitVector[], Integer, Boolean>> jobHandler = new ExecutorCompletionService<Triple<BitVector[],Integer, Boolean>>(exService);
+		CompletionService<Triple<BitVector[], Integer, Boolean>> jobHandler = new ExecutorCompletionService<Triple<BitVector[], Integer, Boolean>>(exService);
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
 			jobHandler.submit(new LRTestHaploTask(i, variants, options.getGenotypeProbThreshold()));
 		}
@@ -175,11 +175,11 @@ public class LRTest {
 					haplotypePairs[fut.getMiddle()] = haps;
 
 
-					if(!availableHaplotypeHash.contains(haps[0])){
+					if (!availableHaplotypeHash.contains(haps[0])) {
 						availableHaplotypesList.add(haps[0]);
 						availableHaplotypeHash.add(haps[0]);
 					}
-					if(!availableHaplotypeHash.contains(haps[1])){
+					if (!availableHaplotypeHash.contains(haps[1])) {
 						availableHaplotypesList.add(haps[1]);
 						availableHaplotypeHash.add(haps[1]);
 					}
@@ -281,25 +281,24 @@ public class LRTest {
 		AssociationFile f = new AssociationFile();
 		out.writeln(f.getHeader());
 
-
 		for (int i = 0; i < haplotypeWithFrequencyAboveThreshold.size(); i++) {
 			BitVector haplotypetotest = haplotypeWithFrequencyAboveThreshold.get(i);
-			if (!haplotypetotest.equals(referenceHaplotype)) {
-				String haplotypename = lrht.getHaplotypeDesc(haplotypetotest, variants);
-				Triple<String, AssociationResult, VCFVariant> result = lrht.calc(haplotypetotest,
-						referenceHaplotype,
-						haplotypeWithFrequencyAboveThreshold,
-						haplotypePairs,
-						finalDiseaseStatus,
-						finalCovariates,
-						null,
-						start,
-						stop,
-						chr,
-						variants);
-				System.out.println(haplotypename + "\t" + haplotypeFrequencies[i] + "\t" + result.getMiddle().getLog10Pval());
-				out.writeln(result.getMiddle().toString());
-			}
+
+			String haplotypename = lrht.getHaplotypeDesc(haplotypetotest, variants);
+			Triple<String, AssociationResult, VCFVariant> result = lrht.calc(haplotypetotest,
+					referenceHaplotype,
+					haplotypeWithFrequencyAboveThreshold,
+					haplotypePairs,
+					finalDiseaseStatus,
+					finalCovariates,
+					null,
+					start,
+					stop,
+					chr,
+					variants);
+			System.out.println(haplotypename + "\t" + haplotypeFrequencies[i] + "\t" + result.getMiddle().getLog10Pval());
+			out.writeln(result.getMiddle().toString());
+
 		}
 
 
