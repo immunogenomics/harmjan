@@ -36,7 +36,8 @@ public class LRTestHaploTestTask {
 			BitVector[][] sampleData,
 			DiseaseStatus[] finalDiseaseStatus,
 			DoubleMatrix2D finalCovariates,
-			ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+			ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditionalVariants,
+			
 			int startpos,
 			int stoppos,
 			Chromosome chr,
@@ -69,7 +70,7 @@ public class LRTestHaploTestTask {
 		Pair<DoubleMatrix2D, double[]> xandy = prepareMatrices(
 				haplotypeData.getRight(),
 				qcdata.getLeft(),
-				conditional,
+				conditionalVariants,
 				finalDiseaseStatus,
 				finalCovariates
 		);
