@@ -6,9 +6,9 @@ import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
-import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
@@ -17,6 +17,7 @@ import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.math.stats.ChiSquare;
 import umcg.genetica.math.stats.Correlation;
+import umcg.genetica.text.Strings;
 import umcg.genetica.util.Primitives;
 
 import java.util.ArrayList;
@@ -32,12 +33,12 @@ public class LRTestHaploTestTask {
 	public Triple<String, AssociationResult, VCFVariant> calc(
 			BitVector haplotypeToTest,
 			BitVector refHaplotype,
-			ArrayList<BitVector> allHaplotypes,
+			ArrayList<BitVector> haplotypesToTest,
+			ArrayList<BitVector> conditionalHaplotypes,
 			BitVector[][] sampleData,
 			DiseaseStatus[] finalDiseaseStatus,
 			DoubleMatrix2D finalCovariates,
-			ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditionalVariants,
-			
+
 			int startpos,
 			int stoppos,
 			Chromosome chr,
@@ -48,11 +49,25 @@ public class LRTestHaploTestTask {
 		Pair<DoubleMatrix2D, DoubleMatrix2D> haplotypeData = getHaplotypeData(
 				haplotypeToTest,
 				refHaplotype,
-				allHaplotypes,
+				haplotypesToTest,
 				sampleData);
+
+
+		Pair<DoubleMatrix2D, DoubleMatrix2D> conditionalHaplotypeData = null;
+		if (conditionalHaplotypes != null) {
+			conditionalHaplotypeData = getHaplotypeData(
+					haplotypeToTest,
+					refHaplotype,
+					conditionalHaplotypes,
+					sampleData);
+		}
 
 		DoubleMatrix2D haplotypeAllelles = haplotypeData.getLeft(); // samples x 2
 		DoubleMatrix2D haplotypeDosages = haplotypeData.getRight(); // samples x nr alleles
+		DoubleMatrix2D conditionalHaplotypeDosages = null;
+		if (conditionalHaplotypeData != null) {
+			conditionalHaplotypeData.getRight();
+		}
 
 		// recode the genotypes to the same ordering as the covariate table
 		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
@@ -68,9 +83,9 @@ public class LRTestHaploTestTask {
 
 		// generate pseudocontrol genotypes
 		Pair<DoubleMatrix2D, double[]> xandy = prepareMatrices(
-				haplotypeData.getRight(),
+				haplotypeDosages,
 				qcdata.getLeft(),
-				conditionalVariants,
+				conditionalHaplotypeDosages,
 				finalDiseaseStatus,
 				finalCovariates
 		);
@@ -99,7 +114,6 @@ public class LRTestHaploTestTask {
 		snp.setImputationQualityScore(imputationqualityscore);
 
 
-
 		if (haplotypeToTest != null) {
 			snp.setAlleles(new String[]{getHaplotypeDesc(refHaplotype, variants), getHaplotypeDesc(haplotypeToTest, variants)});
 			snp.setName(getHaplotypeDesc(haplotypeToTest, variants));
@@ -107,9 +121,9 @@ public class LRTestHaploTestTask {
 		} else {
 			ArrayList<String> haplotypeNames = new ArrayList<>();
 			haplotypeNames.add(getHaplotypeDesc(refHaplotype, variants));
-			for (int q = 0; q < allHaplotypes.size(); q++) {
-				if (!allHaplotypes.get(q).equals(refHaplotype)) {
-					haplotypeNames.add(getHaplotypeDesc(allHaplotypes.get(q), variants));
+			for (int q = 0; q < haplotypesToTest.size(); q++) {
+				if (!haplotypesToTest.get(q).equals(refHaplotype)) {
+					haplotypeNames.add(getHaplotypeDesc(haplotypesToTest.get(q), variants));
 				}
 			}
 
@@ -123,10 +137,10 @@ public class LRTestHaploTestTask {
 	}
 
 	public Pair<DoubleMatrix2D, double[]> prepareMatrices(DoubleMatrix2D x,
-														  int[] left,
-														  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-														  DiseaseStatus[] finalDiseaseStatus,
-														  DoubleMatrix2D finalCovariates) {
+	                                                      int[] left,
+	                                                      DoubleMatrix2D conditionalDosages,
+	                                                      DiseaseStatus[] finalDiseaseStatus,
+	                                                      DoubleMatrix2D finalCovariates) {
 
 		// prepare genotype matrix
 		HashSet<Integer> missingGenotypeIds = new HashSet<Integer>();
@@ -134,19 +148,8 @@ public class LRTestHaploTestTask {
 			missingGenotypeIds.add(i);
 		}
 
-		if (conditional != null && !conditional.isEmpty()) {
-			for (int c = 0; c < conditional.size(); c++) {
-				Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>> conditionalData = conditional.get(c);
-				VCFVariant var2 = conditionalData.getLeft();
-				int[] left2 = conditionalData.getRight().getLeft();
-
-				DoubleMatrix2D dosages = var2.getDosagesAsMatrix2D();
-
-				for (int i : left2) {
-					missingGenotypeIds.add(i);
-				}
-				x = DoubleFactory2D.dense.appendColumns(x, dosages);
-			}
+		if (conditionalDosages != null) {
+			x = DoubleFactory2D.dense.appendColumns(x, conditionalDosages);
 		}
 		// now append covariates
 		x = DoubleFactory2D.dense.appendColumns(x, finalCovariates);
@@ -236,10 +239,10 @@ public class LRTestHaploTestTask {
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-										   double[] y,
-										   int firstColumnToRemove,
-										   int lastColumnToRemove,
-										   double maf) {
+	                                       double[] y,
+	                                       int firstColumnToRemove,
+	                                       int lastColumnToRemove,
+	                                       double maf) {
 
 
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
@@ -369,9 +372,9 @@ public class LRTestHaploTestTask {
 
 
 	public Pair<DoubleMatrix2D, DoubleMatrix2D> getHaplotypeData(BitVector haplotypeToTest,
-																 BitVector referenceHaplotype,
-																 ArrayList<BitVector> allHaplotypes,
-																 BitVector[][] sampleData) {
+	                                                             BitVector referenceHaplotype,
+	                                                             ArrayList<BitVector> allHaplotypes,
+	                                                             BitVector[][] sampleData) {
 
 		DoubleMatrix2D haplotypeAlleles = new DenseDoubleMatrix2D(sampleData.length, 2);
 		DoubleMatrix2D haplotypeDosages = null;
@@ -461,5 +464,15 @@ public class LRTestHaploTestTask {
 			}
 		}
 		return hapdesc;
+	}
+
+	public String getHaplotypeComboDescription(ArrayList<BitVector> comboToTest, ArrayList<VCFVariant> variants) {
+
+		String[] haps = new String[comboToTest.size()];
+		for (int i = 0; i < comboToTest.size(); i++) {
+			haps[i] = getHaplotypeDesc(comboToTest.get(i), variants);
+		}
+
+		return Strings.concat(haps, Strings.semicolon);
 	}
 }

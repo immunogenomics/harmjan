@@ -11,8 +11,8 @@ import nl.harmjanwestra.utilities.association.AssociationFilePairwise;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.AssociationResultPairwise;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
@@ -286,10 +286,10 @@ public class LRTest {
 			Triple<String, AssociationResult, VCFVariant> result = lrht.calc(haplotypetotest,
 					referenceHaplotype,
 					haplotypeWithFrequencyAboveThreshold,
+					null,
 					haplotypePairs,
 					finalDiseaseStatus,
 					finalCovariates,
-					null,
 					start,
 					stop,
 					chr,
@@ -305,20 +305,77 @@ public class LRTest {
 		Triple<String, AssociationResult, VCFVariant> result = lrht.calc(null,
 				referenceHaplotype,
 				haplotypeWithFrequencyAboveThreshold,
+				null,
 				haplotypePairs,
 				finalDiseaseStatus,
 				finalCovariates,
-				null,
 				start,
 				stop,
 				chr,
 				variants);
 		out.writeln(result.getMiddle().toString());
 		System.out.println("multivariate:\t" + result.getMiddle().getLog10Pval());
+
+
+		System.out.println();
+
+
+		// perform conditional analyses
+		// make all possible combinations of haplotypes
+
+		HaplotypeCombiner combiner = new HaplotypeCombiner(availableHaplotypesList);
+		combiner.combine();
+		ArrayList<List<BitVector>> haplotypeCombinations = combiner.getResults();
+
+		for (int c = 0; c < haplotypeCombinations.size(); c++) {
+			ArrayList<BitVector> comboToTest = new ArrayList<>();
+			comboToTest.addAll(haplotypeCombinations.get(c));
+
+			// make a list of available haps to condition on
+			ArrayList<BitVector> possibleConditionalHaplotypes = new ArrayList<>();
+			for (int j = 0; j < haplotypeWithFrequencyAboveThreshold.size(); j++) {
+				BitVector conditionalhaplotype = haplotypeWithFrequencyAboveThreshold.get(j);
+
+				boolean conditionOnThisHaplotype = true;
+				for (int k = 0; k < comboToTest.size(); k++) {
+					BitVector haplotypeToTest = comboToTest.get(k);
+					if (haplotypeToTest.equals(conditionalhaplotype)) {
+						conditionOnThisHaplotype = false;
+					}
+				}
+				if (conditionOnThisHaplotype) {
+					possibleConditionalHaplotypes.add(conditionalhaplotype);
+				}
+			}
+
+			if (!possibleConditionalHaplotypes.isEmpty()) {
+				String haplotypeComboName = lrht.getHaplotypeComboDescription(comboToTest, variants);
+
+				combiner = new HaplotypeCombiner(possibleConditionalHaplotypes);
+				combiner.combine();
+				ArrayList<List<BitVector>> combinations = combiner.getResults();
+				for (List<BitVector> combination : combinations) {
+					ArrayList<BitVector> conditonalCombo = new ArrayList<>();
+					conditonalCombo.addAll(combination);
+					String conditionalHaplotypeComboName = lrht.getHaplotypeComboDescription(conditonalCombo, variants);
+					result = lrht.calc(null,
+							referenceHaplotype,
+							comboToTest,
+							conditonalCombo,
+							haplotypePairs,
+							finalDiseaseStatus,
+							finalCovariates,
+							start,
+							stop,
+							chr,
+							variants);
+					System.out.println(haplotypeComboName + "\t" + conditionalHaplotypeComboName + "\t" + result.getMiddle().getLog10Pval());
+					out.writeln(result.getMiddle().toString());
+				}
+			}
+		}
 		out.close();
-
 	}
-
 
 	public void testNormal() throws IOException {
 
@@ -584,7 +641,6 @@ public class LRTest {
 			return true;
 		}
 	}
-
 
 	public void testConditional() throws IOException {
 
@@ -980,8 +1036,8 @@ public class LRTest {
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-																	  Feature region,
-																	  ArrayList<VCFVariant> variantsInRegion) {
+	                                                                  Feature region,
+	                                                                  ArrayList<VCFVariant> variantsInRegion) {
 
 		AssociationResult topResult = null;
 		for (AssociationResult r : assocResults) {
@@ -1017,11 +1073,10 @@ public class LRTest {
 		return output;
 	}
 
-
 	private void clearQueue(TextFile logout, TextFile pvalout,
-							int iter, ArrayList<VCFVariant> variants,
-							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
-							ArrayList<AssociationResult> associationResults) throws IOException {
+	                        int iter, ArrayList<VCFVariant> variants,
+	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
+	                        ArrayList<AssociationResult> associationResults) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -1077,7 +1132,6 @@ public class LRTest {
 		returned = 0;
 		submitted = 0;
 	}
-
 
 	private ArrayList<Pair<String, Triple<String, String, String>>> getTrios(String famfile) throws IOException {
 		System.out.println("Loading trios from FAM file: " + famfile);
@@ -1153,11 +1207,10 @@ public class LRTest {
 
 	}
 
-
 	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
-																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-																int firstColumnToRemove,
-																int lastColumnToRemove) {
+	                                                            ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+	                                                            int firstColumnToRemove,
+	                                                            int lastColumnToRemove) {
 		// get a random variant
 		// prepare the matrix
 		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
@@ -1215,5 +1268,36 @@ public class LRTest {
 		DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
 		LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 		return new Pair<>(reg.univariate(xandy.getRight(), xprime), xprime.columns());
+	}
+
+	public class HaplotypeCombiner {
+		private final ArrayList<BitVector> inputHaplotypes;
+		ArrayList<List<BitVector>> results = new ArrayList<List<BitVector>>();
+		private List<BitVector> output = new ArrayList<BitVector>();
+
+		public HaplotypeCombiner(final ArrayList<BitVector> haps) {
+			inputHaplotypes = haps;
+		}
+
+		public void combine() {
+			combine(0);
+		}
+
+		private void combine(int start) {
+			for (int i = start; i < inputHaplotypes.size(); ++i) {
+				output.add(inputHaplotypes.get(i));
+				List<BitVector> tmpOutput = new ArrayList<BitVector>();
+				tmpOutput.addAll(output);
+				results.add(tmpOutput);
+				if (i < inputHaplotypes.size()) {
+					combine(i + 1);
+				}
+				output = output.subList(0, output.size() - 1);
+			}
+		}
+
+		public ArrayList<List<BitVector>> getResults() {
+			return results;
+		}
 	}
 }
