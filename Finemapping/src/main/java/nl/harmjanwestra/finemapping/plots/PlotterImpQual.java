@@ -43,22 +43,28 @@ public class PlotterImpQual {
 
 	public void run() throws IOException, DocumentException {
 
+//		String[] files = new String[]{
+//				"/Data/tmp/2016-05-23/T1D-EUR-stats.vcf.gz",
+//				"/Data/tmp/2016-05-23/T1D-COSMO-stats.vcf.gz",
+//				"/Data/tmp/2016-05-23/T1D-HRC-COSMO.vcf.gz",
+//				"/Data/tmp/2016-05-23/T1D-HRC-COSMO-w100kb.vcf.gz",
+//				"/Data/tmp/2016-05-23/T1D-HRC-HRC-w100kb.vcf.gz"
+//		};
+
 		String[] files = new String[]{
-				"/Data/tmp/2016-05-23/T1D-EUR-stats.vcf.gz",
-				"/Data/tmp/2016-05-23/T1D-COSMO-stats.vcf.gz",
-				"/Data/tmp/2016-05-23/T1D-HRC-COSMO.vcf.gz",
-				"/Data/tmp/2016-05-23/T1D-HRC-COSMO-w100kb.vcf.gz",
-				"/Data/tmp/2016-05-23/T1D-HRC-HRC-w100kb.vcf.gz"
+				"/Data/tmp/2016-06-29-quals/INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/INFO/T1D-HRC-w100kb.vcf.gz"
 		};
 
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-COSMO-w100kb", "HRC-HRC-w100kb"};
+		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb"};
 		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
 
 		String[] files2 = new String[]{
 				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
 		};
-		String bedregions = "/Data/tmp/2016-05-23/AllICLoci.bed";
-		String outdir = "/Data/tmp/2016-05-23/T1D-plotsImpQual/";
+		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+		String outdir = "/Data/tmp/2016-06-29-quals/T1D-plotsImpQual/";
 
 		if (windows) {
 
@@ -88,24 +94,35 @@ public class PlotterImpQual {
 		boolean usemafthreshold = false;
 		boolean requireabovemaf = false;
 		boolean plotOnlyImputed = false;
-		double mafthreshold = 0.005;
+		double mafthreshold = 0.01;
+		double infoscorethreshold = 0.8;
 
 		String out = "";
-		includeindels = true;
+
 		usemafthreshold = true;
 		requireabovemaf = true;
 		plotOnlyImputed = true;
+		includeindels = true;
+		out = outdir + "plot1-imputed-impqual-withIndels-mafgt" + mafthreshold + ".pdf";
+		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
 
-		out = outdir + "plot1-imputed-impqual-withIndels-mafgt0.005.pdf";
-		//plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-		out = outdir + "plot1-imputed-impqual-withoutIndels-mafgt0.005.pdf";
 		includeindels = false;
-		//plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+		out = outdir + "plot1-imputed-impqual-withoutIndels-mafgt" + mafthreshold + ".pdf";
+		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
 
-		usemafthreshold = true;
-		requireabovemaf = false;
-		out = outdir + "plot1-imputed-impqual-withoutIndels-maflt0.005.png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+		plotOnlyImputed = false;
+		includeindels = true;
+		out = outdir + "plot1-all-impqual-withIndels-mafgt" + mafthreshold + ".pdf";
+		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
+
+		includeindels = false;
+		out = outdir + "plot1-all-impqual-withoutIndels-mafgt" + mafthreshold + ".pdf";
+		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
+
+//		usemafthreshold = true;
+//		requireabovemaf = false;
+//		out = outdir + "plot1-imputed-impqual-withoutIndels-maflt" + mafthreshold + ".png";
+//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
 
 
 //		out = outdir + "plot1-impqual-unfiltered.png";
@@ -312,17 +329,20 @@ public class PlotterImpQual {
 					  boolean requireabovemaf,
 					  double mafthreshold,
 					  boolean plotOnlyImputed,
+					  double infoscorethreshold,
 					  HashSet<String> variantHash,
 					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
 		int maxSize = 0;
+		String[] newLabels = new String[labels.length];
 		for (int i = 0; i < files.length; i++) {
 			String file = files[i];
 			ArrayList<Double> corvals = new ArrayList<>();
 			TextFile tf = new TextFile(file, TextFile.R);
 			String[] elems = tf.readLineElems(TextFile.tab);
+			int nrAboveThreshold = 0;
 			while (elems != null) {
 				if (elems.length >= 8 && !elems[0].startsWith("#")) {
 					boolean isIndel = isIndel(elems);
@@ -351,7 +371,14 @@ public class PlotterImpQual {
 
 					if (include) {
 						double info = getInfo(elems);
-						corvals.add(info);
+						if (info < 0 || info > 1) {
+							System.out.println("error in info score? " + info + "\t" + file + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
+						} else {
+							if (info > infoscorethreshold) {
+								nrAboveThreshold++;
+							}
+							corvals.add(info);
+						}
 					}
 				}
 
@@ -364,6 +391,7 @@ public class PlotterImpQual {
 				maxSize = corvals.size();
 			}
 			vals.add(corvals);
+			newLabels[i] = labels[i] + " - " + nrAboveThreshold + " / " + corvals.size();
 		}
 		System.out.println(maxSize + " total vals");
 
@@ -390,9 +418,9 @@ public class PlotterImpQual {
 		panel.setData(x, y);
 		Range range = new Range(0, 0, maxSize, 1);
 		panel.setDataRange(range);
-//		range.roundX();
+		range.roundX();
 
-		panel.setDatasetLabels(labels);
+		panel.setDatasetLabels(newLabels);
 		grid.addPanel(panel);
 		grid.draw(out);
 	}

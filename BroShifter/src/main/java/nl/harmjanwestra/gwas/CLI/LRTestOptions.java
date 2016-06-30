@@ -144,6 +144,11 @@ public class LRTestOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("limittosamplesinfam")
+				.desc("Force testing on all samples in fam file")
+				.build();
+		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("includecov")
@@ -177,13 +182,30 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 	}
 
+	private boolean limittosamplesinfam = false;
+
+	public boolean isTestallsamplesinfam() {
+		return limittosamplesinfam;
+	}
+
+	public boolean isAssumeNoMissingData() {
+		return assumeNoMissingData;
+	}
+
+	public boolean isTestMultiAllelicVariantsIndependently() {
+		return testMultiAllelicVariantsIndependently;
+	}
+
+	public boolean isSplitMultiAllelicIntoMultipleVariants() {
+		return splitMultiAllelicIntoMultipleVariants;
+	}
+
 	public boolean assumeNoMissingData;
 	public boolean testMultiAllelicVariantsIndependently;
 	public boolean splitMultiAllelicIntoMultipleVariants;
 	private ANALYSIS analysisType = ANALYSIS.NORMAL;
 	private String conditional;
 	private double HWEPThreshold = 1E-5;
-	private boolean haplotypeAnalysis;
 	private String vcf;
 	private String outputdir;
 	private String diseaseStatusFile;
@@ -313,6 +335,11 @@ public class LRTestOptions {
 				System.out.println("Please provide input: -f");
 				run = false;
 			}
+
+			if (cmd.hasOption("limittosamplesinfam")) {
+				limittosamplesinfam = true;
+			}
+
 
 			if (cmd.hasOption("s")) {
 				snpLimitFile = cmd.getOptionValue("s");

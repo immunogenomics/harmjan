@@ -5,24 +5,26 @@ package nl.harmjanwestra.utilities.enums;
  */
 public enum DiseaseStatus {
 
-	CONTROL(0, "Control"),
-	CASE(1, "Case"),
-	UNKNOWN(-1, "Unknown");
+	CONTROL(0, "Control", 1),
+	CASE(1, "Case", 2),
+	UNKNOWN(-1, "Unknown", -1);
 
 	private final int number;
 	private final String name;
+	private final int famnumber;
 
-	private DiseaseStatus(int num, String name) {
+	private DiseaseStatus(int num, String name, int famnumber) {
 		this.number = num;
 		this.name = name;
+		this.famnumber = famnumber;
 	}
 
 	public static DiseaseStatus parseStatus(String statusStr) {
 		statusStr = statusStr.toLowerCase().trim();
 
-		if (statusStr.equals("control") || statusStr.equals("1")) {
+		if (statusStr.equals("control") || statusStr.equals("" + CONTROL.famnumber)) {
 			return DiseaseStatus.CONTROL;
-		} else if (statusStr.equals("case") || statusStr.equals("2")) {
+		} else if (statusStr.equals("case") || statusStr.equals("" + CASE.famnumber)) {
 			return DiseaseStatus.CASE;
 		} else {
 			return DiseaseStatus.UNKNOWN;

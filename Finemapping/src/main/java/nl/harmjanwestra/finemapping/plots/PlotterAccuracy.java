@@ -101,10 +101,10 @@ public class PlotterAccuracy {
 
 	public void plotCorr() throws IOException, DocumentException {
 		String[] files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/T1D-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/T1D-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/T1D-HRC-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/T1D-HRC-w100kb.txt"
+				"/Data/tmp/2016-06-29-quals/T1D-EUR.txt",
+				"/Data/tmp/2016-06-29-quals/T1D-COSMO.txt",
+				"/Data/tmp/2016-06-29-quals/T1D-HRC-COSMO.txt",
+				"/Data/tmp/2016-06-29-quals/T1D-HRC-w100kb.txt"
 		};
 		String diseaseprefix = "T1D";
 
@@ -123,7 +123,8 @@ public class PlotterAccuracy {
 				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
 		};
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
+//		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
+		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/AccuracyPlots/";
 		double mafthreshold = 0.0;
 

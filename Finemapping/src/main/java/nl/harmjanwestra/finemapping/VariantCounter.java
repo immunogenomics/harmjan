@@ -18,17 +18,24 @@ public class VariantCounter {
 	public static void main(String[] args) {
 		try {
 			VariantCounter c = new VariantCounter();
-			c.count();
+			c.countAccuracy();
 		} catch (IOException e) {
-
+			e.printStackTrace();
 		}
 	}
 
-	public void count() throws IOException {
+	public void countAccuracy() throws IOException {
 
 		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
 
 		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
+
+		String[] files = new String[]{
+				"/Data/tmp/2016-06-29-quals/Acc/T1D-EUR.txt",
+				"/Data/tmp/2016-06-29-quals/Acc/T1D-COSMO.txt",
+				"/Data/tmp/2016-06-29-quals/Acc/T1D-HRC-w100kb.txt",
+		};
+		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb"};
 
 		// get a list of maf > 0.005 variants that on the sequencingpanel
 		TextFile tf = new TextFile(seqpanelvcf, TextFile.R);
@@ -38,8 +45,9 @@ public class VariantCounter {
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
 		double infothreshold = 0.8;
+		boolean includeICVariants = false;
 
-		boolean includeId = false;
+		boolean includeId = true;
 		boolean includeIndels = true;
 
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
@@ -77,22 +85,26 @@ public class VariantCounter {
 
 
 		// get a list of imputed variants for each of the sequencing panels
-		String[] files = new String[]{
-				"/Data/tmp/2016-05-23/T1D/T1D-EUR-merged.txt",
-				"/Data/tmp/2016-05-23/T1D/T1D-COSMO-merged.txt",
-				"/Data/tmp/2016-05-23/T1D/T1D-HRC-HRC-w100kb-merged.txt",
-		};
 
 
 		System.out.println("MAF> " + mafthreshold);
 		System.out.println("INFO> " + infothreshold);
 
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb"};
 
 		PlotterAccuracy p = new PlotterAccuracy();
 
-		HashSet<String> sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
+		HashSet<String> sequencedVariantsHash = null;
+		if (includeICVariants) {
+			ArrayList<VCFVariant> allvars = new ArrayList<>();
+			allvars.addAll(variantsNotOnImmunoChip);
+			allvars.addAll(variantsOnImmunoChip);
+			sequencedVariantsHash = hashit(allvars, includeId);
+		} else {
+			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
+		}
+
 		System.out.println(sequencedVariantsHash.size() + " after hashing");
+		System.out.println(files.length + " files");
 		for (int f = 0; f < files.length; f++) {
 			// get the imputation accuracies for these variants
 			TextFile tf2 = new TextFile(files[f], TextFile.R);
@@ -154,7 +166,7 @@ public class VariantCounter {
 		return false;
 	}
 
-	private HashSet<String> hashit(ArrayList<VCFVariant> variantsNotOnImmunoChip, boolean includeId) {
+	public HashSet<String> hashit(ArrayList<VCFVariant> variantsNotOnImmunoChip, boolean includeId) {
 		HashSet<String> variantHash = new HashSet<String>();
 		for (VCFVariant var : variantsNotOnImmunoChip) {
 			String variant = "";
@@ -170,7 +182,7 @@ public class VariantCounter {
 		return variantHash;
 	}
 
-	private HashSet<String> loadVariantHash(String variantsOnIC, boolean includeId) throws IOException {
+	public HashSet<String> loadVariantHash(String variantsOnIC, boolean includeId) throws IOException {
 		TextFile tf = new TextFile(variantsOnIC, TextFile.R);
 		HashSet<String> variantIds = new HashSet<String>();
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -234,7 +246,7 @@ public class VariantCounter {
 		return false;
 	}
 
-	private boolean isVariantOnIC(String[] elems, HashSet<String> variantHash, boolean includeId) {
+	public boolean isVariantOnIC(String[] elems, HashSet<String> variantHash, boolean includeId) {
 		if (includeId) {
 			String variant = Chromosome.parseChr(elems[0]).toString() + "_" + elems[1] + "_" + elems[2];
 			return variantHash.contains(variant);

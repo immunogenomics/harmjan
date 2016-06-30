@@ -575,13 +575,13 @@ public class PseudoControls {
 																									   ArrayList<Pair<String, Triple<String, String, String>>> famData,
 																									   HashMap<String, Integer> sampleMap,
 																									   ArrayList<String> vcfSamples,
-
 																									   boolean appendFamId) throws IOException {
 		int nrTrios = 0;
 		Integer[][] momAndDad = new Integer[2][vcfSamples.size()];
 		HashMap<String, Integer> kidToPseudoControl = new HashMap<>();
 		ArrayList<String> pseudoCCNames = new ArrayList<>();
 		TextFile individualsToExclude = new TextFile(vcfOut + "-parents.txt", TextFile.W);
+
 		for (Pair<String, Triple<String, String, String>> family : famData) {
 			String famId = family.getLeft();
 			Triple<String, String, String> trio = family.getRight();

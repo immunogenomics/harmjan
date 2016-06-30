@@ -66,7 +66,7 @@ public class LRTestHaploTestTask {
 		DoubleMatrix2D haplotypeDosages = haplotypeData.getRight(); // samples x nr alleles
 		DoubleMatrix2D conditionalHaplotypeDosages = null;
 		if (conditionalHaplotypeData != null) {
-			conditionalHaplotypeData.getRight();
+			conditionalHaplotypeDosages = conditionalHaplotypeData.getRight();
 		}
 
 		// recode the genotypes to the same ordering as the covariate table
@@ -93,7 +93,6 @@ public class LRTestHaploTestTask {
 		int nrAlleles = haplotypeDosages.columns() + 1;
 		double[] y = xandy.getRight(); // get the phenotypes for all non-missing genotypes
 		DoubleMatrix2D x = xandy.getLeft();
-
 
 		AssociationResult result = pruneAndTest(x, y, 1, 1 + (nrAlleles - 1), maf);
 
