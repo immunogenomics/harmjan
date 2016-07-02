@@ -2,10 +2,7 @@ package nl.harmjanwestra.vcfutils;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
-import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
-import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.*;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Regression;
@@ -650,8 +647,16 @@ public class VCFCorrelator {
 
 		}
 
+		// get the genetic similary
+		GeneticSimilarity sim = new GeneticSimilarity();
+		Pair<double[][], double[][]> similarity = sim.calculate(allvariants);
+		double[][] geneticSimilarity = similarity.getLeft();
+		double[][] sharedgenotypes = similarity.getRight();
+
 		// correlate the samples
 		TextFile out = new TextFile(outfile, TextFile.R);
+		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
+		out.writeln(header);
 		ArrayList<String> pairsBiggerThan9 = new ArrayList<>();
 		for (int i = 0; i < samples1.size(); i++) {
 			double[] dosage1 = dosages1[i];
@@ -683,14 +688,15 @@ public class VCFCorrelator {
 
 				double corr = JSci.maths.ArrayMath.correlation(x, y);
 				if (corr > 0.9) {
-					pairsBiggerThan9.add(samples1.get(i) + "\t" + samples2.get(i) + "\t" + corr);
+					pairsBiggerThan9.add(samples1.get(i) + "\t" + samples2.get(j) + "\t" + corr + "\t" + geneticSimilarity[i][j] + "\t" + sharedgenotypes[i][j]);
 				}
-				out.writeln(samples1.get(i) + "\t" + samples2.get(i) + "\t" + corr);
+				out.writeln(samples1.get(i) + "\t" + samples2.get(i) + "\t" + corr + "\t" + geneticSimilarity[i][j] + "\t" + sharedgenotypes[i][j]);
 			}
 		}
 		out.close();
 
 		TextFile out2 = new TextFile(outfile + "biggerthanthreshold.txt", TextFile.W);
+		out2.writeln(header);
 		out2.writeList(pairsBiggerThan9);
 		out2.close();
 

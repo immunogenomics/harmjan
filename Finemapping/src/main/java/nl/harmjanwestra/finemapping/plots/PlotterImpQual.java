@@ -52,9 +52,9 @@ public class PlotterImpQual {
 //		};
 
 		String[] files = new String[]{
-				"/Data/tmp/2016-06-29-quals/INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/INFO/T1D-HRC-w100kb.vcf.gz"
+				"/Data/tmp/2016-06-29-quals/INFO/RA-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/INFO/RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/INFO/RA-HRC-w100kb.vcf.gz"
 		};
 
 		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb"};
@@ -343,6 +343,8 @@ public class PlotterImpQual {
 			TextFile tf = new TextFile(file, TextFile.R);
 			String[] elems = tf.readLineElems(TextFile.tab);
 			int nrAboveThreshold = 0;
+			int outofrange = 0;
+			int totalvalues = 0;
 			while (elems != null) {
 				if (elems.length >= 8 && !elems[0].startsWith("#")) {
 					boolean isIndel = isIndel(elems);
@@ -368,11 +370,17 @@ public class PlotterImpQual {
 						}
 					}
 
+					totalvalues++;
+					double info = getInfo(elems);
+					if (info < 0 || info > 1) {
+//						System.out.println("error in info score? " + info + "\t" + file + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
+						outofrange++;
+					}
 
 					if (include) {
-						double info = getInfo(elems);
+
 						if (info < 0 || info > 1) {
-							System.out.println("error in info score? " + info + "\t" + file + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
+//							System.out.println("error in info score? " + info + "\t" + file + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
 						} else {
 							if (info > infoscorethreshold) {
 								nrAboveThreshold++;
@@ -387,6 +395,8 @@ public class PlotterImpQual {
 			tf.close();
 			Collections.sort(corvals, Collections.reverseOrder());
 			System.out.println(corvals.size() + " vals in file " + file);
+			System.out.println(outofrange + " values out of range..?");
+			System.out.println(totalvalues + " total values");
 			if (corvals.size() > maxSize) {
 				maxSize = corvals.size();
 			}
