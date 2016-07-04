@@ -390,6 +390,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("similarity")
+				.desc("Calculate genetic similarity (between two datasets)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.hasArg()
 				.longOpt("rsquared")
 				.desc("RSquared threshold")
@@ -759,6 +765,18 @@ public class Main {
 
 
 				filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);
+
+			} else if (cmd.hasOption("similarity")) {
+
+				if (cmd.hasOption("i") && cmd.hasOption("i2") && cmd.hasOption("l") && cmd.hasOption("o")) {
+					GeneticSimilarity sim = new GeneticSimilarity();
+					sim.determineGeneticSimilarityBetweenDatasets(cmd.getOptionValue("l"),
+							cmd.getOptionValue("i"),
+							cmd.getOptionValue("i2"),
+							cmd.getOptionValue("o"));
+				} else {
+					System.out.println("Use -i, -i2, -l and -o for --similarity");
+				}
 
 			} else if (cmd.hasOption("plotrsq")) {
 

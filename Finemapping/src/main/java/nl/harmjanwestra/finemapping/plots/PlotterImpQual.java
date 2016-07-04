@@ -324,14 +324,14 @@ public class PlotterImpQual {
 
 
 	public void plot1(String[] files, String[] labels, String out,
-					  boolean includeIndels,
-					  boolean usemafthreshold,
-					  boolean requireabovemaf,
-					  double mafthreshold,
-					  boolean plotOnlyImputed,
-					  double infoscorethreshold,
-					  HashSet<String> variantHash,
-					  ArrayList<Feature> bedregions
+	                  boolean includeIndels,
+	                  boolean usemafthreshold,
+	                  boolean requireabovemaf,
+	                  double mafthreshold,
+	                  boolean plotOnlyImputed,
+	                  double infoscorethreshold,
+	                  HashSet<String> variantHash,
+	                  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
@@ -381,12 +381,14 @@ public class PlotterImpQual {
 
 						if (info < 0 || info > 1) {
 //							System.out.println("error in info score? " + info + "\t" + file + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
-						} else {
-							if (info > infoscorethreshold) {
-								nrAboveThreshold++;
-							}
-							corvals.add(info);
+							info = 0d;
 						}
+
+						if (info > infoscorethreshold) {
+							nrAboveThreshold++;
+						}
+						corvals.add(info);
+
 					}
 				}
 
@@ -436,13 +438,13 @@ public class PlotterImpQual {
 	}
 
 	public void plot2(String[] files, String[] datasetLabels, String out,
-					  boolean includeIndels,
-					  boolean usemafthreshold,
-					  boolean requireabovemaf,
-					  double mafthreshold,
-					  boolean plotOnlyImputed,
-					  HashSet<String> variantHash,
-					  ArrayList<Feature> bedregions
+	                  boolean includeIndels,
+	                  boolean usemafthreshold,
+	                  boolean requireabovemaf,
+	                  double mafthreshold,
+	                  boolean plotOnlyImputed,
+	                  HashSet<String> variantHash,
+	                  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 2: x-axis maf, y-axis correlation (boxplot)
 

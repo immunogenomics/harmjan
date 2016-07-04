@@ -1,5 +1,6 @@
 package nl.harmjanwestra.utilities.vcf;
 
+import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 
 /**
@@ -24,6 +25,7 @@ public class GeneticSimilarity {
 		double[][] geneticSimilaritySameGenotypes = new double[nrInds1][nrInds2];
 		int[][] geneticSimilarityCalled = new int[nrInds1][nrInds2];
 
+		ProgressBar pb = new ProgressBar(nrVariants, "Calculating genetic similarity");
 		for (int snpID = 0; snpID < nrVariants; snpID++) {
 
 			VCFVariant variant1 = variants[0][snpID];
@@ -81,7 +83,9 @@ public class GeneticSimilarity {
 					}
 				}
 			}
+			pb.set(snpID);
 		}
+		pb.close();
 
 		for (int i = 0; i < nrInds1; i++) {
 			for (int j = 0; j < nrInds2; j++) {

@@ -198,7 +198,12 @@ public class VCFVariant {
 
 											if (gtElems.length < 2) {
 												System.out.println(ln);
-												System.out.println(Strings.concat(gtElems, Strings.tab));
+												System.out.println();
+												System.out.println("gtelems: "+Strings.concat(gtElems, Strings.tab));
+												System.out.println("length of GT Elems < 2");
+												System.out.println("Actual length: " + gtElems.length);
+												System.out.println("Number of total sample elems: " + sampleTokens.length);
+												System.out.println("Number of total tokens: " + nrTokens);
 												System.exit(-1);
 											}
 
@@ -686,22 +691,30 @@ public class VCFVariant {
 		return out;
 	}
 
-	public String toVCFString() {
-		StringBuilder builder = new StringBuilder(100000);
-		builder.append(chr);
-		builder.append("\t");
-		builder.append(pos);
-		builder.append("\t");
-		builder.append(id);
-		builder.append("\t");
-		builder.append(alleles[0]);
-		builder.append("\t");
-		builder.append(Strings.concat(alleles, Strings.comma, 1, alleles.length));
-		builder.append("\t.\t.\t").append(getInfoString()).append("\tGT");
 
-		if (hasImputationDosages()) {
-			builder.append(":DS");
+	public String toVCFString() {
+		return toVCFString(true);
+	}
+
+	public String toVCFString(boolean includeHeader) {
+		StringBuilder builder = new StringBuilder(100000);
+		if (includeHeader) {
+			builder.append(chr);
+			builder.append("\t");
+			builder.append(pos);
+			builder.append("\t");
+			builder.append(id);
+			builder.append("\t");
+			builder.append(alleles[0]);
+			builder.append("\t");
+			builder.append(Strings.concat(alleles, Strings.comma, 1, alleles.length));
+			builder.append("\t.\t.\t").append(getInfoString()).append("\tGT");
+
+			if (genotypeProbabilies != null) {
+				builder.append(":GP");
+			}
 		}
+
 
 		for (int i = 0; i < genotypeAlleles.rows(); i++) {
 			byte a1 = (byte) genotypeAlleles.getQuick(i, 0);
@@ -714,17 +727,19 @@ public class VCFVariant {
 			if (a2 == -1) {
 				al2 = ".";
 			}
-			builder.append("\t");
+			if(builder.length() > 0) {
+				builder.append("\t");
+			}
 			builder.append(al1).append(separator).append(al2);
-			if (hasImputationDosages()) {
+			if (genotypeProbabilies != null) {
 
 				// samples x alleles
 				builder.append(":");
-				for (int a = 0; a < dosages.columns(); a++) {
+				for (int a = 0; a < genotypeProbabilies.columns(); a++) {
 					if (a == 0) {
-						builder.append(dosages.getQuick(i, a));
+						builder.append(genotypeProbabilies.getQuick(i, a));
 					} else {
-						builder.append(",").append(dosages.getQuick(i, a));
+						builder.append(",").append(genotypeProbabilies.getQuick(i, a));
 					}
 				}
 
@@ -799,8 +814,8 @@ public class VCFVariant {
 						nrAllelesObservedLocal[gt1]++;
 						nrAllelesObservedLocal[gt2]++;
 					} else if (individualIsFemale == null) {
-//					System.err.println("ERROR: cannot calculate chr X MAF if gender information unavailable.");
-						throw new IllegalArgumentException("ERROR: cannot calculate chr X MAF if gender information unavailable.");
+						System.err.println("ERROR: cannot calculate chr X MAF if gender information unavailable.");
+//						throw new IllegalArgumentException("ERROR: cannot calculate chr X MAF if gender information unavailable.");
 					}
 				} else if (chromosome.equals(Chromosome.Y)) {
 					if (ignoregender || (individualIsFemale != null && individualIsFemale[i] != null && !individualIsFemale[i])) {
@@ -809,7 +824,6 @@ public class VCFVariant {
 						nrAllelesObservedLocal[gt2]++;
 					} else if (individualIsFemale == null) {
 						System.err.println("ERROR: cannot calculate chr Y MAF if gender information unavailable.");
-						throw new IllegalArgumentException("ERROR: cannot calculate chr X MAF if gender information unavailable.");
 					}
 				} else {
 					nrCalled++;
@@ -1170,6 +1184,10 @@ public class VCFVariant {
 
 	public boolean isPhased() {
 		return separator.equals("|");
+	}
+
+	public boolean isAutosomal() {
+		return getChrObj().isAutosome();
 	}
 
 	public enum PARSE {

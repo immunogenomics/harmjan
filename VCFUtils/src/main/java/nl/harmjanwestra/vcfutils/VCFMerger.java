@@ -241,13 +241,13 @@ public class VCFMerger {
 	This merges samples from two VCF files if there are variants that are overlapping. Non-overlapping variants are excluded.
 	 */
 	public void mergeAndIntersect(boolean linux,
-								  int chrint,
-								  String vcfsort,
-								  String refVCF,
-								  String testVCF,
-								  String matchedPanelsOut,
-								  boolean keepoverlapping,
-								  String separator) throws IOException {
+	                              int chrint,
+	                              String vcfsort,
+	                              String refVCF,
+	                              String testVCF,
+	                              String matchedPanelsOut,
+	                              boolean keepoverlapping,
+	                              String separator) throws IOException {
 		Chromosome chr = Chromosome.parseChr("" + chrint);
 
 		mergeAndIntersectVCFVariants(
@@ -270,13 +270,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-											  String testVCF,
-											  String vcf1out,
-											  String vcf2out,
-											  String vcfmergedout,
-											  String separatorInMergedFile,
-											  String logoutfile,
-											  boolean keepNonOverlapping) throws IOException {
+	                                          String testVCF,
+	                                          String vcf1out,
+	                                          String vcf2out,
+	                                          String vcfmergedout,
+	                                          String separatorInMergedFile,
+	                                          String logoutfile,
+	                                          boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -572,7 +572,7 @@ public class VCFMerger {
 	Utility function to mergecheese two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-											   String separatorInMergedFile) {
+	                                           String separatorInMergedFile) {
 
 		String[] refAlleles = refVariant.getAlleles();
 		String refMinorAllele = refVariant.getMinorAllele();
@@ -1082,13 +1082,9 @@ public class VCFMerger {
 					if (ln.startsWith("#")) {
 
 					} else {
-						String[] elems = new String[9];
-						StringTokenizer tokenizer = new StringTokenizer(ln, "\t");
-						int ctr = 0;
-						while (tokenizer.hasMoreTokens() && ctr < 9) {
-							elems[ctr] = tokenizer.nextToken();
-							ctr++;
-						}
+
+						String substr = ln.substring(0, 1000);
+						String[] elems = substr.split("\t");
 
 						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
 						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
@@ -1105,7 +1101,7 @@ public class VCFMerger {
 							}
 							String[] infoElems = elems[7].split(";");
 							for (String s : infoElems) {
-								if (s.startsWith("AR2")) {
+								if (s.startsWith("AR2") || s.startsWith("R2") || s.startsWith("INFO")) {
 									String[] rsquaredElems = s.split("=");
 									Double d = Double.parseDouble(rsquaredElems[1]);
 									rsquareds.add(d);
@@ -1156,8 +1152,7 @@ public class VCFMerger {
 			System.out.println(variantToInt.size() + " variants in total");
 
 
-			StringBuilder[] variantoutput = new StringBuilder[variantToInt.size()];
-			StringBuilder[] variantoutputHeaders = new StringBuilder[variantToInt.size()];
+			VCFVariant[][] variantObjs = new VCFVariant[nrBatches][variantToInt.size()];
 
 			StringBuilder header = new StringBuilder();
 			header.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
@@ -1172,43 +1167,24 @@ public class VCFMerger {
 					if (ln.startsWith("##")) {
 
 					} else if (ln.startsWith("#CHROM")) {
-						StringTokenizer tokenizer = new StringTokenizer(ln, "\t");
-						int elemctr = 0;
-						while (tokenizer.hasMoreTokens()) {
-							String token = tokenizer.nextToken();
-							if (elemctr > 8) {
-								header.append("\t").append(token);
-							}
-							elemctr++;
+						String[] elems = ln.split("\t");
+						for (int i = 9; i < elems.length; i++) {
+							header.append("\t").append(elems[i]);
 						}
+
 					} else {
 						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
-						StringTokenizer tokenizer = new StringTokenizer(ln, "\t");
-						int elemctr = 0;
-						String[] elems = new String[9];
-						while (tokenizer.hasMoreTokens() && elemctr < 9) {
-							String token = tokenizer.nextToken();
-							elems[elemctr] = token;
-							elemctr++;
-						}
+						String substr = ln.substring(0, 200);
+						String[] elems = substr.split("\t");
 						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
-
 
 						Integer id = variantToInt.get(variant);
 						if (id != null) {
-							StringBuilder builder = variantoutput[id];
-							if (builder == null) {
-								variantoutputHeaders[id] = new StringBuilder();
-								variantoutputHeaders[id].append(Strings.concat(elems, Strings.tab, 0, 7));
-								variantoutputHeaders[id].append("\t").append("AR2=").append(variantToAR2.get(variant))
-										.append("\t").append(elems[8]);
-								builder = new StringBuilder(100000);
-								variantoutput[id] = builder;
-							}
-							while (tokenizer.hasMoreTokens()) {
-								builder.append("\t").append(tokenizer.nextToken());
-							}
-
+							VCFVariant variantObj = new VCFVariant(ln);
+							variantObjs[batch][id] = variantObj;
+						} else {
+							System.out.println("variant: " + variant + " not in index??");
+							System.exit(-1);
 						}
 					}
 					ln = tf.readLine();
@@ -1221,12 +1197,22 @@ public class VCFMerger {
 
 			vcfout.writeln("##fileformat=VCFv4.1");
 			vcfout.writeln(header.toString());
-			for (int i = 0; i < variantoutput.length; i++) {
-				vcfout.writeln(variantoutputHeaders[i].toString() + variantoutput[i].toString());
+			for (int i = 0; i < variantToInt.size(); i++) {
+				StringBuilder builder = new StringBuilder(100000);
+				for (int b = 0; b < nrBatches; b++) {
+					VCFVariant variant = variantObjs[b][i];
+					if (b == 0) {
+						builder.append(variant.toVCFString(true));
+					} else {
+						builder.append("\t").append(variant.toVCFString(false));
+					}
+				}
+				vcfout.writeln(builder.toString());
 				if (i % 100 == 0) {
-					System.out.print("\rprogress: " + i + "/" + variantoutput.length + " - " + ((double) i / variantoutput.length));
+					System.out.print("\rprogress: " + i + "/" + variantToInt.size() + " - " + ((double) i / variantToInt.size()) + "\r");
 				}
 			}
+			System.out.println("Done writing");
 			vcfout.close();
 			System.out.println();
 
@@ -1241,6 +1227,9 @@ public class VCFMerger {
 
 				} else if (elems[0].startsWith("#")) {
 					System.out.println(elems.length + " header elems");
+					if (nr == -1) {
+						nr = elems.length;
+					}
 				} else {
 					if (nr == -1) {
 						System.out.println(elems.length + " sample elems: " + (elems.length - 9) + " samples");
@@ -1261,7 +1250,7 @@ public class VCFMerger {
 	}
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-											   boolean linux, String vcfsort) throws IOException {
+	                                           boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants
