@@ -1,11 +1,12 @@
 package nl.harmjanwestra.gwas;
 
-import cern.colt.matrix.tbit.BitVector;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
-import nl.harmjanwestra.gwas.tasks.*;
+import nl.harmjanwestra.gwas.tasks.LRTestExhaustiveTask;
+import nl.harmjanwestra.gwas.tasks.LRTestTask;
+import nl.harmjanwestra.gwas.tasks.LRTestVariantQCTask;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationFilePairwise;
 import nl.harmjanwestra.utilities.association.AssociationResult;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
  */
 public class LRTest {
 
-	private final ExecutorService exService;
+	protected ExecutorService exService;
 	LRTestOptions options;
 	private int submitted;
 	private int returned;
@@ -53,42 +54,49 @@ public class LRTest {
 	private HashSet<String> snpLimit;
 	private ArrayList<Feature> bedRegions = null;
 	private boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
-	private DoubleMatrix2D finalCovariates;
-	private DiseaseStatus[] finalDiseaseStatus;
+	protected DoubleMatrix2D finalCovariates;
+	protected DiseaseStatus[] finalDiseaseStatus;
 	private ProgressBar progressBar;
 
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
-		System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
+
 
 		if (!initialize()) {
 			System.err.println("Something went wrong during initialization.. Please check the input.");
 			System.exit(-1);
 		}
 
-		exService = Executors.newFixedThreadPool(options.getNrThreads());
 		switch (options.getAnalysisType()) {
 			case CONDITIONAL:
 				System.out.println("Will perform conditional logistic regression");
+				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
+				exService = Executors.newFixedThreadPool(options.getNrThreads());
 				testConditional();
+				exService.shutdown();
 				break;
 			case EXHAUSTIVE:
 				System.out.println("Will perform exhaustive pairwise logistic regression");
+				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
+				exService = Executors.newFixedThreadPool(options.getNrThreads());
 				testExhaustivePairwise();
+				exService.shutdown();
 				break;
 			case HAPLOTYPE:
 				System.out.println("Will perform haplotype logistic regression");
-				testHaplotype();
 				break;
 			case NORMAL:
 				System.out.println("Will perform normal logistic regression");
+				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
+				exService = Executors.newFixedThreadPool(options.getNrThreads());
 				testNormal();
+				exService.shutdown();
 				break;
 		}
-		exService.shutdown();
-		// System.exit(0);
-	}
 
+		// System.exit(0);
+		System.out.println("Done.");
+	}
 
 	public static void main(String[] args) {
 
@@ -98,7 +106,7 @@ public class LRTest {
 				"--conditional",
 				"-c", "/Data/tmp/2016-06-24/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
 				"-d", "/Data/tmp/2016-06-24/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
-				"-f","/Data/tmp/2016-06-29/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam",
+				"-f", "/Data/tmp/2016-06-29/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam",
 //				"-f", "/Data/tmp/2016-06-24/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
 //				"-f", "/Data/tmp/2016-06-26/Allele+AA.NomissingNonRare0.0005.Include.fam", // xinli fam file
 				"-i", "/Data/tmp/2016-06-24/T1DVCF.vcf",
@@ -107,26 +115,26 @@ public class LRTest {
 				"--snplimit", "/Data/tmp/2016-06-24/limit.txt",
 				"-t", "4",
 				"-q", "0.3",
-				"--maxiter","5",
+				"--maxiter", "5",
 				"--splitmultiallelic",
 				"--limittosamplesinfam",
 				"-o", "/Data/tmp/2016-06-29/testoutgwas-hjfixed.txt"
 		};
 		LRTestOptions options0 = new LRTestOptions(args4);
 
-		try {
-			new LRTest(options0);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			new LRTest(options0);
+//
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 
 		args4 = new String[]{
 				"--gwas",
 				"--haplotype",
 				"-c", "/Data/tmp/2016-06-24/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
 				"-d", "/Data/tmp/2016-06-24/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
-				"-f", "/Data/tmp/2016-06-24/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
+				"-f", "/Data/tmp/2016-06-29/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam",
 				"-i", "/Data/tmp/2016-06-24/T1DVCF.vcf",
 				"-e", "/Data/tmp/2016-06-24/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
 				"-r", "/Data/tmp/2016-06-24/il2ra.bed",
@@ -134,17 +142,18 @@ public class LRTest {
 				"-t", "4",
 				"-q", "0.3",
 				"--splitmultiallelic",
+				"--limittosamplesinfam",
 				"-o", "/Data/tmp/2016-06-24/testoutnormal.txt"
 		};
 
 		LRTestOptions options = new LRTestOptions(args4);
 
-//		try {
-//		//	new LRTest(options);
-//
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		try {
+			new LRTestHaplotype(options);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void waitForEnter(String message, Object... args) {
@@ -158,280 +167,6 @@ public class LRTest {
 		}
 	}
 
-	private void testHaplotype() throws IOException {
-
-		options.setSplitMultiAllelic(true);
-		ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt");
-
-		System.out.println("Generating haplotype pairs from: " + variants.size() + " variants.");
-		// get a list of available haplotypes
-
-		HashSet<BitVector> availableHaplotypeHash = new HashSet<BitVector>();
-		ArrayList<BitVector> availableHaplotypesList = new ArrayList<>();
-
-		CompletionService<Triple<BitVector[], Integer, Boolean>> jobHandler = new ExecutorCompletionService<Triple<BitVector[], Integer, Boolean>>(exService);
-		for (int i = 0; i < finalDiseaseStatus.length; i++) {
-			jobHandler.submit(new LRTestHaploTask(i, variants, options.getGenotypeProbThreshold()));
-		}
-
-		int returned = 0;
-		BitVector[][] haplotypePairs = new BitVector[finalDiseaseStatus.length][];
-		while (returned < finalDiseaseStatus.length) {
-
-			try {
-				Triple<BitVector[], Integer, Boolean> fut = jobHandler.take().get();
-				BitVector[] haps = fut.getLeft();
-
-				if (!fut.getRight()) {
-					haplotypePairs[fut.getMiddle()] = haps;
-
-
-					if (!availableHaplotypeHash.contains(haps[0])) {
-						availableHaplotypesList.add(haps[0]);
-						availableHaplotypeHash.add(haps[0]);
-					}
-					if (!availableHaplotypeHash.contains(haps[1])) {
-						availableHaplotypesList.add(haps[1]);
-						availableHaplotypeHash.add(haps[1]);
-					}
-
-				} else {
-					haplotypePairs[fut.getMiddle()] = null;
-				}
-
-				returned++;
-				if (availableHaplotypeHash.size() > 1E5) {
-					System.out.println("Can't work with this number of haplotypes..");
-					System.exit(-1);
-				}
-
-
-				System.out.print("Individual: " + returned + "\t" + availableHaplotypeHash.size() + " available haplotypes so far.\r");
-
-
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-		}
-
-		System.out.println("Individual: " + returned + "\t" + availableHaplotypeHash.size() + " available haplotypes so far.");
-
-		// now we have a collection of all haplotypes available in the data..
-		// determine their frequencies
-		// index haplotyoes
-
-
-		HashMap<BitVector, Integer> index = new HashMap<BitVector, Integer>();
-		for (int b = 0; b < availableHaplotypesList.size(); b++) {
-			index.put(availableHaplotypesList.get(b), b);
-		}
-
-		double[] haplotypeFrequencies = new double[availableHaplotypesList.size()];
-		for (int i = 0; i < finalDiseaseStatus.length; i++) {
-			BitVector[] haps = haplotypePairs[i];
-			if (haps != null) {
-				Integer index1 = index.get(haps[0]);
-				Integer index2 = index.get(haps[1]);
-				haplotypeFrequencies[index1]++;
-				haplotypeFrequencies[index2]++;
-			}
-		}
-
-		int totalalleles = finalDiseaseStatus.length * 2;
-		double frequencythreshold = options.getHaplotypeFrequencyThreshold();
-		int nrAboveThreshold = 0;
-
-
-		Double maxFreq = 0d;
-		BitVector referenceHaplotype = null;
-		LRTestHaploTestTask lrht = new LRTestHaploTestTask();
-		ArrayList<BitVector> haplotypeWithFrequencyAboveThreshold = new ArrayList<>();
-		for (int i = 0; i < availableHaplotypesList.size(); i++) {
-			double ctr = haplotypeFrequencies[i];
-
-			haplotypeFrequencies[i] /= totalalleles;
-			BitVector hap = availableHaplotypesList.get(i);
-			int[] hapint = new int[variants.size()];
-			for (int q = 0; q < variants.size(); q++) {
-				if (hap.get(q)) {
-					hapint[q] = 1;
-				}
-			}
-
-			System.out.println(lrht.getHaplotypeDesc(availableHaplotypesList.get(i), variants) + "\t" + haplotypeFrequencies[i] + "\t" + ctr);
-			if (haplotypeFrequencies[i] > frequencythreshold) {
-				nrAboveThreshold++;
-				haplotypeWithFrequencyAboveThreshold.add(availableHaplotypesList.get(i));
-				if (haplotypeFrequencies[i] > maxFreq) {
-					referenceHaplotype = availableHaplotypesList.get(i);
-					maxFreq = haplotypeFrequencies[i];
-				}
-			}
-		}
-
-		System.out.println(nrAboveThreshold + " haplotypes with frequency > " + frequencythreshold);
-
-		System.out.println();
-
-		System.out.println("Allele frequencies: ");
-		for (int i = 0; i < variants.size(); i++) {
-			VCFVariant var = variants.get(i);
-			System.out.println(var.getId() + "\t" + var.getAlleleFrequencies()[0] + "\t" + var.getAlleleFrequencies()[1]);
-		}
-
-
-		int start = variants.get(0).getPos();
-		int stop = variants.get(variants.size() - 1).getPos();
-		Chromosome chr = variants.get(0).getChrObj();
-
-
-		// perform univariate test
-		TextFile out = new TextFile(options.getOutputdir() + "haptest.txt", TextFile.W);
-		AssociationFile f = new AssociationFile();
-		out.writeln(f.getHeader());
-
-		for (int i = 0; i < haplotypeWithFrequencyAboveThreshold.size(); i++) {
-			BitVector haplotypetotest = haplotypeWithFrequencyAboveThreshold.get(i);
-
-			String haplotypename = lrht.getHaplotypeDesc(haplotypetotest, variants);
-			Triple<String, AssociationResult, VCFVariant> result = lrht.calc(haplotypetotest,
-					referenceHaplotype,
-					haplotypeWithFrequencyAboveThreshold,
-					null,
-					haplotypePairs,
-					finalDiseaseStatus,
-					finalCovariates,
-					start,
-					stop,
-					chr,
-					variants);
-			System.out.println(haplotypename + "\t" + haplotypeFrequencies[i] + "\t" + result.getMiddle().getLog10Pval());
-			out.writeln(result.getMiddle().toString());
-
-		}
-		out.writeln("multivariate");
-
-
-		// perform multivariate test
-
-		Triple<String, AssociationResult, VCFVariant> result = lrht.calc(null,
-				referenceHaplotype,
-				haplotypeWithFrequencyAboveThreshold,
-				null,
-				haplotypePairs,
-				finalDiseaseStatus,
-				finalCovariates,
-				start,
-				stop,
-				chr,
-				variants);
-		out.writeln(result.getMiddle().toString());
-		System.out.println("multivariate:\t" + result.getMiddle().getLog10Pval());
-		System.out.println("Reference haplotype: " + lrht.getHaplotypeDesc(referenceHaplotype, variants));
-		out.writeln();
-		System.out.println("Pairwise");
-
-		// try other combinations of two haplotypes
-		ArrayList<BitVector> availableHaplotypesForConditionalAnalysis = new ArrayList<>();
-		for (BitVector b : haplotypeWithFrequencyAboveThreshold) {
-			if (!b.equals(referenceHaplotype)) {
-				availableHaplotypesForConditionalAnalysis.add(b);
-			}
-		}
-		System.out.println(availableHaplotypesForConditionalAnalysis.size() + " haps for conditional analysis");
-
-		System.out.println("Pairwise tests...");
-		for (int i = 0; i < availableHaplotypesForConditionalAnalysis.size(); i++) {
-			BitVector hap1 = availableHaplotypesForConditionalAnalysis.get(i);
-			for (int j = i + 1; j < availableHaplotypesForConditionalAnalysis.size(); j++) {
-				BitVector hap2 = availableHaplotypesForConditionalAnalysis.get(j);
-				ArrayList<BitVector> toTest = new ArrayList<>();
-				toTest.add(hap1);
-				toTest.add(hap2);
-
-				String haplotypeComboName = lrht.getHaplotypeComboDescription(toTest, variants);
-				result = lrht.calc(null,
-						referenceHaplotype,
-						toTest,
-						null,
-						haplotypePairs,
-						finalDiseaseStatus,
-						finalCovariates,
-						start,
-						stop,
-						chr,
-						variants);
-				System.out.println(haplotypeComboName + "\t" + result.getMiddle().getLog10Pval());
-				out.writeln(result.getMiddle().toString());
-			}
-		}
-
-		System.out.println();
-
-
-		out.writeln("conditional");
-		System.out.println("Conditional analysis");
-		// perform conditional analyses
-		// make all possible combinations of haplotypes
-
-
-		HaplotypeCombiner combiner = new HaplotypeCombiner(availableHaplotypesForConditionalAnalysis);
-		combiner.combine();
-		ArrayList<List<BitVector>> haplotypeCombinations = combiner.getResults();
-
-		for (int c = 0; c < haplotypeCombinations.size(); c++) {
-			ArrayList<BitVector> comboToTest = new ArrayList<>();
-			comboToTest.addAll(haplotypeCombinations.get(c));
-
-			HashSet<BitVector> combosToTestHash = new HashSet<BitVector>();
-			combosToTestHash.addAll(comboToTest);
-
-			// make a list of available haps to condition on
-			ArrayList<BitVector> possibleConditionalHaplotypes = new ArrayList<>();
-			for (int j = 0; j < availableHaplotypesForConditionalAnalysis.size(); j++) {
-				BitVector conditionalhaplotype = availableHaplotypesForConditionalAnalysis.get(j);
-
-				boolean conditionOnThisHaplotype = true;
-
-				if (combosToTestHash.contains(conditionalhaplotype)) {
-					conditionOnThisHaplotype = false;
-				}
-
-				if (conditionOnThisHaplotype) {
-					possibleConditionalHaplotypes.add(conditionalhaplotype);
-				}
-			}
-
-			if (!possibleConditionalHaplotypes.isEmpty()) {
-				String haplotypeComboName = lrht.getHaplotypeComboDescription(comboToTest, variants);
-
-				combiner = new HaplotypeCombiner(possibleConditionalHaplotypes);
-				combiner.combine();
-				ArrayList<List<BitVector>> combinations = combiner.getResults();
-				for (List<BitVector> combination : combinations) {
-					ArrayList<BitVector> conditonalCombo = new ArrayList<>();
-					conditonalCombo.addAll(combination);
-					String conditionalHaplotypeComboName = lrht.getHaplotypeComboDescription(conditonalCombo, variants);
-					result = lrht.calc(null,
-							referenceHaplotype,
-							comboToTest,
-							conditonalCombo,
-							haplotypePairs,
-							finalDiseaseStatus,
-							finalCovariates,
-							start,
-							stop,
-							chr,
-							variants);
-					System.out.println(haplotypeComboName + "\t" + conditionalHaplotypeComboName + "\t" + result.getMiddle().getLog10Pval());
-					out.writeln(result.getMiddle().toString());
-				}
-			}
-		}
-		out.close();
-	}
 
 	public void testNormal() throws IOException {
 
@@ -514,7 +249,7 @@ public class LRTest {
 
 	}
 
-	private boolean initialize() throws IOException {
+	protected boolean initialize() throws IOException {
 		System.out.println("Assoc: " + options.getVcf());
 		System.out.println("Covar: " + options.getCovariateFile());
 		System.out.println("Disease: " + options.getDiseaseStatusFile());
@@ -1353,34 +1088,5 @@ public class LRTest {
 		return new Pair<>(reg.univariate(xandy.getRight(), xprime), xprime.columns());
 	}
 
-	public class HaplotypeCombiner {
-		private final ArrayList<BitVector> inputHaplotypes;
-		ArrayList<List<BitVector>> results = new ArrayList<List<BitVector>>();
-		private List<BitVector> output = new ArrayList<BitVector>();
 
-		public HaplotypeCombiner(final ArrayList<BitVector> haps) {
-			inputHaplotypes = haps;
-		}
-
-		public void combine() {
-			combine(0);
-		}
-
-		private void combine(int start) {
-			for (int i = start; i < inputHaplotypes.size(); ++i) {
-				output.add(inputHaplotypes.get(i));
-				List<BitVector> tmpOutput = new ArrayList<BitVector>();
-				tmpOutput.addAll(output);
-				results.add(tmpOutput);
-				if (i < inputHaplotypes.size()) {
-					combine(i + 1);
-				}
-				output = output.subList(0, output.size() - 1);
-			}
-		}
-
-		public ArrayList<List<BitVector>> getResults() {
-			return results;
-		}
-	}
 }

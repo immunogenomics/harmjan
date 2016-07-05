@@ -52,12 +52,17 @@ public class PlotterImpQual {
 //		};
 
 		String[] files = new String[]{
-				"/Data/tmp/2016-06-29-quals/INFO/RA-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/INFO/RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/INFO/RA-HRC-w100kb.vcf.gz"
+				"/Data/tmp/2016-06-29-quals/INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/INFO/T1D-HRC-w100kb.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/reimpute/T1D-COSMO-EAGLE.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/reimpute/T1D-COSMO-SHAPEIT.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/reimpute/T1D-HRC-EAGLE-Michigan.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/reimpute/T1D-HRC-EAGLE.vcf.gz",
+				"/Data/tmp/2016-06-29-quals/reimpute/T1D-HRC-SHAPEIT.vcf.gz",
 		};
 
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb"};
+		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb", "COSMO/EAGLE", "COSMO/SHAPEIT", "HRC/EAGLE/MICHIGAN", "HRC/EAGLE", "HRC/SHAPEIT"};
 		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
 
 		String[] files2 = new String[]{
@@ -119,10 +124,10 @@ public class PlotterImpQual {
 		out = outdir + "plot1-all-impqual-withoutIndels-mafgt" + mafthreshold + ".pdf";
 		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
 
-//		usemafthreshold = true;
-//		requireabovemaf = false;
-//		out = outdir + "plot1-imputed-impqual-withoutIndels-maflt" + mafthreshold + ".png";
-//		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
+		usemafthreshold = true;
+		requireabovemaf = false;
+		out = outdir + "plot1-imputed-impqual-withoutIndels-maflt" + mafthreshold + ".png";
+		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
 
 
 //		out = outdir + "plot1-impqual-unfiltered.png";
@@ -324,14 +329,14 @@ public class PlotterImpQual {
 
 
 	public void plot1(String[] files, String[] labels, String out,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  double infoscorethreshold,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  double infoscorethreshold,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
@@ -438,13 +443,13 @@ public class PlotterImpQual {
 	}
 
 	public void plot2(String[] files, String[] datasetLabels, String out,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 2: x-axis maf, y-axis correlation (boxplot)
 

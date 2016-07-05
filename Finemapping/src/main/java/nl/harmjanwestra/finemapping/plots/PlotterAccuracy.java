@@ -23,7 +23,6 @@ import java.util.HashSet;
  */
 public class PlotterAccuracy {
 
-
 	// id	allele1	allele2	maf	callrate	allele21	allele22	maf 	cr	df	nrsamples	r	rsq	beta	se	impqual0	impqual1
 	int idcol = 0;
 	int minorallele1col = 1;
@@ -104,7 +103,9 @@ public class PlotterAccuracy {
 				"/Data/tmp/2016-06-29-quals/T1D-EUR.txt",
 				"/Data/tmp/2016-06-29-quals/T1D-COSMO.txt",
 				"/Data/tmp/2016-06-29-quals/T1D-HRC-COSMO.txt",
-				"/Data/tmp/2016-06-29-quals/T1D-HRC-w100kb.txt"
+				"/Data/tmp/2016-06-29-quals/T1D-HRC-w100kb.txt",
+
+
 		};
 		String diseaseprefix = "T1D";
 

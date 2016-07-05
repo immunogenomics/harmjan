@@ -41,10 +41,15 @@ public class Main {
 			} else if (options.mode.equals(MainOptions.MODE.QTL)) {
 				new QTLTest(new QTLTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
-				new LRTest(new LRTestOptions(args));
+				LRTestOptions optionsLR = new LRTestOptions(args);
+				if (optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.HAPLOTYPE)) {
+					new LRTestHaplotype(optionsLR);
+				} else {
+					new LRTest(optionsLR);
+				}
 			} else if (options.mode.equals(MainOptions.MODE.PROXYFINDER)) {
 				new ProxyFinder(new ProxyFinderOptions(args));
-			}  else if (options.mode.equals(MainOptions.MODE.COUNTVARIANTS)) {
+			} else if (options.mode.equals(MainOptions.MODE.COUNTVARIANTS)) {
 				new CountVariants(new CountVariantsOptions(args));
 			}
 		} catch (IOException e) {
