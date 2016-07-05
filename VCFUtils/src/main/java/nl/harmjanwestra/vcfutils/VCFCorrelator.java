@@ -2,7 +2,10 @@ package nl.harmjanwestra.vcfutils;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import nl.harmjanwestra.utilities.vcf.*;
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
+import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Regression;
@@ -38,7 +41,7 @@ public class VCFCorrelator {
 		String ln = tf.readLine();
 		int submitted = 0;
 
-		int cores = 1; // Runtime.getRuntime().availableProcessors();
+		int cores = Runtime.getRuntime().availableProcessors();
 		System.out.println("Detected " + cores + " Processors ");
 		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
 		CompletionService<String> jobHandler = new ExecutorCompletionService<>(threadPool);
@@ -479,8 +482,6 @@ public class VCFCorrelator {
 			return output;
 		}
 	}
-
-
 
 
 }

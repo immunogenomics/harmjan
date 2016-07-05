@@ -64,13 +64,14 @@ public class GeneticSimilarity {
 		}
 
 		ArrayList<String> listOfVariants = new ArrayList<>();
+		listOfVariants.addAll(hashOfVariants);
 		HashMap<String, Integer> variantToId = new HashMap<String, Integer>();
 		int varctr = 0;
 		for (String s : listOfVariants) {
 			variantToId.put(s, varctr);
 			varctr++;
 		}
-		listOfVariants.addAll(hashOfVariants);
+		System.out.println(variantToId.size() + " unique variants..");
 		VCFVariant[][] allvariants = new VCFVariant[2][listOfVariants.size()];
 		for (VCFVariant v : variants1) {
 			Integer id = variantToId.get(v.toString());
@@ -92,6 +93,7 @@ public class GeneticSimilarity {
 				missing++;
 			}
 		}
+		System.out.println(missing + " variants not present in VCF1 or VCF2.");
 		VCFVariant[][] tmpvariants = new VCFVariant[2][listOfVariants.size() - missing];
 		int present = 0;
 		for (int i = 0; i < listOfVariants.size(); i++) {
@@ -104,9 +106,10 @@ public class GeneticSimilarity {
 		allvariants = tmpvariants;
 
 		System.out.println(allvariants[0].length + " variants shared between datasets");
-		if (allvariants.length == 0) {
+		if (allvariants[0].length == 0) {
 			System.exit(-1);
 		}
+
 		// now see if the alleles match
 		VCFMerger merger = new VCFMerger();
 		for (int i = 0; i < allvariants[0].length; i++) {
