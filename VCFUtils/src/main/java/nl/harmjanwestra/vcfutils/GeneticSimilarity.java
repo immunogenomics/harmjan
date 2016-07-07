@@ -1,15 +1,19 @@
 package nl.harmjanwestra.vcfutils;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
+import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.*;
 
 /**
  * Created by Harm-Jan on 07/02/16.
@@ -131,7 +135,7 @@ public class GeneticSimilarity {
 
 		// prune the set of variants
 		missing = 0;
-		for (int i = 0; i < listOfVariants.size(); i++) {
+		for (int i = 0; i < allvariants[0].length; i++) {
 			if (allvariants[0][i] == null || allvariants[1][i] == null) {
 				missing++;
 			}
@@ -140,7 +144,7 @@ public class GeneticSimilarity {
 
 
 		present = 0;
-		for (int i = 0; i < listOfVariants.size(); i++) {
+		for (int i = 0; i < allvariants[0].length; i++) {
 			if (allvariants[0][i] != null && allvariants[1][i] != null) {
 				tmpvariants[0][present] = allvariants[0][i];
 				tmpvariants[1][present] = allvariants[1][i];
@@ -185,57 +189,56 @@ public class GeneticSimilarity {
 					dosages2[s][v] = d;
 				}
 			}
-
 		}
 
 		// get the genetic similarity
 		nl.harmjanwestra.utilities.vcf.GeneticSimilarity sim = new nl.harmjanwestra.utilities.vcf.GeneticSimilarity();
-		Pair<double[][], double[][]> similarity = sim.calculate(allvariants);
-		double[][] geneticSimilarity = similarity.getLeft();
-		double[][] sharedgenotypes = similarity.getRight();
-		double[][] correlationmatrix = new double[samples1.size()][samples2.size()];
-		// correlate the samples
-		TextFile out = new TextFile(outfile, TextFile.R);
-		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
-		out.writeln(header);
+		int cores = Runtime.getRuntime().availableProcessors();
+		System.out.println("Detected " + cores + " Processors ");
+		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
+
+		Pair<DoubleMatrix2D, DoubleMatrix2D> similarity = sim.calculate2(allvariants, threadPool);
+		DoubleMatrix2D geneticSimilarity = similarity.getLeft();
+		DoubleMatrix2D sharedgenotypes = similarity.getRight();
+		DoubleMatrix2D correlationmatrix = new DenseDoubleMatrix2D(samples1.size(), samples2.size());
+
 		ArrayList<String> pairsBiggerThan9 = new ArrayList<>();
-		ProgressBar pb = new ProgressBar(samples1.size(), "Correlating samples");
+		CompletionService<Triple<Integer, Integer, Double>> jobHandler = new ExecutorCompletionService<>(threadPool);
+		int submitted = 0;
 		for (int i = 0; i < samples1.size(); i++) {
 			double[] dosage1 = dosages1[i];
 			for (int j = 0; j < samples2.size(); j++) {
 				double[] dosage2 = dosages2[i];
-
-
-				// prune missing
-				int missinggt = 0;
-				for (int k = 0; k < dosage1.length; k++) {
-					if (dosage1[k] == -1 || dosage2[k] == -1) {
-						missinggt++;
-					}
-				}
-
-				double[] x = new double[dosage1.length - missinggt];
-				double[] y = new double[dosage2.length - missinggt];
-
-				int presentgt = 0;
-				for (int k = 0; k < dosage1.length; k++) {
-					if (dosage1[k] == -1 || dosage2[k] == -1) {
-
-					} else {
-						x[presentgt] = dosage1[k];
-						y[presentgt] = dosage2[k];
-						presentgt++;
-					}
-				}
-
-				double corr = JSci.maths.ArrayMath.correlation(x, y);
-				if (corr > 0.9) {
-					pairsBiggerThan9.add(samples1.get(i) + "\t" + samples2.get(j) + "\t" + corr + "\t" + geneticSimilarity[i][j] + "\t" + sharedgenotypes[i][j]);
-				}
-				correlationmatrix[i][j] = corr;
-				out.writeln(samples1.get(i) + "\t" + samples2.get(j) + "\t" + corr + "\t" + geneticSimilarity[i][j] + "\t" + sharedgenotypes[i][j]);
+				jobHandler.submit(new CorrelationTask(i, j, dosage1, dosage2));
+				submitted++;
 			}
-			pb.set(i);
+		}
+
+		// correlate the samples
+		TextFile out = new TextFile(outfile, TextFile.R);
+		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
+		out.writeln(header);
+		ProgressBar pb = new ProgressBar(submitted, "Correlating samples");
+		int returned = 0;
+		while (returned < submitted) {
+			try {
+				Future<Triple<Integer, Integer, Double>> future = jobHandler.take();
+				Triple<Integer, Integer, Double> triple = future.get();
+				int i = triple.getLeft();
+				int j = triple.getMiddle();
+				double corr = triple.getRight();
+				if (corr > 0.9) {
+					pairsBiggerThan9.add(samples1.get(i) + "\t" + samples2.get(j) + "\t" + corr + "\t" + geneticSimilarity.get(i, j) + "\t" + sharedgenotypes.get(i, j));
+				}
+				correlationmatrix.set(i, j, corr);
+				out.writeln(samples1.get(i) + "\t" + samples2.get(j) + "\t" + corr + "\t" + geneticSimilarity.get(i, j) + "\t" + sharedgenotypes.get(i, j));
+				returned++;
+				pb.set(returned);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
 		}
 		out.close();
 		pb.close();
@@ -251,12 +254,12 @@ public class GeneticSimilarity {
 			double maxx = 0;
 			int maxj = 0;
 			for (int j = 0; j < samples2.size(); j++) {
-				if (correlationmatrix[i][j] > maxx) {
-					maxx = correlationmatrix[i][j];
+				if (correlationmatrix.get(i, j) > maxx) {
+					maxx = correlationmatrix.get(i, j);
 					maxj = j;
 				}
 			}
-			out3.writeln(samples1.get(i) + "\t" + samples2.get(maxj) + "\t" + correlationmatrix[i][maxj] + "\t" + geneticSimilarity[i][maxj] + "\t" + sharedgenotypes[i][maxj]);
+			out3.writeln(samples1.get(i) + "\t" + samples2.get(maxj) + "\t" + correlationmatrix.get(i, maxj) + "\t" + geneticSimilarity.get(i, maxj) + "\t" + sharedgenotypes.get(i, maxj));
 		}
 		out3.close();
 
@@ -267,23 +270,64 @@ public class GeneticSimilarity {
 			int maxi = 0;
 			for (int i = 0; i < samples1.size(); i++) {
 
-				if (correlationmatrix[i][j] > maxx) {
-					maxx = correlationmatrix[i][j];
+				if (correlationmatrix.get(i, j) > maxx) {
+					maxx = correlationmatrix.get(i, j);
 					maxi = i;
 				}
 			}
-			out4.writeln(samples1.get(maxi) + "\t" + samples2.get(j) + "\t" + correlationmatrix[maxi][j] + "\t" + geneticSimilarity[maxi][j] + "\t" + sharedgenotypes[maxi][j]);
+			out4.writeln(samples1.get(maxi) + "\t" + samples2.get(j) + "\t" + correlationmatrix.get(maxi, j) + "\t" + geneticSimilarity.get(maxi, j) + "\t" + sharedgenotypes.get(maxi, j));
 		}
 		out4.close();
 
 	}
 
-	private Pair<ArrayList<String>, ArrayList<VCFVariant>> loadData(String vcf, HashSet<String> hashSetVariantsToExclude) throws IOException {
+	public class CorrelationTask implements Callable<Triple<Integer, Integer, Double>> {
 
+		int i;
+		int j;
+		double[] dosage1;
+		double[] dosage2;
+
+		public CorrelationTask(int i, int j, double[] dosage1, double[] dosage2) {
+			this.i = i;
+			this.j = j;
+			this.dosage1 = dosage1;
+			this.dosage2 = dosage2;
+		}
+
+		@Override
+		public Triple<Integer, Integer, Double> call() throws Exception {
+			// prune missing
+			int missinggt = 0;
+			for (int k = 0; k < dosage1.length; k++) {
+				if (dosage1[k] == -1 || dosage2[k] == -1) {
+					missinggt++;
+				}
+			}
+
+			double[] x = new double[dosage1.length - missinggt];
+			double[] y = new double[dosage2.length - missinggt];
+
+			int presentgt = 0;
+			for (int k = 0; k < dosage1.length; k++) {
+				if (dosage1[k] == -1 || dosage2[k] == -1) {
+
+				} else {
+					x[presentgt] = dosage1[k];
+					y[presentgt] = dosage2[k];
+					presentgt++;
+				}
+			}
+
+			double corr = JSci.maths.ArrayMath.correlation(x, y);
+			return new Triple<Integer, Integer, Double>(i, j, corr);
+		}
+	}
+
+	private Pair<ArrayList<String>, ArrayList<VCFVariant>> loadData(String vcf, HashSet<String> hashSetVariantsToExclude) throws IOException {
 		VCFGenotypeData data1 = new VCFGenotypeData(vcf);
 		ArrayList<String> samples = data1.getSamples();
 		data1.close();
-
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String ln = tf.readLine();
 		ArrayList<VCFVariant> variants = new ArrayList<>();
@@ -313,4 +357,5 @@ public class GeneticSimilarity {
 		System.out.println("Done.");
 		return new Pair<>(samples, variants);
 	}
+
 }

@@ -557,6 +557,17 @@ public class Main {
 				input = cmd.getOptionValue("i");
 			}
 
+			if (cmd.hasOption("updaters")) {
+
+				VCFVariantRSNameUpdater updatr = new VCFVariantRSNameUpdater();
+				if (cmd.hasOption("dbsnp")) {
+					updatr.updateRSNames(cmd.getOptionValue("dbsnp"), input);
+				} else {
+					System.out.println("Use --dbsnp, -i with --updaters");
+				}
+				System.exit(-1);
+			}
+
 			if (cmd.hasOption("listsamples") && run) {
 				VCFListSamples s = new VCFListSamples();
 				s.run(input);
@@ -717,16 +728,6 @@ public class Main {
 					filter.filter(input, out, samplefile, keep);
 				} else {
 					System.out.println("Use params -i -o and -l");
-				}
-
-
-			} else if (cmd.hasOption("updaters")) {
-
-				VCFVariantRSNameUpdater updatr = new VCFVariantRSNameUpdater();
-				if (cmd.hasOption("dbsnp")) {
-					updatr.updateRSNames(cmd.getOptionValue("dbsnp"), input, out);
-				} else {
-					System.out.println("Use --dbsnp, -i and -o with --updaters");
 				}
 
 
