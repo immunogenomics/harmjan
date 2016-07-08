@@ -202,24 +202,55 @@ public class GeneticSimilarity {
 		DoubleMatrix2D sharedgenotypes = similarity.getRight();
 		DoubleMatrix2D correlationmatrix = new DenseDoubleMatrix2D(samples1.size(), samples2.size());
 
+		System.out.println("Submitting correlation jobs..");
 		ArrayList<String> pairsBiggerThan9 = new ArrayList<>();
 		CompletionService<Triple<Integer, Integer, Double>> jobHandler = new ExecutorCompletionService<>(threadPool);
 		int submitted = 0;
+		// correlate the samples
+		TextFile out = new TextFile(outfile, TextFile.R);
+		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
+		out.writeln(header);
+		ProgressBar pb = new ProgressBar((samples1.size() * samples2.size()), "Correlating samples");
+		int returned = 0;
 		for (int i = 0; i < samples1.size(); i++) {
 			double[] dosage1 = dosages1[i];
 			for (int j = 0; j < samples2.size(); j++) {
 				double[] dosage2 = dosages2[i];
 				jobHandler.submit(new CorrelationTask(i, j, dosage1, dosage2));
+
 				submitted++;
+				if (submitted % 1000000 == 0) {
+					System.out.println(submitted + " submitted. clearing queue");
+					while (returned < submitted) {
+						try {
+							Future<Triple<Integer, Integer, Double>> future = jobHandler.take();
+							Triple<Integer, Integer, Double> triple = future.get();
+							int i2 = triple.getLeft();
+							int j2 = triple.getMiddle();
+							double corr = triple.getRight();
+							if (corr > 0.9) {
+								pairsBiggerThan9.add(samples1.get(i2) + "\t" + samples2.get(j2) + "\t" + corr + "\t" + geneticSimilarity.get(i2, j2) + "\t" + sharedgenotypes.get(i2, j2));
+							}
+							correlationmatrix.set(i2, j2, corr);
+							out.writeln(samples1.get(i2) + "\t" + samples2.get(j2) + "\t" + corr + "\t" + geneticSimilarity.get(i2, j2) + "\t" + sharedgenotypes.get(i2, j2));
+							returned++;
+							pb.set(returned);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							e.printStackTrace();
+						}
+					}
+
+					System.out.println("Done clearing queue. " + returned + " returned");
+					System.out.println(pairsBiggerThan9.size() + " have corr > 0.9 sofar");
+					pb.print();
+				}
 			}
 		}
+		System.out.println("Done submitting correlation jobs..");
 
-		// correlate the samples
-		TextFile out = new TextFile(outfile, TextFile.R);
-		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
-		out.writeln(header);
-		ProgressBar pb = new ProgressBar(submitted, "Correlating samples");
-		int returned = 0;
+
 		while (returned < submitted) {
 			try {
 				Future<Triple<Integer, Integer, Double>> future = jobHandler.take();
@@ -242,6 +273,7 @@ public class GeneticSimilarity {
 		}
 		out.close();
 		pb.close();
+		System.out.println("Done correlating..");
 
 		TextFile out2 = new TextFile(outfile + "biggerthanthreshold.txt", TextFile.W);
 		out2.writeln(header);

@@ -98,8 +98,10 @@ public class GeneticSimilarity {
 				jobHandler.submit(t);
 
 				nrSubmitted++;
-				if (nrSubmitted % 100000 == 0) {
+				if (nrSubmitted % 1000000 == 0) {
+					System.out.println("Clearing buffer..... " + nrSubmitted + " / " + (nrInds1 * nrInds2));
 					while (returned < nrSubmitted) {
+
 						try {
 							Triple<Integer, Integer, Pair<Double, Double>> future = jobHandler.take().get();
 
@@ -118,10 +120,14 @@ public class GeneticSimilarity {
 						} catch (ExecutionException e) {
 							e.printStackTrace();
 						}
+
 					}
+					System.out.println("Done clearing buffer.. " + returned);
+					pb2.print();
 				}
 			}
 		}
+		System.out.println("Done submitting..");
 
 		while (returned < nrSubmitted) {
 			try {
@@ -145,6 +151,7 @@ public class GeneticSimilarity {
 		}
 		pb2.close();
 
+		System.out.println("Done calculating genetic distance.");
 
 		return new Pair<DoubleMatrix2D, DoubleMatrix2D>(geneticSimilarity, geneticSimilaritySameGenotypes);
 	}
