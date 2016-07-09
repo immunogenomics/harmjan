@@ -3,6 +3,7 @@ package nl.harmjanwestra.gwas;
 import cern.colt.matrix.tbit.BitVector;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.gwas.tasks.LRTestHaploTask;
@@ -19,6 +20,7 @@ import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.ChiSquare;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -86,7 +88,15 @@ public class LRTestHaplotype extends LRTest {
 		univariate(out, hapdata, haplotypeWithFrequencyAboveThreshold, variants);
 
 		out.writeln("multivariate");
-
+		int refhapcol = 0;
+		double maxfreq = 0;
+		for (int i = 0; i < haplotypeFrequencies.length; i++) {
+			if (haplotypeFrequencies[i] > maxfreq) {
+				refhapcol = i;
+				maxfreq = haplotypeFrequencies[i];
+			}
+		}
+		multivariate(out, hapdata, haplotypeWithFrequencyAboveThreshold, variants, refhapcol);
 
 		// perform multivariate test
 
@@ -227,11 +237,12 @@ public class LRTestHaplotype extends LRTest {
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
 			y[i] = finalDiseaseStatus[i].getNumber();
 		}
+		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, finalCovariates);
 
 		for (int hap = 0; hap < hapdata.columns(); hap++) {
 			DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(intercept, hapdata.viewColumn(hap).reshape(hapdata.rows(), 1));
 			x = DoubleFactory2D.dense.appendColumns(x, finalCovariates);
-			DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, finalCovariates);
+
 
 			System.out.println(x.rows() + "\t" + xprime.rows() + "\t" + y.length);
 			System.out.println(x.columns() + "\t" + xprime.columns() + "\t" + 1);
@@ -310,10 +321,112 @@ public class LRTestHaplotype extends LRTest {
 //				snp.setMinorAllele("");
 //			}
 			out.writeln(result.toString());
-			System.out.println(lrht.getHaplotypeDesc(availableHaplotypes.get(hap), variants) + "\t" + OR + "\t" + p);
+			System.out.println(lrht.getHaplotypeComboDescription(availableHaplotypes, variants) + "\t" + Strings.concat(betasmlelr, Strings.semicolon) + "\t" + Strings.concat(or, Strings.semicolon) + "\t" + p);
+		}
+	}
+
+	public void multivariate(TextFile out, DoubleMatrix2D hapdata, ArrayList<BitVector> availableHaplotypes, ArrayList<VCFVariant> variants, int referenceHaplotypeCol) throws IOException {
+		// make the column for the intercept
+		DoubleMatrix2D intercept = DoubleFactory2D.dense.make(hapdata.rows(), 1);
+		intercept.assign(1);
+
+//		DoubleMatrix2D diseaseStatus = new DenseDoubleMatrix2D(hapdata.rows(), 1);
+
+		if (intercept.rows() != finalDiseaseStatus.length) {
+			System.out.println("????");
+			System.exit(-1);
 		}
 
+		double[] y = new double[finalDiseaseStatus.length];
+		for (int i = 0; i < finalDiseaseStatus.length; i++) {
+			y[i] = finalDiseaseStatus[i].getNumber();
+		}
 
+		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, finalCovariates);
+		DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
+		int[] colindexes = new int[hapdata.columns() - 1];
+		int ctr = 0;
+		for (int i = 0; i < hapdata.columns(); i++) {
+			if (i != referenceHaplotypeCol) {
+				colindexes[ctr] = i;
+				ctr++;
+			}
+		}
+		DoubleMatrix2D submatX = dda.subMatrix(hapdata, 0, hapdata.rows() - 1, colindexes);
+
+		DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(intercept, submatX);
+		x = DoubleFactory2D.dense.appendColumns(x, finalCovariates);
+
+		System.out.println(x.rows() + "\t" + xprime.rows() + "\t" + y.length);
+		System.out.println(x.columns() + "\t" + xprime.columns() + "\t" + 1);
+		System.out.println();
+
+		LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
+		LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+		LogisticRegressionResult resultX = reg.univariate(y, x);
+
+		int nrRemaining = hapdata.columns() - 1;
+		double devx = resultX.getDeviance();
+		double devnull = resultCovars.getDeviance();
+		double[] betasmlelr = new double[nrRemaining];
+		double[] stderrsmlelr = new double[nrRemaining];
+		double[] or = new double[nrRemaining];
+		double[] orhi = new double[nrRemaining];
+		double[] orlo = new double[nrRemaining];
+
+		for (int i = 0; i < nrRemaining; i++) {
+			int mlecol = i + 1;
+
+
+			betasmlelr[i] = resultX.getBeta()[mlecol];
+			stderrsmlelr[i] = resultX.getStderrs()[mlecol];
+			double beta = betasmlelr[i];
+			double se = resultX.getStderrs()[mlecol];
+			double OR = Math.exp(beta);
+			double orLow = Math.exp(beta - 1.96 * se);
+			double orHigh = Math.exp(beta + 1.96 * se);
+			or[i] = OR;
+			orhi[i] = orHigh;
+			orlo[i] = orLow;
+
+		}
+
+		double deltaDeviance = devnull - devx;
+		int df = x.columns() - xprime.columns();
+		double p = ChiSquare.getP(df, deltaDeviance);
+
+		AssociationResult result = new AssociationResult();
+		result.setDevianceNull(devnull);
+		result.setDevianceGeno(devx);
+		result.setDf(df);
+		result.setDfalt(x.columns());
+		result.setDfnull(xprime.columns());
+
+		result.setBeta(betasmlelr);
+		result.setSe(stderrsmlelr);
+		result.setPval(p);
+
+		SNPFeature snp = new SNPFeature(Chromosome.ONE, 1, 1);
+
+
+		result.setSnp(snp);
+		result.setN(x.rows());
+		snp.setMaf(0d);
+		snp.setHwep(0d);
+
+		Double imputationqualityscore = 1d;
+		snp.setImputationQualityScore(imputationqualityscore);
+
+		LRTestHaploTestTask lrht = new LRTestHaploTestTask();
+
+
+		snp.setAlleles(new String[]{"", ""});
+
+		snp.setName(lrht.getHaplotypeComboDescription(availableHaplotypes, variants));
+		snp.setMinorAllele("");
+		out.writeln(result.toString());
+		System.out.println(Math.exp(0.2244776321462565));
+		System.out.println(lrht.getHaplotypeComboDescription(availableHaplotypes, variants) + "\t" + Strings.concat(betasmlelr, Strings.semicolon) + "\t" + Strings.concat(or, Strings.semicolon) + "\t" + p + "\t" + -Math.log10(p));
 	}
 
 	private Triple<DoubleMatrix2D, ArrayList<BitVector>, BitVector[][]> createHaplotypes(ArrayList<VCFVariant> variants) {

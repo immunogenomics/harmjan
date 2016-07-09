@@ -112,7 +112,7 @@ public class GeneticSimilarity {
 
 							geneticSimilarity.setQuick(i1, j1, similarity);
 							geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes);
-							pb2.iterate();
+
 							returned++;
 
 						} catch (InterruptedException e) {
@@ -122,7 +122,9 @@ public class GeneticSimilarity {
 						}
 
 					}
+
 					System.out.println("Done clearing buffer.. " + returned);
+					pb2.set(returned);
 					pb2.print();
 				}
 			}

@@ -30,19 +30,6 @@ public class GeneticSimilarity {
 		HashSet<String> hashSetVariantsToExclude = new HashSet<String>();
 		hashSetVariantsToExclude.addAll(listOfVariantsToExcludeArr);
 
-//		// index the variants
-//		HashMap<String, Integer> variantToId = new HashMap<String, Integer>();
-//		HashSet<Integer> chromosomes = new HashSet<Integer>();
-//		for (int i = 0; i < listOfVariants.size(); i++) {
-//			String var = listOfVariants.get(i);
-//			String[] varelems = var.split("_");
-//
-//			chromosomes.add(Integer.parseInt(varelems[0]));
-//			variantToId.put(listOfVariants.get(i), i);
-//		}
-//
-//		VCFVariant[][] allvariants = new VCFVariant[2][listOfVariants.size()];
-
 		// load the variants for ds1
 		System.out.println("VCF1: " + vcf1);
 		System.out.println("VCF2: " + vcf2);
@@ -163,6 +150,19 @@ public class GeneticSimilarity {
 			System.exit(-1);
 		}
 
+
+		// get the genetic similarity
+		nl.harmjanwestra.utilities.vcf.GeneticSimilarity sim = new nl.harmjanwestra.utilities.vcf.GeneticSimilarity();
+		int cores = Runtime.getRuntime().availableProcessors();
+		System.out.println("Detected " + cores + " Processors ");
+		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
+
+		Pair<DoubleMatrix2D, DoubleMatrix2D> similarity = sim.calculate2(allvariants, threadPool);
+		DoubleMatrix2D geneticSimilarity = similarity.getLeft();
+		DoubleMatrix2D sharedgenotypes = similarity.getRight();
+		DoubleMatrix2D correlationmatrix = new DenseDoubleMatrix2D(samples1.size(), samples2.size());
+
+
 		// make two dosage matrices
 		double[][] dosages1 = new double[samples1.size()][allvariants[0].length];
 		double[][] dosages2 = new double[samples2.size()][allvariants[0].length];
@@ -179,7 +179,7 @@ public class GeneticSimilarity {
 				}
 			}
 
-			VCFVariant var2 = allvariants[0][v];
+			VCFVariant var2 = allvariants[1][v];
 			dosage = var2.getDosage();
 			for (int s = 0; s < samples2.size(); s++) {
 				double d = dosage[s][0];
@@ -191,23 +191,12 @@ public class GeneticSimilarity {
 			}
 		}
 
-		// get the genetic similarity
-		nl.harmjanwestra.utilities.vcf.GeneticSimilarity sim = new nl.harmjanwestra.utilities.vcf.GeneticSimilarity();
-		int cores = Runtime.getRuntime().availableProcessors();
-		System.out.println("Detected " + cores + " Processors ");
-		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
-
-		Pair<DoubleMatrix2D, DoubleMatrix2D> similarity = sim.calculate2(allvariants, threadPool);
-		DoubleMatrix2D geneticSimilarity = similarity.getLeft();
-		DoubleMatrix2D sharedgenotypes = similarity.getRight();
-		DoubleMatrix2D correlationmatrix = new DenseDoubleMatrix2D(samples1.size(), samples2.size());
-
 		System.out.println("Submitting correlation jobs..");
 		ArrayList<String> pairsBiggerThan9 = new ArrayList<>();
 		CompletionService<Triple<Integer, Integer, Double>> jobHandler = new ExecutorCompletionService<>(threadPool);
 		int submitted = 0;
 		// correlate the samples
-		TextFile out = new TextFile(outfile, TextFile.R);
+		TextFile out = new TextFile(outfile, TextFile.W);
 		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
 		out.writeln(header);
 		ProgressBar pb = new ProgressBar((samples1.size() * samples2.size()), "Correlating samples");
@@ -215,7 +204,7 @@ public class GeneticSimilarity {
 		for (int i = 0; i < samples1.size(); i++) {
 			double[] dosage1 = dosages1[i];
 			for (int j = 0; j < samples2.size(); j++) {
-				double[] dosage2 = dosages2[i];
+				double[] dosage2 = dosages2[j];
 				jobHandler.submit(new CorrelationTask(i, j, dosage1, dosage2));
 
 				submitted++;
@@ -234,7 +223,7 @@ public class GeneticSimilarity {
 							correlationmatrix.set(i2, j2, corr);
 							out.writeln(samples1.get(i2) + "\t" + samples2.get(j2) + "\t" + corr + "\t" + geneticSimilarity.get(i2, j2) + "\t" + sharedgenotypes.get(i2, j2));
 							returned++;
-							pb.set(returned);
+
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						} catch (ExecutionException e) {
@@ -244,12 +233,12 @@ public class GeneticSimilarity {
 
 					System.out.println("Done clearing queue. " + returned + " returned");
 					System.out.println(pairsBiggerThan9.size() + " have corr > 0.9 sofar");
+					pb.set(returned);
 					pb.print();
 				}
 			}
 		}
 		System.out.println("Done submitting correlation jobs..");
-
 
 		while (returned < submitted) {
 			try {
@@ -264,7 +253,7 @@ public class GeneticSimilarity {
 				correlationmatrix.set(i, j, corr);
 				out.writeln(samples1.get(i) + "\t" + samples2.get(j) + "\t" + corr + "\t" + geneticSimilarity.get(i, j) + "\t" + sharedgenotypes.get(i, j));
 				returned++;
-				pb.set(returned);
+				pb.iterate();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
