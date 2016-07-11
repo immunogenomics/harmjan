@@ -45,6 +45,7 @@ public class PlotterAccuracy {
 	int height = 480;
 	boolean onlyIc = false;
 
+
 	public static void main(String[] args) {
 		PlotterAccuracy p = new PlotterAccuracy();
 		try {
@@ -100,33 +101,47 @@ public class PlotterAccuracy {
 
 	public void plotCorr() throws IOException, DocumentException {
 		String[] files = new String[]{
-				"/Data/tmp/2016-06-29-quals/T1D-EUR.txt",
-				"/Data/tmp/2016-06-29-quals/T1D-COSMO.txt",
-				"/Data/tmp/2016-06-29-quals/T1D-HRC-COSMO.txt",
-				"/Data/tmp/2016-06-29-quals/T1D-HRC-w100kb.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO-EAGLE.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO-SHAPEIT.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-SHAPEIT.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
+		};
 
-
+		String[] labels = new String[]{
+				"EUR",
+				"COSMO",
+				"HRC / COSMO / EAGLE",
+				"HRC / COSMO / SHAPEIT",
+				"HRC / HRC / EAGLE",
+				"HRC / HRC / SHAPEIT",
+				"HRC / HRC / EAGLE / MICHIGAN"
 		};
 		String diseaseprefix = "T1D";
 
-//		files = new String[]{
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/RA-EUR.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/RA-COSMO.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/RA-HRC-COSMO.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/Accuracy/RA-HRC-w100kb.txt"
-//		};
-//		diseaseprefix = "RA";
-
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-COSMO-w100kb"};
-		String variantsOnIC = "/Data/tmp/2016-05-20/T1D-recode-stats.vcf.gz";
-
-		String[] files2 = new String[]{
-				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
+		files = new String[]{
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
 		};
+		labels = new String[]{
+				"EUR",
+				"COSMO",
+				"HRC / COSMO / EAGLE"
+		};
+		diseaseprefix = "RA";
+
+		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-recode-stats.vcf.gz";
+
+//		String[] files2 = new String[]{
+//				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
+//		};
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
 		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/AccuracyPlots/";
+		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-plots/";
 		double mafthreshold = 0.0;
 
 		boolean windows = false;
@@ -144,9 +159,9 @@ public class PlotterAccuracy {
 			variantsOnIC = "D:\\tmp\\2016-05-19\\T1D-recode-stats.vcf.gz";
 			bedregions = "D:\\tmp\\2016-05-19\\AllICLoci.bed";
 			outdir = "D:\\tmp\\2016-05-19\\T1D-plotsAccuracy\\";
-			files2 = new String[]{
-					"D:\\tmp\\2016-05-19\\ImmunoChipGenotyped.txt"
-			};
+//			files2 = new String[]{
+//					"D:\\tmp\\2016-05-19\\ImmunoChipGenotyped.txt"
+//			};
 		}
 
 		String ext = "pdf";
@@ -172,7 +187,7 @@ public class PlotterAccuracy {
 		boolean requireabovemaf = false;
 		boolean plotOnlyImputed = false;
 
-
+		int maxNrVals = 946;
 		includeindels = true;
 		usemafthreshold = true;
 		requireabovemaf = true;
@@ -187,22 +202,23 @@ public class PlotterAccuracy {
 		out = outdir + diseaseprefix + "-plot1-imputedonly-rsquared-withoutindels-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
-		includeindels = true;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = true;
-		out = outdir + diseaseprefix + "-plot1-imputedonly-impqual-withindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = true;
-		out = outdir + diseaseprefix + "-plot1-imputedonly-impqual-withoutindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
+//		includeindels = true;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = true;
+//		out = outdir + diseaseprefix + "-plot1-imputedonly-impqual-withindels-mafgt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = true;
+//		out = outdir + diseaseprefix + "-plot1-imputedonly-impqual-withoutindels-mafgt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
 
 		// include unimputed variants as well
+		maxNrVals = 2134;
 		includeindels = true;
 		usemafthreshold = true;
 		requireabovemaf = true;
@@ -217,19 +233,19 @@ public class PlotterAccuracy {
 		out = outdir + diseaseprefix + "-plot1-rsquared-withoutindels-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
-		includeindels = true;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = false;
-		out = outdir + diseaseprefix + "-plot1-impqual-withindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-		includeindels = false;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = false;
-		out = outdir + diseaseprefix + "-plot1-impqual-withoutindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//		includeindels = true;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = false;
+//		out = outdir + diseaseprefix + "-plot1-impqual-withindels-mafgt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+//
+//		includeindels = false;
+//		usemafthreshold = true;
+//		requireabovemaf = true;
+//		plotOnlyImputed = false;
+//		out = outdir + diseaseprefix + "-plot1-impqual-withoutindels-mafgt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
 
 //
@@ -546,8 +562,14 @@ public class PlotterAccuracy {
 
 
 				if (include) {
-					double val = Double.parseDouble(elems[col]);
-					corvals.add(val);
+					double val = 0;
+					if (col < elems.length) {
+						if (!elems[col].equals("null")) {
+							val = Double.parseDouble(elems[col]);
+							corvals.add(val);
+						}
+					}
+
 				}
 				elems = tf.readLineElems(TextFile.tab);
 			}
@@ -584,6 +606,7 @@ public class PlotterAccuracy {
 		panel.setData(y, x);
 		Range range = new Range(0, 0, 1, maxSize);
 		range.roundX();
+		range.roundY();
 		panel.setDataRange(range);
 		panel.setDatasetLabels(labels);
 		grid.addPanel(panel);

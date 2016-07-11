@@ -31,11 +31,34 @@ public class VariantCounter {
 		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
 
 		String[] files = new String[]{
-				"/Data/tmp/2016-06-29-quals/Acc/T1D-EUR.txt",
-				"/Data/tmp/2016-06-29-quals/Acc/T1D-COSMO.txt",
-				"/Data/tmp/2016-06-29-quals/Acc/T1D-HRC-w100kb.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO-EAGLE.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO-SHAPEIT.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-SHAPEIT.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
 		};
-		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb"};
+		String[] labels = new String[]{
+				"EUR",
+				"COSMO",
+				"HRC / COSMO / EAGLE",
+				"HRC / COSMO / SHAPEIT",
+				"HRC / HRC / EAGLE",
+				"HRC / HRC / SHAPEIT",
+				"HRC / HRC / EAGLE / MICHIGAN"
+		};
+
+		files = new String[]{
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
+		};
+		labels = new String[]{
+				"EUR",
+				"COSMO",
+				"HRC / COSMO / EAGLE"
+		};
 
 		// get a list of maf > 0.005 variants that on the sequencingpanel
 		TextFile tf = new TextFile(seqpanelvcf, TextFile.R);
@@ -44,11 +67,11 @@ public class VariantCounter {
 
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
-		double infothreshold = 0.8;
-		boolean includeICVariants = false;
+		double infothreshold = 0.5;
+		boolean includeICVariants = true;
 
 		boolean includeId = true;
-		boolean includeIndels = true;
+		boolean includeIndels = false;
 
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
 		System.out.println(variantsOnICHash.size() + " total on IC");
@@ -116,26 +139,29 @@ public class VariantCounter {
 			int nrSequencdPassingMafAndRSQ = 0;
 			while (elems != null) {
 
-				double maf = Double.parseDouble(elems[p.maf2col]);
-				double val = Double.parseDouble(elems[p.rsqlcol]);
 
+				if (!elems[p.rsqlcol].equals("null")) {
+					double val = Double.parseDouble(elems[p.rsqlcol]);
+					double maf = Double.parseDouble(elems[p.maf2col]);
 
-				String[] varElems = elems[0].split("_");
+					String[] varElems = elems[0].split("_");
 
-				boolean sequenced = isVariantOnIC(varElems, sequencedVariantsHash, includeId);
+					boolean sequenced = isVariantOnIC(varElems, sequencedVariantsHash, includeId);
 
-				if (sequenced) {
-					nrSequenced++;
-					if (maf > mafthreshold) {
-						nrSequencedPassingMaf++;
+					if (sequenced) {
+						nrSequenced++;
+						if (maf > mafthreshold) {
+							nrSequencedPassingMaf++;
+							if (val > infothreshold) {
+								nrSequencdPassingMafAndRSQ++;
+							}
+						}
 						if (val > infothreshold) {
-							nrSequencdPassingMafAndRSQ++;
+							nrSequencedPassingRSQ++;
 						}
 					}
-					if (val > infothreshold) {
-						nrSequencedPassingRSQ++;
-					}
 				}
+
 				elems = tf2.readLineElems(TextFile.tab);
 			}
 			tf2.close();

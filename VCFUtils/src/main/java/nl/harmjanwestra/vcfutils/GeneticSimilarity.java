@@ -299,7 +299,7 @@ public class GeneticSimilarity {
 			out4.writeln(samples1.get(maxi) + "\t" + samples2.get(j) + "\t" + correlationmatrix.get(maxi, j) + "\t" + geneticSimilarity.get(maxi, j) + "\t" + sharedgenotypes.get(maxi, j));
 		}
 		out4.close();
-		
+
 		threadPool.shutdown();
 	}
 

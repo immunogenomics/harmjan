@@ -26,7 +26,7 @@ public class PlotterImpQual {
 	int width = 640;
 	int height = 480;
 	boolean onlyIc = false;
-	boolean windows = true;
+	boolean windows = false;
 
 	public static void main(String[] args) {
 
@@ -44,22 +44,11 @@ public class PlotterImpQual {
 	public void run() throws IOException, DocumentException {
 
 //		String[] files = new String[]{
-//				"/Data/tmp/2016-05-23/T1D-EUR-stats.vcf.gz",
-//				"/Data/tmp/2016-05-23/T1D-COSMO-stats.vcf.gz",
-//				"/Data/tmp/2016-05-23/T1D-HRC-COSMO.vcf.gz",
-//				"/Data/tmp/2016-05-23/T1D-HRC-COSMO-w100kb.vcf.gz",
-//				"/Data/tmp/2016-05-23/T1D-HRC-HRC-w100kb.vcf.gz"
+//
 //		};
 
 		String[] files = new String[]{
-				"/Data/tmp/2016-06-29-quals/INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/INFO/T1D-HRC-w100kb.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/reimpute/T1D-COSMO-EAGLE.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/reimpute/T1D-COSMO-SHAPEIT.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/reimpute/T1D-HRC-EAGLE-Michigan.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/reimpute/T1D-HRC-EAGLE.vcf.gz",
-				"/Data/tmp/2016-06-29-quals/reimpute/T1D-HRC-SHAPEIT.vcf.gz",
+
 		};
 
 		String[] labels = new String[]{"EUR", "COSMO", "HRC-HRC-w100kb", "COSMO/EAGLE", "COSMO/SHAPEIT", "HRC/EAGLE/MICHIGAN", "HRC/EAGLE", "HRC/SHAPEIT"};
@@ -70,6 +59,49 @@ public class PlotterImpQual {
 		};
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
 		String outdir = "/Data/tmp/2016-06-29-quals/T1D-plotsImpQual/";
+
+
+		// RA
+		files = new String[]{
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/RA-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/RA-HRC-w100kb.vcf.gz"
+		};
+		labels = new String[]{
+				"EUR",
+				"COSMO",
+				"HRC"
+		};
+		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-recode-stats.vcf.gz";
+		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+		outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/RA-plotsImpQual0.3/";
+
+
+//		// T1D
+//		files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-COSMO-EAGLE.vcf.gz",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-COSMO-SHAPEIT.vcf.gz",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-EAGLE.vcf.gz",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-SHAPEIT.vcf.gz",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-EAGLE-Michigan.vcf.gz",
+//
+//
+//		};
+//		labels = new String[]{
+//				"EUR",
+//				"COSMO",
+//				"HRC / COSMO / EAGLE",
+//				"HRC / COSMO / SHAPEIT",
+//				"HRC / HRC / EAGLE",
+//				"HRC / HRC / SHAPEIT",
+//				"HRC / HRC / EAGLE / MICHIGAN"
+//		};
+//		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-recode-stats.vcf.gz";
+//		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+//		outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-plotsImpQual0.3/";
+//
 
 		if (windows) {
 
@@ -130,7 +162,7 @@ public class PlotterImpQual {
 		boolean includeindels = true;
 
 		boolean plotvaluesAboveMafThreshold = false;
-		double infoscorethreshold = 0.8;
+		double infoscorethreshold = 0.3;
 
 		String out = "";
 
