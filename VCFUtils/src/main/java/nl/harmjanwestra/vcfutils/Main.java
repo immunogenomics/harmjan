@@ -525,6 +525,12 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("countvariants")
+				.desc("Count variants.")
+				.build();
+		OPTIONS.addOption(option);
+
 	}
 
 	public static void main(String[] args) {
@@ -564,6 +570,15 @@ public class Main {
 					updatr.updateRSNames(cmd.getOptionValue("dbsnp"), input);
 				} else {
 					System.out.println("Use --dbsnp, -i with --updaters");
+				}
+				System.exit(-1);
+			}
+			if (cmd.hasOption("countvariants")) {
+				VCFVariantCounter v = new VCFVariantCounter();
+				if (!cmd.hasOption("b")) {
+					System.out.println("countvariants needs -b and -i");
+				} else {
+					v.run(cmd.getOptionValue("i"), cmd.getOptionValue("b"));
 				}
 				System.exit(-1);
 			}
@@ -614,6 +629,7 @@ public class Main {
 //				}
 //
 //			} else
+
 			if (cmd.hasOption("stripinfo")) {
 				if (cmd.hasOption("i")) {
 					StripInfo s = new StripInfo();

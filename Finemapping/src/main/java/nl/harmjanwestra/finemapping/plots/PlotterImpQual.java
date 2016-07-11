@@ -26,7 +26,7 @@ public class PlotterImpQual {
 	int width = 640;
 	int height = 480;
 	boolean onlyIc = false;
-	boolean windows = false;
+	boolean windows = true;
 
 	public static void main(String[] args) {
 
@@ -73,14 +73,46 @@ public class PlotterImpQual {
 
 		if (windows) {
 
+			// RA
 			files = new String[]{
-					"D:\\tmp\\2016-05-19\\T1D-EUR-stats.vcf.gz",
-					"D:\\tmp\\2016-05-19\\T1D-COSMO-stats.vcf.gz",
-					"D:\\tmp\\2016-05-19\\T1D-HRC-COSMO.vcf.gz",
+					"D:\\tmp\\2016-07-10\\RA-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+					"D:\\tmp\\2016-07-10\\RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+					"D:\\tmp\\2016-07-10\\RA-HRC-w100kb.vcf.gz"
 			};
-			variantsOnIC = "D:\\tmp\\2016-05-19\\T1D-recode-stats.vcf.gz";
-			bedregions = "D:\\tmp\\2016-05-19\\AllICLoci.bed";
-			outdir = "D:\\tmp\\2016-05-19\\T1D-plotsImpQual\\";
+			labels = new String[]{
+					"EUR",
+					"COSMO",
+					"HRC"
+			};
+			variantsOnIC = "D:\\tmp\\2016-07-10\\T1D-recode-stats.vcf.gz";
+			bedregions = "D:\\tmp\\2016-07-10\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+			outdir = "D:\\tmp\\2016-07-10\\RA-plotsImpQual\\";
+
+
+			// T1D
+			files = new String[]{
+					"D:\\tmp\\2016-07-10\\T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+					"D:\\tmp\\2016-07-10\\T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+					"D:\\tmp\\2016-07-10\\T1D-COSMO-EAGLE.vcf.gz",
+					"D:\\tmp\\2016-07-10\\T1D-COSMO-SHAPEIT.vcf.gz",
+					"D:\\tmp\\2016-07-10\\T1D-HRC-EAGLE.vcf.gz",
+					"D:\\tmp\\2016-07-10\\T1D-HRC-SHAPEIT.vcf.gz",
+					"D:\\tmp\\2016-07-10\\T1D-HRC-EAGLE-Michigan.vcf.gz",
+
+
+			};
+			labels = new String[]{
+					"EUR",
+					"COSMO",
+					"HRC / COSMO / EAGLE",
+					"HRC / COSMO / SHAPEIT",
+					"HRC / HRC / EAGLE",
+					"HRC / HRC / SHAPEIT",
+					"HRC / HRC / EAGLE / MICHIGAN"
+			};
+			variantsOnIC = "D:\\tmp\\2016-07-10\\T1D-recode-stats.vcf.gz";
+			bedregions = "D:\\tmp\\2016-07-10\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+			outdir = "D:\\tmp\\2016-07-10\\T1D-plotsImpQual\\";
 		}
 
 		if (!Gpio.exists(outdir)) {
@@ -96,39 +128,39 @@ public class PlotterImpQual {
 		}
 
 		boolean includeindels = true;
-		boolean usemafthreshold = false;
-		boolean requireabovemaf = false;
-		boolean plotOnlyImputed = false;
-		double mafthreshold = 0.01;
+
+		boolean plotvaluesAboveMafThreshold = false;
 		double infoscorethreshold = 0.8;
 
 		String out = "";
 
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = true;
+		plotvaluesAboveMafThreshold = true;
 		includeindels = true;
-		out = outdir + "plot1-imputed-impqual-withIndels-mafgt" + mafthreshold + ".pdf";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
+		Double mafthreshold = null;
 
-		includeindels = false;
-		out = outdir + "plot1-imputed-impqual-withoutIndels-mafgt" + mafthreshold + ".pdf";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
+		out = outdir + "plot1-all-impqual.pdf";
+		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions);
 
-		plotOnlyImputed = false;
+
+		System.out.println();
+		System.out.println("------");
+		System.out.println();
+
+		plotvaluesAboveMafThreshold = true;
 		includeindels = true;
-		out = outdir + "plot1-all-impqual-withIndels-mafgt" + mafthreshold + ".pdf";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
+		mafthreshold = 0.01;
+		out = outdir + "plot1-all-impqual-maf" + mafthreshold + ".pdf";
+		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions);
 
+		System.out.println();
+		System.out.println("------");
+		System.out.println();
+
+		plotvaluesAboveMafThreshold = true;
 		includeindels = false;
-		out = outdir + "plot1-all-impqual-withoutIndels-mafgt" + mafthreshold + ".pdf";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
-
-		usemafthreshold = true;
-		requireabovemaf = false;
-		out = outdir + "plot1-imputed-impqual-withoutIndels-maflt" + mafthreshold + ".png";
-		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, infoscorethreshold, variantHash, bedfileRegions);
-
+		mafthreshold = 0.01;
+		out = outdir + "plot1-all-impqual-maf" + mafthreshold + "-woIndels.pdf";
+		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions);
 
 //		out = outdir + "plot1-impqual-unfiltered.png";
 //		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
@@ -329,14 +361,12 @@ public class PlotterImpQual {
 
 
 	public void plot1(String[] files, String[] labels, String out,
-					  boolean includeIndels,
-					  boolean usemafthreshold,
-					  boolean requireabovemaf,
-					  double mafthreshold,
-					  boolean plotOnlyImputed,
-					  double infoscorethreshold,
-					  HashSet<String> variantHash,
-					  ArrayList<Feature> bedregions
+	                  boolean includeIndels,
+	                  boolean plotvaluesAboveMafThreshold,
+	                  Double mafthreshold,
+	                  double infoscorethreshold,
+	                  HashSet<String> variantHash,
+	                  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
@@ -347,32 +377,39 @@ public class PlotterImpQual {
 			ArrayList<Double> corvals = new ArrayList<>();
 			TextFile tf = new TextFile(file, TextFile.R);
 			String[] elems = tf.readLineElems(TextFile.tab);
-			int nrAboveThreshold = 0;
+			int nrAboveInfoThreshold = 0;
 			int outofrange = 0;
 			int totalvalues = 0;
+			int nrWithinregion = 0;
+			int nrAboveMafThreshold = 0;
+			int nrAboveBothThresholds = 0;
 			while (elems != null) {
 				if (elems.length >= 8 && !elems[0].startsWith("#")) {
 					boolean isIndel = isIndel(elems);
-					boolean belowmaf = mafbelowfthreshold(elems, mafthreshold);
 
-					boolean include = isWithinRegion(bedregions, elems);
+					boolean mafisbelowthreshold = true;
+					boolean withinregion = isWithinRegion(bedregions, elems);
+					if (withinregion) {
+						nrWithinregion++;
+					}
+					boolean include = withinregion;
+
 					if (!includeIndels && isIndel) {
 						include = false;
 					}
-					if (usemafthreshold && requireabovemaf && belowmaf) {
-						include = false;
-					} else if (usemafthreshold && !requireabovemaf && !belowmaf) {
-						include = false;
+					if (mafthreshold != null) {
+						mafisbelowthreshold = mafbelowfthreshold(elems, mafthreshold);
+
+						if (plotvaluesAboveMafThreshold && mafisbelowthreshold) {
+							include = false;
+						} else if (!plotvaluesAboveMafThreshold && mafisbelowthreshold) {
+							include = true;
+						}
 					}
 
-
-					if (variantHash != null && plotOnlyImputed) {
+					if (variantHash != null) {
 						boolean isOnIc = isVariantOnIC(elems, variantHash);
-						if (plotOnlyImputed && isOnIc) {
-							include = false;
-						} else if (!plotOnlyImputed && !isOnIc) {
-							include = false;
-						}
+						include = include && !isOnIc;
 					}
 
 					totalvalues++;
@@ -380,21 +417,29 @@ public class PlotterImpQual {
 					if (info < 0 || info > 1) {
 //						System.out.println("error in info score? " + info + "\t" + file + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
 						outofrange++;
+						info = 0d;
 					}
 
-					if (include) {
+					if (withinregion) {
 
-						if (info < 0 || info > 1) {
-//							System.out.println("error in info score? " + info + "\t" + file + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
-							info = 0d;
+						if ((!isIndel && !includeIndels) || includeIndels) {
+							if (info > infoscorethreshold) {
+								nrAboveInfoThreshold++;
+							}
+							if (!mafisbelowthreshold) {
+								nrAboveMafThreshold++;
+							}
+							if (!mafisbelowthreshold && info > infoscorethreshold) {
+								nrAboveBothThresholds++;
+							}
 						}
 
-						if (info > infoscorethreshold) {
-							nrAboveThreshold++;
+						if (include) {
+							corvals.add(info);
 						}
-						corvals.add(info);
-
 					}
+
+
 				}
 
 				elems = tf.readLineElems(TextFile.tab);
@@ -403,29 +448,38 @@ public class PlotterImpQual {
 			Collections.sort(corvals, Collections.reverseOrder());
 			System.out.println(corvals.size() + " vals in file " + file);
 			System.out.println(outofrange + " values out of range..?");
-			System.out.println(totalvalues + " total values");
+			System.out.println(nrWithinregion + " within region");
+			System.out.println(totalvalues + " total values.\n"
+					+ nrAboveInfoThreshold + " above info threshold.. "
+					+ nrAboveMafThreshold + " above maf threshold. "
+					+ nrAboveBothThresholds + " above both thresholds.");
 			if (corvals.size() > maxSize) {
 				maxSize = corvals.size();
 			}
 			vals.add(corvals);
-			newLabels[i] = labels[i] + " - " + nrAboveThreshold + " / " + corvals.size();
+			if (mafthreshold != null) {
+				newLabels[i] = labels[i] + " - " + nrAboveBothThresholds + " / " + corvals.size();
+			} else {
+				newLabels[i] = labels[i] + " - " + nrAboveInfoThreshold + " / " + corvals.size();
+			}
+
 		}
 		System.out.println(maxSize + " total vals");
 
-		double[][] x = new double[files.length][maxSize];
 		double[][] y = new double[files.length][maxSize];
+		double[][] x = new double[files.length][maxSize];
 		for (int ds = 0; ds < files.length; ds++) {
 
 			for (int i = 0; i < maxSize; i++) {
-				x[ds][i] = i;
+				y[ds][i] = i;
 			}
 			ArrayList<Double> corvals = vals.get(ds);
 
 			for (int i = 0; i < corvals.size(); i++) {
-				y[ds][i] = corvals.get(i);
+				x[ds][i] = corvals.get(i);
 			}
 			for (int i = corvals.size(); i < maxSize; i++) {
-				y[ds][i] = Double.NaN;
+				x[ds][i] = Double.NaN;
 			}
 		}
 
@@ -433,23 +487,24 @@ public class PlotterImpQual {
 		Grid grid = new Grid(width, height, 1, 1, 100, 100);
 		ScatterplotPanel panel = new ScatterplotPanel(1, 1);
 		panel.setData(x, y);
-		Range range = new Range(0, 0, maxSize, 1);
+		Range range = new Range(0, 0, 1, maxSize);
 		panel.setDataRange(range);
 		range.roundX();
+		range.roundY();
 
-		panel.setDatasetLabels(newLabels);
+		//panel.setDatasetLabels(newLabels);
 		grid.addPanel(panel);
 		grid.draw(out);
 	}
 
 	public void plot2(String[] files, String[] datasetLabels, String out,
-					  boolean includeIndels,
-					  boolean usemafthreshold,
-					  boolean requireabovemaf,
-					  double mafthreshold,
-					  boolean plotOnlyImputed,
-					  HashSet<String> variantHash,
-					  ArrayList<Feature> bedregions
+	                  boolean includeIndels,
+	                  boolean usemafthreshold,
+	                  boolean requireabovemaf,
+	                  double mafthreshold,
+	                  boolean plotOnlyImputed,
+	                  HashSet<String> variantHash,
+	                  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 2: x-axis maf, y-axis correlation (boxplot)
 

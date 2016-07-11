@@ -101,7 +101,7 @@ public class VCFVariantRSNameUpdater {
 				} else {
 					out.writeln(line);
 					if (!headerwritten) {
-						out.writeln("#RSIdsReplaced=" + dbsnpvcf);
+						out.writeln("##RSIdsReplaced=" + dbsnpvcf);
 						headerwritten = true;
 					}
 				}

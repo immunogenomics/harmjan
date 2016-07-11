@@ -64,6 +64,12 @@ public class VCFVariantStats {
 						if (i == 0) {
 							out.writeln(ln);
 						}
+
+					} else if (ln.startsWith("#RSIdsReplaced")) {
+						if (i == 0) {
+							out.writeln("#" + ln);
+						}
+
 					} else if (ln.startsWith("#CHROM")) {
 
 						if (i == 0) {
@@ -158,46 +164,6 @@ public class VCFVariantStats {
 
 
 	}
-
-	public class VariantStatsTask implements Callable<String> {
-
-		private final String ln;
-
-		public VariantStatsTask(String in) {
-			ln = in;
-		}
-
-		@Override
-		public String call() throws Exception {
-			String chrStr = ln.substring(0, 100);
-			String[] chrStrElems = chrStr.split("\t");
-			Chromosome chr = Chromosome.parseChr(chrStrElems[0]);
-			if (!chr.equals(Chromosome.X)) {
-				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
-				// AC / AN / AF
-				String AN = "AN=" + variant.getTotalAlleleCount();
-				String AF = "AF=" + Strings.concat(variant.getAlleleFrequencies(), Strings.comma, 1, variant.getAlleles().length);
-				String AC = "AC=" + Strings.concat(variant.getNrAllelesObserved(), Strings.comma, 1, variant.getAlleles().length);
-				String INFO = "INFO=" + variant.getImputationQualityScore();
-
-				String infoString = AC + ";" + AF + ";" + AN + ";" + INFO;
-
-				StringBuilder outbuilder = new StringBuilder(1000);
-				outbuilder.append(variant.getChr())
-						.append("\t").append(variant.getPos())
-						.append("\t").append(variant.getId())
-						.append("\t").append(variant.getAlleles()[0])
-						.append("\t").append(Strings.concat(variant.getAlleles(), Strings.comma, 1, variant.getAlleles().length))
-						.append("\t.").append("\t.")
-						.append("\t").append(infoString);
-
-				return outbuilder.toString();
-				// out.writeln(outbuilder.toString());
-			}
-			return null;
-		}
-	}
-
 
 	public void compare(String vcf1, String vcf2, String out, String regionsFile, String filterfile, boolean filterExcludes) throws IOException {
 		HashSet<Feature> filter = null;
@@ -512,6 +478,45 @@ public class VCFVariantStats {
 		System.out.println(parsed + " variants parsed. " + loaded + " in memory. " + filtered + " filtered");
 		System.out.println("Done loading: " + vcf);
 		return variants1;
+	}
+
+	public class VariantStatsTask implements Callable<String> {
+
+		private final String ln;
+
+		public VariantStatsTask(String in) {
+			ln = in;
+		}
+
+		@Override
+		public String call() throws Exception {
+			String chrStr = ln.substring(0, 100);
+			String[] chrStrElems = chrStr.split("\t");
+			Chromosome chr = Chromosome.parseChr(chrStrElems[0]);
+			if (!chr.equals(Chromosome.X)) {
+				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+				// AC / AN / AF
+				String AN = "AN=" + variant.getTotalAlleleCount();
+				String AF = "AF=" + Strings.concat(variant.getAlleleFrequencies(), Strings.comma, 1, variant.getAlleles().length);
+				String AC = "AC=" + Strings.concat(variant.getNrAllelesObserved(), Strings.comma, 1, variant.getAlleles().length);
+				String INFO = "INFO=" + variant.getImputationQualityScore();
+
+				String infoString = AC + ";" + AF + ";" + AN + ";" + INFO;
+
+				StringBuilder outbuilder = new StringBuilder(1000);
+				outbuilder.append(variant.getChr())
+						.append("\t").append(variant.getPos())
+						.append("\t").append(variant.getId())
+						.append("\t").append(variant.getAlleles()[0])
+						.append("\t").append(Strings.concat(variant.getAlleles(), Strings.comma, 1, variant.getAlleles().length))
+						.append("\t.").append("\t.")
+						.append("\t").append(infoString);
+
+				return outbuilder.toString();
+				// out.writeln(outbuilder.toString());
+			}
+			return null;
+		}
 	}
 
 }
