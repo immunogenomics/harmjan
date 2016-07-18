@@ -1,14 +1,16 @@
 package nl.harmjanwestra.finemapping.plots;
 
 import com.itextpdf.text.DocumentException;
+import nl.harmjanwestra.finemapping.VariantCounter;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.BoxPlotPanel;
 import nl.harmjanwestra.utilities.graphics.panels.HistogramPanel;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.util.Primitives;
@@ -21,30 +23,12 @@ import java.util.HashSet;
 /**
  * Created by hwestra on 5/18/16.
  */
-public class PlotterAccuracy {
+public class PlotterAccuracy extends VariantCounter {
 
 	// id	allele1	allele2	maf	callrate	allele21	allele22	maf 	cr	df	nrsamples	r	rsq	beta	se	impqual0	impqual1
-	int idcol = 0;
-	int minorallele1col = 1;
-	int aleleles1col = 2;
-	int maf1col = 3;
-	int cr1col = 4;
-	int minorallele2col = 5;
-	int aleleles2col = 6;
-	public int maf2col = 7;
-	int cr2col = 8;
-	int dfcol = 9;
-	int samplecol = 10;
-	int rcol = 11;
-	public int rsqlcol = 12;
-	int betacol = 13;
-	int secol = 14;
-	int impqual1 = 15;
-	int impqual2 = 16;
-	int width = 640;
-	int height = 480;
+	protected int width = 640;
+	protected int height = 480;
 	boolean onlyIc = false;
-
 
 	public static void main(String[] args) {
 		PlotterAccuracy p = new PlotterAccuracy();
@@ -57,54 +41,11 @@ public class PlotterAccuracy {
 		}
 	}
 
-	public boolean isIndel1(String[] elems) {
-		String alleles = elems[minorallele1col];
-		String[] alleleElems = alleles.split(",");
-		boolean b = false;
-		for (String s : alleleElems) {
-			if (s.length() > 1) {
-				b = true;
-			}
-		}
-		return b;
-	}
-
-	public boolean isIndel2(String[] elems) {
-		String alleles = elems[minorallele2col];
-		String[] alleleElems = alleles.split(",");
-		boolean b = false;
-		for (String s : alleleElems) {
-			if (s.length() > 1) {
-				b = true;
-			}
-		}
-		return b;
-	}
-
-	public boolean maf1belowfthreshold(String[] elems, double t) {
-		Double d = Double.parseDouble(elems[maf1col]);
-		if (d < t) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public boolean maf2belowfthreshold(String[] elems, double t) {
-		Double d = Double.parseDouble(elems[maf2col]);
-		if (d < t) {
-			return true;
-		} else {
-			return false;
-		}
-	}
 
 	public void plotCorr() throws IOException, DocumentException {
 		String[] files = new String[]{
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-EUR.txt",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO-EAGLE.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO-SHAPEIT.txt",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE.txt",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-SHAPEIT.txt",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
@@ -113,27 +54,26 @@ public class PlotterAccuracy {
 		String[] labels = new String[]{
 				"EUR",
 				"COSMO",
-				"HRC / COSMO / EAGLE",
-				"HRC / COSMO / SHAPEIT",
 				"HRC / HRC / EAGLE",
 				"HRC / HRC / SHAPEIT",
 				"HRC / HRC / EAGLE / MICHIGAN"
 		};
 		String diseaseprefix = "T1D";
 
-		files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
-		};
-		labels = new String[]{
-				"EUR",
-				"COSMO",
-				"HRC / COSMO / EAGLE"
-		};
-		diseaseprefix = "RA";
+//		files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
+//		};
+//		labels = new String[]{
+//				"EUR",
+//				"COSMO",
+//				"HRC / COSMO / EAGLE"
+//		};
+//		diseaseprefix = "RA";
 
-		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-recode-stats.vcf.gz";
+		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
+		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
 
 //		String[] files2 = new String[]{
 //				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
@@ -141,10 +81,12 @@ public class PlotterAccuracy {
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
 		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-plots/";
-		double mafthreshold = 0.0;
+		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/" + diseaseprefix + "-plots/";
+		double mafthreshold = 0.01;
 
+		boolean includeId = true;
 		boolean windows = false;
+		String ext = "pdf";
 
 		if (windows) {
 
@@ -164,8 +106,6 @@ public class PlotterAccuracy {
 //			};
 		}
 
-		String ext = "pdf";
-
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> bedfileRegions = reader.readAsList(bedregions);
@@ -179,408 +119,144 @@ public class PlotterAccuracy {
 
 		HashSet<String> variantHash = null;
 		if (variantsOnIC != null) {
-			variantHash = loadVariantHash(variantsOnIC);
+			variantHash = loadVariantHash(variantsOnIC, includeId);
 		}
 
 		boolean includeindels = true;
 		boolean usemafthreshold = false;
-		boolean requireabovemaf = false;
-		boolean plotOnlyImputed = false;
+		boolean includeICVariants = true;
 
-		int maxNrVals = 946;
+		int maxNrVariants = 1862;
 		includeindels = true;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = true;
-		out = outdir + diseaseprefix + "-plot1-imputedonly-rsquared-withindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+		usemafthreshold = false;
+		includeICVariants = true;
+		out = outdir + diseaseprefix + "-plot1-allvariants." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
+		maxNrVariants = 1717;
+		includeindels = false;
+		usemafthreshold = false;
+		includeICVariants = true;
+		out = outdir + diseaseprefix + "-plot1-allvariants-excludeIndels." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+
+		maxNrVariants = 1862;
 		includeindels = false;
 		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = true;
-		out = outdir + diseaseprefix + "-plot1-imputedonly-rsquared-withoutindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+		includeICVariants = true;
+		out = outdir + diseaseprefix + "-plot1-allvariants-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
-//		includeindels = true;
-//		usemafthreshold = true;
-//		requireabovemaf = true;
-//		plotOnlyImputed = true;
-//		out = outdir + diseaseprefix + "-plot1-imputedonly-impqual-withindels-mafgt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = true;
-//		plotOnlyImputed = true;
-//		out = outdir + diseaseprefix + "-plot1-imputedonly-impqual-withoutindels-mafgt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-
-		// include unimputed variants as well
-		maxNrVals = 2134;
-		includeindels = true;
-		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = false;
-		out = outdir + diseaseprefix + "-plot1-rsquared-withindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
+		maxNrVariants = 1717;
 		includeindels = false;
 		usemafthreshold = true;
-		requireabovemaf = true;
-		plotOnlyImputed = false;
-		out = outdir + diseaseprefix + "-plot1-rsquared-withoutindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-
-//		includeindels = true;
-//		usemafthreshold = true;
-//		requireabovemaf = true;
-//		plotOnlyImputed = false;
-//		out = outdir + diseaseprefix + "-plot1-impqual-withindels-mafgt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = true;
-//		plotOnlyImputed = false;
-//		out = outdir + diseaseprefix + "-plot1-impqual-withoutindels-mafgt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
+		includeICVariants = true;
+		out = outdir + diseaseprefix + "-plot1-allvariants-excludeIndels-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
 
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-// out = outdir + "plot1-rsquared-unfiltered." + ext;
-//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		out = outdir + "plot2-rsquared-unfiltered." + ext;
-//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-rsquared-unfiltered." + ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		out = outdir + "plot4-betaVsImpQual-unfiltered." + ext;
-//		plot4(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot4-betaVsImpQual-imputedonly." + ext;
-//		plot4(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, true, variantHash, bedfileRegions);
-//
-//		out = outdir + "plot4-CorrVsImpQual-unfiltered." + ext;
-//		plot5(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot4-CorrVsImpQual-imputedonly." + ext;
-//		plot5(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, true, variantHash, bedfileRegions);
-//
-//		out = outdir + "plot2-immunochip." + ext;
-//		onlyIc = true;
-//		plot2(files2, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		onlyIc = false;
-//
-//
-//		includeindels = false;
-//		usemafthreshold = false;
-//		requireabovemaf = false;
-//		plotOnlyImputed = false;
-//
-//		out = outdir + "plot1-rsquared-noindels." + ext;
-//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-rsquared-noindels." + ext;
-//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-rsquared-noindels." + ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = true;
-//		plotOnlyImputed = false;
-//
-//		out = outdir + "plot1-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
-//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-rsquared-noindels-mafgt" + mafthreshold + "." + ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = false;
-//		plotOnlyImputed = false;
-//
-//		out = outdir + "plot1-rsquared-noindels-maflt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-rsquared-noindels-maflt" + mafthreshold + "." + ext;
-//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-rsquared-noindels-maflt" + mafthreshold + "." + ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = true;
-//		usemafthreshold = false;
-//		requireabovemaf = false;
-//		plotOnlyImputed = true;
-//
-//		out = outdir + "plot1-rsquared-imputedonly." + ext;
-//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-rsquared-imputedonly." + ext;
-//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-rsquared-imputedonly." + ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = false;
-//		requireabovemaf = false;
-//		plotOnlyImputed = true;
-//
-//		out = outdir + "plot1-rsquared-imputedonly-noindels." + ext;
-//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-rsquared-imputedonly-noindels." + ext;
-//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-rsquared-imputedonly-noindels." + ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = true;
-//		plotOnlyImputed = true;
-//
-//		out = outdir + "plot1-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
-//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-rsquared-imputedonly-noindels-mafgt" + mafthreshold + "." + ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = false;
-//		plotOnlyImputed = true;
-//
-//		out = outdir + "plot1-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
-//		plot2(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-rsquared-imputedonly-noindels-maflt" + mafthreshold + "." + ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		/// impquals
-//		includeindels = true;
-//		usemafthreshold = false;
-//		requireabovemaf = false;
-//		plotOnlyImputed = false;
-//
-//		out = outdir + "plot1-impqual-unfiltered."+ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-impqual-unfiltered."+ext;
-//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-impqual-unfiltered."+ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = false;
-//		requireabovemaf = false;
-//		plotOnlyImputed = false;
-//
-//		out = outdir + "plot1-impqual-noindels."+ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-impqual-noindels."+ext;
-//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-impqual-noindels."+ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = true;
-//		plotOnlyImputed = false;
-//
-//		out = outdir + "plot1-impqual-noindels-mafgt" + mafthreshold + "."+ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-impqual-noindels-mafgt" + mafthreshold + "."+ext;
-//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-impqual-noindels-mafgt" + mafthreshold + "."+ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = false;
-//		plotOnlyImputed = false;
-//
-//		out = outdir + "plot1-impqual-noindels-maflt" + mafthreshold+ "."+ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-impqual-noindels-maflt" + mafthreshold + "."+ext;
-//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-impqual-noindels-maflt" + mafthreshold + "."+ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = true;
-//		usemafthreshold = false;
-//		requireabovemaf = false;
-//		plotOnlyImputed = true;
-//
-//		out = outdir + "plot1-impqual-imputedonly."+ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-impqual-imputedonly."+ext;
-//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-impqual-imputedonly."+ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = false;
-//		requireabovemaf = false;
-//		plotOnlyImputed = true;
-//
-//		out = outdir + "plot1-impqual-imputedonly-noindels."+ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-impqual-imputedonly-noindels."+ext;
-//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-impqual-imputedonly-noindels."+ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = true;
-//		plotOnlyImputed = true;
-//
-//		out = outdir + "plot1-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
-//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-impqual-imputedonly-noindels-mafgt" + mafthreshold + "."+ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//
-//		includeindels = false;
-//		usemafthreshold = true;
-//		requireabovemaf = false;
-//		plotOnlyImputed = true;
-//
-//		out = outdir + "plot1-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
-//		plot1(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot2-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
-//		plot2(files, labels, out, impqual2, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
-//		out = outdir + "plot3-impqual-imputedonly-noindels-maflt" + mafthreshold + "."+ext;
-//		plot3(files, labels, out, rsqlcol, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
 
-//
+		// imputed variants
+		maxNrVariants = 693;
+		includeindels = true;
+		usemafthreshold = false;
+		includeICVariants = true;
+		out = outdir + diseaseprefix + "-plot1-imputed." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
-//
+		maxNrVariants = 548;
+		includeindels = false;
+		usemafthreshold = false;
+		includeICVariants = true;
+		out = outdir + diseaseprefix + "-plot1-imputed-excludeIndels." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
-//
-//			// plot 5: imputation qual vs correlation
-//			grid = new Grid(1000, 1000, 1, files.length, 0, 0);
-//			for (int i = 0; i < files.length; i++) {
-//				String file = files[i];
-//				int ctr = 0;
-//				TextFile tf = new TextFile(file, TextFile.R);
-//				String[] elems = tf.readLineElems(TextFile.tab);
-//				ArrayList<Double> fy = new ArrayList<>();
-//				ArrayList<Double> fx = new ArrayList<>();
-//				while (elems != null) {
-//					double impqual = Double.parseDouble(elems[1]);
-//					double correlation = Double.parseDouble(elems[1]);
-//					fx.add(impqual);
-//					fy.add(correlation);
-//					ctr++;
-//					elems = tf.readLineElems(TextFile.tab);
-//				}
-//				tf.close();
-//
-//				ScatterplotPanel panel3 = new ScatterplotPanel(1, 1);
-//				grid.addPanel(panel3);
-//			}
-//			grid.draw(out);
+		maxNrVariants = 693;
+		includeindels = false;
+		usemafthreshold = true;
+		includeICVariants = true;
+		out = outdir + diseaseprefix + "-plot1-imputed-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
+		maxNrVariants = 548;
+		includeindels = false;
+		usemafthreshold = true;
+		includeICVariants = true;
+		out = outdir + diseaseprefix + "-plot1-imputed-excludeIndels-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
 	}
 
-	private HashSet<String> loadVariantHash(String variantsOnIC) throws IOException {
-		TextFile tf = new TextFile(variantsOnIC, TextFile.R);
-		HashSet<String> variantIds = new HashSet<String>();
-		String[] elems = tf.readLineElems(TextFile.tab);
-		while (elems != null) {
-			if (!elems[0].startsWith("#")) {
-				String id = elems[0] + "_" + elems[1] + "_" + elems[2];
-				variantIds.add(id);
-			}
-			elems = tf.readLineElems(TextFile.tab);
-		}
-		tf.close();
-		return variantIds;
-	}
 
-	public void plot1(String[] files, String[] labels, String out, int col,
+	public void plot1(String[] files, String[] labels, String out, String bedregionsfile,
 					  boolean includeIndels,
 					  boolean usemafthreshold,
-					  boolean requireabovemaf,
 					  double mafthreshold,
-					  boolean plotOnlyImputed,
-					  HashSet<String> variantHash,
-					  ArrayList<Feature> bedregions
+					  boolean includeICVariants,
+					  int maxSize,
+					  boolean includeId,
+					  String variantsOnIC,
+					  String seqpanelvcf
+
+
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
-		int maxSize = 0;
-		for (int i = 0; i < files.length; i++) {
-			String file = files[i];
+
+		double upperthreshold = 1d;
+		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
+		System.out.println(variantsOnICHash.size() + " total on IC");
+		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
+				seqpanelvcf, bedregionsfile, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels
+		);
+
+		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
+		ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
+		ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
+
+		System.out.println(seqpanel.size() + " variants in VCF");
+		System.out.println(variantsNotOnImmunoChip.size() + " not on IC");
+		System.out.println(variantsOnImmunoChip.size() + " on IC");
+
+
+		HashSet<String> sequencedVariantsHash = null;
+		if (includeICVariants) {
+			ArrayList<VCFVariant> allvars = new ArrayList<>();
+			allvars.addAll(variantsNotOnImmunoChip);
+			allvars.addAll(variantsOnImmunoChip);
+			sequencedVariantsHash = hashit(allvars, includeId);
+		} else {
+			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
+		}
+
+		for (int f = 0; f < files.length; f++) {
+			// get the imputation accuracies for these variants
+			TextFile tf2 = new TextFile(files[f], TextFile.R);
 			ArrayList<Double> corvals = new ArrayList<>();
-			TextFile tf = new TextFile(file, TextFile.R);
-			String[] elems = tf.readLineElems(TextFile.tab);
+			String[] elems = tf2.readLineElems(TextFile.tab);
 			while (elems != null) {
-				boolean isIndel = isIndel2(elems);
-				boolean belowmaf = maf2belowfthreshold(elems, mafthreshold);
+				if (!elems[rsqlcol].equals("null")) {
+					double val = Double.parseDouble(elems[rsqlcol]);
+					double maf = Double.parseDouble(elems[maf2col]);
 
-				boolean include = isWithinRegion(bedregions, elems);
-				if (!includeIndels && isIndel) {
-					include = false;
-				}
-				if (usemafthreshold && requireabovemaf && belowmaf) {
-					include = false;
-				} else if (usemafthreshold && !requireabovemaf && !belowmaf) {
-					include = false;
-				}
+					String[] varElems = elems[0].split("_");
 
-
-				if (variantHash != null && plotOnlyImputed) {
-					boolean isOnIc = isVariantOnIC(elems, variantHash);
-					if (plotOnlyImputed && isOnIc) {
-						include = false;
-					} else if (!plotOnlyImputed && !isOnIc) {
-						include = false;
-					}
-				}
-
-
-				if (include) {
-					double val = 0;
-					if (col < elems.length) {
-						if (!elems[col].equals("null")) {
-							val = Double.parseDouble(elems[col]);
+					boolean sequenced = isVariantOnIC(varElems, sequencedVariantsHash, includeId);
+					if (sequenced) {
+						if (!usemafthreshold || (usemafthreshold && maf > mafthreshold)) {
 							corvals.add(val);
 						}
 					}
-
 				}
-				elems = tf.readLineElems(TextFile.tab);
+
+				elems = tf2.readLineElems(TextFile.tab);
 			}
-			tf.close();
+			tf2.close();
 			Collections.sort(corvals, Collections.reverseOrder());
-			System.out.println(corvals.size() + " vals in file " + file);
-			if (corvals.size() > maxSize) {
-				maxSize = corvals.size();
-			}
+			System.out.println(corvals.size() + " vals in file " + files[f]);
 			vals.add(corvals);
 		}
+
 		System.out.println(maxSize + " total vals");
 
 		double[][] x = new double[files.length][maxSize];
@@ -588,7 +264,7 @@ public class PlotterAccuracy {
 		for (int ds = 0; ds < files.length; ds++) {
 
 			for (int i = 0; i < maxSize; i++) {
-				x[ds][i] = i;
+				x[ds][i] = ((double) i / maxSize) * 100;
 			}
 			ArrayList<Double> corvals = vals.get(ds);
 
@@ -596,7 +272,7 @@ public class PlotterAccuracy {
 				y[ds][i] = corvals.get(i);
 			}
 			for (int i = corvals.size(); i < maxSize; i++) {
-				y[ds][i] = Double.NaN;
+				y[ds][i] = 0;
 			}
 		}
 
@@ -604,35 +280,16 @@ public class PlotterAccuracy {
 		Grid grid = new Grid(width, height, 1, 1, 100, 100);
 		ScatterplotPanel panel = new ScatterplotPanel(1, 1);
 		panel.setData(y, x);
-		Range range = new Range(0, 0, 1, maxSize);
+		Range range = new Range(0, 0, 1, 100);
 		range.roundX();
 		range.roundY();
 		panel.setDataRange(range);
 		panel.setDatasetLabels(labels);
 		grid.addPanel(panel);
 		grid.draw(out);
+		System.out.println("Out: " + out);
 	}
 
-	private boolean isVariantOnIC(String[] elems, HashSet<String> variantHash) {
-		String variant = elems[idcol];
-		return variantHash.contains(variant);
-	}
-
-	private boolean isWithinRegion(ArrayList<Feature> list, String[] elems) {
-		Feature varfeat = new Feature();
-		String[] idelems = elems[idcol].split("_");
-
-		int pos = Integer.parseInt(idelems[1]);
-		varfeat.setChromosome(Chromosome.parseChr(idelems[0]));
-		varfeat.setStart(pos);
-		varfeat.setStop(pos);
-		for (Feature f : list) {
-			if (f.overlaps(varfeat)) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	public void plot2(String[] files, String[] datasetLabels, String out, int col,
 					  boolean includeIndels,
@@ -711,7 +368,7 @@ public class PlotterAccuracy {
 
 				if (variantHash != null && plotOnlyImputed) {
 					boolean isOnIc = false;
-					isOnIc = isVariantOnIC(elems, variantHash);
+					isOnIc = isVariantOnIC(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
 						include = false;
 					} else if (!plotOnlyImputed && !isOnIc) {
@@ -721,7 +378,7 @@ public class PlotterAccuracy {
 
 				if (onlyIc && variantHash != null) {
 					boolean isOnIc = false;
-					isOnIc = isVariantOnIC(elems, variantHash);
+					isOnIc = isVariantOnIC(elems, variantHash, true);
 					include = isOnIc;
 				}
 
@@ -807,7 +464,7 @@ public class PlotterAccuracy {
 				}
 
 				if (variantHash != null && plotOnlyImputed) {
-					boolean isOnIc = isVariantOnIC(elems, variantHash);
+					boolean isOnIc = isVariantOnIC(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
 						include = false;
 					} else if (!plotOnlyImputed && !isOnIc) {
@@ -869,7 +526,7 @@ public class PlotterAccuracy {
 				}
 
 				if (variantHash != null && plotOnlyImputed) {
-					boolean isOnIc = isVariantOnIC(elems, variantHash);
+					boolean isOnIc = isVariantOnIC(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
 						include = false;
 					} else if (!plotOnlyImputed && !isOnIc) {
@@ -931,7 +588,7 @@ public class PlotterAccuracy {
 				}
 
 				if (variantHash != null && plotOnlyImputed) {
-					boolean isOnIc = isVariantOnIC(elems, variantHash);
+					boolean isOnIc = isVariantOnIC(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
 						include = false;
 					} else if (!plotOnlyImputed && !isOnIc) {

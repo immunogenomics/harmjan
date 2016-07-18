@@ -119,8 +119,11 @@ public class VCFVariantStats {
 							try {
 								Future<String> f = jobHandler.take();
 								if (f != null) {
-									out.writeln(f.get());
-									written++;
+									String output = f.get();
+									if(output!=null) {
+										out.writeln(output);
+										written++;
+									}
 								}
 								returned++;
 							} catch (InterruptedException e) {
