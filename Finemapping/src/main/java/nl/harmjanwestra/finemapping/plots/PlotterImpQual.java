@@ -26,7 +26,7 @@ public class PlotterImpQual {
 	int width = 640;
 	int height = 480;
 	boolean onlyIc = false;
-	boolean windows = false;
+	boolean windows = true;
 
 	public static void main(String[] args) {
 
@@ -77,31 +77,27 @@ public class PlotterImpQual {
 		outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/RA-plotsImpQual0.3/";
 
 
-//		// T1D
-//		files = new String[]{
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-COSMO-EAGLE.vcf.gz",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-COSMO-SHAPEIT.vcf.gz",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-EAGLE.vcf.gz",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-SHAPEIT.vcf.gz",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-EAGLE-Michigan.vcf.gz",
-//
-//
-//		};
-//		labels = new String[]{
-//				"EUR",
-//				"COSMO",
-//				"HRC / COSMO / EAGLE",
-//				"HRC / COSMO / SHAPEIT",
-//				"HRC / HRC / EAGLE",
-//				"HRC / HRC / SHAPEIT",
-//				"HRC / HRC / EAGLE / MICHIGAN"
-//		};
-//		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-recode-stats.vcf.gz";
-//		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
-//		outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-plotsImpQual0.3/";
-//
+		// T1D
+		files = new String[]{
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-EAGLE.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-SHAPEIT.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-EAGLE-Michigan.vcf.gz",
+
+
+		};
+		labels = new String[]{
+				"EUR",
+				"COSMO",
+				"HRC / HRC / EAGLE",
+				"HRC / HRC / SHAPEIT",
+				"HRC / HRC / EAGLE / MICHIGAN"
+		};
+		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-recode-stats.vcf.gz";
+		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+		outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-plotsImpQual0.3/";
+
 
 		if (windows) {
 
@@ -125,8 +121,6 @@ public class PlotterImpQual {
 			files = new String[]{
 					"D:\\tmp\\2016-07-10\\T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
 					"D:\\tmp\\2016-07-10\\T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
-					"D:\\tmp\\2016-07-10\\T1D-COSMO-EAGLE.vcf.gz",
-					"D:\\tmp\\2016-07-10\\T1D-COSMO-SHAPEIT.vcf.gz",
 					"D:\\tmp\\2016-07-10\\T1D-HRC-EAGLE.vcf.gz",
 					"D:\\tmp\\2016-07-10\\T1D-HRC-SHAPEIT.vcf.gz",
 					"D:\\tmp\\2016-07-10\\T1D-HRC-EAGLE-Michigan.vcf.gz",
@@ -136,15 +130,13 @@ public class PlotterImpQual {
 			labels = new String[]{
 					"EUR",
 					"COSMO",
-					"HRC / COSMO / EAGLE",
-					"HRC / COSMO / SHAPEIT",
-					"HRC / HRC / EAGLE",
-					"HRC / HRC / SHAPEIT",
-					"HRC / HRC / EAGLE / MICHIGAN"
+					"HRC / EAGLE",
+					"HRC / SHAPEIT",
+					"HRC / EAGLE / MICHIGAN"
 			};
 			variantsOnIC = "D:\\tmp\\2016-07-10\\T1D-recode-stats.vcf.gz";
 			bedregions = "D:\\tmp\\2016-07-10\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
-			outdir = "D:\\tmp\\2016-07-10\\T1D-plotsImpQual\\";
+			outdir = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-21-ImputationQuality\\2016-07-10-INFO\\T1D-plotsImpQual\\";
 		}
 
 		if (!Gpio.exists(outdir)) {
@@ -171,7 +163,7 @@ public class PlotterImpQual {
 		Double mafthreshold = null;
 
 		out = outdir + "plot1-all-impqual.pdf";
-		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions);
+		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions, true, 320000);
 
 
 		System.out.println();
@@ -182,7 +174,7 @@ public class PlotterImpQual {
 		includeindels = true;
 		mafthreshold = 0.01;
 		out = outdir + "plot1-all-impqual-maf" + mafthreshold + ".pdf";
-		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions);
+		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions, true, 70000);
 
 		System.out.println();
 		System.out.println("------");
@@ -192,7 +184,7 @@ public class PlotterImpQual {
 		includeindels = false;
 		mafthreshold = 0.01;
 		out = outdir + "plot1-all-impqual-maf" + mafthreshold + "-woIndels.pdf";
-		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions);
+		plot1(files, labels, out, includeindels, plotvaluesAboveMafThreshold, mafthreshold, infoscorethreshold, null, bedfileRegions, true, 60000);
 
 //		out = outdir + "plot1-impqual-unfiltered.png";
 //		plot1(files, labels, out, includeindels, usemafthreshold, requireabovemaf, mafthreshold, plotOnlyImputed, variantHash, bedfileRegions);
@@ -398,7 +390,10 @@ public class PlotterImpQual {
 	                  Double mafthreshold,
 	                  double infoscorethreshold,
 	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions
+	                  ArrayList<Feature> bedregions,
+	                  boolean plotlabels,
+	                  Integer maxy
+
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
@@ -519,12 +514,22 @@ public class PlotterImpQual {
 		Grid grid = new Grid(width, height, 1, 1, 100, 100);
 		ScatterplotPanel panel = new ScatterplotPanel(1, 1);
 		panel.setData(x, y);
-		Range range = new Range(0, 0, 1, maxSize);
-		panel.setDataRange(range);
-		range.roundX();
-		range.roundY();
 
-		//panel.setDatasetLabels(newLabels);
+
+		if (maxy != null) {
+			Range range = new Range(0, 0, 1, maxy);
+			panel.setDataRange(range);
+		} else {
+			Range range = new Range(0, 0, 1, maxSize);
+			panel.setDataRange(range);
+			range.roundX();
+			range.roundY();
+		}
+
+
+		if (plotlabels) {
+			panel.setDatasetLabels(newLabels);
+		}
 		grid.addPanel(panel);
 		grid.draw(out);
 	}
