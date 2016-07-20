@@ -26,7 +26,7 @@ public class PseudocontrolCheck {
 		}
 	}
 
-//	public void run() throws IOException {
+//	public void picksamples() throws IOException {
 //
 //
 //		// if mom/dad == case --> pseudocontrol is included, but case is excluded

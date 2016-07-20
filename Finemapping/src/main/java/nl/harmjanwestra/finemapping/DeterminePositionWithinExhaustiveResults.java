@@ -30,13 +30,13 @@ public class DeterminePositionWithinExhaustiveResults {
 //			assocfileprefix = "D:\\tmp\\2016-06-19\\exhaustive\\RA-assoc0.3-COSMO-chr";
 //			modelfileprefix = "D:\\tmp\\2016-06-19\\exhaustive\\RA-assoc0.3-COSMO-chr";
 //			outputfile = "D:\\tmp\\2016-06-19\\RA-exhaustiveout-PositionOfTopConditionalEffects.txt";
-//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//			d.picksamples(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
 //			regionfile = "D:\\tmp\\2016-06-19\\T1D-lociwithindependentfx.bed";
 //			assocfileprefix = "D:\\tmp\\2016-06-19\\exhaustive\\T1D-assoc0.3-COSMO-chr";
 //			modelfileprefix = "D:\\tmp\\2016-06-19\\exhaustive\\T1D-assoc0.3-COSMO-chr";
 //			outputfile = "D:\\tmp\\2016-06-19\\T1D-exhaustive-PositionOfTopConditionalEffects.txt";
-//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//			d.picksamples(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
 			regionfile = "/Data/tmp/2016-06-20/TNFAIP3.bed";
 			assocfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-TNFAIP3-chr";

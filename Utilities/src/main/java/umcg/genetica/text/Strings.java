@@ -39,7 +39,7 @@ public class Strings {
 
 	public static String concat(String[] s, Pattern t, boolean[] includeElem, String replaceNull) {
 
-		if(s == null){
+		if (s == null) {
 			return null;
 		}
 
@@ -80,14 +80,27 @@ public class Strings {
 		return output.toString();
 	}
 
+
 	public static String concat(double[] s, Pattern t) {
+		return concat(s, t, null);
+	}
+
+	public static String concat(double[] s, Pattern t, DecimalFormat f) {
 
 		StringBuilder output = new StringBuilder();
 		for (int i = 0; i < s.length; i++) {
 			if (i == 0) {
-				output.append(s[i]);
+				if (f == null) {
+					output.append(s[i]);
+				} else {
+					output.append(f.format(s[i]));
+				}
 			} else {
-				output.append(t.toString()).append(s[i]);
+				if (f == null) {
+					output.append(t.toString()).append(s[i]);
+				} else {
+					output.append(t.toString()).append(f.format(s[i]));
+				}
 			}
 		}
 		return output.toString();
@@ -178,7 +191,7 @@ public class Strings {
 	public static String concat(double[] d, Pattern t, int start, int end) {
 		String[] data = new String[end - start];
 		for (int i = start; i < end; i++) {
-			data[i - start] = ""+d[i];
+			data[i - start] = "" + d[i];
 		}
 		return concat(data, t);
 	}
@@ -186,7 +199,7 @@ public class Strings {
 	public static String concat(int[] d, Pattern t, int start, int end) {
 		String[] data = new String[end - start];
 		for (int i = start; i < end; i++) {
-			data[i - start] = ""+d[i];
+			data[i - start] = "" + d[i];
 		}
 		return concat(data, t);
 	}

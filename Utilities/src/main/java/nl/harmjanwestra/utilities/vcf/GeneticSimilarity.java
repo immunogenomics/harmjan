@@ -30,7 +30,7 @@ public class GeneticSimilarity {
 		DoubleMatrix2D geneticSimilaritySameGenotypes = new DenseDoubleMatrix2D(nrInds1, nrInds2);
 
 		DoubleMatrix2D genotypes1 = new DenseDoubleMatrix2D(nrInds1, nrVariants);
-		DoubleMatrix2D genotypes2 = new DenseDoubleMatrix2D(nrInds1, nrVariants);
+		DoubleMatrix2D genotypes2 = new DenseDoubleMatrix2D(nrInds2, nrVariants);
 		double[] alleleFreqs = new double[nrVariants];
 		double[] callrates = new double[nrVariants];
 
@@ -158,58 +158,6 @@ public class GeneticSimilarity {
 		return new Pair<DoubleMatrix2D, DoubleMatrix2D>(geneticSimilarity, geneticSimilaritySameGenotypes);
 	}
 
-	public class DetermineGeneticSimilarityTask implements Callable<Triple<Integer, Integer, Pair<Double, Double>>> {
-
-		double[] alleleFreqs;
-		double[] callrates;
-
-		int i;
-		int j;
-		int nrVariants;
-		DoubleMatrix2D genotypes1;
-		DoubleMatrix2D genotypes2;
-
-		public DetermineGeneticSimilarityTask(int i, int j, DoubleMatrix2D genotypes1, DoubleMatrix2D genotypes2, int nrVariants, double[] alleleFreqs, double[] callrates) {
-			this.i = i;
-			this.j = j;
-			this.genotypes1 = genotypes1;
-			this.genotypes2 = genotypes2;
-			this.nrVariants = nrVariants;
-			this.alleleFreqs = alleleFreqs;
-			this.callrates = callrates;
-		}
-
-
-		@Override
-		public Triple<Integer, Integer, Pair<Double, Double>> call() throws Exception {
-
-			int nrIdentical = 0;
-			int nrGenotypes = 0;
-			double sum = 0;
-			for (int snp = 0; snp < nrVariants; snp++) {
-				double af = alleleFreqs[snp];
-				double cr = callrates[snp];
-
-				if (!Double.isNaN(af) && cr >= 0.10) {
-					double denominator = af * (1.0d - af);
-					if (!Double.isNaN(denominator) && denominator > 0) {
-						double genotype0I = genotypes1.getQuick(i, snp);
-						double genotype0J = genotypes2.getQuick(j, snp);
-						if (genotype0I != -1 && genotype0J != -1) {
-							sum += ((genotype0I - af) * (genotype0J - af) / denominator);
-							if (genotype0I == genotype0J) {
-								nrIdentical++;
-							}
-							nrGenotypes++;
-						}
-					}
-				}
-			}
-			return new Triple<Integer, Integer, Pair<Double, Double>>(i, j, new Pair<Double, Double>(sum / nrGenotypes, (double) nrIdentical / nrGenotypes));
-		}
-	}
-
-
 	// provide a list of variants (within dataset comparison)
 	// assume variants are pruned.
 	public Pair<double[][], double[][]> calculate(VCFVariant[] variants) {
@@ -251,12 +199,12 @@ public class GeneticSimilarity {
 							double genotype0I = 0;
 							if (0 == genotypeAlleles[i][0]) genotype0I += .5;
 							if (0 == genotypeAlleles[i][1]) genotype0I += .5;
-							for (int j = i + 1; j < nrInds; j++) {
+							for (int j = 0; j < nrInds; j++) {
 								if (genotypeAlleles[j][0] != -1) {
 									double genotype0J = 0;
 									if (0 == genotypeAlleles[j][0]) genotype0J += .5;
 									if (0 == genotypeAlleles[j][1]) genotype0J += .5;
-									geneticSimilarity[i][j] += (genotype0I - alleleFreq0) * (genotype0J - alleleFreq0) / denominator;
+									geneticSimilarity[i][j] += ((genotype0I - alleleFreq0) * (genotype0J - alleleFreq0)) / denominator;
 									if (genotype0I == genotype0J) geneticSimilaritySameGenotypes[i][j]++;
 									geneticSimilarityCalled[i][j]++;
 								}
@@ -268,7 +216,7 @@ public class GeneticSimilarity {
 		}
 
 		for (int i = 0; i < nrInds; i++) {
-			for (int j = i + 1; j < nrInds; j++) {
+			for (int j = 0; j < nrInds; j++) {
 				geneticSimilarity[i][j] /= geneticSimilarityCalled[i][j];
 				geneticSimilaritySameGenotypes[i][j] /= geneticSimilarityCalled[i][j];
 			}
@@ -276,6 +224,61 @@ public class GeneticSimilarity {
 
 		return new Pair<double[][], double[][]>(geneticSimilarity, geneticSimilaritySameGenotypes);
 
+	}
+
+	public class DetermineGeneticSimilarityTask implements Callable<Triple<Integer, Integer, Pair<Double, Double>>> {
+
+		double[] alleleFreqs;
+		double[] callrates;
+
+		int i;
+		int j;
+		int nrVariants;
+		DoubleMatrix2D genotypes1;
+		DoubleMatrix2D genotypes2;
+
+		public DetermineGeneticSimilarityTask(int i, int j, DoubleMatrix2D genotypes1, DoubleMatrix2D genotypes2, int nrVariants, double[] alleleFreqs, double[] callrates) {
+			this.i = i;
+			this.j = j;
+			this.genotypes1 = genotypes1;
+			this.genotypes2 = genotypes2;
+			this.nrVariants = nrVariants;
+			this.alleleFreqs = alleleFreqs;
+			this.callrates = callrates;
+		}
+
+
+		@Override
+		public Triple<Integer, Integer, Pair<Double, Double>> call() throws Exception {
+
+			int nrIdentical = 0;
+			int nrGenotypes = 0;
+			double sum = 0;
+			for (int snp = 0; snp < nrVariants; snp++) {
+				double af = alleleFreqs[snp];
+				double cr = callrates[snp];
+
+				if (!Double.isNaN(af) && cr >= 0.10) {
+					double denominator = af * (1.0d - af);
+					if (!Double.isNaN(denominator) && denominator > 0) {
+						double genotype0I = genotypes1.getQuick(i, snp);
+						double genotype0J = genotypes2.getQuick(j, snp);
+						if (genotype0I != -1 && genotype0J != -1) {
+							double g01 = genotype0I - af;
+							double g02 = genotype0J - af;
+
+							double fhat = (g01 * g02) / denominator;
+							sum += fhat;
+							if (genotype0I == genotype0J) {
+								nrIdentical++;
+							}
+							nrGenotypes++;
+						}
+					}
+				}
+			}
+			return new Triple<Integer, Integer, Pair<Double, Double>>(i, j, new Pair<Double, Double>(sum / nrGenotypes, (double) nrIdentical / nrGenotypes));
+		}
 	}
 
 
