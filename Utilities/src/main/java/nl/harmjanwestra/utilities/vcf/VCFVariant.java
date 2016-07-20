@@ -199,7 +199,7 @@ public class VCFVariant {
 											if (gtElems.length < 2) {
 												System.out.println(ln);
 												System.out.println();
-												System.out.println("gtelems: "+Strings.concat(gtElems, Strings.tab));
+												System.out.println("gtelems: " + Strings.concat(gtElems, Strings.tab));
 												System.out.println("length of GT Elems < 2");
 												System.out.println("Actual length: " + gtElems.length);
 												System.out.println("Number of total sample elems: " + sampleTokens.length);
@@ -699,20 +699,7 @@ public class VCFVariant {
 	public String toVCFString(boolean includeHeader) {
 		StringBuilder builder = new StringBuilder(100000);
 		if (includeHeader) {
-			builder.append(chr);
-			builder.append("\t");
-			builder.append(pos);
-			builder.append("\t");
-			builder.append(id);
-			builder.append("\t");
-			builder.append(alleles[0]);
-			builder.append("\t");
-			builder.append(Strings.concat(alleles, Strings.comma, 1, alleles.length));
-			builder.append("\t.\t.\t").append(getInfoString()).append("\tGT");
-
-			if (genotypeProbabilies != null) {
-				builder.append(":GP");
-			}
+			builder.append(toVCFeader());
 		}
 
 
@@ -727,7 +714,7 @@ public class VCFVariant {
 			if (a2 == -1) {
 				al2 = ".";
 			}
-			if(builder.length() > 0) {
+			if (builder.length() > 0) {
 				builder.append("\t");
 			}
 			builder.append(al1).append(separator).append(al2);
@@ -1188,6 +1175,27 @@ public class VCFVariant {
 
 	public boolean isAutosomal() {
 		return getChrObj().isAutosome();
+	}
+
+	public String toVCFeader() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(chr);
+		builder.append("\t");
+		builder.append(pos);
+		builder.append("\t");
+		builder.append(id);
+		builder.append("\t");
+		builder.append(alleles[0]);
+		builder.append("\t");
+		builder.append(Strings.concat(alleles, Strings.comma, 1, alleles.length));
+		builder.append("\t.\t.\t").append(getInfoString()).append("\tGT");
+
+		if (genotypeProbabilies != null) {
+			builder.append(":GP");
+		}
+
+		return builder.toString();
+
 	}
 
 	public enum PARSE {

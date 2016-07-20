@@ -60,17 +60,17 @@ public class PlotterAccuracy extends VariantCounter {
 		};
 		String diseaseprefix = "T1D";
 
-//		files = new String[]{
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
-//		};
-//		labels = new String[]{
-//				"EUR",
-//				"COSMO",
-//				"HRC / COSMO / EAGLE"
-//		};
-//		diseaseprefix = "RA";
+		files = new String[]{
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
+		};
+		labels = new String[]{
+				"EUR",
+				"COSMO",
+				"HRC / COSMO / EAGLE"
+		};
+		diseaseprefix = "RA";
 
 		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
 		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
@@ -126,6 +126,8 @@ public class PlotterAccuracy extends VariantCounter {
 		boolean usemafthreshold = false;
 		boolean includeICVariants = true;
 
+
+		// including indels
 		int maxNrVariants = 1862;
 		includeindels = true;
 		usemafthreshold = false;
@@ -133,57 +135,39 @@ public class PlotterAccuracy extends VariantCounter {
 		out = outdir + diseaseprefix + "-plot1-allvariants." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
-		maxNrVariants = 1717;
-		includeindels = false;
-		usemafthreshold = false;
-		includeICVariants = true;
-		out = outdir + diseaseprefix + "-plot1-allvariants-excludeIndels." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-
-		maxNrVariants = 1862;
-		includeindels = false;
+		// maf > 1%
 		usemafthreshold = true;
-		includeICVariants = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
+		// maf > 1%, imputed variants
+		usemafthreshold = true;
+		includeICVariants = false;
+		maxNrVariants = 693;
+		out = outdir + diseaseprefix + "-plot1-allvariants-imputed-mafgt" + mafthreshold + "." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+
+
+		// excluding indels
 		maxNrVariants = 1717;
 		includeindels = false;
-		usemafthreshold = true;
-		includeICVariants = true;
-		out = outdir + diseaseprefix + "-plot1-allvariants-excludeIndels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-
-
-
-		// imputed variants
-		maxNrVariants = 693;
-		includeindels = true;
 		usemafthreshold = false;
 		includeICVariants = true;
-		out = outdir + diseaseprefix + "-plot1-imputed." + ext;
+		out = outdir + diseaseprefix + "-plot1-excludedindels." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
-		maxNrVariants = 548;
-		includeindels = false;
-		usemafthreshold = false;
-		includeICVariants = true;
-		out = outdir + diseaseprefix + "-plot1-imputed-excludeIndels." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-
-		maxNrVariants = 693;
-		includeindels = false;
+		// maf > 1%
 		usemafthreshold = true;
-		includeICVariants = true;
-		out = outdir + diseaseprefix + "-plot1-imputed-mafgt" + mafthreshold + "." + ext;
+		out = outdir + diseaseprefix + "-plot1-excludedindels-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
-		maxNrVariants = 548;
-		includeindels = false;
+		// maf > 1%, imputed variants
 		usemafthreshold = true;
-		includeICVariants = true;
-		out = outdir + diseaseprefix + "-plot1-imputed-excludeIndels-mafgt" + mafthreshold + "." + ext;
+		includeICVariants = false;
+		maxNrVariants = 548;
+		out = outdir + diseaseprefix + "-plot1-excludedindels-imputed-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+
 
 	}
 
@@ -229,6 +213,7 @@ public class PlotterAccuracy extends VariantCounter {
 			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 		}
 
+		String[] newlabels = new String[labels.length];
 		for (int f = 0; f < files.length; f++) {
 			// get the imputation accuracies for these variants
 			TextFile tf2 = new TextFile(files[f], TextFile.R);
@@ -254,6 +239,7 @@ public class PlotterAccuracy extends VariantCounter {
 			tf2.close();
 			Collections.sort(corvals, Collections.reverseOrder());
 			System.out.println(corvals.size() + " vals in file " + files[f]);
+			newlabels[f] = labels[f] + " - " + corvals.size() + " / " + maxSize;
 			vals.add(corvals);
 		}
 
@@ -261,6 +247,7 @@ public class PlotterAccuracy extends VariantCounter {
 
 		double[][] x = new double[files.length][maxSize];
 		double[][] y = new double[files.length][maxSize];
+
 		for (int ds = 0; ds < files.length; ds++) {
 
 			for (int i = 0; i < maxSize; i++) {
@@ -284,7 +271,7 @@ public class PlotterAccuracy extends VariantCounter {
 		range.roundX();
 		range.roundY();
 		panel.setDataRange(range);
-		panel.setDatasetLabels(labels);
+		// panel.setDatasetLabels(newlabels);
 		grid.addPanel(panel);
 		grid.draw(out);
 		System.out.println("Out: " + out);

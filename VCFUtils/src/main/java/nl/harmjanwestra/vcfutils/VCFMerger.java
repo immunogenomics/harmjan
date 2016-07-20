@@ -241,13 +241,13 @@ public class VCFMerger {
 	This merges samples from two VCF files if there are variants that are overlapping. Non-overlapping variants are excluded.
 	 */
 	public void mergeAndIntersect(boolean linux,
-	                              int chrint,
-	                              String vcfsort,
-	                              String refVCF,
-	                              String testVCF,
-	                              String matchedPanelsOut,
-	                              boolean keepoverlapping,
-	                              String separator) throws IOException {
+								  int chrint,
+								  String vcfsort,
+								  String refVCF,
+								  String testVCF,
+								  String matchedPanelsOut,
+								  boolean keepoverlapping,
+								  String separator) throws IOException {
 		Chromosome chr = Chromosome.parseChr("" + chrint);
 
 		mergeAndIntersectVCFVariants(
@@ -270,13 +270,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-	                                          String testVCF,
-	                                          String vcf1out,
-	                                          String vcf2out,
-	                                          String vcfmergedout,
-	                                          String separatorInMergedFile,
-	                                          String logoutfile,
-	                                          boolean keepNonOverlapping) throws IOException {
+											  String testVCF,
+											  String vcf1out,
+											  String vcf2out,
+											  String vcfmergedout,
+											  String separatorInMergedFile,
+											  String logoutfile,
+											  boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -572,7 +572,7 @@ public class VCFMerger {
 	Utility function to mergecheese two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-	                                           String separatorInMergedFile) {
+											   String separatorInMergedFile) {
 
 		String[] refAlleles = refVariant.getAlleles();
 		String refMinorAllele = refVariant.getMinorAllele();
@@ -1066,7 +1066,6 @@ public class VCFMerger {
 
 
 		// get a list of variants and their R-squared values
-		int[] variantsPerBatch = new int[nrBatches];
 		for (int batch = 0; batch < nrBatches; batch++) {
 			String batchvcfName = dirInPrefix + batch + ".vcf.gz";
 			if (Gpio.exists(batchvcfName)) {
@@ -1249,8 +1248,200 @@ public class VCFMerger {
 
 	}
 
+	// same variants, different samples
+	public void mergeImputedData(String vcf1, String vcf2, String outfilename, String variantsToTestFile) throws IOException {
+
+		// make a list of variants to include
+		System.out.println("VCF1: " + vcf1);
+		System.out.println("VCF2: " + vcf2);
+		System.out.println("Out: " + outfilename);
+
+		boolean allpresent = true;
+		if (!Gpio.exists(vcf1) || !Gpio.exists(vcf2)) {
+			System.out.println("Could not find one of the input files");
+			System.exit(-1);
+		}
+
+		HashSet<String> varsToTest = null;
+		if (variantsToTestFile != null) {
+			TextFile fin = new TextFile(variantsToTestFile, TextFile.R);
+			ArrayList<String> str = fin.readAsArrayList();
+			boolean splitweirdly = false;
+			varsToTest = new HashSet<String>();
+			for (String s : str) {
+				String[] elems = s.split(";");
+				if (elems.length > 1) {
+					varsToTest.add(elems[0] + "-" + elems[1]);
+					splitweirdly = true;
+				} else {
+					varsToTest.add(s);
+				}
+
+			}
+			if (splitweirdly) {
+				System.out.println("split weirdly ;)");
+			}
+			fin.close();
+			System.out.println(varsToTest.size() + " variants to mergecheese from " + variantsToTestFile);
+		}
+
+		HashSet<String> allVariants = new HashSet<String>();
+		// get a list of variants and their R-squared values
+		String[] files = new String[]{vcf1, vcf2};
+		for (int f = 0; f < files.length; f++) {
+			String vcfname = files[f];
+			TextFile tf = new TextFile(vcfname, TextFile.R);
+
+			String ln = tf.readLine();
+			System.out.println("reading: " + vcfname);
+
+			HashMap<String, ArrayList<Double>> allVariantsLocal = new HashMap<String, ArrayList<Double>>();
+			while (ln != null) {
+				if (ln.startsWith("#")) {
+
+				} else {
+
+					String substr = ln.substring(0, 1000);
+					String[] elems = substr.split("\t");
+
+					// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+					String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+					String variantSelect = elems[0] + "-" + elems[1] + "-" + elems[2];
+					if (varsToTest == null || varsToTest.contains(variantSelect)) {
+						//	String infoStr = elems[7];
+						allVariants.add(variant);
+					}
+				}
+				ln = tf.readLine();
+			}
+			System.out.println(allVariants.size() + " variants found... " + allVariantsLocal.size() + " in this file");
+			tf.close();
+		}
+
+		// remap variants
+		Set<String> variants = allVariants;
+		HashMap<String, Integer> variantToInt = new HashMap<String, Integer>();
+		int ctr = 0;
+		for (String s : variants) {
+			variantToInt.put(s, ctr);
+			ctr++;
+		}
+
+		System.out.println(variantToInt.size() + " variants in total");
+		VCFVariant[][] variantObjs = new VCFVariant[2][variantToInt.size()];
+
+		StringBuilder header = new StringBuilder();
+		header.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
+
+		int[] nrSamples = new int[2];
+
+		for (int f = 0; f < files.length; f++) {
+			String vcfname = files[f];
+			VCFGenotypeData d = new VCFGenotypeData(vcfname);
+			nrSamples[f] = d.getSamples().size();
+			TextFile tf = new TextFile(vcfname, TextFile.R);
+
+			System.out.println("reading: " + vcfname);
+			String ln = tf.readLine();
+			while (ln != null) {
+				if (ln.startsWith("##")) {
+
+				} else if (ln.startsWith("#CHROM")) {
+					String[] elems = ln.split("\t");
+					for (int i = 9; i < elems.length; i++) {
+						header.append("\t").append(elems[i]);
+					}
+
+				} else if (ln.startsWith("#")) {
+
+				} else {
+					// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+					String substr = ln.substring(0, 200);
+					String[] elems = substr.split("\t");
+					String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+
+					Integer id = variantToInt.get(variant);
+					if (id != null) {
+						VCFVariant variantObj = new VCFVariant(ln);
+						variantObjs[f][id] = variantObj;
+					} else {
+						System.out.println("variant: " + variant + " not in index??");
+						System.exit(-1);
+					}
+				}
+				ln = tf.readLine();
+			}
+			tf.close();
+		}
+
+		System.out.println("done reading. writing to: " + outfilename);
+		TextFile vcfout = new TextFile(outfilename, TextFile.W);
+
+		vcfout.writeln("##fileformat=VCFv4.1");
+		vcfout.writeln(header.toString());
+		for (int i = 0; i < variantToInt.size(); i++) {
+			StringBuilder builder = new StringBuilder(100000);
+			for (int b = 0; b < 2; b++) {
+				VCFVariant variant = variantObjs[b][i];
+				if (variant == null) {
+					if (b == 0) {
+						// get variant from b == 1 for purpose of headerness
+						VCFVariant other = variantObjs[1][i];
+						builder.append(variant.toVCFeader());
+					}
+					// append ./. to output for nrSamples
+					builder.append(Strings.repeat("\t./.", nrSamples[b]));
+				}
+				if (b == 0) {
+					builder.append(variant.toVCFString(true));
+				} else {
+					builder.append("\t").append(variant.toVCFString(false));
+				}
+			}
+			vcfout.writeln(builder.toString());
+			if (i % 100 == 0) {
+				System.out.print("\rprogress: " + i + "/" + variantToInt.size() + " - " + ((double) i / variantToInt.size()) + "\r");
+			}
+		}
+		System.out.println("Done writing");
+		vcfout.close();
+		System.out.println();
+
+
+		System.out.println("Testing output file: " + outfilename);
+		TextFile tfin = new TextFile(outfilename, TextFile.R);
+		String[] elems = tfin.readLineElems(TextFile.tab);
+		int nr = -1;
+		int ln = 0;
+		while (elems != null) {
+			if (elems[0].startsWith("##")) {
+
+			} else if (elems[0].startsWith("#")) {
+				System.out.println(elems.length + " header elems");
+				if (nr == -1) {
+					nr = elems.length;
+				}
+			} else {
+				if (nr == -1) {
+					System.out.println(elems.length + " sample elems: " + (elems.length - 9) + " samples");
+					nr = elems.length;
+				} else {
+					if (nr != elems.length) {
+						System.err.println("error detected in output on line " + ln + " " + elems.length + " found " + nr + " expected ");
+					}
+				}
+			}
+			ln++;
+			elems = tfin.readLineElems(TextFile.tab);
+		}
+		tfin.close();
+
+
+	}
+
+
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-	                                           boolean linux, String vcfsort) throws IOException {
+											   boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants

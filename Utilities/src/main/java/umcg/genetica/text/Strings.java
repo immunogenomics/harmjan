@@ -203,4 +203,27 @@ public class Strings {
 		}
 		return concat(data, t);
 	}
+
+	public static String repeat(String toRepeat, int times) {
+
+		if (toRepeat == null) {
+			toRepeat = "";
+		}
+
+		if (times < 0) {
+			times = 0;
+		}
+
+		final int length = toRepeat.length();
+		final int total = length * times;
+		final char[] src = toRepeat.toCharArray();
+		char[] dst = new char[total];
+
+		for (int i = 0; i < total; i += length) {
+			System.arraycopy(src, 0, dst, i, length);
+		}
+
+		return String.copyValueOf(dst);
+
+	}
 }
