@@ -217,7 +217,7 @@ public class LRTestOptions {
 	private String famfile;
 	private String snpLimitFile;
 	private int maxIter = 1;
-	private double mafthresholdD = 0.005;
+	private double mafthresholdD = 0.01;
 	private String covariatesToInclude;
 	private String bedfile;
 	private int nrThreads = 1;

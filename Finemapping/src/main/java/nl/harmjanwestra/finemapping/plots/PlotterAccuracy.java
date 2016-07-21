@@ -226,7 +226,7 @@ public class PlotterAccuracy extends VariantCounter {
 
 					String[] varElems = elems[0].split("_");
 
-					boolean sequenced = isVariantOnIC(varElems, sequencedVariantsHash, includeId);
+					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
 					if (sequenced) {
 						if (!usemafthreshold || (usemafthreshold && maf > mafthreshold)) {
 							corvals.add(val);
@@ -355,7 +355,7 @@ public class PlotterAccuracy extends VariantCounter {
 
 				if (variantHash != null && plotOnlyImputed) {
 					boolean isOnIc = false;
-					isOnIc = isVariantOnIC(elems, variantHash, true);
+					isOnIc = isVariantInHash(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
 						include = false;
 					} else if (!plotOnlyImputed && !isOnIc) {
@@ -365,7 +365,7 @@ public class PlotterAccuracy extends VariantCounter {
 
 				if (onlyIc && variantHash != null) {
 					boolean isOnIc = false;
-					isOnIc = isVariantOnIC(elems, variantHash, true);
+					isOnIc = isVariantInHash(elems, variantHash, true);
 					include = isOnIc;
 				}
 
@@ -451,7 +451,7 @@ public class PlotterAccuracy extends VariantCounter {
 				}
 
 				if (variantHash != null && plotOnlyImputed) {
-					boolean isOnIc = isVariantOnIC(elems, variantHash, true);
+					boolean isOnIc = isVariantInHash(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
 						include = false;
 					} else if (!plotOnlyImputed && !isOnIc) {
@@ -513,7 +513,7 @@ public class PlotterAccuracy extends VariantCounter {
 				}
 
 				if (variantHash != null && plotOnlyImputed) {
-					boolean isOnIc = isVariantOnIC(elems, variantHash, true);
+					boolean isOnIc = isVariantInHash(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
 						include = false;
 					} else if (!plotOnlyImputed && !isOnIc) {
@@ -575,7 +575,7 @@ public class PlotterAccuracy extends VariantCounter {
 				}
 
 				if (variantHash != null && plotOnlyImputed) {
-					boolean isOnIc = isVariantOnIC(elems, variantHash, true);
+					boolean isOnIc = isVariantInHash(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
 						include = false;
 					} else if (!plotOnlyImputed && !isOnIc) {

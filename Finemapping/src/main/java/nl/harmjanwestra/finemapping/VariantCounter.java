@@ -113,7 +113,7 @@ public class VariantCounter {
 
 					String[] varElems = elems[0].split("_");
 
-					boolean sequenced = isVariantOnIC(varElems, sequencedVariantsHash, includeId);
+					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
 
 					if (sequenced) {
 						String variant = Chromosome.parseChr(varElems[0]).toString() + "_" + varElems[1] + "_" + varElems[2];
@@ -263,7 +263,7 @@ public class VariantCounter {
 
 					String[] varElems = elems[0].split("_");
 
-					boolean sequenced = isVariantOnIC(varElems, sequencedVariantsHash, includeId);
+					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
 
 					if (sequenced) {
 						nrSequenced++;
@@ -377,7 +377,7 @@ public class VariantCounter {
 					VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
 					if (variant.getMAF() > mafthreshold && variant.getMAF() < upperthreshold) {
 
-						boolean varOnIc = isVariantOnIC(elems, variantsOnICHash, includeId);
+						boolean varOnIc = isVariantInHash(elems, variantsOnICHash, includeId);
 						boolean iswithinregion = isWithinRegion(regions, elems);
 						boolean indel = isIndel(elems);
 
@@ -400,7 +400,7 @@ public class VariantCounter {
 		return new Triple<>(seqpanel, variantsOnImmunoChip, variantsNotOnImmunoChip);
 	}
 
-	public boolean isVariantOnIC(String[] elems, HashSet<String> variantHash, boolean includeId) {
+	public boolean isVariantInHash(String[] elems, HashSet<String> variantHash, boolean includeId) {
 		if (includeId) {
 			String variant = Chromosome.parseChr(elems[0]).toString() + "_" + elems[1] + "_" + elems[2];
 			return variantHash.contains(variant);

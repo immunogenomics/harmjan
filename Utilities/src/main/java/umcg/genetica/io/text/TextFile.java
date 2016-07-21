@@ -40,12 +40,20 @@ public class TextFile implements Iterable<String> {
 	private int buffersize;
 	private boolean parallel = false;
 
+	public TextFile(File f, boolean mode) throws IOException {
+		this(f.toPath(), mode);
+	}
+
 	public TextFile(String file, boolean mode) throws IOException {
 		this(Paths.get(file), mode, DEFAULT_BUFFER_SIZE, false);
 	}
 
 	public TextFile(Path file, boolean mode) throws IOException {
 		this(file, mode, DEFAULT_BUFFER_SIZE, false);
+	}
+
+	public TextFile(File file, boolean mode, boolean parallel) throws IOException {
+		this(file.toPath(), mode, DEFAULT_BUFFER_SIZE, parallel);
 	}
 
 	public TextFile(Path file, boolean mode, boolean parallel) throws IOException {

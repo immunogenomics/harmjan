@@ -120,7 +120,7 @@ public class VCFVariantStats {
 								Future<String> f = jobHandler.take();
 								if (f != null) {
 									String output = f.get();
-									if(output!=null) {
+									if (output != null) {
 										out.writeln(output);
 										written++;
 									}
@@ -499,12 +499,14 @@ public class VCFVariantStats {
 			if (!chr.equals(Chromosome.X)) {
 				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
 				// AC / AN / AF
+				variant.calculateHWEP();
 				String AN = "AN=" + variant.getTotalAlleleCount();
 				String AF = "AF=" + Strings.concat(variant.getAlleleFrequencies(), Strings.comma, 1, variant.getAlleles().length);
 				String AC = "AC=" + Strings.concat(variant.getNrAllelesObserved(), Strings.comma, 1, variant.getAlleles().length);
 				String INFO = "INFO=" + variant.getImputationQualityScore();
-
-				String infoString = AC + ";" + AF + ";" + AN + ";" + INFO;
+				String callrate = "CR=" + variant.getCallrate();
+				String hwep = "HWEP=" + variant.getHwep();
+				String infoString = AC + ";" + AF + ";" + AN + ";" + INFO + ";" + callrate + ";" + hwep;
 
 				StringBuilder outbuilder = new StringBuilder(1000);
 				outbuilder.append(variant.getChr())
