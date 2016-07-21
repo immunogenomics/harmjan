@@ -231,7 +231,7 @@ public class RSquaredPlot {
 			ArrayList<Double> refVals = new ArrayList<Double>();
 			ArrayList<Double> refMAFVals = new ArrayList<Double>();
 			ArrayList<String> allVariants = new ArrayList<String>();
-			System.out.println("Ref: " + ref + " file: " + file);
+			System.out.println("Ref: " + ref + " path: " + file);
 			String line = tf2.readLine();
 			int lnctr = 0;
 			while (line != null) {

@@ -126,11 +126,11 @@ public class Pipeliner {
 		try {
 			boolean continueRun = true;
 			if (!Gpio.exists(keyfile)) {
-				System.out.println("Key file: " + keyfile + " not found.");
+				System.out.println("Key path: " + keyfile + " not found.");
 				continueRun = false;
 			}
 			if (!Gpio.exists(templateFile)) {
-				System.out.println("Template file: " + templateFile + " not found.");
+				System.out.println("Template path: " + templateFile + " not found.");
 				continueRun = false;
 			}
 

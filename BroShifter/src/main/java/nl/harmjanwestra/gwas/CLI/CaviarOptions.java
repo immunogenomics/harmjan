@@ -16,20 +16,20 @@ public class CaviarOptions {
 		option = Option.builder()
 
 				.longOpt("convert")
-				.desc("Convert association file")
+				.desc("Convert association path")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 
 				.longOpt("filter")
-				.desc("Convert association file")
+				.desc("Convert association path")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("i")
 				.hasArg()
-				.desc("Association file")
+				.desc("Association path")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -41,7 +41,7 @@ public class CaviarOptions {
 
 		option = Option.builder("o")
 				.hasArg()
-				.desc("Output file")
+				.desc("Output path")
 				.build();
 		OPTIONS.addOption(option);
 

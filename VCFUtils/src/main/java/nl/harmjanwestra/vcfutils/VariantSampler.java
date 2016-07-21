@@ -42,11 +42,11 @@ public class VariantSampler {
 		// select variants from list
 		HashSet<String> sample = sample(variants, percentage);
 
-		// write list of selected variants to file
+		// write list of selected variants to path
 		System.out.println("List of selected variants is written to: " + out + "-variantList.txt");
 		writeList(sample, out + "-variantList.txt");
 
-		// write new vcf file and remove selected variants
+		// write new vcf path and remove selected variants
 		DecimalFormat format = new DecimalFormat("#.##");
 		System.out.println("Output VCF: " + out + ".vcf.gz");
 		filter(vcf1, sample, out + ".vcf.gz");

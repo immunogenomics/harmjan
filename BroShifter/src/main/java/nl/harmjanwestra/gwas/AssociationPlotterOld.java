@@ -352,7 +352,7 @@ public class AssociationPlotterOld {
 				PosteriorPValFile assocfile = new PosteriorPValFile();
 				String pvalfile = assocdir + region.toString() + ".txt";
 				if (!Gpio.exists(pvalfile)) {
-					System.out.println("Could not find file: " + pvalfile);
+					System.out.println("Could not find path: " + pvalfile);
 				} else {
 					System.out.println("in: " + pvalfile);
 					ArrayList<AssociationResult> assoc = assocfile.readVariantPValues(pvalfile, region);
@@ -680,7 +680,7 @@ public class AssociationPlotterOld {
 				ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
 
 				for (int refId = 0; refId < refs.length; refId++) {
-					// read gwas file
+					// read gwas path
 					String ref = refs[refId];
 
 					Chromosome chr = region.getChromosome();
@@ -835,7 +835,7 @@ public class AssociationPlotterOld {
 
 
 						} else {
-							System.out.println("Could not find file: " + assocFile);
+							System.out.println("Could not find path: " + assocFile);
 							// add spacer panels...
 
 							pvalgrid.addPanel(new SpacerPanel(1, 1), run + 1, refId);

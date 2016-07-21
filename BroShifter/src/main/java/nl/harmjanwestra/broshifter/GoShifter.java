@@ -45,7 +45,7 @@ public class GoShifter {
 		boolean conditional = options.conditional;
 		int nrThreads = options.nrThreads;
 
-		// TODO: this input file needs some standard formatting or something
+		// TODO: this input path needs some standard formatting or something
 		TextFile tf = new TextFile(listOfAnnotations, TextFile.R);
 		ArrayList<String> annotationFiles = tf.readAsArrayList();
 		System.out.println(annotationFiles.size() + " annotation files in: " + listOfAnnotations);
@@ -182,7 +182,7 @@ public class GoShifter {
 			if (Gpio.exists(annotationFiles.get(i))) {
 				filesPresent.add(annotationFiles.get(i));
 			} else {
-				System.err.println("WARNING: could not find file: " + annotationFiles.get(i));
+				System.err.println("WARNING: could not find path: " + annotationFiles.get(i));
 			}
 		}
 		return filesPresent;

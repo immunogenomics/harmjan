@@ -12,9 +12,9 @@ public class VCFTest {
 
 	public static void main(String[] args) {
 
-//		String file = "/Data/tmp/2016-06-06/rs139965430.txt";
+//		String path = "/Data/tmp/2016-06-06/rs139965430.txt";
 //		try {
-//			TextFile tf = new TextFile(file, TextFile.R);
+//			TextFile tf = new TextFile(path, TextFile.R);
 //
 //			String ln = tf.readLine();
 //			while (ln != null) {

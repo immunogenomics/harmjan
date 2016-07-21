@@ -101,7 +101,7 @@ public class PseudoControls {
 		}
 		tf.close();
 
-		System.out.println(pseudos.size() + " pseudos found in text file: " + famFileWithPseudoControls);
+		System.out.println(pseudos.size() + " pseudos found in text path: " + famFileWithPseudoControls);
 
 		// set the covariates of the pseudo controls to match those of the original kid
 		ArrayList<String> samplesToAdd = new ArrayList<String>();
@@ -117,7 +117,7 @@ public class PseudoControls {
 			}
 		}
 
-		System.out.println(samplesToAdd.size() + " pseudo samples will be added to covariate file");
+		System.out.println(samplesToAdd.size() + " pseudo samples will be added to covariate path");
 		double[][] dataout = new double[ds.nrRows + samplesToAdd.size()][ds.nrCols];
 		for (int r = 0; r < ds.nrRows; r++) {
 			for (int c = 0; c < ds.nrCols; c++) {
@@ -156,7 +156,7 @@ public class PseudoControls {
 		ArrayList<String> vcfSamples = data.getSamples();
 
 		System.out.println(vcfSamples.size() + "vcf samples");
-		// load fam file
+		// load fam path
 		// get the trios (only trios where kid is a case)
 		ArrayList<Pair<String, Triple<String, String, String>>> famData = getTrios(famfile); // format: familyname<kid, mom, dad>
 		HashMap<String, Boolean> genderPerSample = getGenderFromFamFile(famfile);
@@ -251,7 +251,7 @@ public class PseudoControls {
 	}
 
 	private HashMap<String, Boolean> getGenderFromFamFile(String famfile) throws IOException {
-		System.out.println("Loading trios from FAM file: " + famfile);
+		System.out.println("Loading trios from FAM path: " + famfile);
 		HashMap<String, Boolean> output = new HashMap<String, Boolean>();
 		TextFile tf = new TextFile(famfile, TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
@@ -280,7 +280,7 @@ public class PseudoControls {
 			elems = tf.readLineElems(Strings.whitespace);
 		}
 		tf.close();
-		System.out.println(output.size() + " trios found in FAM file");
+		System.out.println(output.size() + " trios found in FAM path");
 		return output;
 	}
 
@@ -294,7 +294,7 @@ public class PseudoControls {
 		ArrayList<String> vcfSamples = data.getSamples();
 
 		System.out.println(vcfSamples.size() + "vcf samples");
-		// load fam file
+		// load fam path
 		// get the trios (only trios where kid is a case)
 		ArrayList<Pair<String, Triple<String, String, String>>> famData = getTrios(famfile); // format: familyname<kid, mom, dad>
 
@@ -383,7 +383,7 @@ public class PseudoControls {
 					// make the pseudo control
 					makePseudoControl(kidId, momId, dadId, pseudoId, alleles, finalAlleles, current);
 
-					// check generated pseudocontrol against the one in the VCF file
+					// check generated pseudocontrol against the one in the VCF path
 					int pseudoSample = sampleToPseudo[kidId];
 
 					if (pseudoSample != -1) {
@@ -409,7 +409,7 @@ public class PseudoControls {
 		}
 	}
 
-	// makes pseudocontrols from VCF and FAM file.
+	// makes pseudocontrols from VCF and FAM path.
 	public void make(String vcfIn, String vcfOut, String famfile, String famfileout) throws IOException {
 
 
@@ -422,7 +422,7 @@ public class PseudoControls {
 		ArrayList<String> vcfSamples = data.getSamples();
 
 		System.out.println(vcfSamples.size());
-		// load fam file
+		// load fam path
 		// get the trios (only trios where kid is a case)
 		ArrayList<Pair<String, Triple<String, String, String>>> famData = getTrios(famfile); // format: familyname<kid, mom, dad>
 
@@ -664,7 +664,7 @@ public class PseudoControls {
 			String origSample = pseudoControl.replaceAll("-pseudo", "");
 			Integer id = sampleMap.get(origSample);
 			if (id == null) {
-				System.err.println("ERROR while writing FAM file");
+				System.err.println("ERROR while writing FAM path");
 			} else {
 				String fam = sampleToFam.get(origSample);
 				String[] elems = Strings.whitespace.split(fam);
@@ -869,7 +869,7 @@ public class PseudoControls {
 	}
 
 	private ArrayList<Pair<String, Triple<String, String, String>>> getTrios(String famfile) throws IOException {
-		System.out.println("Loading trios from FAM file: " + famfile);
+		System.out.println("Loading trios from FAM path: " + famfile);
 		ArrayList<Pair<String, Triple<String, String, String>>> output = new ArrayList<Pair<String, Triple<String, String, String>>>();
 		TextFile tf = new TextFile(famfile, TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
@@ -893,7 +893,7 @@ public class PseudoControls {
 			elems = tf.readLineElems(Strings.whitespace);
 		}
 		tf.close();
-		System.out.println(output.size() + " trios found in FAM file");
+		System.out.println(output.size() + " trios found in FAM path");
 		return output;
 	}
 

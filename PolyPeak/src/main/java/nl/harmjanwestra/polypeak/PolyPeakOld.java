@@ -55,7 +55,7 @@ public class PolyPeakOld {
         // keep a running total coverage distribution (e.g. coverage vs count)
         //
         // for a given sample
-        // -- open bam file reader
+        // -- open bam path reader
         BamFileReader reader = new BamFileReader(new File(tmpFile));
             // -- keep a distribution of d versus correlation 500x100
 

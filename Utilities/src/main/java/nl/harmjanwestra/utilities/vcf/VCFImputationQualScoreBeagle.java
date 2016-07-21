@@ -32,7 +32,7 @@ import java.util.Arrays;
  * https://faculty.washington.edu/browning/beagle/beagle.html
  * Copyright (C) 2014 Brian L. Browning
  * <p>
- * This file is part of Beagle
+ * This path is part of Beagle
  */
 public class VCFImputationQualScoreBeagle {
 

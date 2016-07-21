@@ -40,12 +40,12 @@ public class BedFileReader {
 		this.filter = filter;
 	}
 
-//	public Track readAsTrack(String file, String name, boolean removeduplicates) throws IOException {
+//	public Track readAsTrack(String path, String name, boolean removeduplicates) throws IOException {
 //		nrFeatures = 0;
 //		featureLengthSum = 0;
-//		TextFile tf = new TextFile(file, TextFile.R);
+//		TextFile tf = new TextFile(path, TextFile.R);
 //
-//		System.out.println("Reading file: " + file);
+//		System.out.println("Reading path: " + path);
 //
 //		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
 //		String[] elems = tf.readLineElems(splitpattern);

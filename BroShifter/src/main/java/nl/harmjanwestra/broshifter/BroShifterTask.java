@@ -242,7 +242,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 					outputLines.add(builder.toString());
 				}
 			} else {
-				System.err.println("Thread " + threadNum + " | Cannot find region file: " + options.posteriorFile);
+				System.err.println("Thread " + threadNum + " | Cannot find region path: " + options.posteriorFile);
 			}
 			if (fctr % 10 == 0) {
 				System.out.println("Thread " + threadNum + " | " + fctr + " out of " + regions.size() + " regions processed.");

@@ -54,7 +54,7 @@
                 <version>2.4</version>
                 <!-- The configuration of the plugin -->
                 <configuration>
-                    <!-- Specifies the configuration file of the assembly plugin -->
+                    <!-- Specifies the configuration path of the assembly plugin -->
                     <descriptors>
                         <descriptor>src/main/assembly/assembly.xml</descriptor>
                     </descriptors>
@@ -80,7 +80,7 @@
                     <archive>
                         <!-- Manifest specific configuration -->
                         <manifest>
-                            <!-- Classpath is added to the manifest of the created jar file. -->
+                            <!-- Classpath is added to the manifest of the created jar path. -->
                             <addClasspath>true</addClasspath>
                             <!--
                              Configures the classpath prefix. This configuration option is

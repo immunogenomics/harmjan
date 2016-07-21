@@ -142,7 +142,7 @@ public class GoscializerOldCode {
             annotationInput.close();
             System.out.println("Found: " + bedfileFeatures.size() + " features");
 
-            System.out.println("Writing file: " + outputDir + n);
+            System.out.println("Writing path: " + outputDir + n);
             TextFile annotationOutput = new TextFile(outputDir + n, TextFile.W);
             for (int q = 0; q < bedfileFeatures.size(); q++) {
                 Feature f1 = bedfileFeatures.get(q);
@@ -189,7 +189,7 @@ public class GoscializerOldCode {
     }
 
     private HashMap<SortableSNP, ArrayList<SortableSNP>> getProxiesForSNPs(String tabixdir, Byte chr, int ldWindowSize, double r2threshold, int windowmargin, ArrayList<SortableSNP> snpsForChr) throws IOException {
-        // open tabix file
+        // open tabix path
         TabixReader tbfr = new TabixReader(tabixdir + "chr" + chr + ".EUR.ld.bgz", tabixdir + "chr" + chr + ".EUR.ld.bgz.tbi");
         Set<String> tabixChromosomes = tbfr.getChromosomes();
         String tabixchr = tabixChromosomes.toArray(new String[0])[0];
@@ -272,7 +272,7 @@ public class GoscializerOldCode {
     }
 
     private HashMap<SortableSNP, ArrayList<SortableSNP>> getProxiesForSNPGosiaFiles(String dir, Byte chr, int ldWindowSize, double r2threshold, ArrayList<SortableSNP> snpsForChr) throws IOException {
-        // open tabix file
+        // open tabix path
 
         // iterate the variants
         HashMap<SortableSNP, ArrayList<SortableSNP>> proxies = new HashMap<SortableSNP, ArrayList<SortableSNP>>();
@@ -280,7 +280,7 @@ public class GoscializerOldCode {
         for (SortableSNP snp : snpsForChr) {
             // get the variants within the windowsize of snp
 
-            // open file 
+            // open path
             ArrayList<SortableSNP> ldSNPs = new ArrayList<SortableSNP>();
             int proxyId = 0;
 

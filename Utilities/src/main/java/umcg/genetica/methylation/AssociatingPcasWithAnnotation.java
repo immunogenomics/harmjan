@@ -57,7 +57,7 @@ public class AssociatingPcasWithAnnotation {
         String datafile = "/Data/GeneExpressionFinal/PCA/GPL570/GPL570ExpressiondataQNOnlyHumanSamplesOnlyENSGsCollapsed.binary";
 //        String datafile = "/Data/GeneExpressionFinal/PCA/GPL96/GPL96ExpressiondataQNOnlyHumanSamplesOnlyENSGsCollapsed.binary";
 
-        System.out.print("Read annotation file .... ");
+        System.out.print("Read annotation path .... ");
         HashMap<String, SoftfileAnnotation> sampleAnnotation = readAnnotationFile(fileWithAnnotation);
         System.out.println("done");
 
@@ -70,7 +70,7 @@ public class AssociatingPcasWithAnnotation {
         ArrayList<String> kickOutSamples = new ArrayList<String>(tf.readAsArrayList());
         System.out.println(kickOutSamples.size() + " samples will be kicked out");
 
-        System.out.print("Read data file .... ");
+        System.out.print("Read data path .... ");
 //        DoubleMatrixDataset<String, String> data = readDoubleMatrixFile(datafile);
         DoubleMatrixDataset<String, String> data = readDoubleMatrixFileWithOutGivenColumns(datafile, kickOutSamples);
 //        eigenVectors = eigenVectors.getTransposedDataset();
@@ -95,7 +95,7 @@ public class AssociatingPcasWithAnnotation {
     }
 
     /**
-     * Read annotation file Tab separated file containing sample annotation
+     * Read annotation path Tab separated path containing sample annotation
      * 
      * @param fileWithAnnotation
      * @return Sample annotation
@@ -156,8 +156,8 @@ public class AssociatingPcasWithAnnotation {
     }
 
     /**
-     * Read double matrix file
-     * Eigenvector file / pc file / probe matrix
+     * Read double matrix path
+     * Eigenvector path / pc path / probe matrix
      * @param eigenVectorFile
      * @return 
      */
@@ -167,8 +167,8 @@ public class AssociatingPcasWithAnnotation {
     }
 
     /**
-     * Read double matrix file restricting to given rows
-     * Eigenvector file / pc file / probe matrix
+     * Read double matrix path restricting to given rows
+     * Eigenvector path / pc path / probe matrix
      * @param eigenVectorFile
      * @return 
      */
@@ -189,8 +189,8 @@ public class AssociatingPcasWithAnnotation {
     }
 
     /**
-     * Read double matrix file not including given columns
-     * Eigenvector file / pc file / probe matrix
+     * Read double matrix path not including given columns
+     * Eigenvector path / pc path / probe matrix
      * @param eigenVectorFile
      * @return 
      */

@@ -179,7 +179,6 @@ public class VCFVariant {
 							//String[] sampleElems = Strings.colon.split(sampleColumn);
 
 							String[] sampleTokens = Strings.colon.split(sampleColumn);
-
 							for (int s = 0; s < sampleTokens.length; s++) {
 								String sampleToken = sampleTokens[s];
 
@@ -246,7 +245,6 @@ public class VCFVariant {
 										String[] gpElems = Strings.comma.split(sampleToken);
 
 										try {
-
 											if (genotypeProbabilies == null) {
 												genotypeProbabilies = new DenseDoubleMatrix2D(nrSamples, gpElems.length);
 											}
@@ -699,7 +697,7 @@ public class VCFVariant {
 	public String toVCFString(boolean includeHeader) {
 		StringBuilder builder = new StringBuilder(100000);
 		if (includeHeader) {
-			builder.append(toVCFeader());
+			builder.append(toVCFHeader());
 		}
 
 
@@ -1177,7 +1175,7 @@ public class VCFVariant {
 		return getChrObj().isAutosome();
 	}
 
-	public String toVCFeader() {
+	public String toVCFHeader() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(chr);
 		builder.append("\t");

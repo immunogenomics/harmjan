@@ -397,7 +397,7 @@ public class VCFFunctions {
 						if (!sampleToId.containsKey(sample)) {
 							if (q != 0) {
 								System.out.println("Don't support non-shared samples at this time.");
-								System.out.println("New sample detected: " + sample + " in file: " + vcffile);
+								System.out.println("New sample detected: " + sample + " in path: " + vcffile);
 								System.exit(-1);
 							}
 							sampleNames.add(sample);
@@ -413,7 +413,7 @@ public class VCFFunctions {
 			tf.close();
 
 			q++;
-			System.out.println("Total samples: " + sampleToId.size() + " after file: " + vcffile);
+			System.out.println("Total samples: " + sampleToId.size() + " after path: " + vcffile);
 		}
 
 		// write the rest of the header.
@@ -463,7 +463,7 @@ public class VCFFunctions {
 					}
 					for (int i : sampleToNewSample) {
 						if (i < 0) {
-							System.err.println("Error in file - missing sample:" + vcffile);
+							System.err.println("Error in path - missing sample:" + vcffile);
 							System.exit(-1);
 						}
 						builder.append("\t");
@@ -2493,7 +2493,7 @@ public class VCFFunctions {
 
 
 	public void filterVariantsWithWeirdEncoding(String s) throws IOException {
-		System.out.println("Looking for encoding issues in file: " + s);
+		System.out.println("Looking for encoding issues in path: " + s);
 		TextFile tmp = new TextFile(s + "-tmp.vcf.gz", TextFile.W);
 		TextFile tf = new TextFile(s, TextFile.R);
 
@@ -2510,7 +2510,7 @@ public class VCFFunctions {
 				} catch (ArrayIndexOutOfBoundsException e) {
 					String[] bleh = ln.split("\t");
 					if (bleh.length > 3) {
-						System.err.println(bleh[0] + "" + bleh[1] + "" + bleh[2] + " has issues with encoding. in file: " + s);
+						System.err.println(bleh[0] + "" + bleh[1] + "" + bleh[2] + " has issues with encoding. in path: " + s);
 					}
 				}
 			}

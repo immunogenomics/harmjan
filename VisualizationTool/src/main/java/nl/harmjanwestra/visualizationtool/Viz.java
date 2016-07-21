@@ -86,7 +86,7 @@ public class Viz {
             int stop = 56041464;
 
             // readAsTrack all data
-//            Track t = f.readAsTrack(file, "NaivePrimaryCD8", chr, s0tart, stop, false);
+//            Track t = f.readAsTrack(path, "NaivePrimaryCD8", chr, s0tart, stop, false);
 
 //            start = 117294211;
 //            stop = 117294211 + 5000000;

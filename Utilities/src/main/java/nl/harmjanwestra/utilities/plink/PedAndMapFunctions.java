@@ -49,7 +49,7 @@ public class PedAndMapFunctions {
 			}
 		}
 
-		// iterate ped file
+		// iterate ped path
 		/*
 		Family ID
      Individual ID
@@ -394,7 +394,7 @@ public class PedAndMapFunctions {
 			elems = tfmap.readLineElems(Strings.whitespace);
 		}
 		tfmap.close();
-		System.out.println("Done parsing map file: " + mapfileIn);
+		System.out.println("Done parsing map path: " + mapfileIn);
 		HashSet<String> removedRs = new HashSet<String>();
 
 //			TextFile tfrem = new TextFile(rsRemoveFile, TextFile.R);
@@ -416,7 +416,7 @@ public class PedAndMapFunctions {
 		HashSet<String> visitedLow = new HashSet<String>();
 		int ln = 0;
 		while (elems != null) {
-			String high = "rs" + elems[0]; // original ID (possibly in our MAP file)
+			String high = "rs" + elems[0]; // original ID (possibly in our MAP path)
 			String low = "rs" + elems[1]; // new ID
 			String build = elems[2];
 			Integer bInt = Integer.parseInt(build);
@@ -437,7 +437,7 @@ public class PedAndMapFunctions {
 					} else {
 
 						if (rsToNewRs.containsKey(low)) {
-							System.err.println("WARNING: replacing: " + high + " with " + low + " but " + low + " is already in the map file.");
+							System.err.println("WARNING: replacing: " + high + " with " + low + " but " + low + " is already in the map path.");
 
 							int i = 1;
 							String newLow = low + "_dup" + i;
@@ -621,7 +621,7 @@ public class PedAndMapFunctions {
 
 		// load list of variants to include
 		ArrayList<Feature> mapVariants = getVariantsFromMapFile(map);
-		System.out.println("Loaded " + mapVariants.size() + " variants from map file: " + map);
+		System.out.println("Loaded " + mapVariants.size() + " variants from map path: " + map);
 
 		int[] variantToNewVariant = new int[mapVariants.size()];
 		for (int v = 0; v < mapVariants.size(); v++) {
@@ -638,7 +638,7 @@ public class PedAndMapFunctions {
 		String[] alleles1 = new String[variantSelectionMap.size()];
 		String[] alleles2 = new String[variantSelectionMap.size()];
 
-		// iterate ped file
+		// iterate ped path
 		/*
 		Family ID
      Individual ID
@@ -648,7 +648,7 @@ public class PedAndMapFunctions {
      Phenotype
 		 */
 
-		System.out.println("Parsing PED file: " + ped);
+		System.out.println("Parsing PED path: " + ped);
 		TextFile tf = new TextFile(ped, TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
 		int nrSamplesLoaded = 0;
@@ -658,7 +658,7 @@ public class PedAndMapFunctions {
 
 			// check length of the line
 			if ((elems.length - 6) / 2 != mapVariants.size()) {
-				System.err.println("ERROR: different number of variants in ped than in map! Found " + elems.length + "-6 columns in PED, but found " + mapVariants.size() + " in map file.");
+				System.err.println("ERROR: different number of variants in ped than in map! Found " + elems.length + "-6 columns in PED, but found " + mapVariants.size() + " in map path.");
 				System.exit(-1);
 			} else {
 				if (newSampleId != null) {
@@ -737,7 +737,7 @@ public class PedAndMapFunctions {
 
 			// check length of the line
 			if ((elems.length - 6) / 2 != mapVariants.size()) {
-				System.err.println("ERROR: different number of variants in ped than in map! Found " + elems.length + "-6 columns in PED, but found " + mapVariants.size() + " in map file.");
+				System.err.println("ERROR: different number of variants in ped than in map! Found " + elems.length + "-6 columns in PED, but found " + mapVariants.size() + " in map path.");
 				System.exit(-1);
 			} else {
 				if (newSampleId != null) {
@@ -1263,10 +1263,10 @@ public class PedAndMapFunctions {
 		// 403226 40322601 0 0 1 1 C T G A C C C T A A C C G G C C A A A G
 		// SA1 rs001 10000000 A G 0 0
 
-		// read the map file get all variants
+		// read the map path get all variants
 		ArrayList<String> variants = readMAPFileAsStrings(s + ".map");
 
-		// determine number of samples in ped file
+		// determine number of samples in ped path
 		ArrayList<String> samples = new ArrayList<String>();
 
 
@@ -1275,7 +1275,7 @@ public class PedAndMapFunctions {
 		sampleout.writeln("0 0 0 D D D B");
 		TextFile tf = new TextFile(s + ".ped", TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
-		// write sample file
+		// write sample path
 		while (elems != null) {
 
 			String fam = elems[0];
@@ -1299,7 +1299,7 @@ public class PedAndMapFunctions {
 
 		tf = new TextFile(s + ".ped", TextFile.R);
 		elems = tf.readLineElems(Strings.whitespace);
-		// write sample file
+		// write sample path
 		int sampleCtr = 0;
 		while (elems != null) {
 

@@ -122,7 +122,7 @@ public class DoubleMatrixDataset<T, U> extends DoubleMatrixDatasetAC<T, U> {
         }
     }
 
-    // TODO txt file gson
+    // TODO txt path gson
     public DoubleMatrixDataset(String fileName, String delimiter) throws IOException {
         if (!(fileName.endsWith(".txt") || fileName.endsWith(".txt.gz"))) {
             throw new IllegalArgumentException("File type must be .txt when delimiter is given (given filename: " + fileName + ")");
@@ -257,7 +257,7 @@ public class DoubleMatrixDataset<T, U> extends DoubleMatrixDatasetAC<T, U> {
             in.close();
         }
         recalculateHashMaps();
-        LOGGER.log(Level.INFO, "Binary file ''{0}'' has been loaded, nrRows: {1} nrCols: {2}", new Object[]{fileName, nrRows, nrCols});
+        LOGGER.log(Level.INFO, "Binary path ''{0}'' has been loaded, nrRows: {1} nrCols: {2}", new Object[]{fileName, nrRows, nrCols});
     }
 
     @SuppressWarnings("element-type-mismatch") // generics don't work too well here with text files if the row/col id's are just plain text (use gson or something to represent objects if needed)
@@ -389,7 +389,7 @@ public class DoubleMatrixDataset<T, U> extends DoubleMatrixDatasetAC<T, U> {
             }
 
             colObjects = new ArrayList<U>(colCtr);
-            colIndex = new int[colCtr]; // this will map from position in memory to position in file...
+            colIndex = new int[colCtr]; // this will map from position in memory to position in path...
             nrCols = colCtr;
             colCtr = 0;
             for (int s = 0; s < nrMaxCols; s++) {
@@ -433,7 +433,7 @@ public class DoubleMatrixDataset<T, U> extends DoubleMatrixDatasetAC<T, U> {
         str = in.readLine(); // readAsTrack header
 
         int nrprocs = Runtime.getRuntime().availableProcessors();
-//        System.out.println("Using " + nrprocs + " threads for parsing the file");
+//        System.out.println("Using " + nrprocs + " threads for parsing the path");
         ExecutorService threadPool = Executors.newFixedThreadPool(nrprocs);
         CompletionService<Triple<Integer, String, double[]>> pool = new ExecutorCompletionService<Triple<Integer, String, double[]>>(threadPool);
 
@@ -802,7 +802,7 @@ public class DoubleMatrixDataset<T, U> extends DoubleMatrixDatasetAC<T, U> {
     public void save(String fileName) throws IOException {
         if (fileName.endsWith(".binary") || fileName.endsWith(".dat")) {
 
-            //Create binary file:
+            //Create binary path:
             BufferedOutputStream out = null;
             File fileBinary = new File(fileName + ".dat");
             out = new BufferedOutputStream(new FileOutputStream(fileBinary));

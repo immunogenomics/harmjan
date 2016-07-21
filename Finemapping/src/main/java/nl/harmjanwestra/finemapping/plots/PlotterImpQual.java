@@ -442,7 +442,7 @@ public class PlotterImpQual {
 					totalvalues++;
 					double info = getInfo(elems);
 					if (info < 0 || info > 1) {
-//						System.out.println("error in info score? " + info + "\t" + file + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
+//						System.out.println("error in info score? " + info + "\t" + path + "\t" + elems[0] + "_" + elems[1] + "_" + elems[2]);
 						outofrange++;
 						info = 0d;
 					}
@@ -473,7 +473,7 @@ public class PlotterImpQual {
 			}
 			tf.close();
 			Collections.sort(corvals, Collections.reverseOrder());
-			System.out.println(corvals.size() + " vals in file " + file);
+			System.out.println(corvals.size() + " vals in path " + file);
 			System.out.println(outofrange + " values out of range..?");
 			System.out.println(nrWithinregion + " within region");
 			System.out.println(totalvalues + " total values.\n"
@@ -649,7 +649,7 @@ public class PlotterImpQual {
 				double[] arr = Primitives.toPrimitiveArr(d.toArray(new Double[0]));
 				bins[i][bin] = arr;
 			}
-			System.out.println("Loaded: " + loaded + " from file: " + file);
+			System.out.println("Loaded: " + loaded + " from path: " + file);
 		}
 
 

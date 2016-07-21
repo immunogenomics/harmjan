@@ -19,7 +19,7 @@ public class AssociationFile {
 	private String model = null;
 
 	public ArrayList<AssociationResult> readTabFile(String pvaluefile, Feature region) throws IOException {
-		System.out.println("Reading tab file: " + pvaluefile);
+		System.out.println("Reading tab path: " + pvaluefile);
 		HashSet<String> variantHash = new HashSet<String>();
 		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
 
@@ -111,7 +111,7 @@ public class AssociationFile {
 		}
 		textfile.close();
 
-		System.out.println(pvalctr + " pvalues for " + pvalctr + " positions from file: " + pvaluefile);
+		System.out.println(pvalctr + " pvalues for " + pvalctr + " positions from path: " + pvaluefile);
 
 		return output;
 
@@ -130,7 +130,7 @@ public class AssociationFile {
 		if (file.endsWith("tab") || file.endsWith("tab.gz")) {
 			return readTabFile(file, region);
 		}
-		System.out.println("Reading assoc file: " + file);
+		System.out.println("Reading assoc path: " + file);
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
 
@@ -414,7 +414,7 @@ public class AssociationFile {
 			ln = tf.readLine();
 		}
 		tf.close();
-		System.out.println(results.size() + " associations loaded from file: " + file);
+		System.out.println(results.size() + " associations loaded from path: " + file);
 		return results;
 	}
 

@@ -31,9 +31,9 @@ public class CLI {
         options.addOption("c", true, "Coverage matrix");
         options.addOption("ct", true, "Coverage Threshold");
         options.addOption("cc", true, "Coverage Threshold column");
-        options.addOption("i", true, "BAM file indir");
-        options.addOption("o", true, "BAM file outdir");
-        options.addOption("s", true, "BAM file suffix");
+        options.addOption("i", true, "BAM path indir");
+        options.addOption("o", true, "BAM path outdir");
+        options.addOption("s", true, "BAM path suffix");
 
         CommandLineParser parser = new BasicParser();
 

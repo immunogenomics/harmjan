@@ -33,8 +33,8 @@ public class PseudocontrolCheck {
 //		// if mom and dad == absent --> case is included, without pseudo control
 //		// how many children controls are included that are not pseudocontrols
 //
-//		// load original fam file
-//		// load new fam file
+//		// load original fam path
+//		// load new fam path
 //
 //
 //		String newfamFile = "/Data/tmp/2016-06-24/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam";
@@ -58,7 +58,7 @@ public class PseudocontrolCheck {
 //
 //
 //		System.out.println();
-//		// count the number of individuals in the original fam file that have a sibling in the tested data
+//		// count the number of individuals in the original fam path that have a sibling in the tested data
 //		ArrayList<Family> origFams = origfam.getFamilies();
 //		System.out.println(origFams.size() + " families in dataset");
 //		for (Family f : origFams) {

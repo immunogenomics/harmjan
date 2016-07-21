@@ -187,7 +187,7 @@ public class GoscializerTask implements Runnable {
                 annotationInput.close();
 //                System.out.println(taskctr + "- Found: " + bedfileFeatures.size() + " features");
 //
-//                System.out.println(taskctr + "- Writing file: " + outputDir + n);
+//                System.out.println(taskctr + "- Writing path: " + outputDir + n);
                 if (n.endsWith(".gz")) {
                     n = n.substring(0, n.length() - 3);
                 }
@@ -246,7 +246,7 @@ public class GoscializerTask implements Runnable {
     }
 
     private HashMap<SortableSNP, ArrayList<SortableSNP>> getProxiesForSNPGosiaFiles(String dir, Byte chr, int ldWindowSize, double r2threshold, ArrayList<SortableSNP> snpsForChr) throws IOException {
-        // open tabix file
+        // open tabix path
 
         // iterate the variants
         HashMap<SortableSNP, ArrayList<SortableSNP>> proxies = new HashMap<SortableSNP, ArrayList<SortableSNP>>();
@@ -254,7 +254,7 @@ public class GoscializerTask implements Runnable {
         for (SortableSNP snp : snpsForChr) {
             // get the variants within the windowsize of snp
 
-            // open file 
+            // open path
             ArrayList<SortableSNP> ldSNPs = new ArrayList<SortableSNP>();
             int proxyId = 0;
 

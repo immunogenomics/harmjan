@@ -92,7 +92,7 @@ public class AssociationFilePairwise {
 		int Pvalcol = -1;
 		int Log10pcol = -1;
 
-		System.out.println("Reading assoc file: " + file);
+		System.out.println("Reading assoc path: " + file);
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
 

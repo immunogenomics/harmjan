@@ -74,20 +74,20 @@ public class LRTestOptions {
 
 		option = Option.builder("d")
 				.hasArg()
-				.desc("Disease status file")
+				.desc("Disease status path")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("r")
 				.hasArg()
 				.desc("Test within these regions")
-				.argName(".bed file")
+				.argName(".bed path")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("c")
 				.hasArg()
-				.desc("Covariate file")
+				.desc("Covariate path")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -125,7 +125,7 @@ public class LRTestOptions {
 
 		option = Option.builder("f")
 				.hasArg()
-				.desc("FAM file")
+				.desc("FAM path")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -146,14 +146,14 @@ public class LRTestOptions {
 
 		option = Option.builder()
 				.longOpt("limittosamplesinfam")
-				.desc("Force testing on all samples in fam file")
+				.desc("Force testing on all samples in fam path")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("includecov")
 				.hasArg()
-				.desc("Use only these covariates when testing (point to file with list)")
+				.desc("Use only these covariates when testing (point to path with list)")
 				.build();
 		OPTIONS.addOption(option);
 

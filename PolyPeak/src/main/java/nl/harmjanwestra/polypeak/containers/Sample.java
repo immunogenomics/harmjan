@@ -42,7 +42,7 @@ public class Sample {
 		this.samplename = samplename;
 
 		if (bamfiles == null) {
-			throw new IllegalArgumentException("BAM file location not set!");
+			throw new IllegalArgumentException("BAM path location not set!");
 		}
 
 		this.bamfiles = bamfiles;
@@ -50,7 +50,7 @@ public class Sample {
 
 		this.checkBAMFilesAndInitialize(checkSampleNamesInBAMFiles);
 		if (readers == null || readers.length == 0) {
-			throw new IllegalArgumentException(bamfiles.length + " BAM file(s) defined for sample: " + samplename + " but sample not found in BAM file(s)");
+			throw new IllegalArgumentException(bamfiles.length + " BAM path(s) defined for sample: " + samplename + " but sample not found in BAM path(s)");
 		} else {
 			this.hasReaders = true;
 		}
@@ -60,7 +60,7 @@ public class Sample {
 
 		ArrayList<BamFileReader> tmpReaders = new ArrayList<BamFileReader>();
 		for (int i = 0; i < bamfiles.length; i++) {
-			// check whether file exists
+			// check whether path exists
 			File f = bamfiles[i];
 			if (!f.exists()) {
 				throw new IOException("File: " + bamfiles[i] + " does not exist.");
@@ -71,8 +71,8 @@ public class Sample {
 				List<SAMReadGroupRecord> allBamFileReadGroups = r.getReadGroups();
 
 				if (allBamFileReadGroups.isEmpty()) {
-					System.err.println("WARNING: trying to check sample names in BAM file: " + bamfiles[i].getAbsolutePath() + " but no readAsTrack group information found.");
-					System.err.println("Forcing: " + bamfiles[i].getAbsolutePath() + " as BAM file for sample: " + samplename);
+					System.err.println("WARNING: trying to check sample names in BAM path: " + bamfiles[i].getAbsolutePath() + " but no readAsTrack group information found.");
+					System.err.println("Forcing: " + bamfiles[i].getAbsolutePath() + " as BAM path for sample: " + samplename);
 					tmpReaders.add(r);
 				} else {
 					boolean fileContainsSampleInfo = false;
@@ -86,11 +86,11 @@ public class Sample {
 					}
 					if (!fileContainsSampleInfo) {
 						r.close();
-						System.err.println("Warning: BAM file " + bamfiles[i].getAbsolutePath() + " defined for sample: " + samplename + " but samplename not found in BAM file.");
+						System.err.println("Warning: BAM path " + bamfiles[i].getAbsolutePath() + " defined for sample: " + samplename + " but samplename not found in BAM path.");
 					}
 				}
 			} else {
-				System.out.println("Adding BAM file: " + bamfiles[i] + " for sample: " + samplename);
+				System.out.println("Adding BAM path: " + bamfiles[i] + " for sample: " + samplename);
 				tmpReaders.add(r);
 			}
 
@@ -102,7 +102,7 @@ public class Sample {
 
 		this.readers = tmpReaders.toArray(new BamFileReader[0]);
 
-		System.out.println("Sample: " + samplename + " has " + readers.length + " BAM file readers");
+		System.out.println("Sample: " + samplename + " has " + readers.length + " BAM path readers");
 
 
 		// check the sequence libraries: do they conflict?

@@ -107,12 +107,12 @@ public class GoShifterJobCreator {
 
 	private boolean checkFile(String name, String f) {
 		if (f == null) {
-			System.out.println("Could not find file: " + f + " for switch " + name);
+			System.out.println("Could not find path: " + f + " for switch " + name);
 			return false;
 		}
 		boolean b = Gpio.exists(f);
 		if (!b) {
-			System.out.println("could not find file: " + f + " for switch " + name);
+			System.out.println("could not find path: " + f + " for switch " + name);
 		}
 		return b;
 	}

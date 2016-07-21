@@ -41,7 +41,7 @@ public class BedFilter {
 				elems[3] = elems[6];
 				tfout.writeln(Strings.concat(elems, Strings.tab, 0, 6));
 			} else {
-				//System.out.println("cannot parse chr: " + chr + " in file: " + filein);
+				//System.out.println("cannot parse chr: " + chr + " in path: " + filein);
 			}
 			elems = tf.readLineElems(Strings.whitespace);
 		}

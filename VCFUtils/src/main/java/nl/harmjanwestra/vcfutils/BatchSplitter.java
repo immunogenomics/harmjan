@@ -194,7 +194,7 @@ public class BatchSplitter {
 		}
 
 
-		// iterate the VCF file
+		// iterate the VCF path
 		tf.open();
 		elems = tf.readLineElems(TextFile.tab);
 		while (elems != null) {

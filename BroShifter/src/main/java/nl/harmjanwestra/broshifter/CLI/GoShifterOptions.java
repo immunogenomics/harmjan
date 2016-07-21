@@ -71,14 +71,14 @@ public class GoShifterOptions {
 
 		option = Option.builder("i")
 				.hasArg()
-				.desc("Input SNP file (with proxies: --proxy format)")
+				.desc("Input SNP path (with proxies: --proxy format)")
 				.longOpt("snps")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("a")
 				.hasArg()
-				.desc("List of annotations to testNormal. One line per annotation file. Annotations can be in .xls or .bed file, and may be gzipped")
+				.desc("List of annotations to testNormal. One line per annotation path. Annotations can be in .xls or .bed path, and may be gzipped")
 				.longOpt("annotations")
 				.build();
 		OPTIONS.addOption(option);
@@ -93,7 +93,7 @@ public class GoShifterOptions {
 
 		option = Option.builder("o")
 				.hasArg()
-				.desc("Output file location")
+				.desc("Output path location")
 				.longOpt("out")
 
 				.build();
@@ -151,7 +151,7 @@ public class GoShifterOptions {
 			if (cmd.hasOption("annotations")) {
 				listOfAnnotations = cmd.getOptionValue("annotations");
 			} else {
-				System.out.println("Path to annotations file not provided");
+				System.out.println("Path to annotations path not provided");
 				run = false;
 			}
 
@@ -165,7 +165,7 @@ public class GoShifterOptions {
 			if (cmd.hasOption("out")) {
 				outfile = cmd.getOptionValue("out");
 			} else {
-				System.out.println("Path to out file not provided");
+				System.out.println("Path to out path not provided");
 				run = false;
 			}
 

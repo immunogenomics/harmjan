@@ -68,7 +68,7 @@ public class ProxyFinder {
 			boolean allfilespresent = true;
 			for (Feature queryVariantFeature : snps) {
 				if (!Gpio.exists(options.tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz")) {
-					System.out.println("Could not find required file: " + options.tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz");
+					System.out.println("Could not find required path: " + options.tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz");
 					allfilespresent = false;
 				}
 			}
@@ -128,7 +128,7 @@ public class ProxyFinder {
 			Chromosome chr1 = f.getChromosome();
 
 			if (!Gpio.exists(options.tabixrefprefix + chr1.getNumber() + ".vcf.gz")) {
-				System.out.println("Could not find required file: " + options.tabixrefprefix + chr1.getNumber() + ".vcf.gz");
+				System.out.println("Could not find required path: " + options.tabixrefprefix + chr1.getNumber() + ".vcf.gz");
 				allfilespresent = false;
 			}
 
@@ -236,12 +236,12 @@ public class ProxyFinder {
 				Chromosome chr2 = Chromosome.parseChr(snp2elems[0]);
 
 				if (!Gpio.exists(options.tabixrefprefix + chr1.getNumber() + ".vcf.gz")) {
-					System.out.println("Could not find required file: " + options.tabixrefprefix + chr1.getNumber() + ".vcf.gz");
+					System.out.println("Could not find required path: " + options.tabixrefprefix + chr1.getNumber() + ".vcf.gz");
 					allfilespresent = false;
 				}
 
 				if (!Gpio.exists(options.tabixrefprefix + chr2.getNumber() + ".vcf.gz")) {
-					System.out.println("Could not find required file: " + options.tabixrefprefix + chr2.getNumber() + ".vcf.gz");
+					System.out.println("Could not find required path: " + options.tabixrefprefix + chr2.getNumber() + ".vcf.gz");
 					allfilespresent = false;
 				}
 			}

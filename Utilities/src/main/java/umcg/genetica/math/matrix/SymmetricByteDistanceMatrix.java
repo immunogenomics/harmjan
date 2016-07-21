@@ -343,11 +343,11 @@ public class SymmetricByteDistanceMatrix {
             //Dereference buffer:
             buffer = null;
 
-            //Close file:
+            //Close path:
             out.close();
 
         } catch (Exception e) {
-            System.out.println("Cannot write to file! (" + e.getMessage() + ")");
+            System.out.println("Cannot write to path! (" + e.getMessage() + ")");
         }
     }
         
@@ -355,11 +355,11 @@ public class SymmetricByteDistanceMatrix {
         
         try {
             
-            //Get random access to file:
-            //java.io.RandomAccessFile file = new java.io.RandomAccessFile(fileName,"rw");
+            //Get random access to path:
+            //java.io.RandomAccessFile path = new java.io.RandomAccessFile(fileName,"rw");
             java.io.InputStream in = new java.io.BufferedInputStream(new java.io.FileInputStream(fileName));
 
-            //Get the size of the file
+            //Get the size of the path
             long length = fileName.length();
 
             //Read contents, check that size is same as defined matrix size:
@@ -395,11 +395,11 @@ public class SymmetricByteDistanceMatrix {
                 loadSuccess = false;
             }
 
-            //Close file:
+            //Close path:
             in.close();
 
         } catch (Exception e) {
-            System.out.println("Cannot readAsTrack from file! (" + e.getMessage() + ")");
+            System.out.println("Cannot readAsTrack from path! (" + e.getMessage() + ")");
         }
         
     }

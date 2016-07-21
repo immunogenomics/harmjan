@@ -41,7 +41,7 @@ public class HomIndivFile {
 
 		int nrLines = tf.countLines() - 1;
 
-		System.out.println(nrLines + " samples in file..");
+		System.out.println(nrLines + " samples in path..");
 
 		samples = new String[nrLines];
 		avgkb = new double[nrLines];

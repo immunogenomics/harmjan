@@ -43,7 +43,7 @@ public class TXTr {
 
 		option = Option.builder()
 				.longOpt("comma")
-				.desc("input is comma separated (in stead of a single file with locations)")
+				.desc("input is comma separated (in stead of a single path with locations)")
 				.build();
 		OPTIONS.addOption(option);
 

@@ -16,7 +16,7 @@ public class BasicStats {
 
 	public BasicStats(BamFileReader reader, AggregateFilter filter, int distributionSize) {
 
-		// iterate BAM file, collect:
+		// iterate BAM path, collect:
 		// average insert size
 		// total mapped reads
 		// total mapped fragments
@@ -27,7 +27,7 @@ public class BasicStats {
 
 	public BasicStats(BamFileReader reader, AggregateFilter filter, int distributionSize, ArrayList<Feature> regions) {
 
-		// iterate BAM file, collect:
+		// iterate BAM path, collect:
 		// average insert size
 		// total mapped reads
 		// total mapped fragments

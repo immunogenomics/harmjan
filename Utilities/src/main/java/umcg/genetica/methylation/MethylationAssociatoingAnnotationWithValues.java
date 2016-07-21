@@ -47,11 +47,11 @@ public class MethylationAssociatoingAnnotationWithValues {
         String dataFile = "D:\\UMCG\\Methylation_GPL8490\\TCGA+GEO_14112012\\methylation_Matrix_SexFiltered.QuantileNormalized.txt";
         //String dataFile = "D:\\UMCG\\Methylation_GPL8490\\TCGA+GEO_14112012\\NeverQN-methylation_Matrix_SexFiltered.txt";
         
-        System.out.print("Read annotation file .... ");
+        System.out.print("Read annotation path .... ");
         HashMap<String, SoftfileAnnotation> sampleAnnotation = readAnnotationFile(fileWithAnnotation);
         System.out.println("done");
 
-        System.out.print("Read eigenvector file .... ");
+        System.out.print("Read eigenvector path .... ");
         DoubleMatrixDataset<String, String> eigenVectors = readDoubleMatrixFile(dataFile);
         System.out.println("done");
 
@@ -126,7 +126,7 @@ public class MethylationAssociatoingAnnotationWithValues {
     }
 
     /**
-     * Read annotation file Tab separated file containing sample annotation
+     * Read annotation path Tab separated path containing sample annotation
      *
      * @param fileWithAnnotation
      * @return Sample annotation
@@ -176,7 +176,7 @@ public class MethylationAssociatoingAnnotationWithValues {
     }
 
     /**
-     * Read double matrix file Eigenvector file / pc file / probe matrix
+     * Read double matrix path Eigenvector path / pc path / probe matrix
      *
      * @param eigenVectorFile
      * @return

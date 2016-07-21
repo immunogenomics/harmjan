@@ -219,7 +219,7 @@ public class QTLTest {
 		notfound.close();
 
 		if (geneToExpGene.isEmpty()) {
-			System.err.println("Error: no genes found. Probably a mismatch between annotation and gene expression file");
+			System.err.println("Error: no genes found. Probably a mismatch between annotation and gene expression path");
 			System.exit(-1);
 		}
 		System.out.println(geneToExpGene.size() + " genes with annotation found in gene expression data");

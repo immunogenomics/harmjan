@@ -21,7 +21,7 @@ public class AssociationPlotterOptions {
 
 		option = Option.builder("n")
 				.hasArg()
-				.desc("Input file names (comma separated list)")
+				.desc("Input path names (comma separated list)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -33,7 +33,7 @@ public class AssociationPlotterOptions {
 
 		option = Option.builder("a")
 				.hasArg()
-				.desc("GTF Annotation file")
+				.desc("GTF Annotation path")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -52,7 +52,7 @@ public class AssociationPlotterOptions {
 
 		option = Option.builder("s")
 				.hasArg()
-				.desc("Sequenced regions file")
+				.desc("Sequenced regions path")
 				.build();
 		OPTIONS.addOption(option);
 

@@ -16,7 +16,7 @@ public class PosteriorPvalueOptions {
 
 		option = Option.builder("i")
 				.hasArg()
-				.desc("Input association file")
+				.desc("Input association path")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -34,7 +34,7 @@ public class PosteriorPvalueOptions {
 
 		option = Option.builder("r")
 				.hasArg()
-				.desc("Region file")
+				.desc("Region path")
 				.build();
 		OPTIONS.addOption(option);
 

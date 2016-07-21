@@ -21,7 +21,7 @@ public class PlinkFamFile {
 
 	public PlinkFamFile(String file) throws IOException {
 
-		System.out.println("Parsing FAM file: " + file);
+		System.out.println("Parsing FAM path: " + file);
 
 
 		HashMap<String, Individual> strToInd = new HashMap<String, Individual>();

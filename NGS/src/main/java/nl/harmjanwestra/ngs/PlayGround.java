@@ -1664,7 +1664,7 @@ public class PlayGround {
 //							}
 //
 //						} else {
-//							System.err.println("file does not exist: " + vcf);
+//							System.err.println("path does not exist: " + vcf);
 //						}
 //					}
 //				}
@@ -2791,7 +2791,7 @@ public class PlayGround {
 //			String regionfilteredpedOut = regionFilteredMapOut + "filtered";
 //			ProcessBuilder pb = new ProcessBuilder(plink,
 //					"--extract", variantsToKeep,
-//					"--file", mergedhg19immunochipPed,
+//					"--path", mergedhg19immunochipPed,
 //					"--exclude", variantsToExclude,
 //					"--recode",
 //					"--out", regionfilteredpedOut,
@@ -3035,7 +3035,7 @@ public class PlayGround {
 ////							// remove non-matching variants
 ////
 ////
-////							// update family info in ped file
+////							// update family info in ped path
 //								p.updatePedWithFAM(phasetmpdir + "seq-matched-sorted-" + chr.getName() + ".ped", mergeFam);
 ////
 //
@@ -3094,7 +3094,7 @@ public class PlayGround {
 //								);
 //								t.run(pb);
 //
-////							// reintroduce variants unique to dataset: put them back into the gen/sample file
+////							// reintroduce variants unique to dataset: put them back into the gen/sample path
 //								reintroduceVariants(phasetmpdir + "seq-matched-sorted-shapeit.alignments." + chr.getName() + ".snp.strand.exclude",
 //										phasetmpdir + "seq-matched-sorted-shapeitRound2-" + chr.getName(),
 //										phasetmpdir + "seq-matched-sorted-shapeitRound1-" + chr.getName(),
@@ -3281,7 +3281,7 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 		hapsin.close();
 
 		// read variants that were actually excluded
-		// read map file first to identify the column to read.
+		// read map path first to identify the column to read.
 		TextFile gen = new TextFile(phasedRound1File + ".haps", TextFile.R);
 
 
@@ -3423,9 +3423,9 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 //			System.out.println("Processing Chr " + chr);
 //			ArrayList<String> files = new ArrayList<String>();
 //			for (int d = 0; d < datasetOutput.length; d++) {
-//				String file = datasetOutput[d] + "genotypes-filtered-sorted-Chr" + chr + ".vcf.gz";
-//				if (Gpio.exists(file)) {
-//					files.add(file);
+//				String path = datasetOutput[d] + "genotypes-filtered-sorted-Chr" + chr + ".vcf.gz";
+//				if (Gpio.exists(path)) {
+//					files.add(path);
 //				}
 //			}
 //
@@ -3555,13 +3555,13 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 		if (removeFile != null) {
 			pb = new ProcessBuilder("/Data/Tools/plink-1.07-mac-intel/plink1.9",
 					"--extract", variantSelect,
-					"--file", plinkDataset,
+					"--path", plinkDataset,
 					"--recode", "--out", outdir + "genotypes-filtered",
 					"--remove", removeFile);
 		} else {
 			pb = new ProcessBuilder("/Data/Tools/plink-1.07-mac-intel/plink1.9",
 					"--extract", variantSelect,
-					"--file", plinkDataset,
+					"--path", plinkDataset,
 					"--recode", "--out", outdir + "genotypes-filtered");
 		}
 		ProcessRunner.run(pb);

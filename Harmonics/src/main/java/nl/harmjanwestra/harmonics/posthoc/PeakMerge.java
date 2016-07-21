@@ -443,7 +443,7 @@ x 14  stDevCoverageCoveredBases
 			elems = samplefile.readLineElems(Strings.tab);
 		}
 		samplefile.close();
-		System.out.println(files.size() + " file locations loaded.");
+		System.out.println(files.size() + " path locations loaded.");
 		return new Pair<String[], String[]>(samples.toArray(new String[0]), files.toArray(new String[0]));
 	}
 
@@ -895,7 +895,7 @@ x 14  stDevCoverageCoveredBases
 			ArrayList<PeakFeature> featuresForSample = samplePeaks;
 			saveAsSaf(safOutdir, peakFiles[i], featuresForSample);
 
-			System.out.println(featuresForSample.size() + " peaks in file");
+			System.out.println(featuresForSample.size() + " peaks in path");
 			features.add(featuresForSample);
 
 
@@ -1158,7 +1158,7 @@ x 14  stDevCoverageCoveredBases
 				}
 
 
-				// write presence of peaks to file...
+				// write presence of peaks to path...
 				for (int i = 0; i < remapFeatArr.size(); i++) {
 					int sum = 0;
 					Feature remap = remapFeatArr.get(i);

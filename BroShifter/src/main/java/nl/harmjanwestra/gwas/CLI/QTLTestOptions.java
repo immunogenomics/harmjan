@@ -16,14 +16,14 @@ public class QTLTestOptions {
 
 		option = Option.builder("o")
 				.longOpt("out")
-				.desc("Output file name")
+				.desc("Output path name")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("gtf")
-				.desc("GTF Annotation file")
+				.desc("GTF Annotation path")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);

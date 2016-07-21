@@ -50,7 +50,7 @@ public class PosteriorPvalues {
 		crediblesetout.close();
 		System.out.println("Credible sets are written here: " + output + "-credibleSets.txt");
 
-		// write new output file.
+		// write new output path.
 
 		TextFile outf = new TextFile(output, TextFile.W);
 		System.out.println("Writing output here: " + output);

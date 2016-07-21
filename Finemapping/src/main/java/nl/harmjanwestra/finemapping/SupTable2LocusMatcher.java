@@ -155,9 +155,9 @@ public class SupTable2LocusMatcher {
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regionsImmunobase = reader.readAsList(imbasefile);
-		System.out.println(regionsImmunobase.size() + " regions in file: " + imbasefile);
+		System.out.println(regionsImmunobase.size() + " regions in path: " + imbasefile);
 		ArrayList<Feature> regionsIC = reader.readAsList(icregionfile);
-		System.out.println(regionsIC.size() + " regions in file: " + icregionfile);
+		System.out.println(regionsIC.size() + " regions in path: " + icregionfile);
 
 		TextFile out = new TextFile(outbed, TextFile.W);
 		int nroverlap = 0;

@@ -475,11 +475,11 @@ public class SymmetricShortDistanceMatrix {
             //Dereference buffer:
             buffer = null;
 
-            //Close file:
+            //Close path:
             out.close();
 
         } catch (Exception e) {
-            System.out.println("Cannot write to file! (" + e.getMessage() + ")");
+            System.out.println("Cannot write to path! (" + e.getMessage() + ")");
         }
     }
 
@@ -487,11 +487,11 @@ public class SymmetricShortDistanceMatrix {
         
         try {
             
-            //Get random access to file:
-            //java.io.RandomAccessFile file = new java.io.RandomAccessFile(fileName,"rw");
+            //Get random access to path:
+            //java.io.RandomAccessFile path = new java.io.RandomAccessFile(fileName,"rw");
             java.io.InputStream in = new java.io.BufferedInputStream(new java.io.FileInputStream(fileName));
 
-            //Get the size of the file
+            //Get the size of the path
             long length = fileName.length();
 
             //Read contents, check that size is same as defined matrix size:
@@ -529,14 +529,14 @@ public class SymmetricShortDistanceMatrix {
                 buffer = null;
                 
             } else {
-                System.out.println("File does not adhere to the matrix size! Actual file length:\t" + length + "\t, should be:\t" + matrix.length*2);
+                System.out.println("File does not adhere to the matrix size! Actual path length:\t" + length + "\t, should be:\t" + matrix.length*2);
             }
 
-            //Close file:
+            //Close path:
             in.close();
 
         } catch (java.io.IOException e) {
-            System.out.println("Cannot readAsTrack from file! (" + e.getMessage() + ")");
+            System.out.println("Cannot readAsTrack from path! (" + e.getMessage() + ")");
         }
         
     }

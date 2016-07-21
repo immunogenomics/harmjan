@@ -40,7 +40,7 @@ public class QueryableMergingSamRecordIterator implements Iterator<SAMRecord> {
 			String chrName = readers.get(currentFileIndex).matchChromosomeName(f);
 			if (chrName != null) {
 				currentIterator = readers.get(currentFileIndex).query(chrName, f.getStart(), f.getStop(), false);
-				System.out.println("file index: " + currentFileIndex);
+				System.out.println("path index: " + currentFileIndex);
 			}
 		}
 
@@ -52,7 +52,7 @@ public class QueryableMergingSamRecordIterator implements Iterator<SAMRecord> {
 			if (chrName != null) {
 				currentIterator = readers.get(currentFileIndex).query(chrName, f.getStart(), f.getStop(), false);
 			}
-			System.out.println("file index: " + currentFileIndex);
+			System.out.println("path index: " + currentFileIndex);
 		} else {
 			next = null;
 		}

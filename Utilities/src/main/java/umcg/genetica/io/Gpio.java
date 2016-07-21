@@ -188,7 +188,7 @@ public class Gpio {
 	}
 
 	public static String getFileSeparator() {
-		return System.getProperty("file.separator");
+		return System.getProperty("path.separator");
 	}
 
 	public static String formatAsDirectory(String loc) {

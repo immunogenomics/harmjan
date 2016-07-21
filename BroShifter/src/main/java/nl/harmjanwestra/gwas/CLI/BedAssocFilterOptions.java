@@ -22,7 +22,7 @@ public class BedAssocFilterOptions {
 
 		option = Option.builder("b")
 				.hasArg()
-				.desc("Bed file with regions")
+				.desc("Bed path with regions")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -33,7 +33,7 @@ public class BedAssocFilterOptions {
 
 		option = Option.builder("i")
 				.hasArg()
-				.desc("Association file")
+				.desc("Association path")
 				.build();
 		OPTIONS.addOption(option);
 

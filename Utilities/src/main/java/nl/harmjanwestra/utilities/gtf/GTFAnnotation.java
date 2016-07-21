@@ -48,7 +48,7 @@ public class GTFAnnotation {
 		HashMap<String, Transcript> strToTranscript = new HashMap<String, Transcript>();
 		HashMap<String, Exon> strToExon = new HashMap<String, Exon>();
 
-// this all assumes the file is sorted on genomic coordinates..
+// this all assumes the path is sorted on genomic coordinates..
 		while (ln != null) {
 			if (ln.startsWith("#")) {
 				// skip
@@ -89,7 +89,7 @@ public class GTFAnnotation {
 							e = strToExon.get(e.toString());
 							e.addTranscript(currentTranscript);
 							//System.out.println(e.toString());
-							//System.out.println("Duplicate entry in file: " + lineObj.toString());
+							//System.out.println("Duplicate entry in path: " + lineObj.toString());
 						} else {
 							currentTranscript.addExon(e);
 							e.addTranscript(currentTranscript);

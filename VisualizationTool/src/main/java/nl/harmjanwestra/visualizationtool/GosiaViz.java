@@ -431,10 +431,10 @@ public class GosiaViz {
 						BedFileReader reader = new BedFileReader();
 						Color lineColor = new Color(0, 0, 0, 128);
 						y = 0;
-//                        for (String file : bedFiles) {
+//                        for (String path : bedFiles) {
 //                            // load the track
 //                            String chrStr = "chr" + ChrAnnotation.parseByte(chr);
-//                            Track t = reader.readAsTrack(bedFileDir + file, file, Chromosome.parseChr(chrStr), windowStart, windowStop, true);
+//                            Track t = reader.readAsTrack(bedFileDir + path, path, Chromosome.parseChr(chrStr), windowStart, windowStop, true);
 //                            // bin the peaks
 //
 //                            Set<Feature> featureSet = t.getFeatureSet(Chromosome.parseChr(chrStr), windowStart, windowStop);
@@ -477,7 +477,7 @@ public class GosiaViz {
 //                            g2d.setColor(lineColor);
 //                            g2d.drawLine(figureMargin, yPos + distPlotSize, (width - figureMargin), yPos + distPlotSize);
 //                            // plot the bins
-//                            g2d.drawString(file, (width - figureMargin) + 5, yPos + distPlotSize);
+//                            g2d.drawString(path, (width - figureMargin) + 5, yPos + distPlotSize);
 //                            y++;
 //                        }
 

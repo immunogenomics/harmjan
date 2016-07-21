@@ -100,7 +100,7 @@ public class VCFMerger {
 		}
 
 
-		// get a list of variants in file 1
+		// get a list of variants in path 1
 		TextFile tf = new TextFile(vcf1, TextFile.R);
 		String ln = tf.readLine();
 		HashSet<String> variants1 = new HashSet<String>();
@@ -189,7 +189,7 @@ public class VCFMerger {
 		System.out.println(written + " variants written from VCF2");
 		System.out.println(sharedVariants.size() + " shared variants");
 
-		// now write the variants unique to file 1
+		// now write the variants unique to path 1
 		TextFile tf1 = new TextFile(vcf1, TextFile.R);
 		int written1 = 0;
 		ln = tf1.readLine();
@@ -874,7 +874,7 @@ public class VCFMerger {
 
 					DoubleMatrix2D alleles = var1.getGenotypeAllelesAsMatrix2D();
 					if (alleles.rows() != samples1.size()) {
-						System.err.println("ERROR: not enough alleles in file. Expected " + samples1.size() + " found " + alleles.rows());
+						System.err.println("ERROR: not enough alleles in path. Expected " + samples1.size() + " found " + alleles.rows());
 						System.out.println(var1.toString());
 						System.exit(-1);
 					}
@@ -1004,7 +1004,7 @@ public class VCFMerger {
 					}
 					ln = tf.readLine();
 				}
-				System.out.println(allVariants.size() + " variants found... " + allVariantsLocal.size() + " in this file");
+				System.out.println(allVariants.size() + " variants found... " + allVariantsLocal.size() + " in this path");
 				if (allVariants.size() != allVariantsLocal.size()) {
 					System.out.println("ERROR: number of variants differs! :( " + batchvcfName);
 
@@ -1113,7 +1113,7 @@ public class VCFMerger {
 					}
 					ln = tf.readLine();
 				}
-				System.out.println(allVariants.size() + " variants found... " + allVariantsLocal.size() + " in this file");
+				System.out.println(allVariants.size() + " variants found... " + allVariantsLocal.size() + " in this path");
 				if (allVariants.size() != allVariantsLocal.size()) {
 					System.out.println("ERROR: number of variants differs! :( ");
 					System.exit(-1);
@@ -1216,7 +1216,7 @@ public class VCFMerger {
 			System.out.println();
 
 
-			System.out.println("Testing output file: " + outfilename);
+			System.out.println("Testing output path: " + outfilename);
 			TextFile tfin = new TextFile(outfilename, TextFile.R);
 			String[] elems = tfin.readLineElems(TextFile.tab);
 			int nr = -1;
@@ -1295,7 +1295,8 @@ public class VCFMerger {
 			String ln = tf.readLine();
 			System.out.println("reading: " + vcfname);
 
-			HashMap<String, ArrayList<Double>> allVariantsLocal = new HashMap<String, ArrayList<Double>>();
+
+			int ctr = 0;
 			while (ln != null) {
 				if (ln.startsWith("#")) {
 
@@ -1311,11 +1312,17 @@ public class VCFMerger {
 						//	String infoStr = elems[7];
 						allVariants.add(variant);
 					}
+					ctr++;
+					if (ctr % 1000 == 0) {
+						System.out.print(ctr + " lines parsed.\r");
+					}
+
 				}
 				ln = tf.readLine();
 			}
-			System.out.println(allVariants.size() + " variants found... " + allVariantsLocal.size() + " in this file");
+			System.out.println(allVariants.size() + " variants found... ");
 			tf.close();
+			System.out.println();
 		}
 
 		// remap variants
@@ -1343,6 +1350,8 @@ public class VCFMerger {
 
 			System.out.println("reading: " + vcfname);
 			String ln = tf.readLine();
+			int lnctr = 0;
+			int varctr = 0;
 			while (ln != null) {
 				if (ln.startsWith("##")) {
 
@@ -1364,15 +1373,22 @@ public class VCFMerger {
 					if (id != null) {
 						VCFVariant variantObj = new VCFVariant(ln);
 						variantObjs[f][id] = variantObj;
+						varctr++;
 					} else {
 						System.out.println("variant: " + variant + " not in index??");
 						System.exit(-1);
 					}
+					lnctr++;
+					if (lnctr % 1000 == 0) {
+						System.out.print(lnctr + " lines parsed. " + ((double) varctr / variantToInt.size()) + " % of variants loaded. \r");
+					}
 				}
 				ln = tf.readLine();
 			}
+			System.out.print(lnctr + " lines parsed. " + ((double) varctr / variantToInt.size()) + " % of variants loaded. \r\n");
 			tf.close();
 		}
+
 
 		System.out.println("done reading. writing to: " + outfilename);
 		TextFile vcfout = new TextFile(outfilename, TextFile.W);
@@ -1387,10 +1403,10 @@ public class VCFMerger {
 					if (b == 0) {
 						// get variant from b == 1 for purpose of headerness
 						VCFVariant other = variantObjs[1][i];
-						builder.append(variant.toVCFeader());
+						builder.append(other.toVCFHeader());
 					}
 					// append ./. to output for nrSamples
-					builder.append(Strings.repeat("\t./.", nrSamples[b]));
+					builder.append(Strings.repeat("\t.|.", nrSamples[b]));
 				}
 				if (b == 0) {
 					builder.append(variant.toVCFString(true));
@@ -1400,7 +1416,7 @@ public class VCFMerger {
 			}
 			vcfout.writeln(builder.toString());
 			if (i % 100 == 0) {
-				System.out.print("\rprogress: " + i + "/" + variantToInt.size() + " - " + ((double) i / variantToInt.size()) + "\r");
+				System.out.print("progress: " + i + "/" + variantToInt.size() + " - " + ((double) i / variantToInt.size()) + "\r");
 			}
 		}
 		System.out.println("Done writing");
@@ -1408,7 +1424,7 @@ public class VCFMerger {
 		System.out.println();
 
 
-		System.out.println("Testing output file: " + outfilename);
+		System.out.println("Testing output path: " + outfilename);
 		TextFile tfin = new TextFile(outfilename, TextFile.R);
 		String[] elems = tfin.readLineElems(TextFile.tab);
 		int nr = -1;
@@ -1440,6 +1456,8 @@ public class VCFMerger {
 	}
 
 
+
+
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
 											   boolean linux, String vcfsort) throws IOException {
 
@@ -1451,7 +1469,7 @@ public class VCFMerger {
 		VCFGenotypeData dataset2 = new VCFGenotypeData(unimputedVCF);
 		ArrayList<String> samplesNonImputed = dataset2.getSamples();
 
-		// reorder samples in unimputed file
+		// reorder samples in unimputed path
 		HashMap<String, Integer> sampleIndex = new HashMap<String, Integer>();
 		for (int i = 0; i < samplesImputed.size(); i++) {
 			sampleIndex.put(samplesImputed.get(i), i);

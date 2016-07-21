@@ -431,7 +431,7 @@ public class LRTestR implements Callable<Boolean> {
 								testvariant = true;
 							} else if (imputationqualityscore == null) {
 								System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
-								System.err.println("In file: " + vcf);
+								System.err.println("In path: " + vcf);
 								logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
 							}
 						} else {
@@ -770,7 +770,7 @@ public class LRTestR implements Callable<Boolean> {
 												+ "\t" + log10p;
 //									System.out.println(outstr);
 										pvalout.writeln(outstr);
-//										rConnection.voidEval("save.image(file=\"" + outputdir + regionVariantNames.get(variantId) + ".rData\")");
+//										rConnection.voidEval("save.image(path=\"" + outputdir + regionVariantNames.get(variantId) + ".rData\")");
 //										System.out.println("Saved to: " + outputdir + regionVariantNames.get(variantId) + ".rData");
 //										System.exit(-1);
 									} else {
@@ -1457,7 +1457,7 @@ public class LRTestR implements Callable<Boolean> {
 								testvariant = true;
 							} else if (imputationqualityscore == null) {
 								System.err.println("No imputaton quality score for variant: " + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
-								System.err.println("In file: " + vcf);
+								System.err.println("In path: " + vcf);
 								logout.writeln("Imputation quality score below threshold:\t" + imputationqualityscore + "\t" + variant.getChr() + "-" + variant.getPos() + "-" + variant.getId());
 							}
 						} else {
@@ -1776,7 +1776,7 @@ public class LRTestR implements Callable<Boolean> {
 	}
 
 	private ArrayList<Pair<String, Triple<String, String, String>>> getTrios(String famfile) throws IOException {
-		System.out.println("Loading trios from FAM file: " + famfile);
+		System.out.println("Loading trios from FAM path: " + famfile);
 		ArrayList<Pair<String, Triple<String, String, String>>> output = new ArrayList<>();
 		TextFile tf = new TextFile(famfile, TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
@@ -1802,7 +1802,7 @@ public class LRTestR implements Callable<Boolean> {
 			elems = tf.readLineElems(Strings.whitespace);
 		}
 		tf.close();
-		System.out.println(output.size() + " trios found in FAM file");
+		System.out.println(output.size() + " trios found in FAM path");
 		return output;
 	}
 

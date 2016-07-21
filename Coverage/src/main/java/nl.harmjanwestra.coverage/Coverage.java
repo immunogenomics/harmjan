@@ -63,7 +63,7 @@ public class Coverage {
 
 	public void bamToBedWithinRegionsForList(String listFile, String outdir, String targetregions, boolean outputcoverageperregion, int threads, boolean stranded) throws IOException {
 
-		System.out.println("Loading file list from: " + listFile);
+		System.out.println("Loading path list from: " + listFile);
 		TextFile lf = new TextFile(listFile, TextFile.R);
 		ArrayList<String> samples = new ArrayList<String>();
 		ArrayList<String> files = new ArrayList<String>();

@@ -184,13 +184,13 @@ public class GenotypeTools {
 
 			pb = new ProcessBuilder("/Data/Tools/plink-1.07-mac-intel/plink1.9",
 					"--extract", "/Data/ImmunoChip/US/raci_us-raciChrNames-hg19-dedup-selectVariants.txt",
-					"--file", origmap,
+					"--path", origmap,
 					"--recode", "--out", origmap + "-filtered",
 					"--remove", removeFile);
 		} else {
 			pb = new ProcessBuilder("/Data/Tools/plink-1.07-mac-intel/plink1.9",
 					"--extract", "/Data/ImmunoChip/US/raci_us-raciChrNames-hg19-dedup-selectVariants.txt",
-					"--file", origmap,
+					"--path", origmap,
 					"--recode", "--out", origmap + "-filtered");
 		}
 
@@ -246,7 +246,7 @@ public class GenotypeTools {
 					"match=POS");
 			ProcessRunner.run(pb);
 
-			// gunzip and sort the resulting file
+			// gunzip and sort the resulting path
 			bashfilename = tmpout + "gunzip.sh";
 			String sortedvcf2 = tmpout + "chr" + i + "-sorted.vcf";
 			bashCommand = "zcat " + tmpout + "chr" + i + ".vcf | /Data/Tools/vcftools/bin/vcf-sort > " + sortedvcf2;
@@ -512,7 +512,7 @@ public class GenotypeTools {
 			}
 
 
-			// parse the ped file
+			// parse the ped path
 			TextFile tf = new TextFile(immunoChipPEDFiles[f], TextFile.R);
 			System.out.println("parsing " + immunoChipPEDFiles[f]);
 			String[] elems = tf.readLineElems(Strings.whitespace);
@@ -553,7 +553,7 @@ public class GenotypeTools {
 
 		out.close();
 
-		// write map file
+		// write map path
 		TextFile mapout = new TextFile(mergedImmunoChipOutput + ".map", TextFile.W);
 		for (int i = 0; i < snpsInTheirFinalOrder.size(); i++) {
 			String str = snpsInTheirFinalOrder.get(i);

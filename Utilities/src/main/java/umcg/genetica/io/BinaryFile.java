@@ -24,7 +24,7 @@ public class BinaryFile {
 
 	public BinaryFile(String loc, boolean mode) throws IOException {
 		if (loc.trim().length() == 0) {
-			throw new IOException("Could not find file: no file specified");
+			throw new IOException("Could not find path: no path specified");
 		}
 		this.writeable = mode;
 		this.loc = loc;
@@ -50,7 +50,7 @@ public class BinaryFile {
 
 	public BinaryFile(String loc, boolean mode, int buffersize) throws IOException {
 		if (loc.trim().length() == 0) {
-			throw new IOException("Could not find file: no file specified");
+			throw new IOException("Could not find path: no path specified");
 		}
 		this.writeable = mode;
 		this.loc = loc;

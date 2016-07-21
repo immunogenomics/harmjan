@@ -67,7 +67,7 @@ public class Coverage {
 				System.out.println("Usage: bamfilelist outdir regionfile makebedgraphfiles threads");
 			} else {
 				c.bamToBedWithinRegionsForList(args[0], args[1], args[2], Boolean.parseBoolean(args[3]), Integer.parseInt(args[4]));
-////					c.bamToBedWithinRegions(file, sampleOutDir, targetregions);
+////					c.bamToBedWithinRegions(path, sampleOutDir, targetregions);
 				//String bamfile, String outdir, String regionFile, boolean outputcoverageperregion
 			}
 //		try {

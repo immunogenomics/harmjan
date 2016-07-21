@@ -51,7 +51,7 @@ public class AssociationResultMergerOptions {
 
 		option = Option.builder("r")
 				.hasArg()
-				.desc("Region bed file")
+				.desc("Region bed path")
 				.build();
 		OPTIONS.addOption(option);
 

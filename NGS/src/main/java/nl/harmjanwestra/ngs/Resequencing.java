@@ -318,11 +318,11 @@ public class Resequencing {
 //
 //						File deduppedOut = new File(outdir + sampleName + "_merged.dedup.bam");
 //						File deduppedMetricsOut = new File(outdir + sampleName + "_merged.dedupmetrics.txt");
-//						System.out.println(sampleName + "\tDeduplicating alignments in BAM file" + outputFile.getAbsolutePath());
+//						System.out.println(sampleName + "\tDeduplicating alignments in BAM path" + outputFile.getAbsolutePath());
 //						System.out.println(sampleName + "\tWriting to: " + deduppedOut.getAbsolutePath());
 //						MarkDups md = new MarkDups(outputFile, deduppedOut, deduppedMetricsOut, new File(tmpdir));
 //// md.go();
-//						// sort file
+//						// sort path
 //						File deduppedSortOut = new File(outdir + sampleName + "_merged.dedup.sort.bam");
 //						SortBAM sb = new SortBAM(deduppedOut, deduppedSortOut, new File(tmpdir));
 //
@@ -330,9 +330,9 @@ public class Resequencing {
 //						indexBAM(deduppedSortOut);
 //						outfile.writeln(deduppedSortOut.getAbsolutePath());
 //					} else {
-//						// print filename to file
+//						// print filename to path
 //						if (finalFiles.size() == 1) {
-//							// check whether the file has been indexed..
+//							// check whether the path has been indexed..
 //
 //							if (!Gpio.exists(finalFiles.get(0).getAbsolutePath() + ".bai")) {
 //								System.out.println(sampleName + "\tIndexing BAM: " + finalFiles.get(0).getAbsolutePath());
@@ -343,19 +343,19 @@ public class Resequencing {
 //					}
 //
 //				} else {
-//					// check whether file is there,
+//					// check whether path is there,
 //					String f = dups.get(0);
 //					System.out.println(sampleName + "\thas no duplicates.");
 //					if (Gpio.exists(indir + f + "." + suffix)) {
 //						outfile.writeln(indir + f + "." + suffix);
-//						// check whether file has been indexed...
+//						// check whether path has been indexed...
 //						if (!Gpio.exists(indir + f + "." + suffix + ".bai")) {
 //							System.out.println(sampleName + "\tIndexing BAM: " + indir + f + "." + suffix);
 //							indexBAM(new File(indir + f + "." + suffix));
 //						}
-//						System.out.println(sampleName + "\tFound file: " + indir + f + "." + suffix);
+//						System.out.println(sampleName + "\tFound path: " + indir + f + "." + suffix);
 //					} else {
-//						System.out.println(sampleName + "\tCould not find file: " + indir + f + "." + suffix);
+//						System.out.println(sampleName + "\tCould not find path: " + indir + f + "." + suffix);
 //					}
 //				}
 //
@@ -379,7 +379,7 @@ public class Resequencing {
 		List<SAMSequenceRecord> sequences = sequenceDictionary.getSequences();
 		List<SAMReadGroupRecord> var = header.getReadGroups();
 
-		// create a new BAM file writer for each sequence
+		// create a new BAM path writer for each sequence
 		HashMap<String, Integer> writerIndex = new HashMap<String, Integer>();
 		ArrayList<SAMFileWriter> writers = new ArrayList<SAMFileWriter>();
 		ArrayList<String> resultingBAMFiles = new ArrayList<String>();
@@ -562,7 +562,7 @@ public class Resequencing {
 		}
 
 		for (File f : files) {
-			System.out.println(sample + "\tIncluding file: " + f.getAbsolutePath());
+			System.out.println(sample + "\tIncluding path: " + f.getAbsolutePath());
 			SAMFileReader tmpreader = new SAMFileReader(f);
 			headers.add(tmpreader.getFileHeader());
 			readers.add(tmpreader);
@@ -824,7 +824,7 @@ public class Resequencing {
 //                    f2 = Gpio.formatAsDirectory(path) + f2;
 		System.out.println(f2);
 		if (f2.endsWith(".bam") || f2.endsWith(".sam")) {
-			System.out.println("Running file:" + f2);
+			System.out.println("Running path:" + f2);
 			System.out.println("-----------------------");
 			System.out.println("");
 			System.out.println("");
@@ -965,7 +965,7 @@ public class Resequencing {
 		ArrayList<String> samples = new ArrayList<String>();
 		for (String fileName : fileList) {
 			int q = 0;
-			System.out.println("Opening file: " + fileName);
+			System.out.println("Opening path: " + fileName);
 			BamFileReader reader = new BamFileReader(new File(fileName));
 
 			SAMRecordIterator iterator = reader.iterator();

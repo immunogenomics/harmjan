@@ -109,7 +109,7 @@ public class PolyPeak {
 		// perform joint pileup
 		performJointCalling();
 
-		// close all sample BAM file readers
+		// close all sample BAM path readers
 		for (Sample sample : samples) {
 			sample.close();
 		}
@@ -196,7 +196,7 @@ public class PolyPeak {
 					}
 
 					if (fileName.length() == 0) {
-						System.err.println("Warning: file name is empty on line: " + ln);
+						System.err.println("Warning: path name is empty on line: " + ln);
 						// throw new IllegalFormatException("Error: "+sampleFileName+ " does not have the correct format.");
 						break; // just break for now
 					}

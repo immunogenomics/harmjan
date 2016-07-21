@@ -33,7 +33,7 @@ public class VCFSampleFilter {
 		System.out.println("Sample Filter");
 		System.out.println("in: " + fileIn);
 		System.out.println("out: " + fileout);
-		System.out.println("file: " + sampleFile);
+		System.out.println("path: " + sampleFile);
 
 		TextFile tf1 = new TextFile(sampleFile, TextFile.R);
 		String[] elems = tf1.readLineElems(TextFile.tab);

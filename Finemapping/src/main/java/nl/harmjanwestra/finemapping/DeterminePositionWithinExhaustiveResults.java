@@ -69,7 +69,7 @@ public class DeterminePositionWithinExhaustiveResults {
 			String[] variants = loadConditionalVariants(region, modelfile);
 
 			if (variants == null) {
-				System.err.println("Model file is broken for some reason: " + modelfile);
+				System.err.println("Model path is broken for some reason: " + modelfile);
 				System.exit(-1);
 			}
 

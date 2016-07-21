@@ -52,10 +52,10 @@ public class BamFileReader {
 			}
 		} else {
 			tmpreader.close();
-			logger.info("BAM file does not have an index: " + bamFile.getAbsolutePath());
+			logger.info("BAM path does not have an index: " + bamFile.getAbsolutePath());
 			if (indexFileWhenNotIndexed) {
-				// index file
-				logger.info("Indexing BAM file: " + bamFile.getAbsolutePath());
+				// index path
+				logger.info("Indexing BAM path: " + bamFile.getAbsolutePath());
 				SAMFileReader samfileReader = new SAMFileReader(bamFile);
 				String outputPath = bamFile.getAbsolutePath();
 //                outputPath = outputPath.substring(3);

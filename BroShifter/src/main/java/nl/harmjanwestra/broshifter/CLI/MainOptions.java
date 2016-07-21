@@ -57,7 +57,7 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Filter bed region file for significant results")
+				.desc("Filter bed region path for significant results")
 				.longOpt("bedfilter")
 				.build();
 		OPTIONS.addOption(option);
@@ -75,7 +75,7 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Find LD partners of variants given a VCF file")
+				.desc("Find LD partners of variants given a VCF path")
 				.longOpt("proxy")
 				.build();
 		OPTIONS.addOption(option);

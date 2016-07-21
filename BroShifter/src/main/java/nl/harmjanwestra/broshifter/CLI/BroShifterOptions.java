@@ -29,7 +29,7 @@ public class BroShifterOptions {
 
 		option = Option.builder("i")
 				.hasArg()
-				.desc("Input posterior p-value file (gwas-file format)")
+				.desc("Input posterior p-value path (gwas-path format)")
 				.longOpt("posteriors")
 
 				.build();
@@ -37,7 +37,7 @@ public class BroShifterOptions {
 
 		option = Option.builder("a")
 				.hasArg()
-				.desc("List of annotations to testNormal. One line per annotation file. Annotations can be in .xls or .bed file, and may be gzipped")
+				.desc("List of annotations to testNormal. One line per annotation path. Annotations can be in .xls or .bed path, and may be gzipped")
 				.longOpt("annotations")
 
 				.build();
@@ -53,7 +53,7 @@ public class BroShifterOptions {
 
 		option = Option.builder("o")
 				.hasArg()
-				.desc("Output file location")
+				.desc("Output path location")
 				.longOpt("out")
 
 				.build();
@@ -166,7 +166,7 @@ public class BroShifterOptions {
 			if (cmd.hasOption("regions")) {
 				regionFile = cmd.getOptionValue("regions");
 			} else {
-				System.out.println("Path to regions file not provided");
+				System.out.println("Path to regions path not provided");
 				run = false;
 			}
 
@@ -188,14 +188,14 @@ public class BroShifterOptions {
 			if (cmd.hasOption("annotations")) {
 				listOfAnnotations = cmd.getOptionValue("annotations");
 			} else {
-				System.out.println("Path to annotations file not provided");
+				System.out.println("Path to annotations path not provided");
 				run = false;
 			}
 
 			if (cmd.hasOption("out")) {
 				outfile = cmd.getOptionValue("out");
 			} else {
-				System.out.println("Path to out file not provided");
+				System.out.println("Path to out path not provided");
 				run = false;
 			}
 

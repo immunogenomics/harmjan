@@ -169,7 +169,7 @@ public class SaturationAnalysis {
             }
 
             String readFile1 = dir + "/cufflinks/Iteration" + dStr + "/genes.fpkm_tracking";
-            System.out.println("Reading file: " + readFile1);
+            System.out.println("Reading path: " + readFile1);
             TextFile tf = new TextFile(readFile1, TextFile.R);
             tf.readLine(); // skip header
             String[] elems = tf.readLineElems(TextFile.tab);

@@ -110,7 +110,7 @@ public class VCFMatcher {
 			VCFVariant testVar = iterator2.next();
 			ArrayList<Triple<String[], String, Double>> referenceData = refData.get(testVar.asFeature());
 			if (referenceData == null) {
-				// write to unique file
+				// write to unique path
 				uniqueTest.writeln(testVar.getChr() + "\t" + testVar.getPos() + "\t" + testVar.getId());
 			} else {
 
@@ -345,7 +345,7 @@ public class VCFMatcher {
 			VCFVariant testVar = iterator2.next();
 			ArrayList<VCFVariant> referenceData = refData.get(testVar.asFeature());
 			if (referenceData == null) {
-				// write to unique file
+				// write to unique path
 				uniqueTest.writeln(testVar.getChr() + "\t" + testVar.getPos() + "\t" + testVar.getId());
 			} else {
 				for (VCFVariant refVariant : referenceData) {

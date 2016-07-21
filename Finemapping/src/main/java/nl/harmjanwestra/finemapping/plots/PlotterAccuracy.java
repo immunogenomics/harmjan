@@ -238,7 +238,7 @@ public class PlotterAccuracy extends VariantCounter {
 			}
 			tf2.close();
 			Collections.sort(corvals, Collections.reverseOrder());
-			System.out.println(corvals.size() + " vals in file " + files[f]);
+			System.out.println(corvals.size() + " vals in path " + files[f]);
 			newlabels[f] = labels[f] + " - " + corvals.size() + " / " + maxSize;
 			vals.add(corvals);
 		}
@@ -391,7 +391,7 @@ public class PlotterAccuracy extends VariantCounter {
 				double[] arr = Primitives.toPrimitiveArr(d.toArray(new Double[0]));
 				bins[i][bin] = arr;
 			}
-			System.out.println("Loaded: " + loaded + " from file: " + file);
+			System.out.println("Loaded: " + loaded + " from path: " + file);
 		}
 
 

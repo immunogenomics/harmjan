@@ -118,7 +118,7 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("DB SNP VCF file")
+				.desc("DB SNP VCF path")
 				.longOpt("dbsnp")
 				.hasArg()
 				.build();
@@ -230,6 +230,12 @@ public class Main {
 		option = Option.builder()
 				.desc("Merge imputation batches")
 				.longOpt("mergeimputation")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Merge (imputed) data for two VCFs (in a cheesy way)")
+				.longOpt("mergeimputationcheese")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -349,19 +355,19 @@ public class Main {
 		option = Option.builder("f")
 				.argName("file")
 				.hasArg()
-				.desc("Input family information (PED or FAM file)")
+				.desc("Input family information (PED or FAM path)")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("b")
 				.hasArg()
-				.desc("Region BED file")
+				.desc("Region BED path")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("l")
 				.hasArg()
-				.desc("List file")
+				.desc("List path")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -450,7 +456,7 @@ public class Main {
 		option = Option.builder()
 				.hasArg()
 				.longOpt("tabix")
-				.desc("Tabix file name prefix")
+				.desc("Tabix path name prefix")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -1113,6 +1119,24 @@ public class Main {
 				if (run) {
 					merger.mergeImputationBatches(input, out, variantList, nrbatches);
 				}
+			} else if (cmd.hasOption("mergeimputationcheese")) {
+				VCFMerger merger = new VCFMerger();
+
+				String variantList = null;
+				if (cmd.hasOption("l")) {
+					variantList = cmd.getOptionValue("l");
+				}
+				String input2 = null;
+				if (cmd.hasOption("i2")) {
+					input2 = cmd.getOptionValue("i2");
+				} else {
+					System.out.println("use -i2 with --mergeimputationcheese");
+					run = false;
+				}
+
+				if (run) {
+					merger.mergeImputedData(input, input2, out, variantList);
+				}
 			} else if (cmd.hasOption("checkimputation")) {
 				VCFMerger merger = new VCFMerger();
 				int nrbatches = 0;
@@ -1170,7 +1194,7 @@ public class Main {
 				if (cmd.hasOption("f")) {
 					ped = cmd.getOptionValue("f");
 				} else {
-					System.out.println("Please provide pedigree data (ped or fam file)");
+					System.out.println("Please provide pedigree data (ped or fam path)");
 					run = false;
 				}
 

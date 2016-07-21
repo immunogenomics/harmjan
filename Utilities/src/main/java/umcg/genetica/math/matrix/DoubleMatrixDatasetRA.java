@@ -38,7 +38,7 @@ public class DoubleMatrixDatasetRA<T, U> extends DoubleMatrixDatasetAC {
                 throw new IOException(ex); // for backward compatibility we don't throw ClassNotFoundExceptions :I
             }
         } else {
-            throw new IOException("Only .binary format supported for random access! Given file: " + fileName);
+            throw new IOException("Only .binary format supported for random access! Given path: " + fileName);
         }
     }
 
@@ -56,7 +56,7 @@ public class DoubleMatrixDatasetRA<T, U> extends DoubleMatrixDatasetAC {
                 throw new IOException(ex); // for backward compatibility we don't throw ClassNotFoundExceptions :I
             }
         } else {
-            throw new IOException("Only .binary format supported for random access! Given file: " + fileName);
+            throw new IOException("Only .binary format supported for random access! Given path: " + fileName);
         }
     }
 
@@ -75,7 +75,7 @@ public class DoubleMatrixDatasetRA<T, U> extends DoubleMatrixDatasetAC {
                 throw new IOException(ex);
             }
         } else {
-            throw new IOException("Only .binary format supported for random access! Given file: " + fileName);
+            throw new IOException("Only .binary format supported for random access! Given path: " + fileName);
         }
     }
 
@@ -123,7 +123,7 @@ public class DoubleMatrixDatasetRA<T, U> extends DoubleMatrixDatasetAC {
 
         }
         recalculateHashMaps();
-        LOGGER.log(Level.INFO, "Access to binary file:\t{0}\tok, nrRows:\t{1}\tnrCols:\t{2}", new Object[]{fileName, nrRows, nrCols});
+        LOGGER.log(Level.INFO, "Access to binary path:\t{0}\tok, nrRows:\t{1}\tnrCols:\t{2}", new Object[]{fileName, nrRows, nrCols});
     }
 
     public static List<Object> getRowObjectsOnly(String fileName) throws FileNotFoundException, IOException, ClassNotFoundException {
@@ -247,7 +247,7 @@ public class DoubleMatrixDatasetRA<T, U> extends DoubleMatrixDatasetAC {
 
     public double[] getNextRow() {
         if (nrCols != nrColsTotal) {
-            throw new IllegalStateException("Not applicable to datasets with not all columns included. (Columns in file: " + nrColsTotal + ", columns included: " + nrCols + ")");
+            throw new IllegalStateException("Not applicable to datasets with not all columns included. (Columns in path: " + nrColsTotal + ", columns included: " + nrCols + ")");
         }
         double[] values = new double[nrCols];
         int col = 0;
@@ -264,7 +264,7 @@ public class DoubleMatrixDatasetRA<T, U> extends DoubleMatrixDatasetAC {
     @Override
     public synchronized double[] get(int x) {
         if (nrCols != nrColsTotal) {
-            throw new IllegalStateException("Not applicable to datasets with not all columns included. (Columns in file: " + nrColsTotal + ", columns included: " + nrCols + ")");
+            throw new IllegalStateException("Not applicable to datasets with not all columns included. (Columns in path: " + nrColsTotal + ", columns included: " + nrCols + ")");
         }
         int rawRowIndex = x;
         if (rowIndexToRawRowIndex != null) {

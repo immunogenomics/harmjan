@@ -16,7 +16,7 @@ public class ProxyFinderOptions {
 		option = Option.builder()
 				.longOpt("tabix")
 				.hasArg()
-				.desc("Prefix for tabix file [format /path/to/chr$i.vcf.gz]")
+				.desc("Prefix for tabix path [format /path/to/chr$i.vcf.gz]")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -37,14 +37,14 @@ public class ProxyFinderOptions {
 		option = Option.builder("i")
 				.longOpt("snps")
 				.hasArg()
-				.desc("SNP file")
+				.desc("SNP path")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("r")
 				.longOpt("regions")
 				.hasArg()
-				.desc("Region file")
+				.desc("Region path")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -63,7 +63,7 @@ public class ProxyFinderOptions {
 		option = Option.builder("o")
 				.longOpt("out")
 				.hasArg()
-				.desc("Output file")
+				.desc("Output path")
 				.build();
 		OPTIONS.addOption(option);
 

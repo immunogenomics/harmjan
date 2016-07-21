@@ -50,10 +50,10 @@ public class AssociationResultMerger {
 		int totalvars = 0;
 		for (String file : files) {
 			if (Gpio.exists(file)) {
-				System.out.println("Concatenating file: " + file);
+				System.out.println("Concatenating path: " + file);
 				AssociationFile assocFile = new AssociationFile();
 				ArrayList<AssociationResult> result = assocFile.read(file);
-				System.out.println(result.size() + " associations in file..");
+				System.out.println(result.size() + " associations in path..");
 				totalvars += result.size();
 				if (!headerwritten) {
 					out.writeln(assocFile.getHeader());
@@ -64,7 +64,7 @@ public class AssociationResultMerger {
 					out.writeln(r.toString());
 				}
 			} else {
-				System.out.println("Could not find file: " + file);
+				System.out.println("Could not find path: " + file);
 			}
 		}
 		out.close();

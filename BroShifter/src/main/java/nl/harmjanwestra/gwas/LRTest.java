@@ -108,7 +108,7 @@ public class LRTest {
 				"-d", "/Data/tmp/2016-06-24/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
 				"-f", "/Data/tmp/2016-06-29/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam",
 //				"-f", "/Data/tmp/2016-06-24/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz.fam",
-//				"-f", "/Data/tmp/2016-06-26/Allele+AA.NomissingNonRare0.0005.Include.fam", // xinli fam file
+//				"-f", "/Data/tmp/2016-06-26/Allele+AA.NomissingNonRare0.0005.Include.fam", // xinli fam path
 				"-i", "/Data/tmp/2016-06-24/T1DVCF.vcf",
 				"-e", "/Data/tmp/2016-06-24/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
 				"-r", "/Data/tmp/2016-06-24/il2ra.bed",
@@ -280,7 +280,7 @@ public class LRTest {
 
 		System.out.println(diseaseStatus.size() + " disease status samples loaded");
 
-		// load samples from vcf file
+		// load samples from vcf path
 		VCFGenotypeData data = new VCFGenotypeData(options.getVcf());
 		ArrayList<String> vcfSamples = data.getSamples();
 		HashSet<String> vcfSamplesWithDiseaseStatus = new HashSet<String>();
@@ -292,7 +292,7 @@ public class LRTest {
 			}
 		}
 
-		// remove related samples based on fam file if any
+		// remove related samples based on fam path if any
 		if (options.getFamfile() != null) {
 			if (excludeTheseSamples == null) {
 				excludeTheseSamples = new HashSet<String>();
@@ -952,7 +952,7 @@ public class LRTest {
 	}
 
 	private ArrayList<Pair<String, Triple<String, String, String>>> getTrios(String famfile) throws IOException {
-		System.out.println("Loading trios from FAM file: " + famfile);
+		System.out.println("Loading trios from FAM path: " + famfile);
 		ArrayList<Pair<String, Triple<String, String, String>>> output = new ArrayList<>();
 		TextFile tf = new TextFile(famfile, TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
@@ -977,7 +977,7 @@ public class LRTest {
 			elems = tf.readLineElems(Strings.whitespace);
 		}
 		tf.close();
-		System.out.println(output.size() + " trios found in FAM file");
+		System.out.println(output.size() + " trios found in FAM path");
 		return output;
 	}
 
@@ -1020,7 +1020,7 @@ public class LRTest {
 				}
 			}
 
-			System.out.println(samplesToRemove.size() + " samples to remove using FAM file");
+			System.out.println(samplesToRemove.size() + " samples to remove using FAM path");
 		}
 
 	}

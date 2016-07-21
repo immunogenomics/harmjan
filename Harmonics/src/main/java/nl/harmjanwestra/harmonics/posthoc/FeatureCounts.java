@@ -229,7 +229,7 @@ public class FeatureCounts {
 
 		// Geneid	Chr	Start	End	Strand	Length	/medpop/srlab/cd4timelinepilot/atac/bwa-aligned/20141202-0-hrs-sorted-dedup.bam
 
-		// assume the same data is in each file
+		// assume the same data is in each path
 		TextFile tf = new TextFile(samplefiles[0], TextFile.R);
 		int peakCtr = 0;
 		tf.readLine();

@@ -171,7 +171,7 @@ public class ModelBuildingTask implements Callable<Boolean> {
 								}
 
 
-								// create bedlike file:
+								// create bedlike path:
 								// - store pileup average + std. deviance
 								// - store average insert size
 								// - store average readAsTrack length

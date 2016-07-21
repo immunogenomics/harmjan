@@ -15,7 +15,7 @@ public class MainOptions {
 
 		Option option;
 		option = Option.builder()
-				.desc("Convert bam to bed file")
+				.desc("Convert bam to bed path")
 				.longOpt("bamtobed")
 				.build();
 		OPTIONS.addOption(option);
@@ -43,7 +43,7 @@ public class MainOptions {
 		 */
 
 		option = Option.builder()
-				.desc("Bam file")
+				.desc("Bam path")
 				.longOpt("bam")
 				.hasArg()
 				.build();
@@ -63,7 +63,7 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("List file")
+				.desc("List path")
 				.longOpt("list")
 				.hasArg()
 				.build();
@@ -77,7 +77,7 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
-				.desc("Output a file per region")
+				.desc("Output a path per region")
 				.longOpt("outputregions")
 				.hasArg()
 				.build();
@@ -168,13 +168,13 @@ public class MainOptions {
 				if (targetregions != null) {
 					mode = MODE.BAMTOBEDREGIONS;
 					if (list == null || outdir == null) {
-						System.out.println("Please provide bam file list and outdir");
+						System.out.println("Please provide bam path list and outdir");
 						run = false;
 					}
 				} else {
 					mode = MODE.BAMTOBED;
 					if (bamfile == null || outdir == null) {
-						System.out.println("Please provide bam file and outdir");
+						System.out.println("Please provide bam path and outdir");
 						run = false;
 					}
 				}

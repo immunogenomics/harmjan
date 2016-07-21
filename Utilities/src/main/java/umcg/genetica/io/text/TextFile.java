@@ -9,6 +9,9 @@ import umcg.genetica.containers.Triple;
 import umcg.genetica.text.Strings;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -30,7 +33,7 @@ public class TextFile implements Iterable<String> {
 	public static final boolean R = false;
 	protected static final String ENCODING = "ISO-8859-1";
 	protected BufferedReader in;
-	protected File file;
+	protected Path path;
 	protected BufferedWriter out;
 	protected boolean writeable;
 	private boolean gzipped;
@@ -38,26 +41,26 @@ public class TextFile implements Iterable<String> {
 	private boolean parallel = false;
 
 	public TextFile(String file, boolean mode) throws IOException {
-		this(new File(file), mode, DEFAULT_BUFFER_SIZE, false);
+		this(Paths.get(file), mode, DEFAULT_BUFFER_SIZE, false);
 	}
 
-	public TextFile(File file, boolean mode) throws IOException {
+	public TextFile(Path file, boolean mode) throws IOException {
 		this(file, mode, DEFAULT_BUFFER_SIZE, false);
 	}
 
-	public TextFile(File file, boolean mode, boolean parallel) throws IOException {
+	public TextFile(Path file, boolean mode, boolean parallel) throws IOException {
 		this(file, mode, DEFAULT_BUFFER_SIZE, parallel);
 	}
 
-	public TextFile(File file, boolean mode, int buffersize, boolean parallel) throws IOException {
+	public TextFile(Path file, boolean mode, int buffersize, boolean parallel) throws IOException {
 
 		this.parallel = parallel;
 		this.buffersize = buffersize;
-		this.file = file;
+		this.path = file;
 
-		String loc = file.getAbsolutePath();
+		String loc = path.getFileName().toString();
 		if (loc.trim().length() == 0) {
-			throw new IOException("Could not find file: no file specified");
+			throw new IOException("Could not find path: no path specified");
 		}
 		this.writeable = mode;
 
@@ -69,36 +72,36 @@ public class TextFile implements Iterable<String> {
 	}
 
 	public TextFile(String file, boolean mode, int buffersize) throws IOException {
-		this(new File(file), mode, buffersize, false);
+		this(Paths.get(file), mode, buffersize, false);
 	}
 
 	public final void open() throws IOException {
 
-		if (!file.exists() && !writeable) {
-			throw new IOException("Could not find file: " + file);
+		if (!Files.exists(path) && !writeable) {
+			throw new IOException("Could not find path: " + path);
 		} else {
 			if (writeable) {
 				if (gzipped) {
 					this.buffersize = 1000 * 1024;
 //					if (parallel) {
-//						ParallelGZIPOutputStream gzipOutputStream = new ParallelGZIPOutputStream(new FileOutputStream(file));
+//						ParallelGZIPOutputStream gzipOutputStream = new ParallelGZIPOutputStream(new FileOutputStream(path));
 //						out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
 //					} else {
-					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(file), buffersize);
+					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(Files.newOutputStream(path), buffersize);
 					out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
 //					}
 				} else {
-					out = new BufferedWriter(new FileWriter(file), buffersize);
+					out = Files.newBufferedWriter(path);
 				}
 			} else {
 				if (gzipped) {
 					this.buffersize = 1000 * 1024;
-					GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(file), buffersize);
-					in = new BufferedReader(new InputStreamReader(gzipInputStream, "US-ASCII"));
+					GZIPInputStream gzipInputStream = new GZIPInputStream(Files.newInputStream(path), buffersize);
+					in = new BufferedReader(new InputStreamReader(gzipInputStream, ENCODING));
 
 				} else {
-//                System.out.println("Opening file: "+file);
-					in = new BufferedReader(new InputStreamReader(new FileInputStream(file), ENCODING), 8096);
+//                System.out.println("Opening path: "+path);
+					in = new BufferedReader(new InputStreamReader(Files.newInputStream(path), ENCODING), 8096);
 				}
 			}
 		}
@@ -113,7 +116,7 @@ public class TextFile implements Iterable<String> {
 	}
 
 	public void close() throws IOException {
-//        System.out.println("Closing "+file);
+//        System.out.println("Closing "+path);
 		if (writeable) {
 			out.close();
 		} else {
@@ -374,7 +377,7 @@ public class TextFile implements Iterable<String> {
 	}
 
 	public String getFileName() {
-		return file.getAbsolutePath();
+		return path.getFileName().toString();
 	}
 
 	public HashSet<Pair<String, String>> readAsPairs(int A, int B) throws IOException {

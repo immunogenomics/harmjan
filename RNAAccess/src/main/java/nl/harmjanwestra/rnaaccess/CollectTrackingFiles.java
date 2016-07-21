@@ -52,7 +52,7 @@ public class CollectTrackingFiles {
 
                             System.out.println(sampleName);
 
-                            System.out.println("Found file: " + dir.getAbsolutePath() + " / " + f.getName());
+                            System.out.println("Found path: " + dir.getAbsolutePath() + " / " + f.getName());
 //                            Gpio.createDir(outdir + "/" + sampleName);
                             Gpio.copyFile(dir.getAbsolutePath() + "/" + f.getName(), outdir + "/" + sampleName + "-" + f.getName());
                         }
