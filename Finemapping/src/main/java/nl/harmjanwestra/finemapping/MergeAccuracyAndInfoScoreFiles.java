@@ -58,7 +58,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 
 		boolean includeId = true;
 		boolean includeIndels = true;
-		boolean includeICVariants = true;
+		boolean includeICVariants = false;
 		double mafthreshold = 0.01;
 
 
@@ -164,6 +164,9 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 
 		// now make the table
 		double[][] table = new double[files.length][files.length];
+		double[] medians = new double[files.length];
+		double[] means = new double[files.length];
+		double[] stdevs = new double[files.length];
 		for (int f = 0; f < files.length; f++) {
 			for (int f2 = f + 1; f2 < files.length; f2++) {
 				double[] x = values[f];
@@ -176,7 +179,11 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 
 				table[f][f2] = p;
 				table[f2][f] = (medianx - mediany);
+
 			}
+			medians[f] = JSci.maths.ArrayMath.median(values[f]);
+			means[f] = JSci.maths.ArrayMath.mean(values[f]);
+			stdevs[f] = JSci.maths.ArrayMath.standardDeviation(values[f]);
 		}
 
 		String header = "-";
@@ -184,7 +191,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			header += "\t" + labels[i];
 		}
 
-		System.out.println(header);
+		System.out.println(header + "\tmedian\tmean\tstdev");
 
 		for (int i = 0; i < files.length; i++) {
 			String line = labels[i];
@@ -195,7 +202,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 					line += "\t" + table[i][j];
 				}
 			}
-			System.out.println(line);
+			System.out.println(line + "\t" + medians[i] + "\t" + means[i] + "\t" + stdevs[i]);
 		}
 
 	}
