@@ -72,6 +72,7 @@ public class LRTest {
 				System.out.println("Will perform conditional logistic regression");
 				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
 				exService = Executors.newFixedThreadPool(options.getNrThreads());
+
 				testConditional();
 				exService.shutdown();
 				break;
