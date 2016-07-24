@@ -2,7 +2,6 @@ package nl.harmjanwestra.vcfutils;
 
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.console.ProgressBar;
@@ -16,7 +15,9 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Harm-Jan on 07/02/16.
@@ -26,15 +27,81 @@ public class GeneticSimilarity {
 
 	public static void main(String[] args) {
 		GeneticSimilarity sim = new GeneticSimilarity();
-		String listofvariants = "D:\\tmp\\2016-07-19\\plink.prune.out";
-		String vcf1 = "D:\\tmp\\2016-07-19\\RA-recode-select.vcf.gz";
-		String vcf2 = "D:\\tmp\\2016-07-19\\RA-recode-select.vcf.gz";
-		String outfile = "D:\\tmp\\2016-07-19\\debug";
+		String listofvariants = "/Data/tmp/2016-07-22/plink.prune.out";
+		String vcf1 = "/Data/ImmunoChip/RA/2015-09-23-IncX/ES/genotypes-filtered-sorted.vcf.gz";
+		String vcf2 = "/Data/ImmunoChip/RA/2015-09-23-IncX/NL/genotypes-filtered-sorted.vcf.gz";
+		String outfile = "/Data/tmp/2016-07-22/debug";
 		try {
-			sim.determineGeneticSimilarityBetweenDatasets(listofvariants, vcf1, vcf2, outfile);
+			sim.determineGeneticSimilaritySingleDataset(listofvariants, vcf1, outfile);
+//			sim.determineGeneticSimilarityBetweenDatasets(listofvariants, vcf1, vcf2, outfile);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void determineGeneticSimilaritySingleDataset(String listOfVariantsToExclude, String vcf1, String outfile) throws IOException {
+		// read list of variants
+		TextFile tf1 = new TextFile(listOfVariantsToExclude, TextFile.R);
+		ArrayList<String> listOfVariantsToExcludeArr = tf1.readAsArrayList();
+		tf1.close();
+		HashSet<String> hashSetVariantsToExclude = new HashSet<String>();
+		hashSetVariantsToExclude.addAll(listOfVariantsToExcludeArr);
+
+		// load the variants for ds1
+		System.out.println("VCF input: " + vcf1);
+		Pair<ArrayList<String>, ArrayList<VCFVariant>> data1 = loadData(vcf1, hashSetVariantsToExclude);
+		ArrayList<String> samples1 = data1.getLeft();
+		ArrayList<VCFVariant> variants1 = data1.getRight();
+		System.out.println(samples1.size() + " samples in vcf1");
+		System.out.println(variants1.size() + " variants in vcf1");
+
+		VCFVariant[] allvariants = variants1.toArray(new VCFVariant[0]);
+		nl.harmjanwestra.utilities.vcf.GeneticSimilarity sim = new nl.harmjanwestra.utilities.vcf.GeneticSimilarity();
+		int cores = Runtime.getRuntime().availableProcessors();
+		System.out.println("Detected " + cores + " Processors ");
+		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
+
+		sim.calculateWithinDataset(allvariants, threadPool);
+		Triple<DoubleMatrix2D, DoubleMatrix2D, DoubleMatrix2D> similarity = sim.calculateWithinDataset(allvariants, threadPool);
+		DoubleMatrix2D geneticSimilarity = similarity.getLeft();
+		DoubleMatrix2D sharedgenotypes = similarity.getMiddle();
+		DoubleMatrix2D correlationmatrix = similarity.getRight();
+
+		writeMatrix(geneticSimilarity, samples1.toArray(new String[0]), samples1.toArray(new String[0]), outfile + "geneticsim.txt.gz");
+		writeMatrix(correlationmatrix, samples1.toArray(new String[0]), samples1.toArray(new String[0]), outfile + "correlations.txt.gz");
+		writeMatrix(sharedgenotypes, samples1.toArray(new String[0]), samples1.toArray(new String[0]), outfile + "sharedgenotypes.txt.gz");
+
+		// make two dosage matrices
+		System.out.println("Submitting correlation jobs..");
+		// correlate the samples
+
+		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
+		TextFile out = new TextFile(outfile + "pairsAboveCorrelationThreshold0.25.txt", TextFile.W);
+		out.writeln(header);
+		for (int i = 0; i < samples1.size(); i++) {
+			for (int j = i; j < samples1.size(); j++) {
+				if (correlationmatrix.get(i, j) > 0.25) {
+					out.writeln(samples1.get(i) + "\t" + samples1.get(j) + "\t" + correlationmatrix.get(i, j) + "\t" + geneticSimilarity.get(i, j) + "\t" + sharedgenotypes.get(i, j));
+				}
+			}
+		}
+		out.close();
+
+
+		TextFile out3 = new TextFile(outfile + "toppairpersample1.txt", TextFile.W);
+		out3.writeln(header);
+		for (int i = 0; i < samples1.size(); i++) {
+			double maxx = 0;
+			int maxj = 0;
+			for (int j = 0; j < samples1.size(); j++) {
+				if (correlationmatrix.get(i, j) > maxx) {
+					maxx = correlationmatrix.get(i, j);
+					maxj = j;
+				}
+			}
+			out3.writeln(samples1.get(i) + "\t" + samples1.get(maxj) + "\t" + correlationmatrix.get(i, maxj) + "\t" + geneticSimilarity.get(i, maxj) + "\t" + sharedgenotypes.get(i, maxj));
+		}
+		out3.close();
 	}
 
 	public void determineGeneticSimilarityBetweenDatasets(String listOfVariantsToExclude, String vcf1, String vcf2, String outfile) throws IOException {
@@ -52,9 +119,9 @@ public class GeneticSimilarity {
 		Pair<ArrayList<String>, ArrayList<VCFVariant>> data1 = loadData(vcf1, hashSetVariantsToExclude);
 		ArrayList<String> samples1 = data1.getLeft();
 		ArrayList<VCFVariant> variants1 = data1.getRight();
-
 		System.out.println(samples1.size() + " samples in vcf1");
 		System.out.println(variants1.size() + " variants in vcf1");
+
 		Pair<ArrayList<String>, ArrayList<VCFVariant>> data2 = loadData(vcf2, hashSetVariantsToExclude);
 		ArrayList<String> samples2 = data2.getLeft();
 		ArrayList<VCFVariant> variants2 = data2.getRight();
@@ -169,133 +236,39 @@ public class GeneticSimilarity {
 
 		// get the genetic similarity
 		nl.harmjanwestra.utilities.vcf.GeneticSimilarity sim = new nl.harmjanwestra.utilities.vcf.GeneticSimilarity();
-		Pair<double[][], double[][]> testoutput = sim.calculate(variants1.toArray(new VCFVariant[0]));
-		DoubleMatrix2D m1 = new DenseDoubleMatrix2D(testoutput.getLeft());
-		DoubleMatrix2D m2 = new DenseDoubleMatrix2D(testoutput.getRight());
-
-//		writeMatrix(m1, samples1.toArray(new String[0]), samples2.toArray(new String[0]), outfile + "method1-1.txt");
-//		writeMatrix(m2, samples1.toArray(new String[0]), samples2.toArray(new String[0]), outfile + "method1-2.txt");
-
 
 		int cores = Runtime.getRuntime().availableProcessors();
 		System.out.println("Detected " + cores + " Processors ");
+
 		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
+		Triple<DoubleMatrix2D, DoubleMatrix2D, DoubleMatrix2D> similarity = sim.calculateBetweenDatasets(allvariants, threadPool);
+		threadPool.shutdown();
 
-		Pair<DoubleMatrix2D, DoubleMatrix2D> similarity = sim.calculate2(allvariants, threadPool);
 		DoubleMatrix2D geneticSimilarity = similarity.getLeft();
-		DoubleMatrix2D sharedgenotypes = similarity.getRight();
-		DoubleMatrix2D correlationmatrix = new DenseDoubleMatrix2D(samples1.size(), samples2.size());
-
-
-		// make two dosage matrices
-		double[][] dosages1 = new double[samples1.size()][allvariants[0].length];
-		double[][] dosages2 = new double[samples2.size()][allvariants[0].length];
-
-		for (int v = 0; v < allvariants[0].length; v++) {
-			VCFVariant var1 = allvariants[0][v];
-			double[][] dosage = var1.getDosage();
-			for (int s = 0; s < samples1.size(); s++) {
-				double d = dosage[s][0];
-				if (Double.isNaN(d) || d == -1) {
-					dosages1[s][v] = -1;
-				} else {
-					dosages1[s][v] = d;
-				}
-			}
-
-			VCFVariant var2 = allvariants[1][v];
-			dosage = var2.getDosage();
-			for (int s = 0; s < samples2.size(); s++) {
-				double d = dosage[s][0];
-				if (Double.isNaN(d) || d == -1) {
-					dosages2[s][v] = -1;
-				} else {
-					dosages2[s][v] = d;
-				}
-			}
-		}
-
-		System.out.println("Submitting correlation jobs..");
-		ArrayList<String> pairsBiggerThan9 = new ArrayList<>();
-		CompletionService<Triple<Integer, Integer, Double>> jobHandler = new ExecutorCompletionService<>(threadPool);
-		int submitted = 0;
-		// correlate the samples
-		TextFile out = new TextFile(outfile + ".txt.gz", TextFile.W);
-		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
-		out.writeln(header);
-		ProgressBar pb = new ProgressBar((samples1.size() * samples2.size()), "Correlating samples");
-		int returned = 0;
-		for (int i = 0; i < samples1.size(); i++) {
-			double[] dosage1 = dosages1[i];
-			for (int j = 0; j < samples2.size(); j++) {
-				double[] dosage2 = dosages2[j];
-				jobHandler.submit(new CorrelationTask(i, j, dosage1, dosage2));
-
-				submitted++;
-				if (submitted % 1000000 == 0) {
-					System.out.println(submitted + " submitted. clearing queue");
-					while (returned < submitted) {
-						try {
-							Future<Triple<Integer, Integer, Double>> future = jobHandler.take();
-							Triple<Integer, Integer, Double> triple = future.get();
-							int i2 = triple.getLeft();
-							int j2 = triple.getMiddle();
-							double corr = triple.getRight();
-							if (corr > 0.9) {
-								pairsBiggerThan9.add(samples1.get(i2) + "\t" + samples2.get(j2) + "\t" + corr + "\t" + geneticSimilarity.get(i2, j2) + "\t" + sharedgenotypes.get(i2, j2));
-							}
-							correlationmatrix.set(i2, j2, corr);
-							out.writeln(samples1.get(i2) + "\t" + samples2.get(j2) + "\t" + corr + "\t" + geneticSimilarity.get(i2, j2) + "\t" + sharedgenotypes.get(i2, j2));
-							returned++;
-
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							e.printStackTrace();
-						}
-					}
-
-					System.out.println("Done clearing queue. " + returned + " returned");
-					System.out.println(pairsBiggerThan9.size() + " have corr > 0.9 sofar");
-					pb.set(returned);
-					pb.print();
-				}
-			}
-		}
-		System.out.println("Done submitting correlation jobs..");
-
-		while (returned < submitted) {
-			try {
-				Future<Triple<Integer, Integer, Double>> future = jobHandler.take();
-				Triple<Integer, Integer, Double> triple = future.get();
-				int i = triple.getLeft();
-				int j = triple.getMiddle();
-				double corr = triple.getRight();
-				if (corr > 0.9) {
-					pairsBiggerThan9.add(samples1.get(i) + "\t" + samples2.get(j) + "\t" + corr + "\t" + geneticSimilarity.get(i, j) + "\t" + sharedgenotypes.get(i, j));
-				}
-				correlationmatrix.set(i, j, corr);
-				out.writeln(samples1.get(i) + "\t" + samples2.get(j) + "\t" + corr + "\t" + geneticSimilarity.get(i, j) + "\t" + sharedgenotypes.get(i, j));
-				returned++;
-				pb.iterate();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-		}
-		out.close();
-		pb.close();
-		System.out.println("Done correlating..");
+		DoubleMatrix2D sharedgenotypes = similarity.getMiddle();
+		DoubleMatrix2D correlationmatrix = similarity.getRight();
 
 		writeMatrix(geneticSimilarity, samples1.toArray(new String[0]), samples2.toArray(new String[0]), outfile + "geneticsim.txt.gz");
 		writeMatrix(correlationmatrix, samples1.toArray(new String[0]), samples2.toArray(new String[0]), outfile + "correlations.txt.gz");
 		writeMatrix(sharedgenotypes, samples1.toArray(new String[0]), samples2.toArray(new String[0]), outfile + "sharedgenotypes.txt.gz");
 
-		TextFile out2 = new TextFile(outfile + "biggerthanthreshold.txt", TextFile.W);
-		out2.writeln(header);
-		out2.writeList(pairsBiggerThan9);
-		out2.close();
+
+		// make two dosage matrices
+		System.out.println("Submitting correlation jobs..");
+		// correlate the samples
+
+		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
+		TextFile out = new TextFile(outfile + "pairsAboveCorrelationThreshold0.25.txt", TextFile.W);
+		out.writeln(header);
+		for (int i = 0; i < samples1.size(); i++) {
+			for (int j = 0; j < samples2.size(); j++) {
+				if (correlationmatrix.get(i, j) > 0.25) {
+					out.writeln(samples1.get(i) + "\t" + samples2.get(j) + "\t" + correlationmatrix.get(i, j) + "\t" + geneticSimilarity.get(i, j) + "\t" + sharedgenotypes.get(i, j));
+				}
+			}
+		}
+		out.close();
+
 
 		TextFile out3 = new TextFile(outfile + "toppairpersample1.txt", TextFile.W);
 		out3.writeln(header);
@@ -337,50 +310,64 @@ public class GeneticSimilarity {
 		header += "\t" + Strings.concat(samplesCols, Strings.tab);
 		out.writeln(header);
 		DecimalFormat f = new DecimalFormat("#.###");
+		ProgressBar pb = new ProgressBar(geneticSimilarity.rows(), "printing matrix");
 		for (int r = 0; r < geneticSimilarity.rows(); r++) {
 			DoubleMatrix1D row = geneticSimilarity.viewRow(r);
 			double[] rowarr = row.toArray();
 			out.writeln(samplesRows[r] + "\t" + Strings.concat(rowarr, Strings.tab, f));
+
+			pb.iterate();
 		}
 		out.close();
-
+		pb.close();
 	}
 
-	private Pair<ArrayList<String>, ArrayList<VCFVariant>> loadData(String vcf, HashSet<String> hashSetVariantsToExclude) throws IOException {
-		VCFGenotypeData data1 = new VCFGenotypeData(vcf);
-		ArrayList<String> samples = data1.getSamples();
-		data1.close();
-		TextFile tf = new TextFile(vcf, TextFile.R);
-		String ln = tf.readLine();
+	private Pair<ArrayList<String>, ArrayList<VCFVariant>> loadData(String vcffileloc, HashSet<String> hashSetVariantsToExclude) throws IOException {
+
+		String[] files = vcffileloc.split(",");
+
+		ArrayList<String> samples = null;
 		ArrayList<VCFVariant> variants = new ArrayList<>();
-		int lnsparsed = 0;
-		System.out.println("Parsing: " + vcf);
-		while (ln != null) {
-			if (!ln.startsWith("#")) {
+		for (String file : files) {
+			System.out.println("Parsing: " + file);
+			VCFGenotypeData data1 = new VCFGenotypeData(file);
+			if (samples == null) {
+				samples = data1.getSamples();
+			}
+			data1.close();
 
-				String substr = ln;
-				if (ln.length() > 150) {
-					ln.substring(0, 150);
-				}
-				String[] elems = substr.split("\t");
-				String varId = elems[2];
-				if (!hashSetVariantsToExclude.contains(varId)) {
-					VCFVariant variant = new VCFVariant(ln);
-					if (variant.isAutosomal() && variant.isBiallelic() && variant.getMAF() > 0.05 && variant.getHwep() > 0.001) {
-						variants.add(variant);
+			TextFile tf = new TextFile(file, TextFile.R);
+			String ln = tf.readLine();
+
+			int lnsparsed = 0;
+			while (ln != null) {
+				if (!ln.startsWith("#")) {
+
+					String substr = ln;
+					if (ln.length() > 150) {
+						ln.substring(0, 150);
 					}
-				}
+					String[] elems = substr.split("\t");
+					String varId = elems[2];
+					if (!hashSetVariantsToExclude.contains(varId)) {
+						VCFVariant variant = new VCFVariant(ln);
+						if (variant.isAutosomal() && variant.isBiallelic() && variant.getMAF() > 0.05 && variant.getHwep() > 0.001) {
+							variants.add(variant);
+						}
+					}
 
+				}
+				lnsparsed++;
+				if (lnsparsed % 1000 == 0) {
+					System.out.print(lnsparsed + " lines parsed. " + variants.size() + " in memory\r");
+				}
+				ln = tf.readLine();
 			}
-			lnsparsed++;
-			if (lnsparsed % 1000 == 0) {
-				System.out.print(lnsparsed + " lines parsed. " + variants.size() + " in memory\r");
-			}
-			ln = tf.readLine();
+			tf.close();
+			System.out.println();
+			System.out.println("Done parsing: " + file);
+			System.out.println("");
 		}
-		tf.close();
-		System.out.println("");
-		System.out.println("Done.");
 		return new Pair<>(samples, variants);
 	}
 

@@ -799,8 +799,8 @@ public class VCFVariant {
 						nrAllelesObservedLocal[gt1]++;
 						nrAllelesObservedLocal[gt2]++;
 					} else if (individualIsFemale == null) {
-//						System.err.println("ERROR: cannot calculate chr X MAF if gender information unavailable.");
-//						throw new IllegalArgumentException("ERROR: cannot calculate chr X MAF if gender information unavailable.");
+//						System.err.println("ERROR: cannot calculateWithinDataset chr X MAF if gender information unavailable.");
+//						throw new IllegalArgumentException("ERROR: cannot calculateWithinDataset chr X MAF if gender information unavailable.");
 					}
 				} else if (chromosome.equals(Chromosome.Y)) {
 					if (ignoregender || (individualIsFemale != null && individualIsFemale[i] != null && !individualIsFemale[i])) {
@@ -808,7 +808,7 @@ public class VCFVariant {
 						nrAllelesObservedLocal[gt1]++;
 						nrAllelesObservedLocal[gt2]++;
 					} else if (individualIsFemale == null) {
-//						System.err.println("ERROR: cannot calculate chr Y MAF if gender information unavailable.");
+//						System.err.println("ERROR: cannot calculateWithinDataset chr Y MAF if gender information unavailable.");
 					}
 				} else {
 					nrCalled++;

@@ -811,14 +811,21 @@ public class Main {
 
 			} else if (cmd.hasOption("similarity")) {
 
-				if (cmd.hasOption("i") && cmd.hasOption("i2") && cmd.hasOption("l") && cmd.hasOption("o")) {
+				if (cmd.hasOption("i") && cmd.hasOption("l") && cmd.hasOption("o")) {
 					GeneticSimilarity sim = new GeneticSimilarity();
-					sim.determineGeneticSimilarityBetweenDatasets(cmd.getOptionValue("l"),
-							cmd.getOptionValue("i"),
-							cmd.getOptionValue("i2"),
-							cmd.getOptionValue("o"));
+					if (cmd.hasOption("i2")) {
+						sim.determineGeneticSimilarityBetweenDatasets(cmd.getOptionValue("l"),
+								cmd.getOptionValue("i"),
+								cmd.getOptionValue("i2"),
+								cmd.getOptionValue("o"));
+					} else {
+						sim.determineGeneticSimilaritySingleDataset(cmd.getOptionValue("l"),
+								cmd.getOptionValue("i"),
+								cmd.getOptionValue("o"));
+					}
+
 				} else {
-					System.out.println("Use -i, -i2, -l and -o for --similarity");
+					System.out.println("Use -i, [-i2], -l and -o for --similarity");
 				}
 
 			} else if (cmd.hasOption("plotrsq")) {

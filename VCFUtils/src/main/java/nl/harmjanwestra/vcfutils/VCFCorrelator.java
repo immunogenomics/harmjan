@@ -247,7 +247,7 @@ public class VCFCorrelator {
 							if (x.length > 0 && y.length > 0) {
 								double r = JSci.maths.ArrayMath.correlation(x, y);
 
-								// calculate betas
+								// calculateWithinDataset betas
 
 								double[] coeff = Regression.getLinearRegressionCoefficients(x, y);
 								double beta = coeff[0];
