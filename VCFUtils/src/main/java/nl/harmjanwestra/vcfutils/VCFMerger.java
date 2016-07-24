@@ -25,11 +25,9 @@ import java.util.*;
 public class VCFMerger {
 
 
-	public void concatenate(String listFile, String out) throws IOException {
+	public void concatenate(String vcf, String out) throws IOException {
 
-		TextFile tf = new TextFile(listFile, TextFile.R);
-		String[] list = tf.readAsArray();
-		tf.close();
+		String[] list = vcf.split(",");
 
 
 		String tmp = out + "_tmp1.vcf.gz";

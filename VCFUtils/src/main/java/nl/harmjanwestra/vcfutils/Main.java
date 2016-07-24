@@ -138,6 +138,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Filter for variants")
+				.longOpt("filtervariants")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Reintroduce unimputed variants (can also be used to mergecheese two VCF files)")
 				.longOpt("reintroduce")
 				.build();
@@ -753,6 +759,20 @@ public class Main {
 				}
 
 
+			} else if (cmd.hasOption("filtervariants")) {
+				boolean exclude = false;
+				if (cmd.hasOption("exclude")) {
+					exclude = true;
+				}
+				String list = null;
+				if (cmd.hasOption("list")) {
+					list = cmd.getOptionValue("list");
+				} else {
+					System.out.println("Use --list with --filtervariants");
+					System.exit(-1);
+				}
+				VCFVariantFilter filter = new VCFVariantFilter();
+				filter.run(input, out, list, exclude);
 			} else if (cmd.hasOption("filtergenotype")) {
 
 
