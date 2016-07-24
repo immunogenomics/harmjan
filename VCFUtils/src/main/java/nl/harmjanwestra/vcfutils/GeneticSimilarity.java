@@ -26,30 +26,30 @@ public class GeneticSimilarity {
 
 
 	public static void main(String[] args) {
-		GeneticSimilarity sim = new GeneticSimilarity();
-		String listofvariants = "/Data/tmp/2016-07-22/plink.prune.out";
-		String vcf1 = "/Data/ImmunoChip/RA/2015-09-23-IncX/ES/genotypes-filtered-sorted.vcf.gz";
-		String vcf2 = "/Data/ImmunoChip/RA/2015-09-23-IncX/NL/genotypes-filtered-sorted.vcf.gz";
-		String outfile = "/Data/tmp/2016-07-22/debug";
-		try {
-			sim.determineGeneticSimilaritySingleDataset(listofvariants, vcf1, outfile);
-//			sim.determineGeneticSimilarityBetweenDatasets(listofvariants, vcf1, vcf2, outfile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		GeneticSimilarity sim = new GeneticSimilarity();
+//		String listofvariants = "/Data/tmp/2016-07-22/plink.prune.out";
+//		String vcf1 = "/Data/ImmunoChip/RA/2015-09-23-IncX/ES/genotypes-filtered-sorted.vcf.gz";
+//		String vcf2 = "/Data/ImmunoChip/RA/2015-09-23-IncX/NL/genotypes-filtered-sorted.vcf.gz";
+//		String outfile = "/Data/tmp/2016-07-22/debug";
+//		try {
+//			sim.determineGeneticSimilaritySingleDataset(listofvariants, vcf1, outfile);
+////			sim.determineGeneticSimilarityBetweenDatasets(listofvariants, vcf1, vcf2, outfile);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
-	public void determineGeneticSimilaritySingleDataset(String listOfVariantsToExclude, String vcf1, String outfile) throws IOException {
+	public void determineGeneticSimilaritySingleDataset(String listOfVariants, boolean exclude, String vcf1, String outfile) throws IOException {
 		// read list of variants
-		TextFile tf1 = new TextFile(listOfVariantsToExclude, TextFile.R);
+		TextFile tf1 = new TextFile(listOfVariants, TextFile.R);
 		ArrayList<String> listOfVariantsToExcludeArr = tf1.readAsArrayList();
 		tf1.close();
-		HashSet<String> hashSetVariantsToExclude = new HashSet<String>();
-		hashSetVariantsToExclude.addAll(listOfVariantsToExcludeArr);
+		HashSet<String> hashSetVariants = new HashSet<String>();
+		hashSetVariants.addAll(listOfVariantsToExcludeArr);
 
 		// load the variants for ds1
 		System.out.println("VCF input: " + vcf1);
-		Pair<ArrayList<String>, ArrayList<VCFVariant>> data1 = loadData(vcf1, hashSetVariantsToExclude);
+		Pair<ArrayList<String>, ArrayList<VCFVariant>> data1 = loadData(vcf1, hashSetVariants, exclude);
 		ArrayList<String> samples1 = data1.getLeft();
 		ArrayList<VCFVariant> variants1 = data1.getRight();
 		System.out.println(samples1.size() + " samples in vcf1");
@@ -104,10 +104,10 @@ public class GeneticSimilarity {
 		out3.close();
 	}
 
-	public void determineGeneticSimilarityBetweenDatasets(String listOfVariantsToExclude, String vcf1, String vcf2, String outfile) throws IOException {
+	public void determineGeneticSimilarityBetweenDatasets(String listOfVariantsFile, boolean exclude, String vcf1, String vcf2, String outfile) throws IOException {
 
 		// read list of variants
-		TextFile tf1 = new TextFile(listOfVariantsToExclude, TextFile.R);
+		TextFile tf1 = new TextFile(listOfVariantsFile, TextFile.R);
 		ArrayList<String> listOfVariantsToExcludeArr = tf1.readAsArrayList();
 		tf1.close();
 		HashSet<String> hashSetVariantsToExclude = new HashSet<String>();
@@ -116,13 +116,13 @@ public class GeneticSimilarity {
 		// load the variants for ds1
 		System.out.println("VCF1: " + vcf1);
 		System.out.println("VCF2: " + vcf2);
-		Pair<ArrayList<String>, ArrayList<VCFVariant>> data1 = loadData(vcf1, hashSetVariantsToExclude);
+		Pair<ArrayList<String>, ArrayList<VCFVariant>> data1 = loadData(vcf1, hashSetVariantsToExclude, exclude);
 		ArrayList<String> samples1 = data1.getLeft();
 		ArrayList<VCFVariant> variants1 = data1.getRight();
 		System.out.println(samples1.size() + " samples in vcf1");
 		System.out.println(variants1.size() + " variants in vcf1");
 
-		Pair<ArrayList<String>, ArrayList<VCFVariant>> data2 = loadData(vcf2, hashSetVariantsToExclude);
+		Pair<ArrayList<String>, ArrayList<VCFVariant>> data2 = loadData(vcf2, hashSetVariantsToExclude, exclude);
 		ArrayList<String> samples2 = data2.getLeft();
 		ArrayList<VCFVariant> variants2 = data2.getRight();
 		System.out.println(samples2.size() + " samples in vcf2");
@@ -322,7 +322,7 @@ public class GeneticSimilarity {
 		pb.close();
 	}
 
-	private Pair<ArrayList<String>, ArrayList<VCFVariant>> loadData(String vcffileloc, HashSet<String> hashSetVariantsToExclude) throws IOException {
+	private Pair<ArrayList<String>, ArrayList<VCFVariant>> loadData(String vcffileloc, HashSet<String> hashsetVariants, boolean exclude) throws IOException {
 
 		String[] files = vcffileloc.split(",");
 
@@ -349,13 +349,15 @@ public class GeneticSimilarity {
 					}
 					String[] elems = substr.split("\t");
 					String varId = elems[2];
-					if (!hashSetVariantsToExclude.contains(varId)) {
+					if ((exclude && !hashsetVariants.contains(varId))
+							||
+							(!exclude && hashsetVariants.contains(varId))
+							) {
 						VCFVariant variant = new VCFVariant(ln);
 						if (variant.isAutosomal() && variant.isBiallelic() && variant.getMAF() > 0.05 && variant.getHwep() > 0.001) {
 							variants.add(variant);
 						}
 					}
-
 				}
 				lnsparsed++;
 				if (lnsparsed % 1000 == 0) {

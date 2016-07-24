@@ -31,7 +31,7 @@ public class VCFVariantFilter {
 			} else {
 				String substr = ln.substring(0, 200);
 				String[] elems = substr.split("\t");
-				if( (exclude && !allowedSet.contains(elems[1])) || (!exclude && allowedSet.contains(elems[1]))){
+				if( (exclude && !allowedSet.contains(elems[2])) || (!exclude && allowedSet.contains(elems[2]))){
 					vcfout.writeln(ln);
 				}
 			}

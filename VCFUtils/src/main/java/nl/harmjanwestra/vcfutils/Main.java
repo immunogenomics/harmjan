@@ -813,13 +813,19 @@ public class Main {
 
 				if (cmd.hasOption("i") && cmd.hasOption("l") && cmd.hasOption("o")) {
 					GeneticSimilarity sim = new GeneticSimilarity();
+					boolean exclude = false;
+					if (cmd.hasOption("exclude")) {
+						exclude = true;
+					}
 					if (cmd.hasOption("i2")) {
 						sim.determineGeneticSimilarityBetweenDatasets(cmd.getOptionValue("l"),
+								exclude,
 								cmd.getOptionValue("i"),
 								cmd.getOptionValue("i2"),
 								cmd.getOptionValue("o"));
 					} else {
 						sim.determineGeneticSimilaritySingleDataset(cmd.getOptionValue("l"),
+								exclude,
 								cmd.getOptionValue("i"),
 								cmd.getOptionValue("o"));
 					}
