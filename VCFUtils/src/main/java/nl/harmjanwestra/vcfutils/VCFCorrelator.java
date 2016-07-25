@@ -261,6 +261,7 @@ public class VCFCorrelator {
 
 								if (Double.isNaN(r)) {
 									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
+									System.out.println("NaN correlation?");
 								} else {
 									double rsq = r * r;
 									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + beta + "\t" + se + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
@@ -356,7 +357,7 @@ public class VCFCorrelator {
 		for (int i = 0; i < gprobs1.length; i++) {
 			double d = gprobs1[i][0];
 			double d2 = gprobs2[i][0];
-			if (Double.isNaN(d) || Double.isNaN(d2)) {
+			if (Double.isNaN(d) || Double.isNaN(d2) || d == -1 || d2 == -1) {
 				nrNull++;
 			}
 		}
@@ -367,7 +368,7 @@ public class VCFCorrelator {
 		for (int i = 0; i < gprobs1.length; i++) {
 			double d = gprobs1[i][0];
 			double d2 = gprobs2[i][0];
-			if (!Double.isNaN(d) && !Double.isNaN(d2)) {
+			if (!Double.isNaN(d) && !Double.isNaN(d2) && d != -1 && d2 != -1) {
 				out1[ctr] = gprobs1[i];
 				out2[ctr] = gprobs2[i];
 				ctr++;

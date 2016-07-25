@@ -580,7 +580,11 @@ public class VCFVariant {
 		for (int i = 0; i < genotypeAlleles.rows(); i++) {
 			for (int j = 0; j < genotypeAlleles.columns(); j++) {
 				int allele = (int) genotypeAlleles.getQuick(i, j);
-				if (allele > 0) {
+				if (allele == -1) {
+					for (int q = 0; q < gtdosage.columns(); q++) {
+						gtdosage.setQuick(i, q, -1);
+					}
+				} else if (allele > 0) {
 					allele -= 1;
 					double ct = gtdosage.getQuick(i, allele);
 					ct++;
