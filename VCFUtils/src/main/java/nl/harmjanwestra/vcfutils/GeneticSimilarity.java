@@ -41,6 +41,7 @@ public class GeneticSimilarity {
 
 	public void determineGeneticSimilaritySingleDataset(String listOfVariants, boolean exclude, String vcf1, String outfile) throws IOException {
 		// read list of variants
+
 		TextFile tf1 = new TextFile(listOfVariants, TextFile.R);
 		ArrayList<String> listOfVariantsToExcludeArr = tf1.readAsArrayList();
 		tf1.close();
@@ -54,15 +55,21 @@ public class GeneticSimilarity {
 		ArrayList<VCFVariant> variants1 = data1.getRight();
 		System.out.println(samples1.size() + " samples in vcf1");
 		System.out.println(variants1.size() + " variants in vcf1");
+		TextFile log = new TextFile(outfile + "-log.txt", TextFile.W);
+		log.writeln(samples1.size() + " samples in vcf1");
+		log.writeln(variants1.size() + " variants in vcf1");
+		log.close();
 
 		VCFVariant[] allvariants = variants1.toArray(new VCFVariant[0]);
 		nl.harmjanwestra.utilities.vcf.GeneticSimilarity sim = new nl.harmjanwestra.utilities.vcf.GeneticSimilarity();
 		int cores = Runtime.getRuntime().availableProcessors();
 		System.out.println("Detected " + cores + " Processors ");
-		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
 
+		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
 		sim.calculateWithinDataset(allvariants, threadPool);
 		Triple<DoubleMatrix2D, DoubleMatrix2D, DoubleMatrix2D> similarity = sim.calculateWithinDataset(allvariants, threadPool);
+		threadPool.shutdown();
+
 		DoubleMatrix2D geneticSimilarity = similarity.getLeft();
 		DoubleMatrix2D sharedgenotypes = similarity.getMiddle();
 		DoubleMatrix2D correlationmatrix = similarity.getRight();
@@ -76,7 +83,7 @@ public class GeneticSimilarity {
 		// correlate the samples
 
 		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
-		TextFile out = new TextFile(outfile + "pairsAboveCorrelationThreshold0.25.txt", TextFile.W);
+		TextFile out = new TextFile(outfile + "pairsAboveCorrelationThreshold0.25.txt.gz", TextFile.W);
 		out.writeln(header);
 		for (int i = 0; i < samples1.size(); i++) {
 			for (int j = i; j < samples1.size(); j++) {

@@ -26,7 +26,7 @@ public class PlotterImpQual {
 	int width = 640;
 	int height = 480;
 	boolean onlyIc = false;
-	boolean windows = true;
+	boolean windows = false;
 
 	public static void main(String[] args) {
 
@@ -97,6 +97,7 @@ public class PlotterImpQual {
 		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-recode-stats.vcf.gz";
 		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
 		outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-plotsImpQual0.3/";
+		outdir = "/Data/tmp/2016-07-22/tmp/t1d";
 
 
 		if (windows) {
@@ -385,14 +386,14 @@ public class PlotterImpQual {
 
 
 	public void plot1(String[] files, String[] labels, String out,
-	                  boolean includeIndels,
-	                  boolean plotvaluesAboveMafThreshold,
-	                  Double mafthreshold,
-	                  double infoscorethreshold,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions,
-	                  boolean plotlabels,
-	                  Integer maxy
+					  boolean includeIndels,
+					  boolean plotvaluesAboveMafThreshold,
+					  Double mafthreshold,
+					  double infoscorethreshold,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions,
+					  boolean plotlabels,
+					  Integer maxy
 
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
@@ -535,13 +536,13 @@ public class PlotterImpQual {
 	}
 
 	public void plot2(String[] files, String[] datasetLabels, String out,
-	                  boolean includeIndels,
-	                  boolean usemafthreshold,
-	                  boolean requireabovemaf,
-	                  double mafthreshold,
-	                  boolean plotOnlyImputed,
-	                  HashSet<String> variantHash,
-	                  ArrayList<Feature> bedregions
+					  boolean includeIndels,
+					  boolean usemafthreshold,
+					  boolean requireabovemaf,
+					  double mafthreshold,
+					  boolean plotOnlyImputed,
+					  HashSet<String> variantHash,
+					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 2: x-axis maf, y-axis correlation (boxplot)
 

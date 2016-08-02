@@ -1,6 +1,7 @@
 package nl.harmjanwestra.txtr;
 
 import org.apache.commons.cli.*;
+import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
@@ -162,33 +163,38 @@ public class TXTr {
 		TextFile out = new TextFile(output, TextFile.W);
 		int fctr = 0;
 		for (String file : files) {
-			TextFile in = new TextFile(file, TextFile.R);
-			String ln = in.readLine();
-			int lnctr = 0;
-			while (ln != null) {
-				if (multilinehashtagheader) {
-					if (ln.startsWith("#")) {
-						if (fctr == 0) {
+			if (Gpio.exists(file)) {
+				TextFile in = new TextFile(file, TextFile.R);
+				String ln = in.readLine();
+				int lnctr = 0;
+				while (ln != null) {
+					if (multilinehashtagheader) {
+						if (ln.startsWith("#")) {
+							if (fctr == 0) {
+								out.writeln(ln);
+							}
+						} else {
 							out.writeln(ln);
 						}
 					} else {
-						out.writeln(ln);
+						if (!headerwritten && lnctr == 0) {
+							out.writeln(ln);
+							headerwritten = true;
+						} else if (lnctr > 0) {
+							out.writeln(ln);
+						}
 					}
-				} else {
-					if (!headerwritten && lnctr == 0) {
-						out.writeln(ln);
-						headerwritten = true;
-					} else if (lnctr > 0) {
-						out.writeln(ln);
-					}
+
+					ln = in.readLine();
+					lnctr++;
 				}
 
-				ln = in.readLine();
-				lnctr++;
+				in.close();
+				fctr++;
+			} else {
+				System.out.println("Warning - could not find file: " + file);
 			}
 
-			in.close();
-			fctr++;
 		}
 		out.close();
 

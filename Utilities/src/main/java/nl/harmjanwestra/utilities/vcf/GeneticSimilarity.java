@@ -140,7 +140,7 @@ public class GeneticSimilarity {
 
 		long nrSubmitted = 0;
 		CompletionService<Triple<Integer, Integer, Triple<Double, Double, Double>>> jobHandler = new ExecutorCompletionService<>(service);
-		ProgressBar pb2 = new ProgressBar(nrInds1 * nrInds1, "Calculating distances");
+		ProgressBar pb2 = new ProgressBar(((nrInds1 * nrInds1) - nrInds1) / 2, "Calculating distances");
 		long returned = 0;
 		for (int i = 0; i < nrInds1; i++) {
 			for (int j = i; j < nrInds1; j++) {
@@ -157,7 +157,7 @@ public class GeneticSimilarity {
 
 				nrSubmitted++;
 				if (nrSubmitted % 1000000 == 0) {
-					System.out.println("Clearing buffer..... " + nrSubmitted + " / " + (nrInds1 * nrInds1));
+
 					while (returned < nrSubmitted) {
 
 						try {
@@ -177,7 +177,7 @@ public class GeneticSimilarity {
 							geneticSimilarityCorrelation.setQuick(j1, i1, correlation);
 
 							returned++;
-
+							pb2.iterate();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						} catch (ExecutionException e) {
@@ -185,10 +185,6 @@ public class GeneticSimilarity {
 						}
 
 					}
-
-					System.out.println("Done clearing buffer.. " + returned);
-					pb2.set(returned);
-					pb2.print();
 				}
 			}
 		}
@@ -270,11 +266,9 @@ public class GeneticSimilarity {
 			int call = 0;
 			for (int i = 0; i < nrInds1; i++) {
 				if (genotypeAlleles1.getQuick(i, 0) != -1) {
-					double genotype0I = 0;
-					if (0 == genotypeAlleles1.getQuick(i, 0)) genotype0I += .5;
-					if (0 == genotypeAlleles1.getQuick(i, 1)) genotype0I += .5;
-					alleleFreq0 += genotype0I;
-					genotypes1.setQuick(i, snp, genotype0I);
+					double gt = genotypeAlleles1.getQuick(i, 0) + genotypeAlleles1.getQuick(i, 1);
+					alleleFreq0 += gt;
+					genotypes1.setQuick(i, snp, gt);
 					call++;
 				} else {
 					genotypes1.setQuick(i, snp, -1);
@@ -286,11 +280,9 @@ public class GeneticSimilarity {
 
 				for (int i = 0; i < nrInds2; i++) {
 					if (genotypeAlleles2.getQuick(i, 0) != -1) {
-						double genotype0I = 0;
-						if (0 == genotypeAlleles2.getQuick(i, 0)) genotype0I += .5;
-						if (0 == genotypeAlleles2.getQuick(i, 1)) genotype0I += .5;
-						alleleFreq0 += genotype0I;
-						genotypes2.setQuick(i, snp, genotype0I);
+						double gt = genotypeAlleles2.getQuick(i, 0) + genotypeAlleles2.getQuick(i, 1);
+						alleleFreq0 += gt;
+						genotypes2.setQuick(i, snp, gt);
 						call++;
 					} else {
 						genotypes2.setQuick(i, snp, -1);
@@ -300,7 +292,7 @@ public class GeneticSimilarity {
 
 			double snpCallRate = call / (nrInds1 + nrInds2);
 			callrates[snp] = snpCallRate;
-			alleleFreqs[snp] = alleleFreq0 / call;
+			alleleFreqs[snp] = alleleFreq0 / (call * 2);
 			pb1.set(snp);
 		}
 		pb1.close();
@@ -357,8 +349,8 @@ public class GeneticSimilarity {
 				}
 
 				if (genotype0I != -1 && genotype0J != -1) {
-					x[snp] = genotype0I * 2;
-					y[snp] = genotype0J * 2;
+					x[snp] = genotype0I;
+					y[snp] = genotype0J;
 				} else {
 					x[snp] = -1;
 					y[snp] = -1;
@@ -366,13 +358,13 @@ public class GeneticSimilarity {
 				}
 
 				if (!Double.isNaN(af) && cr >= 0.10) {
-					double denominator = af * (1.0d - af);
+					double denominator = 2 * (af * (1.0d - af));
 					if (!Double.isNaN(denominator) && denominator > 0) {
 
 
 						if (genotype0I != -1 && genotype0J != -1) {
-							double g01 = genotype0I - af;
-							double g02 = genotype0J - af;
+							double g01 = genotype0I - (2 * af);
+							double g02 = genotype0J - (2 * af);
 
 							double fhat = (g01 * g02) / denominator;
 							sum += fhat;
