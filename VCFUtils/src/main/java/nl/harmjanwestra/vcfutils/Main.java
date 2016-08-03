@@ -263,6 +263,26 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Filter matrix (for --similarity)")
+				.longOpt("filtermatrix")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Generic threshold (for --similarity --filtermatrix)")
+				.argName("double")
+				.longOpt("threshold")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Transpose matrix (for --similarity --filtermatrix)")
+				.longOpt("transpose")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.desc("RSquared threshold")
@@ -810,28 +830,36 @@ public class Main {
 				filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);
 
 			} else if (cmd.hasOption("similarity")) {
-
-				if (cmd.hasOption("i") && cmd.hasOption("l") && cmd.hasOption("o")) {
-					GeneticSimilarity sim = new GeneticSimilarity();
-					boolean exclude = false;
-					if (cmd.hasOption("exclude")) {
-						exclude = true;
-					}
-					if (cmd.hasOption("i2")) {
-						sim.determineGeneticSimilarityBetweenDatasets(cmd.getOptionValue("l"),
-								exclude,
-								cmd.getOptionValue("i"),
-								cmd.getOptionValue("i2"),
-								cmd.getOptionValue("o"));
+				GeneticSimilarity sim = new GeneticSimilarity();
+				if (cmd.hasOption("filtermatrix")) {
+					if (cmd.hasOption("i") && cmd.hasOption("o") && cmd.hasOption("threshold")) {
+						Double t = Double.parseDouble(cmd.getOptionValue("threshold"));
+						sim.filterMatrix(cmd.getOptionValue("i"), t, cmd.hasOption("transpose"), cmd.getOptionValue("o"));
 					} else {
-						sim.determineGeneticSimilaritySingleDataset(cmd.getOptionValue("l"),
-								exclude,
-								cmd.getOptionValue("i"),
-								cmd.getOptionValue("o"));
+						System.out.println("Use -i, -o, and --threshold for --filtermatrix");
 					}
-
 				} else {
-					System.out.println("Use -i, [-i2], -l and -o for --similarity");
+					if (cmd.hasOption("i") && cmd.hasOption("l") && cmd.hasOption("o")) {
+						boolean exclude = false;
+						if (cmd.hasOption("exclude")) {
+							exclude = true;
+						}
+						if (cmd.hasOption("i2")) {
+							sim.determineGeneticSimilarityBetweenDatasets(cmd.getOptionValue("l"),
+									exclude,
+									cmd.getOptionValue("i"),
+									cmd.getOptionValue("i2"),
+									cmd.getOptionValue("o"));
+						} else {
+							sim.determineGeneticSimilaritySingleDataset(cmd.getOptionValue("l"),
+									exclude,
+									cmd.getOptionValue("i"),
+									cmd.getOptionValue("o"));
+						}
+
+					} else {
+						System.out.println("Use -i, [-i2], -l and -o for --similarity");
+					}
 				}
 
 			} else if (cmd.hasOption("plotrsq")) {
@@ -1350,13 +1378,23 @@ public class Main {
 			}
 
 
-		} catch (ParseException ex) {
+		} catch (
+				ParseException ex)
+
+		{
 			printHelp();
-		} catch (IOException e) {
+		} catch (
+				IOException e)
+
+		{
 			e.printStackTrace();
-		} catch (DocumentException e) {
+		} catch (
+				DocumentException e)
+
+		{
 			e.printStackTrace();
 		}
+
 	}
 
 

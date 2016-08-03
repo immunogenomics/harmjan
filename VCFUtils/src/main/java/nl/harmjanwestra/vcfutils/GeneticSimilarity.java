@@ -8,6 +8,7 @@ import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.math.matrix2.DoubleMatrixDataset;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
@@ -15,7 +16,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -261,11 +261,14 @@ public class GeneticSimilarity {
 
 
 		// make two dosage matrices
-		System.out.println("Submitting correlation jobs..");
 		// correlate the samples
 
 		String header = "Sample1\tSample2\tCorrelation\tGeneticSimilarity\tPercSharedGenotypes";
-		TextFile out = new TextFile(outfile + "pairsAboveCorrelationThreshold0.25.txt", TextFile.W);
+
+
+		TextFile out = new TextFile(outfile + "pairsAboveCorrelationThreshold0.25.txt.gz", TextFile.W);
+		System.out.println("Writing: " + out.getFileName());
+
 		out.writeln(header);
 		for (int i = 0; i < samples1.size(); i++) {
 			for (int j = 0; j < samples2.size(); j++) {
@@ -278,6 +281,7 @@ public class GeneticSimilarity {
 
 
 		TextFile out3 = new TextFile(outfile + "toppairpersample1.txt", TextFile.W);
+		System.out.println("Writing: " + out3.getFileName());
 		out3.writeln(header);
 		for (int i = 0; i < samples1.size(); i++) {
 			double maxx = 0;
@@ -293,6 +297,7 @@ public class GeneticSimilarity {
 		out3.close();
 
 		TextFile out4 = new TextFile(outfile + "toppairpersample2.txt", TextFile.W);
+		System.out.println("Writing: " + out4.getFileName());
 		out4.writeln(header);
 		for (int j = 0; j < samples2.size(); j++) {
 			double maxx = 0;
@@ -308,7 +313,7 @@ public class GeneticSimilarity {
 		}
 		out4.close();
 
-		threadPool.shutdown();
+
 	}
 
 	private void writeMatrix(DoubleMatrix2D geneticSimilarity, String[] samplesRows, String[] samplesCols, String s) throws IOException {
@@ -380,47 +385,124 @@ public class GeneticSimilarity {
 		return new Pair<>(samples, variants);
 	}
 
-	public class CorrelationTask implements Callable<Triple<Integer, Integer, Double>> {
 
-		int i;
-		int j;
-		double[] dosage1;
-		double[] dosage2;
+	public void filterMatrix(String matrix, double threshold, boolean transpose, String out) throws IOException {
 
-		public CorrelationTask(int i, int j, double[] dosage1, double[] dosage2) {
-			this.i = i;
-			this.j = j;
-			this.dosage1 = dosage1;
-			this.dosage2 = dosage2;
-		}
 
-		@Override
-		public Triple<Integer, Integer, Double> call() throws Exception {
-			// prune missing
-			int missinggt = 0;
-			for (int k = 0; k < dosage1.length; k++) {
-				if (dosage1[k] == -1 || dosage2[k] == -1) {
-					missinggt++;
+		DoubleMatrixDataset<String, String> ds = DoubleMatrixDataset.loadDoubleData(matrix);
+		DoubleMatrix2D d = ds.getMatrix();
+
+		TextFile outf = new TextFile(out, TextFile.W);
+
+		int nrbins = 1000;
+		int[] bins = new int[nrbins];
+
+
+		if (transpose) {
+			for (int j = 0; j < d.columns(); j++) {
+				for (int i = 0; i < d.rows(); i++) {
+					double q = d.getQuick(i, j);
+					if (q < -1) {
+						q = -1;
+					}
+					if (q > 1) {
+						q = 1;
+					}
+
+					int bin = (int) Math.floor(((q + 1) / 2) * nrbins);
+					if (bin < 0) {
+						bin = 0;
+					}
+					if (bin == nrbins) {
+						bin = nrbins - 1;
+					}
+					bins[bin]++;
+					if (d.getQuick(i, j) > threshold) {
+						outf.writeln(ds.getRowObjects().get(i) + "\t" + ds.getColObjects().get(j) + "\t" + d.getQuick(i, j));
+					}
 				}
 			}
+		} else {
+			for (int i = 0; i < d.rows(); i++) {
+				for (int j = 0; j < d.columns(); j++) {
+					double q = d.getQuick(i, j);
+					if (q < -1) {
+						q = -1;
+					}
+					if (q > 1) {
+						q = 1;
+					}
 
-			double[] x = new double[dosage1.length - missinggt];
-			double[] y = new double[dosage2.length - missinggt];
+					int bin = (int) Math.floor(((q + 1) / 2) * nrbins);
+					if (bin < 0) {
+						bin = 0;
+					}
+					if (bin == nrbins) {
+						bin = nrbins - 1;
+					}
+					bins[bin]++;
 
-			int presentgt = 0;
-			for (int k = 0; k < dosage1.length; k++) {
-				if (dosage1[k] == -1 || dosage2[k] == -1) {
-
-				} else {
-					x[presentgt] = dosage1[k];
-					y[presentgt] = dosage2[k];
-					presentgt++;
+					if (d.getQuick(i, j) > threshold) {
+						outf.writeln(ds.getRowObjects().get(i) + "\t" + ds.getColObjects().get(j) + "\t" + d.getQuick(i, j));
+					}
 				}
 			}
-
-			double corr = JSci.maths.ArrayMath.correlation(x, y);
-			return new Triple<Integer, Integer, Double>(i, j, corr);
 		}
+
+		outf.close();
+
+
+		TextFile out3 = new TextFile(out + "bins.txt", TextFile.W);
+		for (int i = 0; i < bins.length; i++) {
+
+			out3.writeln(
+					((double) -1 + (i * (2d / nrbins))) + "\t" + bins[i]);
+
+		}
+		out3.close();
 	}
+
+//	public class CorrelationTask implements Callable<Triple<Integer, Integer, Double>> {
+//
+//		int i;
+//		int j;
+//		double[] dosage1;
+//		double[] dosage2;
+//
+//		public CorrelationTask(int i, int j, double[] dosage1, double[] dosage2) {
+//			this.i = i;
+//			this.j = j;
+//			this.dosage1 = dosage1;
+//			this.dosage2 = dosage2;
+//		}
+//
+//		@Override
+//		public Triple<Integer, Integer, Double> call() throws Exception {
+//			// prune missing
+//			int missinggt = 0;
+//			for (int k = 0; k < dosage1.length; k++) {
+//				if (dosage1[k] == -1 || dosage2[k] == -1) {
+//					missinggt++;
+//				}
+//			}
+//
+//			double[] x = new double[dosage1.length - missinggt];
+//			double[] y = new double[dosage2.length - missinggt];
+//
+//			int presentgt = 0;
+//			for (int k = 0; k < dosage1.length; k++) {
+//				if (dosage1[k] == -1 || dosage2[k] == -1) {
+//
+//				} else {
+//					x[presentgt] = dosage1[k];
+//					y[presentgt] = dosage2[k];
+//					presentgt++;
+//				}
+//			}
+//
+//			double corr = JSci.maths.ArrayMath.correlation(x, y);
+//			return new Triple<Integer, Integer, Double>(i, j, corr);
+//		}
+//	}
 
 }

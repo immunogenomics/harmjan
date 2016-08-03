@@ -12,6 +12,7 @@ import java.util.concurrent.*;
 /**
  * Created by hwestra on 7/1/16.
  * Blatantly copied from Lude Franke's WGAViewerModel.java
+ * Adapted to diploid calculations
  */
 public class GeneticSimilarity {
 
@@ -44,6 +45,8 @@ public class GeneticSimilarity {
 		long returned = 0;
 		for (int i = 0; i < nrInds1; i++) {
 			for (int j = 0; j < nrInds2; j++) {
+				// this is very inefficient...
+
 				DetermineGeneticSimilarityTask t = new DetermineGeneticSimilarityTask(
 						i,
 						j,
