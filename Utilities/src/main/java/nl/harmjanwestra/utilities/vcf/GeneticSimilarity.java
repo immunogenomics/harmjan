@@ -40,80 +40,85 @@ public class GeneticSimilarity {
 
 
 		long nrSubmitted = 0;
-		CompletionService<Triple<Integer, Integer, Triple<Double, Double, Double>>> jobHandler = new ExecutorCompletionService<>(service);
-		ProgressBar pb2 = new ProgressBar(nrInds1 * nrInds2, "Calculating distances");
+		CompletionService<Pair<Integer, Triple<double[], double[], double[]>>> jobHandler = new ExecutorCompletionService<>(service);
+		ProgressBar pb2 = new ProgressBar(nrInds1, "Calculating distances");
 		long returned = 0;
 		for (int i = 0; i < nrInds1; i++) {
-			for (int j = 0; j < nrInds2; j++) {
-				// this is very inefficient...
-
-				DetermineGeneticSimilarityTask t = new DetermineGeneticSimilarityTask(
-						i,
-						j,
-						genotypes1,
-						genotypes2,
-						nrVariants,
-						alleleFreqs,
-						callrates
-				);
-				jobHandler.submit(t);
-
-				nrSubmitted++;
-				if (nrSubmitted % 1000000 == 0) {
-					System.out.println("Clearing buffer..... " + nrSubmitted + " / " + (nrInds1 * nrInds2));
-					while (returned < nrSubmitted) {
-
-						try {
-							Triple<Integer, Integer, Triple<Double, Double, Double>> future = jobHandler.take().get();
-
-							int i1 = future.getLeft();
-							int j1 = future.getMiddle();
-							double similarity = future.getRight().getLeft();
-							double simgenotypes = future.getRight().getMiddle();
-							double correlation = future.getRight().getRight();
-							geneticSimilarity.setQuick(i1, j1, similarity);
-							geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes);
-							geneticSimilarityCorrelation.setQuick(i1, j1, correlation);
 
 
-							returned++;
+			DetermineGeneticSimilarityTask t = new DetermineGeneticSimilarityTask(
+					i,
+					genotypes1,
+					genotypes2,
+					nrVariants,
+					alleleFreqs,
+					callrates
+			);
+			jobHandler.submit(t);
 
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							e.printStackTrace();
+			nrSubmitted++;
+			if (nrSubmitted % 1000 == 0) {
+				System.out.println("Clearing buffer..... " + nrSubmitted + " / " + (nrInds1 * nrInds2));
+				while (returned < nrSubmitted) {
+
+					try {
+						Pair<Integer, Triple<double[], double[], double[]>> future = jobHandler.take().get();
+
+						int i1 = future.getLeft();
+
+						double[] similarity = future.getRight().getLeft();
+						double[] simgenotypes = future.getRight().getMiddle();
+						double[] correlation = future.getRight().getRight();
+						int nrSamples = genotypes2.rows();
+						for (int j1 = 0; j1 < nrSamples; j1++) {
+							geneticSimilarity.setQuick(i1, j1, similarity[j1]);
+							geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes[j1]);
+							geneticSimilarityCorrelation.setQuick(i1, j1, correlation[j1]);
 						}
 
+
+						returned++;
+
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						e.printStackTrace();
 					}
 
-					System.out.println("Done clearing buffer.. " + returned);
-					pb2.set(returned);
-					pb2.print();
 				}
+
+				System.out.println("Done clearing buffer.. " + returned);
+				pb2.set(returned);
+				pb2.print();
 			}
+
 		}
 		System.out.println("Done submitting..");
 
 		while (returned < nrSubmitted) {
+
 			try {
-				Triple<Integer, Integer, Triple<Double, Double, Double>> future = jobHandler.take().get();
+				Pair<Integer, Triple<double[], double[], double[]>> future = jobHandler.take().get();
 
 				int i1 = future.getLeft();
-				int j1 = future.getMiddle();
-				double similarity = future.getRight().getLeft();
-				double simgenotypes = future.getRight().getMiddle();
-				double correlation = future.getRight().getRight();
-				geneticSimilarity.setQuick(i1, j1, similarity);
-				geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes);
-				geneticSimilarityCorrelation.setQuick(i1, j1, correlation);
-				pb2.iterate();
-				returned++;
 
+				double[] similarity = future.getRight().getLeft();
+				double[] simgenotypes = future.getRight().getMiddle();
+				double[] correlation = future.getRight().getRight();
+				int nrSamples = genotypes2.rows();
+				for (int j1 = 0; j1 < nrSamples; j1++) {
+					geneticSimilarity.setQuick(i1, j1, similarity[j1]);
+					geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes[j1]);
+					geneticSimilarityCorrelation.setQuick(i1, j1, correlation[j1]);
+				}
+				returned++;
+				pb2.set(returned);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
+
 		}
 		pb2.close();
 
@@ -142,14 +147,13 @@ public class GeneticSimilarity {
 
 
 		long nrSubmitted = 0;
-		CompletionService<Triple<Integer, Integer, Triple<Double, Double, Double>>> jobHandler = new ExecutorCompletionService<>(service);
+		CompletionService<Pair<Integer, Triple<double[], double[], double[]>>> jobHandler = new ExecutorCompletionService<>(service);
 		ProgressBar pb2 = new ProgressBar(((nrInds1 * nrInds1) - nrInds1) / 2, "Calculating distances");
 		long returned = 0;
 		for (int i = 0; i < nrInds1; i++) {
-			for (int j = i; j < nrInds1; j++) {
+
 				DetermineGeneticSimilarityTask t = new DetermineGeneticSimilarityTask(
 						i,
-						j,
 						genotypes1,
 						null,
 						nrVariants,
@@ -159,25 +163,24 @@ public class GeneticSimilarity {
 				jobHandler.submit(t);
 
 				nrSubmitted++;
-				if (nrSubmitted % 1000000 == 0) {
+				if (nrSubmitted % 1000 == 0) {
 
 					while (returned < nrSubmitted) {
 
 						try {
-							Triple<Integer, Integer, Triple<Double, Double, Double>> future = jobHandler.take().get();
+							Pair<Integer, Triple<double[], double[], double[]>> future = jobHandler.take().get();
 
 							int i1 = future.getLeft();
-							int j1 = future.getMiddle();
-							double similarity = future.getRight().getLeft();
-							double simgenotypes = future.getRight().getMiddle();
-							double correlation = future.getRight().getRight();
 
-							geneticSimilarity.setQuick(i1, j1, similarity);
-							geneticSimilarity.setQuick(j1, i1, similarity);
-							geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes);
-							geneticSimilaritySameGenotypes.setQuick(j1, i1, simgenotypes);
-							geneticSimilarityCorrelation.setQuick(i1, j1, correlation);
-							geneticSimilarityCorrelation.setQuick(j1, i1, correlation);
+							double[] similarity = future.getRight().getLeft();
+							double[] simgenotypes = future.getRight().getMiddle();
+							double[] correlation = future.getRight().getRight();
+							int nrSamples = genotypes1.rows();
+							for (int j1 = 0; j1 < nrSamples; j1++) {
+								geneticSimilarity.setQuick(i1, j1, similarity[j1]);
+								geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes[j1]);
+								geneticSimilarityCorrelation.setQuick(i1, j1, correlation[j1]);
+							}
 
 							returned++;
 							pb2.iterate();
@@ -189,26 +192,26 @@ public class GeneticSimilarity {
 
 					}
 				}
-			}
+
 		}
 		System.out.println("Done submitting..");
 
 		while (returned < nrSubmitted) {
 			try {
-				Triple<Integer, Integer, Triple<Double, Double, Double>> future = jobHandler.take().get();
+				Pair<Integer, Triple<double[], double[], double[]>> future = jobHandler.take().get();
 
 				int i1 = future.getLeft();
-				int j1 = future.getMiddle();
-				double similarity = future.getRight().getLeft();
-				double simgenotypes = future.getRight().getMiddle();
-				double correlation = future.getRight().getRight();
 
-				geneticSimilarity.setQuick(i1, j1, similarity);
-				geneticSimilarity.setQuick(j1, i1, similarity);
-				geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes);
-				geneticSimilaritySameGenotypes.setQuick(j1, i1, simgenotypes);
-				geneticSimilarityCorrelation.setQuick(i1, j1, correlation);
-				geneticSimilarityCorrelation.setQuick(j1, i1, correlation);
+				double[] similarity = future.getRight().getLeft();
+				double[] simgenotypes = future.getRight().getMiddle();
+				double[] correlation = future.getRight().getRight();
+				int nrSamples = genotypes1.rows();
+				for (int j1 = 0; j1 < nrSamples; j1++) {
+					geneticSimilarity.setQuick(i1, j1, similarity[j1]);
+					geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes[j1]);
+					geneticSimilarityCorrelation.setQuick(i1, j1, correlation[j1]);
+				}
+				
 				pb2.iterate();
 				returned++;
 
@@ -307,20 +310,18 @@ public class GeneticSimilarity {
 	}
 
 
-	public class DetermineGeneticSimilarityTask implements Callable<Triple<Integer, Integer, Triple<Double, Double, Double>>> {
+	public class DetermineGeneticSimilarityTask implements Callable<Pair<Integer, Triple<double[], double[], double[]>>> {
 
 		double[] alleleFreqs;
 		double[] callrates;
 
 		int i;
-		int j;
 		int nrVariants;
 		DoubleMatrix2D genotypes1;
 		DoubleMatrix2D genotypes2;
 
-		public DetermineGeneticSimilarityTask(int i, int j, DoubleMatrix2D genotypes1, DoubleMatrix2D genotypes2, int nrVariants, double[] alleleFreqs, double[] callrates) {
+		public DetermineGeneticSimilarityTask(int i, DoubleMatrix2D genotypes1, DoubleMatrix2D genotypes2, int nrVariants, double[] alleleFreqs, double[] callrates) {
 			this.i = i;
-			this.j = j;
 			this.genotypes1 = genotypes1;
 			this.genotypes2 = genotypes2;
 			this.nrVariants = nrVariants;
@@ -330,72 +331,92 @@ public class GeneticSimilarity {
 
 
 		@Override
-		public Triple<Integer, Integer, Triple<Double, Double, Double>> call() throws Exception {
+		public Pair<Integer, Triple<double[], double[], double[]>> call() throws Exception {
 
-			int nrIdentical = 0;
-			int nrGenotypes = 0;
-			double sum = 0;
+			int nrSamples2 = genotypes1.rows();
+			if (genotypes2 != null) {
+				nrSamples2 = genotypes2.rows();
+			}
 
-			double[] x = new double[nrVariants];
-			double[] y = new double[nrVariants];
+
+			double[] geneticsimilarity = new double[nrSamples2];
+			double[] correlations = new double[nrSamples2];
+			double[] sharedgenotypes = new double[nrSamples2];
+
 			int nrMissing = 0;
-			for (int snp = 0; snp < nrVariants; snp++) {
-				double af = alleleFreqs[snp];
-				double cr = callrates[snp];
+			for (int j = 0; j < nrSamples2; j++) {
+				double[] x = new double[nrVariants];
+				double[] y = new double[nrVariants];
 
-				double genotype0I = genotypes1.getQuick(i, snp);
-				double genotype0J = -1;
-				if (genotypes2 == null) {
-					genotype0J = genotypes1.getQuick(j, snp);
-				} else {
-					genotype0J = genotypes2.getQuick(j, snp);
-				}
+				int nrIdentical = 0;
+				int nrGenotypes = 0;
+				double sum = 0;
 
-				if (genotype0I != -1 && genotype0J != -1) {
-					x[snp] = genotype0I;
-					y[snp] = genotype0J;
-				} else {
-					x[snp] = -1;
-					y[snp] = -1;
-					nrMissing++;
-				}
+				for (int snp = 0; snp < nrVariants; snp++) {
+					double af = alleleFreqs[snp];
+					double cr = callrates[snp];
 
-				if (!Double.isNaN(af) && cr >= 0.10) {
-					double denominator = 2 * (af * (1.0d - af));
-					if (!Double.isNaN(denominator) && denominator > 0) {
+					double genotype0I = genotypes1.getQuick(i, snp);
+					double genotype0J = -1;
+					if (genotypes2 == null) {
+						genotype0J = genotypes1.getQuick(j, snp);
+					} else {
+						genotype0J = genotypes2.getQuick(j, snp);
+					}
+
+					if (genotype0I != -1 && genotype0J != -1) {
+						x[snp] = genotype0I;
+						y[snp] = genotype0J;
+					} else {
+						x[snp] = -1;
+						y[snp] = -1;
+						nrMissing++;
+					}
+
+					if (!Double.isNaN(af) && cr >= 0.10) {
+						double denominator = 2 * (af * (1.0d - af));
+						if (!Double.isNaN(denominator) && denominator > 0) {
 
 
-						if (genotype0I != -1 && genotype0J != -1) {
-							double g01 = genotype0I - (2 * af);
-							double g02 = genotype0J - (2 * af);
+							if (genotype0I != -1 && genotype0J != -1) {
+								double g01 = genotype0I - (2 * af);
+								double g02 = genotype0J - (2 * af);
 
-							double fhat = (g01 * g02) / denominator;
-							sum += fhat;
-							if (genotype0I == genotype0J) {
-								nrIdentical++;
+								double fhat = (g01 * g02) / denominator;
+								sum += fhat;
+								if (genotype0I == genotype0J) {
+									nrIdentical++;
+								}
+								nrGenotypes++;
 							}
-							nrGenotypes++;
 						}
 					}
 				}
-			}
 
-			// include correlation here as well?
-			double[] xn = new double[nrVariants - nrMissing];
-			double[] yn = new double[nrVariants - nrMissing];
+				// include correlation here as well?
+				double[] xn = new double[nrVariants - nrMissing];
+				double[] yn = new double[nrVariants - nrMissing];
 
-			int ctr = 0;
-			for (int s = 0; s < nrVariants; s++) {
-				if (x[s] != -1) {
-					xn[ctr] = x[s];
-					yn[ctr] = y[s];
-					ctr++;
+				int ctr = 0;
+				for (int s = 0; s < nrVariants; s++) {
+					if (x[s] != -1) {
+						xn[ctr] = x[s];
+						yn[ctr] = y[s];
+						ctr++;
+					}
 				}
+
+				PearsonsCorrelation c = new PearsonsCorrelation();
+				double corr = c.correlation(x, y);
+
+				correlations[j] = corr;
+				geneticsimilarity[j] = sum / nrGenotypes;
+				sharedgenotypes[j] = (double) nrIdentical / nrGenotypes;
+
 			}
 
-			PearsonsCorrelation c = new PearsonsCorrelation();
-			double corr = c.correlation(x, y);
-			return new Triple<Integer, Integer, Triple<Double, Double, Double>>(i, j, new Triple<>(sum / nrGenotypes, (double) nrIdentical / nrGenotypes, corr));
+
+			return new Pair<Integer, Triple<double[], double[], double[]>>(i, new Triple<>(geneticsimilarity, sharedgenotypes, correlations));
 		}
 	}
 

@@ -19,24 +19,24 @@ public class SamplePicker {
 
 	public static void main(String[] args) {
 
-		String list = "D:\\tmp\\2016-07-19\\listofsharedsamples.txt";
-		String out1 = "D:\\tmp\\2016-07-19\\listofsharedsamples-RA.txt";
-		String out2 = "D:\\tmp\\2016-07-19\\listofsharedsamples-T1D.txt";
-		String famt1d = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam";
-		String famra = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\covarmerged.txtmergedfam.fam";
+		String list = "D:\\tmp\\2016-08-03-sim\\sharedsamples-geneticsim0.2.txt";
+		String out1 = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-RA.txt";
+		String out2 = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-T1D.txt";
+		String famt1d = "D:\\tmp\\2016-08-03-sim\\phenotypes\\T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam";
+		String famra = "D:\\tmp\\2016-08-03-sim\\phenotypes\\covarmerged.txtmergedfam.fam";
 		SamplePicker s = new SamplePicker();
 		try {
 			s.picksamples(list, out1, out2);
-			list = "D:\\tmp\\2016-07-19\\sim\\RASamplex.txt";
-			String rewriteout = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-RA-rewritten.txt";
+			list = "D:\\tmp\\2016-08-03-sim\\RASamplex.txt";
+			String rewriteout = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-RA-rewritten.txt";
 			s.rewrite(out1, list, rewriteout);
-			String remainingout = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-RA-rewritten-remaining.txt";
+			String remainingout = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-RA-rewritten-remaining.txt";
 			s.writeListOfRemainingSamples(list, rewriteout, famra, remainingout);
 			System.out.println("Filtering T1D samples");
-			list = "D:\\tmp\\2016-07-19\\sim\\T1DSamplex.txt";
-			rewriteout = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-T1D-rewritten.txt";
+			list = "D:\\tmp\\2016-08-03-sim\\T1DSamplex.txt";
+			rewriteout = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-T1D-rewritten.txt";
 			s.rewrite(out2, list, rewriteout);
-			remainingout = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-T1D-rewritten-remaining.txt";
+			remainingout = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-T1D-rewritten-remaining.txt";
 			s.writeListOfRemainingSamples(list, rewriteout, famt1d, remainingout);
 		} catch (IOException e) {
 			e.printStackTrace();
