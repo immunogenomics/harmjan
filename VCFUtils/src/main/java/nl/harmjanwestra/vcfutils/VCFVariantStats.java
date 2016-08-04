@@ -36,7 +36,7 @@ public class VCFVariantStats {
 
 	}
 
-	public void run(String vcf1, String vcf2) throws IOException {
+	public void run(String vcf1, String vcf2, String list) throws IOException {
 
 		TextFile out = new TextFile(vcf2, TextFile.W);
 		System.out.println("Out: " + vcf2);
@@ -53,8 +53,37 @@ public class VCFVariantStats {
 		int returned = 0;
 		for (int i = 0; i < vcfFiles.length; i++) {
 			String file = vcfFiles[i];
+			boolean[] samplestoinclude = null;
 
+			int nroverlappingsamples = 0;
 			if (Gpio.exists(file)) {
+				if (list != null) {
+
+					System.out.println("Filtering samples using list: " + list);
+					TextFile tf = new TextFile(list, TextFile.R);
+					ArrayList<String> samples = tf.readAsArrayList();
+					tf.close();
+
+					HashSet<String> sampleSet = new HashSet<String>();
+					sampleSet.addAll(samples);
+
+					VCFGenotypeData d = new VCFGenotypeData(file);
+					ArrayList<String> allSamples = d.getSamples();
+					d.close();
+					samplestoinclude = new boolean[allSamples.size()];
+					for (int q = 0; q < allSamples.size(); q++) {
+						String s = allSamples.get(q);
+						if (sampleSet.contains(s)) {
+							samplestoinclude[q] = true;
+							nroverlappingsamples++;
+						} else {
+							samplestoinclude[q] = false;
+						}
+					}
+					System.out.println(nroverlappingsamples + " samples overlap with list");
+				}
+
+
 				TextFile tf = new TextFile(file, TextFile.R);
 				String ln = tf.readLine();
 				System.out.println("Parsing: " + file);
@@ -78,7 +107,7 @@ public class VCFVariantStats {
 
 					} else {
 
-						VariantStatsTask t = new VariantStatsTask(ln);
+						VariantStatsTask t = new VariantStatsTask(ln, samplestoinclude);
 						jobHandler.submit(t);
 						submitted++;
 
@@ -486,9 +515,11 @@ public class VCFVariantStats {
 	public class VariantStatsTask implements Callable<String> {
 
 		private final String ln;
+		private final boolean[] samplesToInclude;
 
-		public VariantStatsTask(String in) {
+		public VariantStatsTask(String in, boolean[] samplesToInclude) {
 			ln = in;
+			this.samplesToInclude = samplesToInclude;
 		}
 
 		@Override
@@ -497,7 +528,7 @@ public class VCFVariantStats {
 			String[] chrStrElems = chrStr.split("\t");
 			Chromosome chr = Chromosome.parseChr(chrStrElems[0]);
 			if (!chr.equals(Chromosome.X)) {
-				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, samplesToInclude);
 				// AC / AN / AF
 				variant.calculateHWEP();
 				String AN = "AN=" + variant.getTotalAlleleCount();

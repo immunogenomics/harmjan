@@ -844,16 +844,29 @@ public class Main {
 						if (cmd.hasOption("exclude")) {
 							exclude = true;
 						}
+
+						String sampleList1 = null;
+						if (cmd.hasOption("sl1")) {
+							sampleList1 = cmd.getOptionValue("sl1");
+						}
+						String sampleList2 = null;
+						if (cmd.hasOption("sl2")) {
+							sampleList1 = cmd.getOptionValue("sl2");
+						}
+
 						if (cmd.hasOption("i2")) {
 							sim.determineGeneticSimilarityBetweenDatasets(cmd.getOptionValue("l"),
 									exclude,
 									cmd.getOptionValue("i"),
+									sampleList1,
 									cmd.getOptionValue("i2"),
+									sampleList2,
 									cmd.getOptionValue("o"));
 						} else {
 							sim.determineGeneticSimilaritySingleDataset(cmd.getOptionValue("l"),
 									exclude,
 									cmd.getOptionValue("i"),
+									sampleList1,
 									cmd.getOptionValue("o"));
 						}
 
@@ -953,7 +966,11 @@ public class Main {
 
 			} else if (cmd.hasOption("summarize3")) {
 				VCFVariantStats stats = new VCFVariantStats();
-				stats.run(input, out);
+				String list = null;
+				if (cmd.hasOption("l")) {
+					list = cmd.getOptionValue("l");
+				}
+				stats.run(input, out, list);
 
 			} else if (cmd.hasOption("summarize3compare")) {
 				VCFVariantStats stats = new VCFVariantStats();

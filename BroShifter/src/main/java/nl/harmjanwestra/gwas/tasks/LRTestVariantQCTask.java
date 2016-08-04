@@ -151,9 +151,12 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 
 		// initialize hwep stuff
 		int nrCombinations = (nrAlleles * (nrAlleles + 1)) / 2;
-		int[] obs = new int[nrCombinations];
+		int[] obsControls = new int[nrCombinations];
+		int[] obsAll = new int[nrCombinations];
 		int[] nrHomozygous = new int[nrAlleles];
-		int nrCalled = 0;
+		int nrCalledAll = 0;
+		int nrCalledControls = 0;
+
 		int[][] index = new int[nrAlleles][nrAlleles];
 
 		int ctr = 0;
@@ -173,16 +176,18 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				nrWithMissingGenotypes++;
 				genotypeMissing[individualCounter] = true;
 			} else {
+				int b2 = (int) genotypeAlleles.getQuick(i, 1);
+				int id = index[b1][b2];
 				if (diseaseStatus[individualCounter].equals(DiseaseStatus.CONTROL)) { // controls
-					int b2 = (int) genotypeAlleles.getQuick(i, 1);
+
 					if (b1 == b2) {
 						nrHomozygous[b1]++;
 					}
-
-					int id = index[b1][b2];
-					obs[id]++;
-					nrCalled++;
+					obsControls[id]++;
+					nrCalledControls++;
 				}
+				obsAll[id]++;
+				nrCalledAll++;
 			}
 			individualCounter++;
 		}
@@ -202,32 +207,48 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 			for (int j = 0; j < nrAlleles; j++) {
 				int id = index[i][j];
 				if (i == j) {
-					freqs[i] += (2 * obs[id]);
+					freqs[i] += (2 * obsAll[id]);
 				} else {
-					freqs[i] += obs[id];
+					freqs[i] += obsAll[id];
 				}
 			}
 		}
 		for (int i = 0; i < nrAlleles; i++) {
-			freqs[i] /= (nrCalled * 2);
+			freqs[i] /= (nrCalledAll * 2);
 		}
 
 		double hwep = 0;
 		boolean debug = true;
 		if (nrAlleles == 2 && !debug) {
-			hwep = HWE.calculateExactHWEPValue(obs[1], obs[0], obs[2]);
+			hwep = HWE.calculateExactHWEPValue(obsControls[1], obsControls[0], obsControls[2]);
 		} else {
 			ctr = 0;
+
+			double[] freqscontrols = new double[nrAlleles];
+			for (int i = 0; i < nrAlleles; i++) {
+				for (int j = 0; j < nrAlleles; j++) {
+					int id = index[i][j];
+					if (i == j) {
+						freqscontrols[i] += (2 * obsControls[id]);
+					} else {
+						freqscontrols[i] += obsControls[id];
+					}
+				}
+			}
+			for (int i = 0; i < nrAlleles; i++) {
+				freqscontrols[i] /= (nrCalledControls * 2);
+			}
+
 			double chisq = 0;
 			for (int i = 0; i < nrAlleles; i++) {
 				for (int j = i; j < nrAlleles; j++) {
 					double expectedFreq;
 					if (i == j) {
-						expectedFreq = (freqs[i] * freqs[i]) * nrCalled; // homozygote freq
+						expectedFreq = (freqscontrols[i] * freqscontrols[i]) * nrCalledControls; // homozygote freq
 					} else {
-						expectedFreq = (2 * (freqs[i] * freqs[j])) * nrCalled; // heterozygote freq
+						expectedFreq = (2 * (freqscontrols[i] * freqscontrols[j])) * nrCalledControls; // heterozygote freq
 					}
-					double observedFreq = obs[ctr];
+					double observedFreq = obsControls[ctr];
 					double oe = (observedFreq - expectedFreq);
 					if (oe != 0 && expectedFreq != 0) {
 						chisq += ((oe * oe) / expectedFreq);
