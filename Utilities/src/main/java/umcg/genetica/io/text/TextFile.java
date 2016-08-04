@@ -39,6 +39,7 @@ public class TextFile implements Iterable<String> {
 	private boolean gzipped;
 	private int buffersize;
 	private boolean parallel = false;
+	private String fullPath;
 
 	public TextFile(File f, boolean mode) throws IOException {
 		this(f.toPath(), mode);
@@ -426,6 +427,10 @@ public class TextFile implements Iterable<String> {
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
+	}
+
+	public String getFullPath() {
+		return this.path.toAbsolutePath().toString();
 	}
 
 	private static class TextFileIterator implements Iterator<String> {

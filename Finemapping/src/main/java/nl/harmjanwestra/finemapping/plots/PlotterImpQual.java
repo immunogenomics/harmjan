@@ -11,6 +11,7 @@ import nl.harmjanwestra.utilities.graphics.panels.HistogramPanel;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
@@ -79,11 +80,11 @@ public class PlotterImpQual {
 
 		// T1D
 		files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-EAGLE.vcf.gz",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-SHAPEIT.vcf.gz",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-HRC-EAGLE-Michigan.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO//T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-HRC-EAGLE.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-HRC-SHAPEIT.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-HRC-EAGLE-Michigan.vcf.gz",
 
 
 		};
@@ -400,7 +401,9 @@ public class PlotterImpQual {
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
 		int maxSize = 0;
 		String[] newLabels = new String[labels.length];
+
 		for (int i = 0; i < files.length; i++) {
+			TextFile outaboveboth = new TextFile(out + "-variantsAboveBothThresholds-" + i + ".txt", TextFile.W);
 			String file = files[i];
 			ArrayList<Double> corvals = new ArrayList<>();
 			TextFile tf = new TextFile(file, TextFile.R);
@@ -459,6 +462,7 @@ public class PlotterImpQual {
 							}
 							if (!mafisbelowthreshold && info > infoscorethreshold) {
 								nrAboveBothThresholds++;
+								outaboveboth.writeln(Strings.concat(elems, Strings.tab));
 							}
 						}
 
@@ -472,6 +476,8 @@ public class PlotterImpQual {
 
 				elems = tf.readLineElems(TextFile.tab);
 			}
+			outaboveboth.close();
+			System.out.println(outaboveboth.getFullPath() + " is what you're looking for..");
 			tf.close();
 			Collections.sort(corvals, Collections.reverseOrder());
 			System.out.println(corvals.size() + " vals in path " + file);

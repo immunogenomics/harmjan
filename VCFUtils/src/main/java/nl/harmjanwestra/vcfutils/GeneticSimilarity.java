@@ -454,9 +454,7 @@ public class GeneticSimilarity {
 
 		TextFile out3 = new TextFile(out + "bins.txt", TextFile.W);
 		for (int i = 0; i < bins.length; i++) {
-
 			out3.writeln(((double) -1 + (i * (2d / nrbins))) + "\t" + bins[i]);
-
 		}
 		out3.close();
 	}
