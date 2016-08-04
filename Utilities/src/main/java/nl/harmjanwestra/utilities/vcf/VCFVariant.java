@@ -91,6 +91,7 @@ public class VCFVariant {
 	public VCFVariant(String ln, PARSE p, boolean[] samplesToInclude) {
 		this.samplesToInclude = samplesToInclude;
 		parse(ln, p);
+
 	}
 
 	public VCFVariant(String chr, Integer pos, String id, String alleleStr, String info, DoubleMatrix2D alleles, DoubleMatrix2D dosages) {
@@ -158,6 +159,7 @@ public class VCFVariant {
 						}
 					}
 				}
+
 
 				genotypeAlleles = DoubleFactory2D.dense.make(nrSamples, 2, -1);// new DenseDoubleMatrix2D(nrSamples, 2);
 
@@ -787,8 +789,6 @@ public class VCFVariant {
 				nrIndividuals = nrFemales;
 			} else if (chromosome.equals(Chromosome.Y)) {
 				nrIndividuals = nrMales;
-			} else {
-				nrIndividuals = nrIndividuals;
 			}
 		}
 
