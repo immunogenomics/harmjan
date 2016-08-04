@@ -211,7 +211,7 @@ public class GeneticSimilarity {
 					geneticSimilaritySameGenotypes.setQuick(i1, j1, simgenotypes[j1]);
 					geneticSimilarityCorrelation.setQuick(i1, j1, correlation[j1]);
 				}
-				
+
 				pb2.iterate();
 				returned++;
 

@@ -26,21 +26,89 @@ public class SamplePicker {
 		String famra = "D:\\tmp\\2016-08-03-sim\\phenotypes\\covarmerged.txtmergedfam.fam";
 		SamplePicker s = new SamplePicker();
 		try {
+
+
 			s.picksamples(list, out1, out2);
 			list = "D:\\tmp\\2016-08-03-sim\\RASamplex.txt";
 			String rewriteout = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-RA-rewritten.txt";
 			s.rewrite(out1, list, rewriteout);
-			String remainingout = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-RA-rewritten-remaining.txt";
-			s.writeListOfRemainingSamples(list, rewriteout, famra, remainingout);
+			String remainingoutra = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-RA-rewritten-remaining.txt";
+			s.writeListOfRemainingSamples(list, rewriteout, famra, remainingoutra);
 			System.out.println("Filtering T1D samples");
 			list = "D:\\tmp\\2016-08-03-sim\\T1DSamplex.txt";
 			rewriteout = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-T1D-rewritten.txt";
 			s.rewrite(out2, list, rewriteout);
-			remainingout = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-T1D-rewritten-remaining.txt";
-			s.writeListOfRemainingSamples(list, rewriteout, famt1d, remainingout);
+			String remainingoutt1d = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-T1D-rewritten-remaining.txt";
+			s.writeListOfRemainingSamples(list, rewriteout, famt1d, remainingoutt1d);
+
+			String remainingoutradedup = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-RA-rewritten-remaining-dedup.txt";
+			String remainingoutt1ddedup = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-T1D-rewritten-remaining-dedup.txt";
+			s.dedup(remainingoutra, remainingoutt1d, remainingoutradedup, remainingoutt1ddedup);
+
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void dedup(String remainingoutra, String remainingoutt1d, String remainingoutradedup, String remainingoutt1ddedup) throws IOException {
+
+		TextFile tf1 = new TextFile(remainingoutra, TextFile.R);
+		ArrayList<String> samples1 = tf1.readAsArrayList();
+		tf1.close();
+
+		HashSet<String> samples1hash = new HashSet<>();
+		samples1hash.addAll(samples1);
+
+		TextFile tf2 = new TextFile(remainingoutt1d, TextFile.R);
+		ArrayList<String> samples2 = tf2.readAsArrayList();
+		tf2.close();
+
+		ArrayList<String> duped = new ArrayList<>();
+		for (String s : samples2) {
+			if (samples1hash.contains(s)) {
+				duped.add(s);
+			}
+		}
+
+		// split half the duped samples
+		HashSet<String> dupedSet = new HashSet<String>();
+		dupedSet.addAll(duped);
+
+		TextFile tf3 = new TextFile(remainingoutradedup, TextFile.W);
+		TextFile tf4 = new TextFile(remainingoutt1ddedup, TextFile.W);
+		for (String s : samples1) {
+			if (!dupedSet.contains(s)) {
+				tf3.writeln(s);
+			}
+		}
+
+		for (String s : samples2) {
+			if (!dupedSet.contains(s)) {
+				tf4.writeln(s);
+			}
+		}
+
+		if (duped.size() > 0) {
+
+			int nr = duped.size() / 2;
+			System.out.println(duped.size() + " duplicates.. splitting: " + nr);
+			for (int i = 0; i < nr; i++) {
+				String s = duped.get(i);
+				tf3.writeln(s);
+			}
+
+			for (int i = nr; i < duped.size(); i++) {
+				String s = duped.get(i);
+				tf4.writeln(s);
+			}
+
+		}
+
+		tf3.close();
+		tf4.close();
+
+
 	}
 
 	public void writeListOfRemainingSamples(String list1, String excludelist, String famfile, String out) throws IOException {
