@@ -14,23 +14,26 @@ public class MetaAnalysisCovarWriter {
 
 	public static void main(String[] args) {
 		MetaAnalysisCovarWriter c = new MetaAnalysisCovarWriter();
-		String remainlistRA = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-RA-rewritten-remaining.txt";
-		String remainlistT1D = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-T1D-rewritten-remaining.txt";
-		String remainlistMergeRA = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-RA-rewritten-remaining-dedup.txt";
-		String remainlistMergeT1D = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-T1D-rewritten-remaining-dedup.txt";
+//		String remainlistRA = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-RA-rewritten-remaining.txt";
+//		String remainlistT1D = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-T1D-rewritten-remaining.txt";
+//		String remainlistMergeRA = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-RA-rewritten-remaining-dedup.txt";
+//		String remainlistMergeT1D = "D:\\tmp\\2016-07-19\\sim\\listofsharedsamples-T1D-rewritten-remaining-dedup.txt";
+//
+//		try {
+//			c.dedup(remainlistRA, remainlistT1D, remainlistMergeRA, remainlistMergeT1D);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 
-		try {
-			c.dedup(remainlistRA, remainlistT1D, remainlistMergeRA, remainlistMergeT1D);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		String remainlistMergeRA = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-RA-rewritten-remaining-dedup.txt";
+		String remainlistMergeT1D = "D:\\tmp\\2016-08-03-sim\\out\\listofsharedsamples-T1D-rewritten-remaining-dedup.txt";
 
-		String famin = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\covarmerged.txtmergedfam.fam";
-		String famout = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\meta-RA.fam";
-		String covin = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\covarmerged.txtmergedCovariates.txt";
-		String covout = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\meta-RA-covar.txt";
-		String diseasein = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\covarmerged.txtmergeddisease.txt";
-		String diseaseout = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\meta-RA-disease.txt";
+		String famin = "D:\\tmp\\2016-08-03-sim\\phenotypes\\covarmerged.txtmergedfam.fam";
+		String famout = "D:\\tmp\\2016-08-03-sim\\phenotypes\\meta-RA.fam";
+		String covin = "D:\\tmp\\2016-08-03-sim\\phenotypes\\covarmerged.txtmergedCovariates.txt";
+		String covout = "D:\\tmp\\2016-08-03-sim\\phenotypes\\meta-RA-covar.txt";
+		String diseasein = "D:\\tmp\\2016-08-03-sim\\phenotypes\\covarmerged.txtmergeddisease.txt";
+		String diseaseout = "D:\\tmp\\2016-08-03-sim\\phenotypes\\meta-RA-disease.txt";
 		try {
 			c.filterfam(remainlistMergeRA, famin, famout);
 			c.filtercov(remainlistMergeRA, covin, covout, true);
@@ -43,12 +46,12 @@ public class MetaAnalysisCovarWriter {
 		System.out.println("T1D");
 
 
-		famin = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam";
-		famout = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\meta-T1D.fam";
-		covin = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt";
-		covout = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\meta-T1D-covar.txt";
-		diseasein = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\2016-03-11-T1D-diseaseStatusWithPseudos.txt";
-		diseaseout = "D:\\tmp\\2016-07-19\\sim\\phenotypes\\meta-T1D-disease.txt";
+		famin = "D:\\tmp\\2016-08-03-sim\\phenotypes\\T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam";
+		famout = "D:\\tmp\\2016-08-03-sim\\phenotypes\\meta-T1D.fam";
+		covin = "D:\\tmp\\2016-08-03-sim\\phenotypes\\2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt";
+		covout = "D:\\tmp\\2016-08-03-sim\\phenotypes\\meta-T1D-covar.txt";
+		diseasein = "D:\\tmp\\2016-08-03-sim\\phenotypes\\2016-03-11-T1D-diseaseStatusWithPseudos.txt";
+		diseaseout = "D:\\tmp\\2016-08-03-sim\\phenotypes\\meta-T1D-disease.txt";
 		try {
 			c.filterfam(remainlistMergeT1D, famin, famout);
 			c.filtercov(remainlistMergeT1D, covin, covout, true);
