@@ -85,8 +85,6 @@ public class PlotterImpQual {
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-HRC-EAGLE.vcf.gz",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-HRC-SHAPEIT.vcf.gz",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-HRC-EAGLE-Michigan.vcf.gz",
-
-
 		};
 		labels = new String[]{
 				"EUR",
@@ -97,8 +95,8 @@ public class PlotterImpQual {
 		};
 		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-recode-stats.vcf.gz";
 		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
-		outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-INFO/T1D-plotsImpQual0.3/";
-		outdir = "/Data/tmp/2016-07-22/tmp/t1d";
+		outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/";
+
 
 
 		if (windows) {

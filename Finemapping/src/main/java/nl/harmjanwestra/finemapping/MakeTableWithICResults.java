@@ -22,49 +22,49 @@ public class MakeTableWithICResults {
 
 	public static void main(String[] args) {
 		try {
-
-
 			MakeTableWithICResults m = new MakeTableWithICResults();
 			String outfile = "";
 			String fmAssocFile = "";
 			String icTabFile = "";
-			String locusFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\AllICLoci.bed";
-			String tabixprefix = "d:\\Data\\Ref\\1kg\\cosmo.1kg.phase3.v5.chr";
+			String locusFile = "";
+			String tabixprefix = "/Data/Ref/1kg/cosmo.1kg.phase3.v5.chr";
 
-
-//			icTabFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\ImmunoBase\\hg19_gwas_ra_okada_4_19_1.tab.gz";
-//			fmAssocFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-//			outfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-RA-LocusComparisonWithOkada.txt";
-//			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
-//
-//			icTabFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\ImmunoBase\\hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
-//			fmAssocFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-//			outfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-T1D-LocusComparisonWithOnengutCC.txt";
-//			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
-//
-//			icTabFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\ImmunoBase\\hg19_gwas_ra_okada_4_19_1.tab.gz";
-//			fmAssocFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-//			outfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-RA-LocusComparisonWithOkada-SignificantLoci.txt";
-//			locusFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\RA-assoc0.3-COSMO-significantregions-1e5.bed";
-//			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
-//
-//			icTabFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\ImmunoBase\\hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
-//			fmAssocFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-//			outfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-T1D-LocusComparisonWithOnengutCC-SignificantLoci.txt";
-//			locusFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\T1D-assoc0.3-COSMO-significantregions-1e5.bed";
-//			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
-//
-
-
-			icTabFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\ImmunoBase\\hg19_gwas_ic_ra_eyre_4_19_1.tab.gz";
-			fmAssocFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			outfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-RA-LocusComparisonWithEyre.txt";
+			/// RA
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_ra_eyre_4_19_1.tab.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-RA-LocusComparisonWithEyre.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
 
-			icTabFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\ImmunoBase\\hg19_gwas_ic_ra_eyre_4_19_1.tab.gz";
-			fmAssocFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			outfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-RA-LocusComparisonWithEyre-SignificantLoci.txt";
-			locusFile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-19-SummaryStats\\RA-assoc0.3-COSMO-significantregions-1e5.bed";
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_ra_eyre_4_19_1.tab.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior-significantloci.txt.gz";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-RA-LocusComparisonWithEyre-SignificantLoci.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-RA-LocusComparisonWithOkada.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-RA-LocusComparisonWithOkada-SignificantLoci.txt";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior-significantloci.txt.gz";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+
+			/// T1D
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-T1D-LocusComparisonWithOnengutCC.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior-significantloci.txt.gz";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-T1D-LocusComparisonWithOnengutCC-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
 
 

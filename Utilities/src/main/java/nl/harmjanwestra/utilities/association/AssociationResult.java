@@ -164,8 +164,9 @@ public class AssociationResult {
 					+ "\t" + Strings.concat(getConfHi(), Strings.semicolon)
 					+ "\t" + Strings.concat(getConfLo(), Strings.semicolon);
 		} else {
-			str += "\tnull";
+			str += "\tnull\tnull\tnull";
 		}
+
 
 		str += "\t" + pval
 				+ "\t" + getLog10Pval();
@@ -230,4 +231,6 @@ public class AssociationResult {
 	public AssociationResult[] getSubresults() {
 		return subresults;
 	}
+
+
 }
