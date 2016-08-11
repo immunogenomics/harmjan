@@ -38,6 +38,8 @@ public class Main {
 				new Caviar(new CaviarOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.MERGE)) {
 				new AssociationResultMerger(new AssociationResultMergerOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.UPDATERS)) {
+				new ReannotateRSIds(new ReannotateRSIdsOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.QTL)) {
 				new QTLTest(new QTLTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {

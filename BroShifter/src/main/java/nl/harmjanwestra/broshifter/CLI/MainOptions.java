@@ -86,6 +86,12 @@ public class MainOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Update RS ids for association files")
+				.longOpt("updaters")
+				.build();
+		OPTIONS.addOption(option);
+
 	}
 
 	public MODE mode = MODE.NA;
@@ -119,6 +125,8 @@ public class MainOptions {
 				mode = MODE.QTL;
 			} else if (cmd.hasOption("countvariants")) {
 				mode = MODE.COUNTVARIANTS;
+			} else if (cmd.hasOption("updaters")) {
+				mode = MODE.UPDATERS;
 			} else {
 				HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp(" ", OPTIONS);
@@ -143,7 +151,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOTPOSTERIORS,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, UPDATERS, NA
 	}
 
 }

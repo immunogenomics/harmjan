@@ -1,5 +1,6 @@
-package nl.harmjanwestra.vcfutils;
+package nl.harmjanwestra.gwas;
 
+import nl.harmjanwestra.gwas.CLI.ReannotateRSIdsOptions;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
@@ -10,17 +11,21 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by Harm-Jan on 02/10/16.
+ * Created by hwestra on 8/10/16.
  */
-public class VCFVariantRSNameUpdater {
+public class ReannotateRSIds {
+
+	public ReannotateRSIds(ReannotateRSIdsOptions reannotateRSIdsOptions) throws IOException {
+		this.updateRSNames(reannotateRSIdsOptions.vcf, reannotateRSIdsOptions.assoc);
+	}
 
 	public void updateRSNames(String dbsnpvcf, String input) throws IOException {
+
 
 		String[] filenames = input.split(",");
 		System.out.println(filenames.length + " files to process");
 		HashSet<String> mapOrig = new HashSet<String>();
 		HashSet<String> mapOrigPos = new HashSet<String>();
-
 		for (String vcfin : filenames) {
 			System.out.println("Parsing: " + vcfin);
 			TextFile tf = new TextFile(vcfin, TextFile.R);
@@ -95,13 +100,10 @@ public class VCFVariantRSNameUpdater {
 		vcf.close();
 		System.out.println(mapDbSNP.size() + " variant annotations total");
 
-		for (String vcfin : filenames) {
-			String vcfout = vcfin + "-updatedRSId.vcf.gz";
-
-			TextFile tf = new TextFile(vcfin, TextFile.R);
-
+		for (String assocFile : filenames) {
+			String vcfout = assocFile + "-updatedRSId.txt";
+			TextFile tf = new TextFile(assocFile, TextFile.R);
 			TextFile out = new TextFile(vcfout, TextFile.W);
-
 			tf.open();
 			int nrReplaced = 0;
 			int nrEqual = 0;
@@ -127,18 +129,7 @@ public class VCFVariantRSNameUpdater {
 						} else {
 							// multiple RS ids at this position...
 							// try to match alleles
-							String refAllele = elems[3];
-							String altAllele = elems[4];
-							String[] altAlleleElems = altAllele.split(",");
-							String[] allAlleles = new String[1 + altAlleleElems.length];
-							allAlleles[0] = refAllele;
-							for (int q = 0; q < altAlleleElems.length; q++) {
-								allAlleles[q + 1] = altAlleleElems[q];
-							}
-
 							HashMap<String, Integer> set = new HashMap<String, Integer>();
-							HashMap<String, String> setAlleles = new HashMap<String, String>();
-
 							for (String rep : replacementelems) {
 								String[] replacementelems2 = rep.split("_");
 								String chr = replacementelems2[0];
@@ -147,11 +138,7 @@ public class VCFVariantRSNameUpdater {
 								String allele2 = replacementelems2[3];
 								String rsid = replacementelems2[4];
 
-
-								// try another combo
-								// is the variant an indel? maybe we can only match one allele
-
-
+								String[] allAlleles = elems[4].split(",");
 								String[] allele2elems = allele2.split(",");
 								String[] dbSNPAlleles = new String[1 + allele2elems.length];
 
@@ -170,7 +157,7 @@ public class VCFVariantRSNameUpdater {
 
 								}
 								set.put(rep, equalCtr);
-								setAlleles.put(rep, Strings.concat(dbSNPAlleles, Strings.comma));
+
 							}
 
 							if (replacementRS == null) {
@@ -188,15 +175,7 @@ public class VCFVariantRSNameUpdater {
 								if (max > 0) {
 									String[] replacementelems2 = mostlikelymatch.split("_");
 									replacementRS = replacementelems2[4];
-									System.out.println(elems[0] + ":" + elems[1] + ":" + elems[2] + ":" + Strings.concat(allAlleles, Strings.comma) + "\t-->\t" + replacementRS + ":" + setAlleles.get(mostlikelymatch) + "\t" + max);
-									for (String s : keys) {
-										if (!mostlikelymatch.equals(s)) {
-											System.out.println(s);
-										}
-									}
-									System.out.println();
-
-
+									System.out.println(elems[0] + ":" + elems[1] + ":" + elems[2] + " --> " + replacementRS);
 								} else {
 									replacementRS = elems[0] + ":" + elems[1] + ":" + elems[2];
 									System.out.println("Could not find match:\t" + elems[0] + ":" + elems[1] + ":" + elems[2] + " --> " + replacementRS);
@@ -219,10 +198,6 @@ public class VCFVariantRSNameUpdater {
 					out.writeln(Strings.concat(elems, Strings.tab));
 				} else {
 					out.writeln(line);
-					if (!headerwritten) {
-						out.writeln("##RSIdsReplaced=" + dbsnpvcf);
-						headerwritten = true;
-					}
 				}
 
 				lnctr++;
@@ -232,7 +207,7 @@ public class VCFVariantRSNameUpdater {
 				line = tf.readLine();
 			}
 			tf.close();
-			System.out.println(nrReplaced + " (" + nrEqual + " equal / " + numnull + " null) totally replaced in " + vcfin);
+			System.out.println(nrReplaced + " (" + nrEqual + " equal / " + numnull + " null) totally replaced in " + assocFile);
 			out.close();
 		}
 
