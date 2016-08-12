@@ -2,9 +2,12 @@ package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureTree;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
+import nl.harmjanwestra.utilities.individuals.Individual;
+import nl.harmjanwestra.utilities.plink.PlinkFamFile;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.io.Gpio;
@@ -36,7 +39,7 @@ public class VCFVariantStats {
 
 	}
 
-	public void run(String vcf1, String vcf2, String list) throws IOException {
+	public void run(String vcf1, String vcf2, String list, String famfile) throws IOException {
 
 		TextFile out = new TextFile(vcf2, TextFile.W);
 		System.out.println("Out: " + vcf2);
@@ -54,11 +57,11 @@ public class VCFVariantStats {
 		for (int i = 0; i < vcfFiles.length; i++) {
 			String file = vcfFiles[i];
 			boolean[] samplestoinclude = null;
+			DiseaseStatus[] sampleDiseaseStatus = null;
 
 			int nroverlappingsamples = 0;
 			if (Gpio.exists(file)) {
 				if (list != null) {
-
 					System.out.println("Filtering samples using list: " + list);
 					TextFile tf = new TextFile(list, TextFile.R);
 					ArrayList<String> samples = tf.readAsArrayList();
@@ -81,6 +84,31 @@ public class VCFVariantStats {
 						}
 					}
 					System.out.println(nroverlappingsamples + " samples overlap with list");
+				}
+
+				if (famfile != null) {
+					VCFGenotypeData d = new VCFGenotypeData(file);
+					ArrayList<String> allSamples = d.getSamples();
+					d.close();
+					PlinkFamFile pf = new PlinkFamFile(famfile);
+					ArrayList<Individual> individuals = pf.getSamples();
+					sampleDiseaseStatus = new DiseaseStatus[allSamples.size()];
+					HashMap<String, Integer> sampleToId = new HashMap<String, Integer>();
+					for (int s = 0; s < allSamples.size(); s++) {
+						sampleToId.put(allSamples.get(s), s);
+					}
+
+					for (int q = 0; q < sampleDiseaseStatus.length; q++) {
+						sampleDiseaseStatus[q] = DiseaseStatus.UNKNOWN;
+					}
+
+					for (Individual ind : individuals) {
+						String sampleName = ind.getName();
+						Integer id = sampleToId.get(sampleName);
+						if (id != null) {
+							sampleDiseaseStatus[id] = ind.getDiseaseStatus();
+						}
+					}
 				}
 
 
@@ -107,37 +135,9 @@ public class VCFVariantStats {
 
 					} else {
 
-						VariantStatsTask t = new VariantStatsTask(ln, samplestoinclude);
+						VariantStatsTask t = new VariantStatsTask(ln, samplestoinclude, sampleDiseaseStatus);
 						jobHandler.submit(t);
 						submitted++;
-
-
-//						String chrStr = ln.substring(0, 100);
-//						String[] chrStrElems = chrStr.split("\t");
-//						Chromosome chr = Chromosome.parseChr(chrStrElems[0]);
-//						if (!chr.equals(Chromosome.X)) {
-//
-//							VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
-//
-//							// AC / AN / AF
-//							String AN = "AN=" + variant.getTotalAlleleCount();
-//							String AF = "AF=" + Strings.concat(variant.getAlleleFrequencies(), Strings.comma, 1, variant.getAlleles().length);
-//							String AC = "AC=" + Strings.concat(variant.getNrAllelesObserved(), Strings.comma, 1, variant.getAlleles().length);
-//							String INFO = "INFO=" + variant.getImputationQualityScore();
-//
-//							String infoString = AC + ";" + AF + ";" + AN + ";" + INFO;
-//
-//							StringBuilder outbuilder = new StringBuilder(1000);
-//							outbuilder.append(variant.getChr())
-//									.append("\t").append(variant.getPos())
-//									.append("\t").append(variant.getId())
-//									.append("\t").append(variant.getAlleles()[0])
-//									.append("\t").append(Strings.concat(variant.getAlleles(), Strings.comma, 1, variant.getAlleles().length))
-//									.append("\t.").append("\t.")
-//									.append("\t").append(infoString);
-//
-//							out.writeln(outbuilder.toString());
-//						}
 
 					}
 
@@ -516,10 +516,12 @@ public class VCFVariantStats {
 
 		private final String ln;
 		private final boolean[] samplesToInclude;
+		private final DiseaseStatus[] sampleDiseaseStatus;
 
-		public VariantStatsTask(String in, boolean[] samplesToInclude) {
+		public VariantStatsTask(String in, boolean[] samplesToInclude, DiseaseStatus[] sampleDiseaseStatus) {
 			ln = in;
 			this.samplesToInclude = samplesToInclude;
+			this.sampleDiseaseStatus = sampleDiseaseStatus;
 		}
 
 		@Override
@@ -530,16 +532,26 @@ public class VCFVariantStats {
 			if (!chr.equals(Chromosome.X)) {
 				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, samplesToInclude);
 				// AC / AN / AF
-				variant.calculateHWEP();
+
+				variant.recalculateMAFAndCallRate(null, sampleDiseaseStatus);
+
 				String AN = "AN=" + variant.getTotalAlleleCount();
 				String AF = "AF=" + Strings.concat(variant.getAlleleFrequencies(), Strings.comma, 1, variant.getAlleles().length);
 				String AC = "AC=" + Strings.concat(variant.getNrAllelesObserved(), Strings.comma, 1, variant.getAlleles().length);
 				String INFO = "INFO=" + variant.getImputationQualityScore();
 				String callrate = "CR=" + variant.getCallrate();
 				String hwep = "HWEP=" + variant.getHwep();
-				String infoString = AC + ";" + AF + ";" + AN + ";" + INFO + ";" + callrate + ";" + hwep;
 
-				StringBuilder outbuilder = new StringBuilder(1000);
+				String infoString = AC + ";" + AF + ";" + AN + ";" + INFO + ";" + callrate + ";" + hwep;
+				if (sampleDiseaseStatus != null) {
+					String AFCASES = "AFCASES=" + Strings.concat(variant.getAlleleFrequenciesControls(), Strings.comma, 1, variant.getAlleles().length);
+					String AFCONTROLS = "AFCONTROLS=" + Strings.concat(variant.getAlleleFrequenciesControls(), Strings.comma, 1, variant.getAlleles().length);
+					String hwepcases = "HWEPCASES=" + variant.getHwepCases();
+					String hwepcontrols = "HWEPCONTROLS=" + variant.getHwepControls();
+					infoString += ";" + AFCASES + ";" + AFCONTROLS + ";" + hwepcases + ";" + hwepcontrols;
+				}
+
+				StringBuilder outbuilder = new StringBuilder(infoString.length() + 200);
 				outbuilder.append(variant.getChr())
 						.append("\t").append(variant.getPos())
 						.append("\t").append(variant.getId())
@@ -553,6 +565,8 @@ public class VCFVariantStats {
 			}
 			return null;
 		}
+
+
 	}
 
 }

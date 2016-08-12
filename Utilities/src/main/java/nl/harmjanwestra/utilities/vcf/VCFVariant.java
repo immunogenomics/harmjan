@@ -5,6 +5,8 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.DiseaseStatus;
+import nl.harmjanwestra.utilities.enums.Gender;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.matrix.ShortMatrix2D;
 import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
@@ -68,6 +70,12 @@ public class VCFVariant {
 	private int pgtCol = -1; // ?
 	private int dsCol = -1;
 	private int gpCol = -1;
+	private int[] nrAllelesObservedCases;
+	private int[] nrAllelesObservedControls;
+	private double[] alleleFrequenciesCases;
+	private double[] alleleFrequenciesControls;
+	private double hwepCases;
+	private double hwepControls;
 
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
@@ -760,29 +768,58 @@ public class VCFVariant {
 	}
 
 	public void recalculateMAFAndCallRate() {
-		recalculateMAFAndCallRate(null);
+		recalculateMAFAndCallRate(null, null);
 	}
 
-	public void recalculateMAFAndCallRate(Boolean[] individualIsFemale) {
+	public int[] getNrAllelesObservedCases() {
+		return nrAllelesObservedCases;
+	}
+
+	public int[] getNrAllelesObservedControls() {
+		return nrAllelesObservedControls;
+	}
+
+	public double[] getAlleleFrequenciesCases() {
+		return alleleFrequenciesCases;
+	}
+
+	public double[] getAlleleFrequenciesControls() {
+		return alleleFrequenciesControls;
+	}
+
+	public void recalculateMAFAndCallRate(Gender[] individualGender, DiseaseStatus[] sampleDiseaseStatus) {
+
+		if (individualGender != null && individualGender.length != genotypeAlleles.rows()) {
+
+			throw new IllegalArgumentException("Sample gender status length does not match number of loaded genotypes. " + individualGender.length + " gender status vs " + genotypeAlleles.rows() + " genotypes");
+
+		}
+		if (sampleDiseaseStatus != null && sampleDiseaseStatus.length != genotypeAlleles.rows()) {
+
+			throw new IllegalArgumentException("Sample disease status length does not match number of loaded genotypes. " + sampleDiseaseStatus.length + " disease status vs " + genotypeAlleles.rows() + " genotypes");
+
+		}
 
 		int nrCalled = 0;
-		if (nrAllelesObserved == null) {
-			nrAllelesObserved = new int[alleles.length];
-		}
+		int nrCalledCases = 0;
+		int nrCalledControls = 0;
 		nrAllelesObserved = new int[nrAllelesObserved.length];
-		int[] nrAllelesObservedLocal = new int[nrAllelesObserved.length];
+		if (sampleDiseaseStatus != null) {
+			nrAllelesObservedCases = new int[alleles.length];
+			nrAllelesObservedControls = new int[alleles.length];
+		}
+
 		int nrIndividuals = genotypeAlleles.rows();
-		Chromosome chromosome = Chromosome.parseChr(chr);
-		if (individualIsFemale != null) {
+		Chromosome chromosome = getChrObj();
+		if (individualGender != null) {
 			int nrFemales = 0;
 			int nrMales = 0;
 			for (int i = 0; i < nrIndividuals; i++) {
-				if (individualIsFemale[i] != null) {
-					if (individualIsFemale[i]) {
-						nrFemales++;
-					} else {
-						nrMales++;
-					}
+				Gender gender = individualGender[i];
+				if (gender != null && gender == Gender.MALE) {
+					nrMales++;
+				} else if (gender != null && gender == Gender.FEMALE) {
+					nrFemales++;
 				}
 			}
 			if (chromosome.equals(Chromosome.X)) {
@@ -794,36 +831,77 @@ public class VCFVariant {
 
 
 		for (int i = 0; i < genotypeAlleles.rows(); i++) {
+			Gender gender = null;
+			DiseaseStatus diseaseStatus = null;
+			if (individualGender != null) {
+				gender = individualGender[i];
+			}
+			if (sampleDiseaseStatus != null) {
+				diseaseStatus = sampleDiseaseStatus[i];
+			}
+
 			int gt1 = (int) genotypeAlleles.getQuick(i, 0);
 			if (gt1 != -1) {
 				int gt2 = (int) genotypeAlleles.getQuick(i, 1);
 				if (chromosome.equals(Chromosome.X)) {
-					if (ignoregender || (individualIsFemale != null && individualIsFemale[i] != null && individualIsFemale[i])) {
+					if (ignoregender || (gender != null && gender == Gender.FEMALE)) {
 						nrCalled++;
-						nrAllelesObservedLocal[gt1]++;
-						nrAllelesObservedLocal[gt2]++;
-					} else if (individualIsFemale == null) {
+						nrAllelesObserved[gt1]++;
+						nrAllelesObserved[gt2]++;
+						if (diseaseStatus != null) {
+							if (diseaseStatus == DiseaseStatus.CASE) {
+								nrAllelesObservedCases[gt1]++;
+								nrAllelesObservedCases[gt2]++;
+								nrCalledCases++;
+							} else if (diseaseStatus == DiseaseStatus.CONTROL) {
+								nrAllelesObservedControls[gt1]++;
+								nrAllelesObservedControls[gt2]++;
+								nrCalledControls++;
+							}
+						}
+
+					} else if (individualGender == null) {
 //						System.err.println("ERROR: cannot calculateWithinDataset chr X MAF if gender information unavailable.");
 //						throw new IllegalArgumentException("ERROR: cannot calculateWithinDataset chr X MAF if gender information unavailable.");
 					}
 				} else if (chromosome.equals(Chromosome.Y)) {
-					if (ignoregender || (individualIsFemale != null && individualIsFemale[i] != null && !individualIsFemale[i])) {
+					if (ignoregender || (gender != null && gender == Gender.MALE)) {
 						nrCalled++;
-						nrAllelesObservedLocal[gt1]++;
-						nrAllelesObservedLocal[gt2]++;
-					} else if (individualIsFemale == null) {
+						nrAllelesObserved[gt1]++;
+						nrAllelesObserved[gt2]++;
+						if (diseaseStatus != null) {
+							if (diseaseStatus == DiseaseStatus.CASE) {
+								nrAllelesObservedCases[gt1]++;
+								nrAllelesObservedCases[gt2]++;
+								nrCalledCases++;
+							} else if (diseaseStatus == DiseaseStatus.CONTROL) {
+								nrAllelesObservedControls[gt1]++;
+								nrAllelesObservedControls[gt2]++;
+								nrCalledControls++;
+							}
+						}
+					} else if (individualGender == null) {
 //						System.err.println("ERROR: cannot calculateWithinDataset chr Y MAF if gender information unavailable.");
 					}
 				} else {
 					nrCalled++;
-					nrAllelesObservedLocal[gt1]++;
-					nrAllelesObservedLocal[gt2]++;
-
+					nrAllelesObserved[gt1]++;
+					nrAllelesObserved[gt2]++;
+					if (diseaseStatus != null) {
+						if (diseaseStatus == DiseaseStatus.CASE) {
+							nrAllelesObservedCases[gt1]++;
+							nrAllelesObservedCases[gt2]++;
+							nrCalledCases++;
+						} else if (diseaseStatus == DiseaseStatus.CONTROL) {
+							nrAllelesObservedControls[gt1]++;
+							nrAllelesObservedControls[gt2]++;
+							nrCalledControls++;
+						}
+					}
 				}
-				nrAllelesObserved[gt1]++;
-				nrAllelesObserved[gt2]++;
 			}
 		}
+
 
 		callrate = (double) nrCalled / nrIndividuals;
 
@@ -832,14 +910,24 @@ public class VCFVariant {
 		int nrAllelesThatHaveAlleleFrequency = 0;
 		double minAlleleFreq = 2;
 		alleleFrequencies = new double[nrAllelesObserved.length];
+		if (sampleDiseaseStatus != null) {
+			alleleFrequenciesCases = new double[nrAllelesObserved.length];
+			alleleFrequenciesControls = new double[nrAllelesObserved.length];
+		}
 		minorAllele = null;
 		totalCalledAlleles = totalAllelesObs;
 
 		for (int i = 0; i < nrAllelesObserved.length; i++) {
-			double alleleFreq = (double) nrAllelesObservedLocal[i] / totalAllelesObs;
+			double alleleFreq = (double) nrAllelesObserved[i] / totalAllelesObs;
 			alleleFrequencies[i] = alleleFreq;
 
-			if (nrAllelesObservedLocal[i] > 0) {
+			if (sampleDiseaseStatus != null) {
+				alleleFrequenciesCases[i] = alleleFrequenciesCases[i] / (nrCalledCases * 2);
+				alleleFrequenciesControls[i] = alleleFrequenciesControls[i] / (nrCalledControls * 2);
+			}
+
+
+			if (nrAllelesObserved[i] > 0) {
 				nrAllelesThatHaveAlleleFrequency++;
 				if (alleleFreq < minAlleleFreq) {
 					if (i == 0) {
@@ -862,7 +950,7 @@ public class VCFVariant {
 			}
 		}
 
-		calculateHWEP();
+		calculateHWEP(sampleDiseaseStatus);
 
 		if (nrAllelesThatHaveAlleleFrequency == 2) {
 			biallelic = true;
@@ -874,7 +962,22 @@ public class VCFVariant {
 	}
 
 	public void calculateHWEP() {
+		calculateHWEP(null);
+	}
 
+	public double getHwepCases() {
+		return hwepCases;
+	}
+
+	public double getHwepControls() {
+		return hwepControls;
+	}
+
+	public void calculateHWEP(DiseaseStatus[] sampleDiseaseStatus) {
+
+		if (sampleDiseaseStatus != null && sampleDiseaseStatus.length != genotypeAlleles.rows()) {
+			throw new IllegalArgumentException("Sample disease status length does not match number of loaded genotypes. " + sampleDiseaseStatus.length + " disease status vs " + genotypeAlleles.rows() + " genotypes");
+		}
 
 		int nrAlleles = alleles.length;
 		if (nrAlleles == 2) {
@@ -883,30 +986,84 @@ public class VCFVariant {
 			int homs1 = 0;
 			int homs2 = 0;
 
+			int hetsCases = 0;
+			int homs1Cases = 0;
+			int homs2Cases = 0;
+
+			int hetsControls = 0;
+			int homs1Controls = 0;
+			int homs2Controls = 0;
+
 			for (int i = 0; i < genotypeAlleles.rows(); i++) {
 				int a1 = (int) genotypeAlleles.getQuick(i, 0);
+				DiseaseStatus diseaseStatus = null;
+				if (sampleDiseaseStatus != null) {
+					diseaseStatus = sampleDiseaseStatus[i];
+				}
 				if (a1 != -1) {
 					int a2 = (int) genotypeAlleles.getQuick(i, 1);
 					if (a1 == a2) {
 						if (a1 == 0) {
 							homs1++;
+							if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CASE) {
+								homs1Cases++;
+							} else if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CONTROL) {
+								homs1Controls++;
+							}
 						} else {
 							homs2++;
+							if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CASE) {
+								homs2Cases++;
+							} else if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CONTROL) {
+								homs2Controls++;
+							}
 						}
 					} else {
 						hets++;
+						if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CASE) {
+							hetsCases++;
+						} else if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CONTROL) {
+							hetsControls++;
+						}
 					}
 				}
 			}
 
 			hwep = HWE.calculateExactHWEPValue(hets, homs1, homs2);
+			if (sampleDiseaseStatus != null) {
+				hwepCases = HWE.calculateExactHWEPValue(hetsCases, homs1Cases, homs2Cases);
+				hwepControls = HWE.calculateExactHWEPValue(hetsControls, homs1Controls, homs2Controls);
+			}
 		} else {
+			// use a chi-square test for multi-allelic variants (less precise with lower allele frequencies)
 			int nrCombinations = (nrAlleles * (nrAlleles + 1)) / 2;
+			int nrCalled = 0;
+			int nrCalledCases = 0;
+			int nrCalledControls = 0;
+
 			int[] obs = new int[nrCombinations];
 			int[] nrHomozygous = new int[nrAlleles];
-			int nrCalled = 0;
-			int[][] index = new int[nrAlleles][nrAlleles];
+			double[] freqs = new double[nrAlleles];
 
+			double[] freqsCases = new double[nrAlleles];
+			double[] freqsControls = new double[nrAlleles];
+
+			int[] obsCases = null;
+			int[] nrHomozygousCases = null;
+			int[] obsControls = null;
+			int[] nrHomozygousControls = null;
+
+			if (sampleDiseaseStatus != null) {
+				obsCases = new int[nrCombinations];
+				nrHomozygousCases = new int[nrAlleles];
+				obsControls = new int[nrCombinations];
+				nrHomozygousControls = new int[nrAlleles];
+				freqsCases = new double[nrAlleles];
+				freqsControls = new double[nrAlleles];
+			}
+
+			// index the allele combinations
+			int[][] index = new int[nrAlleles][nrAlleles];
 			int ctr = 0;
 			for (int i = 0; i < nrAlleles; i++) {
 				for (int j = i; j < nrAlleles; j++) {
@@ -918,36 +1075,66 @@ public class VCFVariant {
 
 			// count the homozygous
 			for (int i = 0; i < genotypeAlleles.rows(); i++) {
+				DiseaseStatus diseaseStatus = null;
+				if (sampleDiseaseStatus != null) {
+					diseaseStatus = sampleDiseaseStatus[i];
+				}
 				int a1 = (int) genotypeAlleles.getQuick(i, 0);
 				if (a1 != -1) {
 					int a2 = (int) genotypeAlleles.getQuick(i, 1);
 					if (a1 == a2) {
+						if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CASE) {
+							nrHomozygousCases[a1]++;
+						} else if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CONTROL) {
+							nrHomozygousControls[a1]++;
+						}
 						nrHomozygous[a1]++;
 					}
 
 					int id = index[a1][a2];
 					obs[id]++;
+					if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CASE) {
+						obsCases[id]++;
+						nrCalledCases++;
+					} else if (diseaseStatus != null && diseaseStatus == DiseaseStatus.CONTROL) {
+						obsControls[id]++;
+						nrCalledControls++;
+					}
 					nrCalled++;
 				}
 			}
 
-			double[] freqs = new double[nrAlleles];
+
 			for (int i = 0; i < nrAlleles; i++) {
 				for (int j = 0; j < nrAlleles; j++) {
 					int id = index[i][j];
 					if (i == j) {
 						freqs[i] += (2 * obs[id]);
+						if (freqsCases != null) {
+							freqsCases[i] += (2 * obsCases[id]);
+							freqsControls[i] += (2 * obsControls[id]);
+						}
 					} else {
 						freqs[i] += obs[id];
+						if (freqsCases != null) {
+							freqsCases[i] += (obsCases[id]);
+							freqsControls[i] += (obsControls[id]);
+						}
 					}
 				}
 			}
 			for (int i = 0; i < nrAlleles; i++) {
 				freqs[i] /= (nrCalled * 2);
+				if (freqsCases != null) {
+					freqsCases[i] /= (nrCalledCases * 2);
+					freqsControls[i] /= (nrCalledControls * 2);
+				}
 			}
 
 			ctr = 0;
 			double chisq = 0;
+			double chisqCases = 0;
+			double chisqControls = 0;
 			for (int i = 0; i < nrAlleles; i++) {
 				for (int j = i; j < nrAlleles; j++) {
 					double expectedFreq;
@@ -961,12 +1148,40 @@ public class VCFVariant {
 					if (oe != 0 && expectedFreq != 0) {
 						chisq += ((oe * oe) / expectedFreq);
 					}
+
+					if (freqsCases != null) {
+						double expectedFreqCases;
+						double expectedFreqControls;
+						if (i == j) {
+							expectedFreqCases = (freqsCases[i] * freqsCases[i]) * nrCalledCases; // homozygote freq
+							expectedFreqControls = (freqsControls[i] * freqsControls[i]) * nrCalledControls; // homozygote freq
+						} else {
+							expectedFreqCases = (2 * (freqsCases[i] * freqsCases[j])) * nrCalledCases; // heterozygote freq
+							expectedFreqControls = (2 * (freqsControls[i] * freqsControls[j])) * nrCalledControls; // heterozygote freq
+						}
+						double observedFreqCases = obsCases[ctr];
+						double observedFreqControls = obsControls[ctr];
+						double oeCases = (observedFreqCases - expectedFreqCases);
+						double oeControls = (observedFreqControls - expectedFreqControls);
+						if (oeCases != 0 && expectedFreqCases != 0) {
+							chisqCases += ((oeCases * oeCases) / expectedFreqCases);
+						}
+
+						if (oeControls != 0 && expectedFreqControls != 0) {
+							chisqControls += ((oeControls * oeControls) / expectedFreqControls);
+						}
+
+					}
 					ctr++;
 				}
 			}
 
 			int df = (nrCombinations - nrAlleles);
 			hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
+			if (freqsCases != null) {
+				hwepCases = umcg.genetica.math.stats.ChiSquare.getP(df, chisqCases);
+				hwepControls = umcg.genetica.math.stats.ChiSquare.getP(df, chisqControls);
+			}
 		}
 
 	}

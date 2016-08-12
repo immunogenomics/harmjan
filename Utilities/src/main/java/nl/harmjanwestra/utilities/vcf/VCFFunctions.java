@@ -994,7 +994,7 @@ public class VCFFunctions {
 				String alt = "";
 				Chromosome chr = Chromosome.parseChr(variant.getChr());
 				if (sampleIsFemale != null && (chr.equals(Chromosome.X) || chr.equals(Chromosome.Y))) {
-					variant.recalculateMAFAndCallRate(sampleIsFemale);
+					variant.recalculateMAFAndCallRate(sampleIsFemale, sampleDiseaseStatus);
 				}
 
 				if (variant.getCallrate() < callratethreshold) {
