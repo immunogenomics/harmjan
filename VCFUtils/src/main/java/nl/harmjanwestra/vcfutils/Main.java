@@ -970,7 +970,11 @@ public class Main {
 				if (cmd.hasOption("l")) {
 					list = cmd.getOptionValue("l");
 				}
-				stats.run(input, out, list);
+				String fam = null;
+				if (cmd.hasOption("f")) {
+					fam = cmd.getOptionValue("f");
+				}
+				stats.run(input, out, list, fam);
 
 			} else if (cmd.hasOption("summarize3compare")) {
 				VCFVariantStats stats = new VCFVariantStats();

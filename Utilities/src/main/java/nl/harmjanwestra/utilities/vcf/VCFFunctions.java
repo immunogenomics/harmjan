@@ -3,9 +3,12 @@ package nl.harmjanwestra.utilities.vcf;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
 import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.Gender;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
+import nl.harmjanwestra.utilities.individuals.Individual;
 import nl.harmjanwestra.utilities.plink.PedAndMapFunctions;
+import nl.harmjanwestra.utilities.plink.PlinkFamFile;
 import nl.harmjanwestra.utilities.sets.StringSets;
 import nl.harmjanwestra.utilities.shell.ProcessRunner;
 import nl.harmjanwestra.utilities.vcf.filter.GenotypeQualityFilter;
@@ -878,9 +881,6 @@ public class VCFFunctions {
 										   int minObservationsPerAllele) throws IOException {
 
 
-		PedAndMapFunctions pm = new PedAndMapFunctions();
-
-
 		System.out.println("Filtering for low freq variants: " + sequencingVCF);
 		TextFile in = new TextFile(sequencingVCF, TextFile.R);
 		String ln = in.readLine();
@@ -929,7 +929,7 @@ public class VCFFunctions {
 		TextFile filteredVCF = new TextFile(outputdir + "filtered.vcf.gz", TextFile.W);
 
 		HashMap<String, Integer> sampleMap = new HashMap<String, Integer>();
-		Boolean[] sampleIsFemale = null;
+		Gender[] sampleIsFemale = null;
 		while (ln != null) {
 			if (ln.startsWith("##")) {
 // metadata
@@ -945,7 +945,14 @@ public class VCFFunctions {
 				}
 
 				if (famfile != null) {
-					sampleIsFemale = pm.getGenderFromFam(famfile, sampleMap);
+					PlinkFamFile pf = new PlinkFamFile(famfile);
+					sampleIsFemale = new Gender[sampleMap.size()];
+					for (Individual ind : pf.getSamples()) {
+						Integer id = sampleMap.get(ind.getName());
+						if (id != null) {
+							sampleIsFemale[id] = ind.getGender();
+						}
+					}
 				}
 
 				mafthreshold = (double) minObservationsPerAllele / sampleNames.size();
@@ -994,7 +1001,7 @@ public class VCFFunctions {
 				String alt = "";
 				Chromosome chr = Chromosome.parseChr(variant.getChr());
 				if (sampleIsFemale != null && (chr.equals(Chromosome.X) || chr.equals(Chromosome.Y))) {
-					variant.recalculateMAFAndCallRate(sampleIsFemale, sampleDiseaseStatus);
+					variant.recalculateMAFAndCallRate(sampleIsFemale, null);
 				}
 
 				if (variant.getCallrate() < callratethreshold) {

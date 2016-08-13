@@ -46,6 +46,7 @@ public class VCFVariantStats {
 		String[] vcfFiles = vcf1.split(",");
 
 		int threads = Runtime.getRuntime().availableProcessors();
+		
 		System.out.println("Booting up threadpool: " + threads);
 		ExecutorService exService = Executors.newFixedThreadPool(threads);
 		CompletionService<String> jobHandler = new ExecutorCompletionService<String>(exService);
@@ -87,21 +88,27 @@ public class VCFVariantStats {
 				}
 
 				if (famfile != null) {
+					System.out.println("Loading famfile: " + famfile);
 					VCFGenotypeData d = new VCFGenotypeData(file);
 					ArrayList<String> allSamples = d.getSamples();
 					d.close();
-					PlinkFamFile pf = new PlinkFamFile(famfile);
-					ArrayList<Individual> individuals = pf.getSamples();
-					sampleDiseaseStatus = new DiseaseStatus[allSamples.size()];
+
 					HashMap<String, Integer> sampleToId = new HashMap<String, Integer>();
+					int ctr = 0;
 					for (int s = 0; s < allSamples.size(); s++) {
-						sampleToId.put(allSamples.get(s), s);
+						if (samplestoinclude == null || samplestoinclude[s]) {
+							sampleToId.put(allSamples.get(s), ctr);
+							ctr++;
+						}
 					}
 
+					sampleDiseaseStatus = new DiseaseStatus[sampleToId.size()];
 					for (int q = 0; q < sampleDiseaseStatus.length; q++) {
 						sampleDiseaseStatus[q] = DiseaseStatus.UNKNOWN;
 					}
 
+					PlinkFamFile pf = new PlinkFamFile(famfile);
+					ArrayList<Individual> individuals = pf.getSamples();
 					for (Individual ind : individuals) {
 						String sampleName = ind.getName();
 						Integer id = sampleToId.get(sampleName);
@@ -256,11 +263,7 @@ public class VCFVariantStats {
 
 		int multiAllelic = 0;
 
-		for (
-				int chr = 1;
-				chr < 23; chr++)
-
-		{
+		for (int chr = 1; chr < 23; chr++) {
 			// hash the variants in list 1
 			HashMap<Feature, ArrayList<VCFVariant>> set = filter(variants1, chr);
 

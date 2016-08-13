@@ -922,8 +922,8 @@ public class VCFVariant {
 			alleleFrequencies[i] = alleleFreq;
 
 			if (sampleDiseaseStatus != null) {
-				alleleFrequenciesCases[i] = alleleFrequenciesCases[i] / (nrCalledCases * 2);
-				alleleFrequenciesControls[i] = alleleFrequenciesControls[i] / (nrCalledControls * 2);
+				alleleFrequenciesCases[i] = (double) nrAllelesObservedCases[i] / (nrCalledCases * 2);
+				alleleFrequenciesControls[i] = (double) nrAllelesObservedControls[i] / (nrCalledControls * 2);
 			}
 
 
@@ -1045,8 +1045,8 @@ public class VCFVariant {
 			int[] nrHomozygous = new int[nrAlleles];
 			double[] freqs = new double[nrAlleles];
 
-			double[] freqsCases = new double[nrAlleles];
-			double[] freqsControls = new double[nrAlleles];
+			double[] freqsCases = null;
+			double[] freqsControls = null;
 
 			int[] obsCases = null;
 			int[] nrHomozygousCases = null;
