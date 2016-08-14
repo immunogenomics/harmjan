@@ -1,4 +1,4 @@
-package nl.harmjanwestra.miscscripts;
+package nl.harmjanwestra.finemapping;
 
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.graphics.ChromosomePlot;
