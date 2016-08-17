@@ -5,7 +5,6 @@ import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.AssociationResultPValuePair;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
-import umcg.genetica.containers.Triple;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -99,35 +98,38 @@ public class ApproximateBayesPosterior {
 
 	public void calculatePosterior(ArrayList<AssociationResult> assocResults) {
 		double nullVariance = (Math.log(1.5) / 1.96) * (Math.log(1.5) / 1.96); // 0.4
-
-		double[] abfs = new double[assocResults.size()];
 		double sum = 0;
 		for (int i = 0; i < assocResults.size(); i++) {
 			AssociationResult r = assocResults.get(i);
 //			Double beta = Math.log(Math.abs(gwas.getMiddle()));
-			double beta = Math.abs(r.getBeta()[0]);
-			double se = r.getSe()[0];
+			double totalABF = 0;
 
-			if (!Double.isNaN(beta) && !Double.isNaN(se)) {
-				double variance = se * se;
-				try {
-					JSci.maths.statistics.NormalDistribution n1 = new JSci.maths.statistics.NormalDistribution(0, variance);
-					JSci.maths.statistics.NormalDistribution n2 = new JSci.maths.statistics.NormalDistribution(0, variance + nullVariance);
-					double p0 = n1.probability(beta);
-					double p1 = n2.probability(beta);
+			for (int b = 0; b < r.getBeta().length; b++) {
+				double beta = Math.abs(r.getBeta()[b]);
+				double se = r.getSe()[b];
 
-					double abf = p1 / p0;
-					r.setBf(abf);
-					if (!Double.isNaN(abf) && !Double.isInfinite(abf)) {
-						abfs[i] = abf;
-						sum += abf;
+				if (!Double.isNaN(beta) && !Double.isNaN(se)) {
+					double variance = se * se;
+					try {
+						JSci.maths.statistics.NormalDistribution n1 = new JSci.maths.statistics.NormalDistribution(0, variance);
+						JSci.maths.statistics.NormalDistribution n2 = new JSci.maths.statistics.NormalDistribution(0, variance + nullVariance);
+						double p0 = n1.probability(beta);
+						double p1 = n2.probability(beta);
+
+						double abf = p1 / p0;
+
+						totalABF += abf;
+
+						if (!Double.isNaN(abf) && !Double.isInfinite(abf)) {
+							sum += abf;
+						}
+					} catch (OutOfRangeException e) {
+						System.out.println("Distribution out of range: b: " + beta + "\tv: " + variance);
 					}
-				} catch (OutOfRangeException e) {
-					System.out.println("Distribution out of range: b: " + beta + "\tv: " + variance);
 				}
 			}
+			r.setBf(totalABF);
 		}
-
 
 		for (int i = 0; i < assocResults.size(); i++) {
 			AssociationResult r = assocResults.get(i);
