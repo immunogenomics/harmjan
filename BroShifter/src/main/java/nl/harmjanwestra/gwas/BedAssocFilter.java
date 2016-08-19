@@ -9,6 +9,7 @@ import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -19,6 +20,19 @@ public class BedAssocFilter {
 
 	public BedAssocFilter(BedAssocFilterOptions options) throws IOException {
 
+		HashMap<String, Double> thresholdsPerLocus = null;
+		if (options.thresholdfile != null) {
+			TextFile tf = new TextFile(options.thresholdfile, TextFile.R);
+			String[] elems = tf.readLineElems(TextFile.tab);
+			thresholdsPerLocus = new HashMap<String, Double>();
+			while (elems != null) {
+				String region = elems[0];
+				double threshold = Double.parseDouble(elems[2]);
+				thresholdsPerLocus.put(region, threshold);
+				elems = tf.readLineElems(TextFile.tab);
+			}
+			tf.close();
+		}
 
 		// load bed regions to testNormal
 		BedFileReader bf = new BedFileReader();
@@ -29,11 +43,17 @@ public class BedAssocFilter {
 		AssociationFile assocFile = new AssociationFile();
 		ArrayList<AssociationResult> allResults = assocFile.read(options.assocFile, null);
 
-		double threshold = -Math.log10(options.threshold);
 
 		ArrayList<Feature> regionsAfterFilter = new ArrayList<>();
 		for (int i = 0; i < regions.size(); i++) {
 			Feature region = regions.get(i);
+			double threshold = -Math.log10(options.threshold);
+			if (thresholdsPerLocus != null) {
+				Double t = thresholdsPerLocus.get(region.toString());
+				if (t != null) {
+					threshold = t;
+				}
+			}
 			System.out.println(i + "/" + regions.size());
 			ArrayList<AssociationResult> results = filter(allResults, region);
 			boolean written = false;

@@ -2,8 +2,6 @@ package nl.harmjanwestra.gwas.CLI;
 
 import org.apache.commons.cli.*;
 
-import java.io.File;
-
 /**
  * Created by hwestra on 2/24/16.
  */
@@ -11,6 +9,7 @@ public class BedAssocFilterOptions {
 	public String outfile;
 	public String regionFile;
 	public String assocFile;
+	public String thresholdfile;
 	public double threshold = 10E-6;
 
 	private static final Options OPTIONS;
@@ -40,6 +39,12 @@ public class BedAssocFilterOptions {
 		option = Option.builder("t")
 				.hasArg()
 				.desc("Threshold (default: 10-6)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder("q")
+				.hasArg()
+				.desc("Thresholds per locus")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -73,6 +78,10 @@ public class BedAssocFilterOptions {
 			}
 			if (cmd.hasOption("p")) {
 				printTopAssocPerRegion = true;
+			}
+
+			if (cmd.hasOption("q")) {
+				thresholdfile = cmd.getOptionValue("q");
 			}
 
 			if (cmd.hasOption("t")) {

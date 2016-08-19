@@ -97,7 +97,7 @@ public class ApproximateBayesPosterior {
 	}
 
 	public void calculatePosterior(ArrayList<AssociationResult> assocResults) {
-		double nullVariance = (Math.log(1.5) / 1.96) * (Math.log(1.5) / 1.96); // 0.4
+		double prior = 1.5;
 		double sum = 0;
 		for (int i = 0; i < assocResults.size(); i++) {
 			AssociationResult r = assocResults.get(i);
@@ -109,23 +109,16 @@ public class ApproximateBayesPosterior {
 				double se = r.getSe()[b];
 
 				if (!Double.isNaN(beta) && !Double.isNaN(se)) {
-					double variance = se * se;
-					try {
-						JSci.maths.statistics.NormalDistribution n1 = new JSci.maths.statistics.NormalDistribution(0, variance);
-						JSci.maths.statistics.NormalDistribution n2 = new JSci.maths.statistics.NormalDistribution(0, variance + nullVariance);
-						double p0 = n1.probability(beta);
-						double p1 = n2.probability(beta);
 
-						double abf = p1 / p0;
 
-						totalABF += abf;
+					double abf = abf(beta, se, prior);
+					totalABF += abf;
 
-						if (!Double.isNaN(abf) && !Double.isInfinite(abf)) {
-							sum += abf;
-						}
-					} catch (OutOfRangeException e) {
-						System.out.println("Distribution out of range: b: " + beta + "\tv: " + variance);
+
+					if (!Double.isNaN(abf) && !Double.isInfinite(abf)) {
+						sum += abf;
 					}
+
 				}
 			}
 			r.setBf(totalABF);
@@ -143,6 +136,43 @@ public class ApproximateBayesPosterior {
 				}
 			}
 		}
+
+		// abf
+	}
+
+	public static void main(String[] args) {
+		ApproximateBayesPosterior p = new ApproximateBayesPosterior();
+		System.out.println(p.abf(1.316, 0.10, 2));
+	}
+
+
+
+
+	private double abf(double beta, double se, double prior) {
+		double variance = se * se;
+		double theta = beta; // Math.log(beta);
+		try {
+			double nullVariance = (Math.log(prior) / 1.96) * (Math.log(prior) / 1.96); // 0.04
+
+			JSci.maths.statistics.NormalDistribution n1 = new JSci.maths.statistics.NormalDistribution(0, variance);
+			JSci.maths.statistics.NormalDistribution n2 = new JSci.maths.statistics.NormalDistribution(0, variance + nullVariance);
+
+			double p0 = n1.probability(theta);
+			double p1 = n2.probability(theta);
+			double abf = p0 / p1;
+			return abf;
+
+
+		} catch (OutOfRangeException e) {
+			System.out.println("Distribution out of range: b: " + beta + "\tv: " + variance);
+		}
+		/*
+		double z = beta / se;
+						double r2 = nullVariance / (variance + nullVariance);
+						double otherbf = 1 / Math.sqrt(1 - r2) * Math.exp(-((z * z) / 2) * r2);
+		 */
+
+		return 0;
 	}
 
 }
