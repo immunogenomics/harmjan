@@ -47,13 +47,15 @@ public class BedAssocFilter {
 		ArrayList<Feature> regionsAfterFilter = new ArrayList<>();
 		for (int i = 0; i < regions.size(); i++) {
 			Feature region = regions.get(i);
-			double threshold = -Math.log10(options.threshold);
+			double threshold = options.threshold;
 			if (thresholdsPerLocus != null) {
 				Double t = thresholdsPerLocus.get(region.toString());
 				if (t != null) {
 					threshold = t;
 				}
 			}
+			threshold = -Math.log10(threshold);
+
 			System.out.println(i + "/" + regions.size());
 			ArrayList<AssociationResult> results = filter(allResults, region);
 			boolean written = false;
@@ -65,8 +67,6 @@ public class BedAssocFilter {
 					written = true;
 				}
 			}
-
-
 		}
 		out.close();
 
