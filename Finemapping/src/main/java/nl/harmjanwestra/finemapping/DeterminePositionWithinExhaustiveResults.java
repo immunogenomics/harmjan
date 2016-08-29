@@ -4,6 +4,7 @@ import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
+import nl.harmjanwestra.utilities.graphics.Range;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
@@ -26,23 +27,23 @@ public class DeterminePositionWithinExhaustiveResults {
 		DeterminePositionWithinExhaustiveResults d = new DeterminePositionWithinExhaustiveResults();
 		try {
 
-//			regionfile = "D:\\tmp\\2016-06-19\\RA-lociwithindependentfx.bed";
-//			assocfileprefix = "D:\\tmp\\2016-06-19\\exhaustive\\RA-assoc0.3-COSMO-chr";
-//			modelfileprefix = "D:\\tmp\\2016-06-19\\exhaustive\\RA-assoc0.3-COSMO-chr";
-//			outputfile = "D:\\tmp\\2016-06-19\\RA-exhaustiveout-PositionOfTopConditionalEffects.txt";
-//			d.picksamples(regionfile, assocfileprefix, modelfileprefix, outputfile);
-
-//			regionfile = "D:\\tmp\\2016-06-19\\T1D-lociwithindependentfx.bed";
-//			assocfileprefix = "D:\\tmp\\2016-06-19\\exhaustive\\T1D-assoc0.3-COSMO-chr";
-//			modelfileprefix = "D:\\tmp\\2016-06-19\\exhaustive\\T1D-assoc0.3-COSMO-chr";
-//			outputfile = "D:\\tmp\\2016-06-19\\T1D-exhaustive-PositionOfTopConditionalEffects.txt";
-//			d.picksamples(regionfile, assocfileprefix, modelfileprefix, outputfile);
-
-			regionfile = "/Data/tmp/2016-06-20/TNFAIP3.bed";
-			assocfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-TNFAIP3-chr";
-			modelfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-chr";
-			outputfile = "/Data/tmp/2016-06-20/RA-TNFAIP3";
+			regionfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-07-25-SummaryStats\\Conditional\\RA-lociWithIndependentFX.txt";
+			assocfileprefix = "D:\\tmp\\2016-08-14-exhaustive\\RA-assoc0.3-COSMO-chr";
+			modelfileprefix = "D:\\tmp\\2016-08-14-exhaustive\\models\\RA-assoc0.3-COSMO-chr";
+			outputfile = "D:\\tmp\\2016-08-14-exhaustive\\output\\RA-exhaustiveout-PositionOfTopConditionalEffects.txt";
 			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+
+			regionfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-07-25-SummaryStats\\Conditional\\T1D-lociWithIndependentFX.txt";
+			assocfileprefix = "D:\\tmp\\2016-08-14-exhaustive\\T1D-assoc0.3-COSMO-chr";
+			modelfileprefix = "D:\\tmp\\2016-08-14-exhaustive\\models\\T1D-assoc0.3-COSMO-chr";
+			outputfile = "D:\\tmp\\2016-08-14-exhaustive\\output\\T1D-exhaustive-PositionOfTopConditionalEffects.txt";
+			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+
+//			regionfile = "/Data/tmp/2016-06-20/TNFAIP3.bed";
+//			assocfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-TNFAIP3-chr";
+//			modelfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-chr";
+//			outputfile = "/Data/tmp/2016-06-20/RA-TNFAIP3";
+//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -78,7 +79,7 @@ public class DeterminePositionWithinExhaustiveResults {
 			String headerln = tf2.readLine();
 			String[] elems = tf2.readLineElems(TextFile.tab);
 
-			Double pval = 0d;
+			Double pvalForCombo = 0d;
 			ArrayList<Double> allPvals = new ArrayList<>();
 
 			String regionStr = region.toString();
@@ -89,13 +90,14 @@ public class DeterminePositionWithinExhaustiveResults {
 			boolean foundit = false;
 
 
-			ArrayList<Pair<Double, String>> outputBuffer = null;
+//			ArrayList<Pair<Double, String>> outputBuffer = null;
 			double highestPInBuffer = 0;
 			int numberOfTopFx = 25000;
 			ArrayList<Pair<Double, String>> workBuffer = new ArrayList<Pair<Double, String>>(numberOfTopFx);
 
+			boolean lineIsWhatWereLookingFor = false;
 			while (elems != null) {
-
+				lineIsWhatWereLookingFor = false;
 				Feature s1 = new Feature();
 				Chromosome chr = Chromosome.parseChr(elems[0]);
 				Integer pos1 = Integer.parseInt(elems[1]);
@@ -126,31 +128,35 @@ public class DeterminePositionWithinExhaustiveResults {
 					if ((snp1str.equals(variants[0]) && snp2str.equals(variants[1]))
 							|| (snp1str.equals(variants[1]) && snp2str.equals(variants[0]))) {
 						System.out.println("found it.");
-						pval = p;
+						pvalForCombo = p;
 						foundit = true;
+						lineIsWhatWereLookingFor = true;
 					}
+
 					if (p > maxP) {
 						topEffect = elems;
 						maxP = p;
 					}
-					allPvals.add(p);
+					if (!lineIsWhatWereLookingFor) {
+						allPvals.add(p);
+					}
 
 					if (p > highestPInBuffer) {
 						Pair<Double, String> pair = new Pair<Double, String>(p, Strings.concat(elems, Strings.tab), Pair.SORTBY.LEFT);
 						workBuffer.add(pair);
 						if (workBuffer.size() == numberOfTopFx) {
-							if (outputBuffer == null) {
-								outputBuffer = workBuffer;
-								Collections.sort(outputBuffer);
-								System.out.println("Set outputbuffer: "+outputBuffer.size());
-							} else {
-								System.out.println("Update outputbuffer");
-								outputBuffer.addAll(workBuffer);
-								Collections.sort(outputBuffer);
-								ArrayList<Pair<Double, String>> tmp = new ArrayList<>(numberOfTopFx);
-								tmp.addAll(outputBuffer.subList(0, numberOfTopFx));
-								outputBuffer = tmp;
-							}
+//							if (outputBuffer == null) {
+//								outputBuffer = workBuffer;
+//								Collections.sort(outputBuffer);
+//								System.out.println("Set outputbuffer: "+outputBuffer.size());
+//							} else {
+//								System.out.println("Update outputbuffer");
+//								outputBuffer.addAll(workBuffer);
+//								Collections.sort(outputBuffer);
+//								ArrayList<Pair<Double, String>> tmp = new ArrayList<>(numberOfTopFx);
+//								tmp.addAll(outputBuffer.subList(0, numberOfTopFx));
+//								outputBuffer = tmp;
+//							}
 							workBuffer = new ArrayList<>(numberOfTopFx);
 						}
 					}
@@ -160,27 +166,27 @@ public class DeterminePositionWithinExhaustiveResults {
 			}
 			tf2.close();
 
-			if (outputBuffer == null) {
-				outputBuffer = workBuffer;
-				Collections.sort(outputBuffer);
-			} else {
-				outputBuffer.addAll(workBuffer);
-				Collections.sort(outputBuffer);
-				ArrayList<Pair<Double, String>> tmp = new ArrayList<>(numberOfTopFx);
-				tmp.addAll(outputBuffer.subList(0, numberOfTopFx));
-				outputBuffer = tmp;
-			}
+//			if (outputBuffer == null) {
+//				outputBuffer = workBuffer;
+//				Collections.sort(outputBuffer);
+//			} else {
+//				outputBuffer.addAll(workBuffer);
+//				Collections.sort(outputBuffer);
+//				ArrayList<Pair<Double, String>> tmp = new ArrayList<>(numberOfTopFx);
+//				tmp.addAll(outputBuffer.subList(0, numberOfTopFx));
+//				outputBuffer = tmp;
+//			}
 
-			TextFile outtop = new TextFile(outputfile + "_" + region.toString() + "-top" + numberOfTopFx + ".txt.gz", TextFile.W);
-			outtop.writeln(headerln);
-			for (int d = 0; d < outputBuffer.size(); d++) {
-				outtop.writeln(outputBuffer.get(d).getRight());
-			}
-			outtop.close();
+//			TextFile outtop = new TextFile(outputfile + "_" + region.toString() + "-top" + numberOfTopFx + ".txt.gz", TextFile.W);
+//			outtop.writeln(headerln);
+//			for (int d = 0; d < outputBuffer.size(); d++) {
+//				outtop.writeln(outputBuffer.get(d).getRight());
+//			}
+//			outtop.close();
 
 			int nrLowerPvals = 0;
 			for (Double d : allPvals) {
-				if (d > pval) {
+				if (d >= pvalForCombo) {
 					nrLowerPvals++;
 				}
 			}
@@ -206,7 +212,7 @@ public class DeterminePositionWithinExhaustiveResults {
 			String output = regionStr + "\t" +
 					variants[0] + "\t" +
 					variants[1] + "\t" +
-					pval + "\t" +
+					pvalForCombo + "\t" +
 					foundit + "\t" +
 					nrLowerPvals + "\t" +
 					allPvals.size() + "\t" +
@@ -216,7 +222,43 @@ public class DeterminePositionWithinExhaustiveResults {
 
 			System.out.println(region.toString() + "\nConditional effect: " + (nrLowerPvals) + " lower pvals out of " + allPvals.size());
 
+
+			double max = Collections.max(allPvals);
+			double min = Collections.min(allPvals);
+			System.out.println();
+			System.out.println("Pval of combo: " + pvalForCombo);
+			System.out.println("Max: " + max);
+			System.out.println("Min: " + min);
+
+			int nrbins = 100;
+			int[] bins = new int[nrbins];
+			Range range = new Range(min, min, max, max);
+			for (double d : allPvals) {
+				double pos = range.getRelativePositionX(d);
+				int bin = (int) Math.floor(pos * nrbins);
+				if (bin >= nrbins) {
+					bin = nrbins - 1;
+				}
+				if (bin < 0) {
+					bin = 0;
+				}
+				bins[bin]++;
+			}
+
+
 			outf.writeln(output);
+
+			TextFile binout = new TextFile(outputfile + "_" + region.toString() + "-bins.txt", TextFile.W);
+			binout.writeln("PvalBin\tCt\tPerc");
+			double stepsize = range.getRangeX() / nrbins;
+			for (int i = 0; i < nrbins; i++) {
+				binout.writeln(
+						(min + (stepsize * i))
+								+ "\t" + bins[i]
+								+ "\t" + ((double) bins[i] / allPvals.size())
+						);
+			}
+			binout.close();
 		}
 
 		outf.close();
