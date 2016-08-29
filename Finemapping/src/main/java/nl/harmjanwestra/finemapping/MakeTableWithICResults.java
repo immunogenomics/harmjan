@@ -6,6 +6,7 @@ import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.math.DetermineLD;
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
@@ -14,6 +15,7 @@ import umcg.genetica.text.Strings;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by Harm-Jan on 06/15/16.
@@ -27,53 +29,66 @@ public class MakeTableWithICResults {
 			String fmAssocFile = "";
 			String icTabFile = "";
 			String locusFile = "";
-			String tabixprefix = "/Data/Ref/1kg/cosmo.1kg.phase3.v5.chr";
+			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chr";
+			String tabixSampleFile = "";
 
 			/// RA
-			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_ra_eyre_4_19_1.tab.gz";
-			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
-			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-RA-LocusComparisonWithEyre.txt";
-			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
-
-			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_ra_eyre_4_19_1.tab.gz";
-			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior-significantloci.txt.gz";
-			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-RA-LocusComparisonWithEyre-SignificantLoci.txt";
-			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
-
-			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
-			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
-			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-RA-LocusComparisonWithOkada.txt";
-			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+//			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_ra_eyre_4_19_1.tab.gz";
+//			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+//			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+//			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/ComparisonsToIC/2016-06-19-RA-LocusComparisonWithEyre.txt";
+//			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+//
+//			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_ra_eyre_4_19_1.tab.gz";
+//			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+//			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior-significantloci.txt.gz";
+//			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/ComparisonsToIC/2016-06-19-RA-LocusComparisonWithEyre-SignificantLoci.txt";
+//			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
 
 			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
 			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-RA-LocusComparisonWithOkada-SignificantLoci.txt";
-			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior-significantloci.txt.gz";
-			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/ComparisonsToIC/2016-06-19-RA-LocusComparisonWithOkada.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
-			/// T1D
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-significantregions-75e7.bed";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/ComparisonsToIC/2016-06-19-RA-LocusComparisonWithOkada-SignificantLoci.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
+//
+//			// T1D
 			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
 			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
 			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
-			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-T1D-LocusComparisonWithOnengutCC.txt";
-			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/ComparisonsToIC/2016-06-19-T1D-LocusComparisonWithOnengutCC.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
 			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
 			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior-significantloci.txt.gz";
-			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/2016-06-19-T1D-LocusComparisonWithOnengutCC-SignificantLoci.txt";
-			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, outfile);
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-significantregions-75e7.bed";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/ComparisonsToIC/2016-06-19-T1D-LocusComparisonWithOnengutCC-SignificantLoci.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
+			// ComparisonsToMeta
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-significantregions-75e7.bed";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/ComparisonsToMeta/2016-06-19-RA-LocusComparisonWithOkada.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
+
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz";
+			fmAssocFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-significantregions-75e7.bed";
+			outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/ComparisonsToMeta/2016-06-19-T1D-LocusComparisonWithMeta-SignificantLoci.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void make(String locusfile, String icTabFile, String fmAssocFile, String tabixprefix, String outfile) throws IOException {
+	public void make(String locusfile, String icTabFile, String fmAssocFile, String tabixprefix, String tabixSampleFile, String outfile) throws IOException {
 
 		String[] header1 = new String[]{"",
 				"",
@@ -109,11 +124,8 @@ public class MakeTableWithICResults {
 				, "Alleles", "Minor", "OR", "Beta", "Pval"
 		};
 
-
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(locusfile);
-
-
 		AssociationFile assocfilereader = new AssociationFile();
 
 		TextFile out = new TextFile(outfile, TextFile.W);
@@ -123,6 +135,7 @@ public class MakeTableWithICResults {
 		for (int r = 0; r < regions.size(); r++) {
 			System.out.println(r + "/" + regions.size());
 			Feature region = regions.get(r);
+
 			ArrayList<AssociationResult> icResults = assocfilereader.read(icTabFile, region);
 			ArrayList<AssociationResult> fmResults = assocfilereader.read(fmAssocFile, region);
 
@@ -132,7 +145,7 @@ public class MakeTableWithICResults {
 			if (bestICResult != null && bestFMResult != null) {
 
 				// get the variants in Cosmo
-				Pair<VCFVariant, VCFVariant> variants = getVariants(tabixprefix, region, bestICResult.getSnp(), bestFMResult.getSnp());
+				Pair<VCFVariant, VCFVariant> variants = getVariants(tabixprefix, tabixSampleFile, region, bestICResult.getSnp(), bestFMResult.getSnp());
 				DetermineLD ldcalc = new DetermineLD();
 				Pair<Double, Double> ld = ldcalc.getLD(variants.getLeft(), variants.getRight());
 
@@ -162,9 +175,29 @@ public class MakeTableWithICResults {
 
 	}
 
-	private Pair<VCFVariant, VCFVariant> getVariants(String tabixrefprefix, Feature region, Feature snp1, Feature snp2) throws IOException {
+	private Pair<VCFVariant, VCFVariant> getVariants(String tabixrefprefix, String samplesToInclude, Feature region, Feature snp1, Feature snp2) throws IOException {
 
 		String tabixfile = tabixrefprefix + region.getChromosome().getNumber() + ".vcf.gz";
+
+		boolean[] samplesToIncludeArr = null;
+
+		if (samplesToInclude != null) {
+			HashSet<String> sampleIncludeHash = new HashSet<String>();
+			TextFile tf = new TextFile(samplesToInclude, TextFile.R);
+			sampleIncludeHash.addAll(tf.readAsArrayList());
+			tf.close();
+
+			VCFGenotypeData g = new VCFGenotypeData(tabixfile);
+			ArrayList<String> samplesInVCF = g.getSamples();
+			samplesToIncludeArr = new boolean[samplesInVCF.size()];
+			for (int i = 0; i < samplesInVCF.size(); i++) {
+				if (sampleIncludeHash.contains(samplesInVCF.get(i))) {
+					samplesToIncludeArr[i] = true;
+				}
+			}
+
+		}
+
 		TabixReader reader = new TabixReader(tabixfile);
 		TabixReader.Iterator window = reader.query(region.getChromosome().getNumber() + ":" + (region.getStart() - 10) + "-" + (region.getStop() + 10));
 		String next = window.next();
@@ -176,12 +209,13 @@ public class MakeTableWithICResults {
 			VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.HEADER);
 			if (variant.asFeature().overlaps(snp1)) {
 				if (variant.getId().equals(snp1.getName())) {
-					variant1 = new VCFVariant(next, VCFVariant.PARSE.ALL);
+
+					variant1 = new VCFVariant(next, VCFVariant.PARSE.ALL, samplesToIncludeArr);
 				}
 			}
 			if (variant.asFeature().overlaps(snp2)) {
 				if (variant.getId().equals(snp2.getName())) {
-					variant2 = new VCFVariant(next, VCFVariant.PARSE.ALL);
+					variant2 = new VCFVariant(next, VCFVariant.PARSE.ALL, samplesToIncludeArr);
 				}
 			}
 			next = window.next();

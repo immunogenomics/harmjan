@@ -28,7 +28,11 @@ public class PlotterAccuracy extends VariantCounter {
 	// id	allele1	allele2	maf	callrate	allele21	allele22	maf 	cr	df	nrsamples	r	rsq	beta	se	impqual0	impqual1
 	protected int width = 640;
 	protected int height = 480;
-	boolean onlyIc = false;
+	final double mafthreshold = 0.01;
+	final boolean onlyIc = false;
+	final boolean windows = false;
+	final boolean includeId = false;
+	double qualthreshold = 0.5;
 
 	public static void main(String[] args) {
 		PlotterAccuracy p = new PlotterAccuracy();
@@ -60,17 +64,17 @@ public class PlotterAccuracy extends VariantCounter {
 		};
 		String diseaseprefix = "T1D";
 
-		files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
-		};
-		labels = new String[]{
-				"EUR",
-				"COSMO",
-				"HRC / COSMO / EAGLE"
-		};
-		diseaseprefix = "RA";
+//		files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
+//		};
+//		labels = new String[]{
+//				"EUR",
+//				"COSMO",
+//				"HRC / COSMO / EAGLE"
+//		};
+//		diseaseprefix = "RA";
 
 		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
 		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
@@ -81,11 +85,8 @@ public class PlotterAccuracy extends VariantCounter {
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
 		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/" + diseaseprefix + "-plots/";
-		double mafthreshold = 0.01;
+		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-23-Accuracy/" + diseaseprefix + "-plots/";
 
-		boolean includeId = true;
-		boolean windows = false;
 		String ext = "pdf";
 
 		if (windows) {
@@ -126,7 +127,6 @@ public class PlotterAccuracy extends VariantCounter {
 		boolean usemafthreshold = false;
 		boolean includeICVariants = true;
 
-
 		// including indels
 		int maxNrVariants = 1862;
 		includeindels = true;
@@ -140,34 +140,44 @@ public class PlotterAccuracy extends VariantCounter {
 		out = outdir + diseaseprefix + "-plot1-allvariants-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
+
+		// maf > 1%, imputed variants
+		usemafthreshold = false;
+		includeICVariants = false;
+		maxNrVariants = 693; // if including IDs
+		maxNrVariants = 689; // if not including IDs
+		out = outdir + diseaseprefix + "-plot1-allvariants-imputed." + ext;
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+
 		// maf > 1%, imputed variants
 		usemafthreshold = true;
 		includeICVariants = false;
-		maxNrVariants = 693;
+		maxNrVariants = 693; // if including IDs
+		maxNrVariants = 689; // if not including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
 
-		// excluding indels
-		maxNrVariants = 1717;
-		includeindels = false;
-		usemafthreshold = false;
-		includeICVariants = true;
-		out = outdir + diseaseprefix + "-plot1-excludedindels." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-
-		// maf > 1%
-		usemafthreshold = true;
-		out = outdir + diseaseprefix + "-plot1-excludedindels-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-
-		// maf > 1%, imputed variants
-		usemafthreshold = true;
-		includeICVariants = false;
-		maxNrVariants = 548;
-		out = outdir + diseaseprefix + "-plot1-excludedindels-imputed-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-
+//		// excluding indels
+//		maxNrVariants = 1717;
+//		includeindels = false;
+//		usemafthreshold = false;
+//		includeICVariants = true;
+//		out = outdir + diseaseprefix + "-plot1-excludedindels." + ext;
+//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+//
+//		// maf > 1%
+//		usemafthreshold = true;
+//		out = outdir + diseaseprefix + "-plot1-excludedindels-mafgt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+//
+//		// maf > 1%, imputed variants
+//		usemafthreshold = true;
+//		includeICVariants = false;
+//		maxNrVariants = 548;
+//		out = outdir + diseaseprefix + "-plot1-excludedindels-imputed-mafgt" + mafthreshold + "." + ext;
+//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+//
 
 	}
 
@@ -181,6 +191,7 @@ public class PlotterAccuracy extends VariantCounter {
 					  boolean includeId,
 					  String variantsOnIC,
 					  String seqpanelvcf
+
 
 
 	) throws IOException, DocumentException {
@@ -213,12 +224,15 @@ public class PlotterAccuracy extends VariantCounter {
 			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 		}
 
+
 		String[] newlabels = new String[labels.length];
 		for (int f = 0; f < files.length; f++) {
 			// get the imputation accuracies for these variants
 			TextFile tf2 = new TextFile(files[f], TextFile.R);
 			ArrayList<Double> corvals = new ArrayList<>();
 			String[] elems = tf2.readLineElems(TextFile.tab);
+			int nrAboveQualThreshold = 0;
+
 			while (elems != null) {
 				if (!elems[rsqlcol].equals("null")) {
 					double val = Double.parseDouble(elems[rsqlcol]);
@@ -230,6 +244,11 @@ public class PlotterAccuracy extends VariantCounter {
 					if (sequenced) {
 						if (!usemafthreshold || (usemafthreshold && maf > mafthreshold)) {
 							corvals.add(val);
+							if (val > qualthreshold) {
+								nrAboveQualThreshold++;
+							}
+						} else {
+
 						}
 					}
 				}
@@ -238,9 +257,16 @@ public class PlotterAccuracy extends VariantCounter {
 			}
 			tf2.close();
 			Collections.sort(corvals, Collections.reverseOrder());
-			System.out.println(corvals.size() + " vals in path " + files[f]);
+			System.out.println(nrAboveQualThreshold + " > " + qualthreshold + "\t" + corvals.size() + " vals in path " + files[f]);
 			newlabels[f] = labels[f] + " - " + corvals.size() + " / " + maxSize;
 			vals.add(corvals);
+
+//			if (writeMissingFor != null && writeMissingFor.equals(f)) {
+//				// get the list of variants below the thresholds
+//
+//
+//			}
+
 		}
 
 		System.out.println(maxSize + " total vals");

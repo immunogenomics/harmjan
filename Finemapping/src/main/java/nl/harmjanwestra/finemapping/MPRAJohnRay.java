@@ -31,7 +31,7 @@ public class MPRAJohnRay {
 
 	private void calculateProxies() throws IOException {
 
-		String tabixrefprefix = "/Data/Ref/1kg/cosmo.1kg.phase3.v5.chr";
+		String tabixrefprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chr1.vcf.gz";
 		String outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-08-08-JohnRayMPRA/filterout/ldfile.txt";
 		String raybedfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-08-08-JohnRayMPRA/20160617_both_sig_MPRA_SNPs.bed";
 
