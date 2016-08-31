@@ -28,7 +28,7 @@ public class CompareJointAnalysisToSingleDatasetAnalyses {
 		double ldthreshold = 0.8;
 	}
 
-	public void run(String[] files, String[] names, String jointbedfile, String tabixprefix, String out) throws IOException {
+	public void run(String[] assocfiles, String[] names, String jointbedfile, String tabixprefix, String out) throws IOException {
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> bedregions = reader.readAsList(jointbedfile);
@@ -56,11 +56,11 @@ public class CompareJointAnalysisToSingleDatasetAnalyses {
 			Feature region = bedregions.get(f);
 
 			AssociationFile af = new AssociationFile();
-			AssociationResult[][] results = new AssociationResult[files.length][];
-			AssociationResult[] top = new AssociationResult[files.length];
+			AssociationResult[][] results = new AssociationResult[assocfiles.length][];
+			AssociationResult[] top = new AssociationResult[assocfiles.length];
 
-			for (int i = 0; i < files.length; i++) {
-				ArrayList<AssociationResult> r = af.read(files[i], region);
+			for (int i = 0; i < assocfiles.length; i++) {
+				ArrayList<AssociationResult> r = af.read(assocfiles[i], region);
 				results[i] = r.toArray(new AssociationResult[0]);
 				double maxP = 0;
 				for (AssociationResult a : r) {

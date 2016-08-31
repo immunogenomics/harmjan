@@ -30,6 +30,12 @@ public class LDPanel extends Panel {
 		this.region = region;
 	}
 
+	private boolean useQuadScale = false;
+
+	public void scaleQuadratic(boolean b) {
+		useQuadScale = true;
+	}
+
 	@Override
 	public void draw(DefaultGraphics g) {
 
@@ -75,13 +81,13 @@ public class LDPanel extends Panel {
 			if (perc1 >= 0 && perc2 >= 0 && perc1 <= 1 && perc2 <= 1) {
 
 				double yperc = objs.get(i).p;
-				yperc *= yperc;
+				if (useQuadScale) {
+					yperc *= yperc;
+				}
 				int color = (int) Math.floor(255 - (yperc * 255));
 				if (color < 0) {
 					color = 0;
 				}
-
-
 
 
 				double startX1 = x0 + marginX + (perc1 * nrPixelsMaxX);
@@ -96,9 +102,6 @@ public class LDPanel extends Panel {
 					g2d.fillOval((int) Math.floor(startX1) - 5, (int) Math.floor(startY1) - 5, 10, 10);
 				}
 
-//				double startX2 = x0 + marginX + (perc2 * ppbp);
-//				double startY2 = y0 + marginY + (perc1 * ppbp);
-//				g2d.fillRect((int) Math.floor(startX2), (int) Math.floor(startY2), ppbpi, ppbpi);
 			}
 		}
 	}

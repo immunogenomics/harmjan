@@ -143,13 +143,13 @@ public class ExhaustivePlot {
 			pvals2.add(pvals.get(i) / maxP);
 		}
 
-
 		// make the actual plot
 		Grid grid = new Grid(400, 400, 1, 1, 100, 100);
 
 		LDPanel panel = new LDPanel(1, 1);
 		panel.setData(region, positions, pvals2);
 		grid.addPanel(panel);
+		panel.scaleQuadratic(true);
 		grid.draw(output + ".png");
 	}
 
