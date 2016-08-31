@@ -144,7 +144,6 @@ public class Grid {
 
 	public void draw(String filename) throws IOException, DocumentException {
 		if (filename.endsWith(".png")) {
-
 			draw(filename, DefaultGraphics.Output.PNG);
 		} else if (filename.endsWith(".pdf")) {
 			draw(filename, DefaultGraphics.Output.PDF);

@@ -74,10 +74,7 @@ public class DeterminePositionWithinExhaustiveResults {
 				System.exit(-1);
 			}
 
-			// get all pvalues in region
-			TextFile tf2 = new TextFile(assocfile, TextFile.R);
-			String headerln = tf2.readLine();
-			String[] elems = tf2.readLineElems(TextFile.tab);
+
 
 			Double pvalForCombo = 0d;
 			ArrayList<Double> allPvals = new ArrayList<>();
@@ -96,6 +93,10 @@ public class DeterminePositionWithinExhaustiveResults {
 			ArrayList<Pair<Double, String>> workBuffer = new ArrayList<Pair<Double, String>>(numberOfTopFx);
 
 			boolean lineIsWhatWereLookingFor = false;
+			// get all pvalues in region
+			TextFile tf2 = new TextFile(assocfile, TextFile.R);
+			String headerln = tf2.readLine();
+			String[] elems = tf2.readLineElems(TextFile.tab);
 			while (elems != null) {
 				lineIsWhatWereLookingFor = false;
 				Feature s1 = new Feature();
