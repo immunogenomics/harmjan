@@ -24,11 +24,11 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
 
 		String[] files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-SHAPEIT.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-SHAPEIT.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
 		};
 
 		String[] labels = new String[]{
@@ -39,21 +39,23 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 				"HRC / HRC / EAGLE / MICHIGAN"
 		};
 		String diseaseprefix = "T1D";
+//
+//		files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-EUR.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-HRC-w100kb.txt",
+//		};
+//		labels = new String[]{
+//				"EUR",
+//				"COSMO",
+//				"HRC / COSMO / EAGLE"
+//		};
+//		diseaseprefix = "RA";
 
-		files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
-		};
-		labels = new String[]{
-				"EUR",
-				"COSMO",
-				"HRC / COSMO / EAGLE"
-		};
-		diseaseprefix = "RA";
+		seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz-updatedRSId.vcf.gz";
+		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
 
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-
 		String outfile = "/Data/tmp/2016-06-29-quals/T1D-INFOAndAccMerged.txt";
 
 		boolean includeId = true;

@@ -122,7 +122,7 @@ public class VCFCorrelator {
 		System.out.println(samples1.size() + " samples in " + vcf1);
 		ArrayList<String> samples2 = data2.getSamples();
 		System.out.println(samples2.size() + " samples in " + vcf2);
-
+		data1.close();
 		data2.close();
 
 		HashSet<String> samples1Hash = new HashSet<String>();
@@ -143,6 +143,19 @@ public class VCFCorrelator {
 		}
 		System.out.println(sharedSamples.size() + " samples shared between VCFs");
 
+		boolean[] includeSamples1 = new boolean[samples1.size()];
+		for (int s1 = 0; s1 < samples1.size(); s1++) {
+			if (sharedSamplesIndex.containsKey(samples1.get(s1))) {
+				includeSamples1[s1] = true;
+			}
+		}
+		boolean[] includeSamples2 = new boolean[samples2.size()];
+		for (int s2 = 0; s2 < samples2.size(); s2++) {
+			if (sharedSamplesIndex.containsKey(samples1.get(s2))) {
+				includeSamples2[s2] = true;
+			}
+		}
+
 		HashSet<String> varsToTest = null;
 		if (variantsToTestFile != null) {
 			TextFile fin = new TextFile(variantsToTestFile, TextFile.R);
@@ -157,7 +170,6 @@ public class VCFCorrelator {
 				} else {
 					varsToTest.add(s);
 				}
-
 			}
 			if (splitweirdly) {
 				System.out.println("split weirdly ;)");
@@ -169,23 +181,30 @@ public class VCFCorrelator {
 		HashMap<String, VCFVariant> variantMap = new HashMap<String, VCFVariant>();
 		ArrayList<VCFVariant> variants1 = new ArrayList<VCFVariant>();
 		int ctr1 = 0;
-		while (data1.hasNext()) {
-			VCFVariant var = data1.next();
-			Chromosome chr = Chromosome.parseChr(var.getChr());
 
-			if (!chr.equals(Chromosome.X)) {
-				String varStr = var.toString();
-				if (varsToTest == null || varsToTest.contains(varStr)) {
-					variantMap.put(var.toString(), var);
-					variants1.add(var);
+		TextFile tfvcf1 = new TextFile(vcf1, TextFile.R);
+		String vcf1ln = tfvcf1.readLine();
+		while (vcf1ln != null) {
+			if (!vcf1ln.startsWith("#")) {
+				VCFVariant var = new VCFVariant(vcf1ln, VCFVariant.PARSE.ALL, includeSamples1);
+				Chromosome chr = Chromosome.parseChr(var.getChr());
+
+				if (!chr.equals(Chromosome.X)) {
+					String varStr = var.toString();
+					if (varsToTest == null || varsToTest.contains(varStr)) {
+						variantMap.put(var.toString(), var);
+						variants1.add(var);
+					}
+				}
+				ctr1++;
+				if (ctr1 % 1000 == 0) {
+					System.out.println(ctr1 + " variants parsed from vcf1");
 				}
 			}
-			ctr1++;
-			if (ctr1 % 1000 == 0) {
-				System.out.println(ctr1 + " variants parsed from vcf1");
-			}
+
+			vcf1ln = tfvcf1.readLine();
 		}
-		data1.close();
+		tfvcf1.close();
 
 		System.out.println(variantMap.size() + " variants loaded from " + vcf1);
 		TextFile tfot = new TextFile(out, TextFile.W);
@@ -214,7 +233,7 @@ public class VCFCorrelator {
 
 				VCFVariant var1 = variantMap.get(varStr);
 				if (var1 != null) {
-					VCFVariant var2 = new VCFVariant(ln);
+					VCFVariant var2 = new VCFVariant(ln, VCFVariant.PARSE.ALL, includeSamples2);
 
 //					if (var2.getTokens() != null) {
 //						var2.parseGenotypes(var2.getTokens(), VCFVariant.PARSE.ALL);
@@ -232,6 +251,7 @@ public class VCFCorrelator {
 					if (gprobs1[0].length == gprobs2[0].length) {
 
 						// recode: make sure sample ordering is identical
+
 
 						gprobs1 = reorder(gprobs1, samples1, sharedSamplesIndex, sharedSamples.size());
 						gprobs2 = reorder(gprobs2, samples2, sharedSamplesIndex, sharedSamples.size());

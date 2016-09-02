@@ -357,7 +357,8 @@ public class VariantCounter {
 																											 double upperthreshold,
 																											 HashSet<String> variantsOnICHash,
 																											 boolean includeId,
-																											 boolean includeIndels) throws IOException {
+																											 boolean includeIndels,
+																											 String sampleList) throws IOException {
 
 		BedFileReader bfr = new BedFileReader();
 		ArrayList<Feature> regions = bfr.readAsList(bedregionsFile);

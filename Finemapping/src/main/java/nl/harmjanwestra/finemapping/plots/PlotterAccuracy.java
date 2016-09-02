@@ -3,6 +3,7 @@ package nl.harmjanwestra.finemapping.plots;
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.finemapping.VariantCounter;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
@@ -13,6 +14,7 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
@@ -31,11 +33,12 @@ public class PlotterAccuracy extends VariantCounter {
 	final double mafthreshold = 0.01;
 	final boolean onlyIc = false;
 	final boolean windows = false;
-	final boolean includeId = false;
+	final boolean includeId = true;
 	double qualthreshold = 0.5;
 
 	public static void main(String[] args) {
 		PlotterAccuracy p = new PlotterAccuracy();
+
 		try {
 			p.plotCorr();
 		} catch (IOException e) {
@@ -48,11 +51,11 @@ public class PlotterAccuracy extends VariantCounter {
 
 	public void plotCorr() throws IOException, DocumentException {
 		String[] files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-SHAPEIT.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-SHAPEIT.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
 		};
 
 		String[] labels = new String[]{
@@ -64,19 +67,19 @@ public class PlotterAccuracy extends VariantCounter {
 		};
 		String diseaseprefix = "T1D";
 
-//		files = new String[]{
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
-//		};
-//		labels = new String[]{
-//				"EUR",
-//				"COSMO",
-//				"HRC / COSMO / EAGLE"
-//		};
-//		diseaseprefix = "RA";
+		files = new String[]{
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-EUR.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-HRC-w100kb.txt",
+		};
+		labels = new String[]{
+				"EUR",
+				"COSMO",
+				"HRC / COSMO / EAGLE"
+		};
+		diseaseprefix = "RA";
 
-		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
+		String seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz-updatedRSId.vcf.gz";
 		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
 
 //		String[] files2 = new String[]{
@@ -85,7 +88,7 @@ public class PlotterAccuracy extends VariantCounter {
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
 		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-23-Accuracy/" + diseaseprefix + "-plots/";
+		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/" + diseaseprefix + "-plots/";
 
 		String ext = "pdf";
 
@@ -144,16 +147,16 @@ public class PlotterAccuracy extends VariantCounter {
 		// maf > 1%, imputed variants
 		usemafthreshold = false;
 		includeICVariants = false;
-		maxNrVariants = 693; // if including IDs
-		maxNrVariants = 689; // if not including IDs
+		maxNrVariants = 692; // if including IDs
+//		maxNrVariants = 689; // if not including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
 		// maf > 1%, imputed variants
 		usemafthreshold = true;
 		includeICVariants = false;
-		maxNrVariants = 693; // if including IDs
-		maxNrVariants = 689; // if not including IDs
+		maxNrVariants = 692; // if including IDs
+//		maxNrVariants = 689; // if not including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 
@@ -193,7 +196,6 @@ public class PlotterAccuracy extends VariantCounter {
 					  String seqpanelvcf
 
 
-
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
@@ -215,10 +217,12 @@ public class PlotterAccuracy extends VariantCounter {
 
 
 		HashSet<String> sequencedVariantsHash = null;
+		ArrayList<VCFVariant> allvars = new ArrayList<>();
+
 		if (includeICVariants) {
-			ArrayList<VCFVariant> allvars = new ArrayList<>();
 			allvars.addAll(variantsNotOnImmunoChip);
 			allvars.addAll(variantsOnImmunoChip);
+
 			sequencedVariantsHash = hashit(allvars, includeId);
 		} else {
 			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
@@ -233,6 +237,11 @@ public class PlotterAccuracy extends VariantCounter {
 			String[] elems = tf2.readLineElems(TextFile.tab);
 			int nrAboveQualThreshold = 0;
 
+			ArrayList<String> missing = new ArrayList<String>();
+
+
+			ArrayList<String[]> variantsBelowThresholds = new ArrayList<>();
+			ArrayList<String> variantsAboveThresholds = new ArrayList<>();
 			while (elems != null) {
 				if (!elems[rsqlcol].equals("null")) {
 					double val = Double.parseDouble(elems[rsqlcol]);
@@ -241,15 +250,28 @@ public class PlotterAccuracy extends VariantCounter {
 					String[] varElems = elems[0].split("_");
 
 					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
+
+					boolean abovethreshold = true;
 					if (sequenced) {
+
 						if (!usemafthreshold || (usemafthreshold && maf > mafthreshold)) {
 							corvals.add(val);
 							if (val > qualthreshold) {
 								nrAboveQualThreshold++;
+
+							} else {
+								abovethreshold = false;
 							}
 						} else {
-
+							abovethreshold = false;
 						}
+					}
+
+					if (!abovethreshold) {
+						variantsBelowThresholds.add(elems);
+					} else {
+						String variant = Chromosome.parseChr(elems[0]).toString() + "_" + elems[1] + "_" + elems[2];
+						variantsAboveThresholds.add(variant);
 					}
 				}
 
@@ -261,11 +283,23 @@ public class PlotterAccuracy extends VariantCounter {
 			newlabels[f] = labels[f] + " - " + corvals.size() + " / " + maxSize;
 			vals.add(corvals);
 
-//			if (writeMissingFor != null && writeMissingFor.equals(f)) {
-//				// get the list of variants below the thresholds
-//
-//
-//			}
+
+			TextFile outf = new TextFile(out + labels[f] + "-belowthresholds.txt", TextFile.W);
+			for (String[] elem : variantsBelowThresholds) {
+				outf.writeln(Strings.concat(elem, Strings.tab));
+			}
+			outf.close();
+
+			HashSet<String> variantsAboveThresholdHash = new HashSet<String>();
+			variantsAboveThresholdHash.addAll(variantsAboveThresholds);
+			TextFile outf2 = new TextFile(out + labels[f] + "-missing.txt", TextFile.W);
+			for (VCFVariant var : allvars) {
+				String variant = var.getChrObj().toString() + "_" + var.getPos() + "_" + var.getId();
+				if (!variantsAboveThresholdHash.contains(variant)) {
+					outf2.writeln(variant + "\t" + var.getMinorAllele() + "\tt" + Strings.concat(var.getAlleles(), Strings.comma) + "\t" + var.getMAF());
+				}
+			}
+			outf.close();
 
 		}
 
