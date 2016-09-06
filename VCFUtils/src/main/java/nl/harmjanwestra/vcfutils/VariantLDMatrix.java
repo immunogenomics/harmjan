@@ -113,7 +113,7 @@ public class VariantLDMatrix {
 		LDPanel panel = new LDPanel(0, 0);
 		DoubleMatrixDataset<String, String> set = new DoubleMatrixDataset<String, String>();
 		set.loadDoubleData(correlationMatrix);
-		panel.setData(set);
+//		panel.setData(set);
 		grid.addPanel(panel);
 
 		try {

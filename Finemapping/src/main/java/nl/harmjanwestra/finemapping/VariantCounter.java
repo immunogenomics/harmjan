@@ -3,6 +3,7 @@ package nl.harmjanwestra.finemapping;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
@@ -49,7 +50,7 @@ public class VariantCounter {
 		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
 		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-
+		String samplelist = "";
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
 		double infothreshold = 0.5;
@@ -63,7 +64,7 @@ public class VariantCounter {
 
 
 		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
-				seqpanelvcf, bedregions, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels
+				seqpanelvcf, bedregions, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels, samplelist
 		);
 
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
@@ -184,6 +185,7 @@ public class VariantCounter {
 				"HRC / HRC / SHAPEIT",
 				"HRC / HRC / EAGLE / MICHIGAN"
 		};
+		String samplelist = "";
 
 //		files = new String[]{
 //				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
@@ -214,7 +216,7 @@ public class VariantCounter {
 
 
 		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
-				seqpanelvcf, bedregions, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels
+				seqpanelvcf, bedregions, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels, samplelist
 		);
 
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
@@ -360,6 +362,34 @@ public class VariantCounter {
 																											 boolean includeIndels,
 																											 String sampleList) throws IOException {
 
+
+		boolean[] includesamples = null;
+		if (sampleList != null) {
+			VCFGenotypeData d = new VCFGenotypeData(seqpanelvcf);
+			ArrayList<String> allsamples = d.getSamples();
+			d.close();
+
+			TextFile tf = new TextFile(sampleList, TextFile.R);
+			String[] elems = tf.readLineElems(TextFile.tab);
+			HashSet<String> sampleSet = new HashSet<String>();
+			while (elems != null) {
+				sampleSet.add(elems[0]);
+				elems = tf.readLineElems(TextFile.tab);
+			}
+			tf.close();
+
+			includesamples = new boolean[allsamples.size()];
+			int ctr = 0;
+			for (int i = 0; i < allsamples.size(); i++) {
+				if (sampleSet.contains(allsamples.get(i))) {
+					includesamples[i] = true;
+					ctr++;
+				}
+			}
+			System.out.println(ctr + " samples overlapping with: " + sampleList);
+		}
+
+
 		BedFileReader bfr = new BedFileReader();
 		ArrayList<Feature> regions = bfr.readAsList(bedregionsFile);
 
@@ -375,7 +405,7 @@ public class VariantCounter {
 				String[] elems = ln.split("\t");
 				Chromosome chr = Chromosome.parseChr(elems[0]);
 				if (chr.isAutosome()) {
-					VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+					VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, includesamples);
 					if (variant.getMAF() > mafthreshold && variant.getMAF() < upperthreshold) {
 
 						boolean varOnIc = isVariantInHash(elems, variantsOnICHash, includeId);

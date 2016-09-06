@@ -65,6 +65,7 @@ public class PlotterAccuracy extends VariantCounter {
 				"HRC / HRC / SHAPEIT",
 				"HRC / HRC / EAGLE / MICHIGAN"
 		};
+		String samplelist = "";
 		String diseaseprefix = "T1D";
 
 		files = new String[]{
@@ -77,6 +78,7 @@ public class PlotterAccuracy extends VariantCounter {
 				"COSMO",
 				"HRC / COSMO / EAGLE"
 		};
+		samplelist = "";
 		diseaseprefix = "RA";
 
 		String seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz-updatedRSId.vcf.gz";
@@ -136,12 +138,12 @@ public class PlotterAccuracy extends VariantCounter {
 		usemafthreshold = false;
 		includeICVariants = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf,samplelist);
 
 		// maf > 1%
 		usemafthreshold = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf,samplelist);
 
 
 		// maf > 1%, imputed variants
@@ -150,7 +152,7 @@ public class PlotterAccuracy extends VariantCounter {
 		maxNrVariants = 692; // if including IDs
 //		maxNrVariants = 689; // if not including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf,samplelist);
 
 		// maf > 1%, imputed variants
 		usemafthreshold = true;
@@ -158,7 +160,7 @@ public class PlotterAccuracy extends VariantCounter {
 		maxNrVariants = 692; // if including IDs
 //		maxNrVariants = 689; // if not including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf,samplelist);
 
 
 //		// excluding indels
@@ -193,7 +195,8 @@ public class PlotterAccuracy extends VariantCounter {
 					  int maxSize,
 					  boolean includeId,
 					  String variantsOnIC,
-					  String seqpanelvcf
+					  String seqpanelvcf,
+					  String samplelist
 
 
 	) throws IOException, DocumentException {
@@ -204,7 +207,7 @@ public class PlotterAccuracy extends VariantCounter {
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
 		System.out.println(variantsOnICHash.size() + " total on IC");
 		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
-				seqpanelvcf, bedregionsfile, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels
+				seqpanelvcf, bedregionsfile, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels, samplelist
 		);
 
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();

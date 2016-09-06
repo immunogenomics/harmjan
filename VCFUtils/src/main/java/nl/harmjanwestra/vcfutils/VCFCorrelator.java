@@ -23,6 +23,8 @@ import java.util.concurrent.*;
  */
 public class VCFCorrelator {
 
+	private boolean calculateMAFOverAllSamples = false;
+
 	public static void main(String[] args) {
 		VCFCorrelator c = new VCFCorrelator();
 		try {
@@ -118,23 +120,23 @@ public class VCFCorrelator {
 		VCFGenotypeData data1 = new VCFGenotypeData(vcf1);
 		VCFGenotypeData data2 = new VCFGenotypeData(vcf2);
 
-		ArrayList<String> samples1 = data1.getSamples();
-		System.out.println(samples1.size() + " samples in " + vcf1);
-		ArrayList<String> samples2 = data2.getSamples();
-		System.out.println(samples2.size() + " samples in " + vcf2);
+		ArrayList<String> samples1Initial = data1.getSamples();
+		System.out.println(samples1Initial.size() + " samples in " + vcf1);
+		ArrayList<String> samples2Initial = data2.getSamples();
+		System.out.println(samples2Initial.size() + " samples in " + vcf2);
 		data1.close();
 		data2.close();
 
 		HashSet<String> samples1Hash = new HashSet<String>();
-		for (int i = 0; i < samples1.size(); i++) {
-			samples1Hash.add(samples1.get(i));
+		for (int i = 0; i < samples1Initial.size(); i++) {
+			samples1Hash.add(samples1Initial.get(i));
 		}
 
 		ArrayList<String> sharedSamples = new ArrayList<String>();
 		HashMap<String, Integer> sharedSamplesIndex = new HashMap<String, Integer>();
 
 		int sctr = 0;
-		for (String s : samples2) {
+		for (String s : samples2Initial) {
 			if (samples1Hash.contains(s)) {
 				sharedSamples.add(s);
 				sharedSamplesIndex.put(s, sctr);
@@ -143,18 +145,31 @@ public class VCFCorrelator {
 		}
 		System.out.println(sharedSamples.size() + " samples shared between VCFs");
 
-		boolean[] includeSamples1 = new boolean[samples1.size()];
-		for (int s1 = 0; s1 < samples1.size(); s1++) {
-			if (sharedSamplesIndex.containsKey(samples1.get(s1))) {
+
+		ArrayList<String> samples1 = new ArrayList<>();
+		boolean[] includeSamples1 = new boolean[samples1Initial.size()];
+		for (int s1 = 0; s1 < samples1Initial.size(); s1++) {
+			if (sharedSamplesIndex.containsKey(samples1Initial.get(s1))) {
 				includeSamples1[s1] = true;
+				samples1.add(samples1Initial.get(s1));
 			}
 		}
-		boolean[] includeSamples2 = new boolean[samples2.size()];
-		for (int s2 = 0; s2 < samples2.size(); s2++) {
-			if (sharedSamplesIndex.containsKey(samples1.get(s2))) {
+
+		ArrayList<String> samples2 = new ArrayList<>();
+		boolean[] includeSamples2 = new boolean[samples2Initial.size()];
+		for (int s2 = 0; s2 < samples2Initial.size(); s2++) {
+			if (sharedSamplesIndex.containsKey(samples2Initial.get(s2))) {
 				includeSamples2[s2] = true;
+				samples2.add(samples2Initial.get(s2));
 			}
 		}
+
+
+		TextFile sharedsampleout = new TextFile(out + "-sharedsamples.txt", TextFile.W);
+		for (String sample : sharedSamples) {
+			sharedsampleout.writeln(sample);
+		}
+		sharedsampleout.close();
 
 		HashSet<String> varsToTest = null;
 		if (variantsToTestFile != null) {
@@ -186,7 +201,12 @@ public class VCFCorrelator {
 		String vcf1ln = tfvcf1.readLine();
 		while (vcf1ln != null) {
 			if (!vcf1ln.startsWith("#")) {
-				VCFVariant var = new VCFVariant(vcf1ln, VCFVariant.PARSE.ALL, includeSamples1);
+				VCFVariant var = null;
+				if (calculateMAFOverAllSamples) {
+					var = new VCFVariant(vcf1ln, VCFVariant.PARSE.ALL);
+				} else {
+					var = new VCFVariant(vcf1ln, VCFVariant.PARSE.ALL, includeSamples1);
+				}
 				Chromosome chr = Chromosome.parseChr(var.getChr());
 
 				if (!chr.equals(Chromosome.X)) {
@@ -207,16 +227,13 @@ public class VCFCorrelator {
 		tfvcf1.close();
 
 		System.out.println(variantMap.size() + " variants loaded from " + vcf1);
+
 		TextFile tfot = new TextFile(out, TextFile.W);
-
-
 		HashMap<String, VCFVariant> variantMap2 = new HashMap<>();
 		HashSet<String> writtenVariants = new HashSet<String>();
 		int ctr2 = 0;
 		TextFile tfVCF2 = new TextFile(vcf2, TextFile.R);
 		String ln = tfVCF2.readLine();
-
-
 		while (ln != null) {
 			if (!ln.startsWith("#")) {
 
@@ -233,8 +250,12 @@ public class VCFCorrelator {
 
 				VCFVariant var1 = variantMap.get(varStr);
 				if (var1 != null) {
-					VCFVariant var2 = new VCFVariant(ln, VCFVariant.PARSE.ALL, includeSamples2);
-
+					VCFVariant var2 = null;
+					if (calculateMAFOverAllSamples) {
+						var2 = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+					} else {
+						var2 = new VCFVariant(ln, VCFVariant.PARSE.ALL, includeSamples2);
+					}
 //					if (var2.getTokens() != null) {
 //						var2.parseGenotypes(var2.getTokens(), VCFVariant.PARSE.ALL);
 //						var2.cleartokens();
@@ -244,6 +265,7 @@ public class VCFCorrelator {
 
 					double[][] gprobs1 = var1.getDosage();
 
+
 					double[][] gprobs2 = var2.getDosage(); // format [samples][alleles]
 
 
@@ -251,10 +273,11 @@ public class VCFCorrelator {
 					if (gprobs1[0].length == gprobs2[0].length) {
 
 						// recode: make sure sample ordering is identical
-
-
 						gprobs1 = reorder(gprobs1, samples1, sharedSamplesIndex, sharedSamples.size());
+//						System.out.println("x1:" + gprobs1.length + "x" + gprobs1[0].length);
+
 						gprobs2 = reorder(gprobs2, samples2, sharedSamplesIndex, sharedSamples.size());
+//						System.out.println("x2:" + gprobs2.length + "x" + gprobs2[0].length);
 
 						// remove missing genotypes
 						Pair<double[][], double[][]> data = removeNulls(gprobs1, gprobs2);
@@ -288,11 +311,14 @@ public class VCFCorrelator {
 								}
 								tfot.writeln(ln);
 								writtenVariants.add(varStr);
+							} else {
+								System.out.println("length == 0: i1:" + x.length + ", i2: " + y.length);
 							}
 
 						}
 					} else {
 						// ?
+						System.out.println("Unequal lengths? " + gprobs1[0].length + "\t" + gprobs2[0].length);
 					}
 				} else {
 					if (varsToTest != null && varsToTest.contains(varStr)) {
@@ -311,7 +337,6 @@ public class VCFCorrelator {
 		System.out.println();
 
 		// write variants that are not in variantlist
-
 		if (varsToTest != null) {
 			for (String variant : varsToTest) {
 
@@ -377,6 +402,7 @@ public class VCFCorrelator {
 		for (int i = 0; i < gprobs1.length; i++) {
 			double d = gprobs1[i][0];
 			double d2 = gprobs2[i][0];
+//			System.out.println(i + "\t" + d + "\t" + d2);
 			if (Double.isNaN(d) || Double.isNaN(d2) || d == -1 || d2 == -1) {
 				nrNull++;
 			}
