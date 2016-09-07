@@ -30,7 +30,6 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-SHAPEIT.txt",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
 		};
-
 		String[] labels = new String[]{
 				"EUR",
 				"COSMO",
@@ -39,6 +38,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 				"HRC / HRC / EAGLE / MICHIGAN"
 		};
 		String diseaseprefix = "T1D";
+		String samplelist = null;
 //
 //		files = new String[]{
 //				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-EUR.txt",
@@ -66,7 +66,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 
 		try {
 			MergeAccuracyAndInfoScoreFiles c = new MergeAccuracyAndInfoScoreFiles();
-			c.ttest(files, labels, seqpanelvcf, bedregions, mafthreshold, variantsOnIC, includeId, includeIndels, includeICVariants);
+			c.ttest(files, labels, seqpanelvcf, bedregions, mafthreshold, variantsOnIC, includeId, includeIndels, includeICVariants, samplelist);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -82,12 +82,13 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			String variantsOnIC,
 			boolean includeId,
 			boolean includeIndels,
-			boolean includeICVariants) throws IOException {
+			boolean includeICVariants,
+			String samplelist) throws IOException {
 
 
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
 		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
-				seqpanelvcf, bedregions, mafthreshold, 1d, variantsOnICHash, includeId, includeIndels
+				seqpanelvcf, bedregions, mafthreshold, 1d, variantsOnICHash, includeId, includeIndels, samplelist
 		);
 
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();

@@ -1,15 +1,16 @@
 package nl.harmjanwestra.finemapping;
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -25,10 +26,52 @@ public class LocusToGene {
 		String bed = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\AllICLoci.bed";
 		String output = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\AllLoci-GenesPerLocus.txt";
 		try {
-			t.run(annot, bed, output);
+//			t.run(annot, bed, output);
+
+			output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
+			String file = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz-credibleSets-sets.txt";
+			String fileout = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz-credibleSets-sets-wGenes.txt";
+			t.runset(output, file, fileout);
+
+			file = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz-credibleSets-sets.txt";
+			fileout = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz-credibleSets-sets-wGenes.txt";
+			t.runset(output, file, fileout);
+
+			file = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz-credibleSets-sets.txt";
+			fileout = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz-credibleSets-sets-wGenes.txt";
+			t.runset(output, file, fileout);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void runset(String output, String file, String fileout) throws IOException {
+
+		HashMap<String, String> locusToGene = new HashMap<String, String>();
+		TextFile tf = new TextFile(output, TextFile.R);
+		String[] elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+			if (elems.length > 1) {
+				locusToGene.put(elems[0], elems[1]);
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
+
+		TextFile out = new TextFile(fileout, TextFile.W);
+		TextFile in = new TextFile(file, TextFile.R);
+		out.writeln(in.readLine() + "\tGenes");
+		elems = in.readLineElems(Strings.whitespace);
+		while (elems != null) {
+			if (elems.length > 1) {
+				String loc = elems[0];
+				String genes = locusToGene.get(loc);
+				out.writeln(loc + "\t" + elems[1] + "\t" + genes);
+			}
+			elems = in.readLineElems(Strings.whitespace);
+		}
+		out.close();
+		in.close();
 	}
 
 	public void run(String annot, String bed, String output) throws IOException {

@@ -3,7 +3,6 @@ package nl.harmjanwestra.finemapping.plots;
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.finemapping.VariantCounter;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
@@ -61,25 +60,25 @@ public class PlotterAccuracy extends VariantCounter {
 		String[] labels = new String[]{
 				"EUR",
 				"COSMO",
-				"HRC / HRC / EAGLE",
-				"HRC / HRC / SHAPEIT",
-				"HRC / HRC / EAGLE / MICHIGAN"
+				"HRC-EAGLE",
+				"HRC-SHAPEIT",
+				"HRC-EAGLE-MICHIGAN"
 		};
-		String samplelist = "";
+		String samplelist = null;
 		String diseaseprefix = "T1D";
 
-		files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-HRC-w100kb.txt",
-		};
-		labels = new String[]{
-				"EUR",
-				"COSMO",
-				"HRC / COSMO / EAGLE"
-		};
-		samplelist = "";
-		diseaseprefix = "RA";
+//		files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-EUR.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-HRC-w100kb.txt",
+//		};
+//		labels = new String[]{
+//				"EUR",
+//				"COSMO",
+//				"HRC-EAGLE"
+//		};
+//		samplelist = null;
+//		diseaseprefix = "RA";
 
 		String seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz-updatedRSId.vcf.gz";
 		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
@@ -138,12 +137,12 @@ public class PlotterAccuracy extends VariantCounter {
 		usemafthreshold = false;
 		includeICVariants = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf,samplelist);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
 
 		// maf > 1%
 		usemafthreshold = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf,samplelist);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
 
 
 		// maf > 1%, imputed variants
@@ -152,7 +151,7 @@ public class PlotterAccuracy extends VariantCounter {
 		maxNrVariants = 692; // if including IDs
 //		maxNrVariants = 689; // if not including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf,samplelist);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
 
 		// maf > 1%, imputed variants
 		usemafthreshold = true;
@@ -160,7 +159,7 @@ public class PlotterAccuracy extends VariantCounter {
 		maxNrVariants = 692; // if including IDs
 //		maxNrVariants = 689; // if not including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf,samplelist);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
 
 
 //		// excluding indels
@@ -243,6 +242,7 @@ public class PlotterAccuracy extends VariantCounter {
 			ArrayList<String> missing = new ArrayList<String>();
 
 
+			ArrayList<String> variantsSeen = new ArrayList<>();
 			ArrayList<String[]> variantsBelowThresholds = new ArrayList<>();
 			ArrayList<String> variantsAboveThresholds = new ArrayList<>();
 			while (elems != null) {
@@ -268,14 +268,19 @@ public class PlotterAccuracy extends VariantCounter {
 						} else {
 							abovethreshold = false;
 						}
+
+						if (!abovethreshold) {
+							variantsBelowThresholds.add(elems);
+						} else {
+//							String variant = Chromosome.parseChr(elems[0]).toString() + "_" + elems[1] + "_" + elems[2];
+							variantsAboveThresholds.add(elems[0]);
+						}
+
+
 					}
 
-					if (!abovethreshold) {
-						variantsBelowThresholds.add(elems);
-					} else {
-						String variant = Chromosome.parseChr(elems[0]).toString() + "_" + elems[1] + "_" + elems[2];
-						variantsAboveThresholds.add(variant);
-					}
+					variantsSeen.add(elems[0]);
+
 				}
 
 				elems = tf2.readLineElems(TextFile.tab);
@@ -288,6 +293,7 @@ public class PlotterAccuracy extends VariantCounter {
 
 
 			TextFile outf = new TextFile(out + labels[f] + "-belowthresholds.txt", TextFile.W);
+			System.out.println("below thresh:\t" + outf.getFullPath());
 			for (String[] elem : variantsBelowThresholds) {
 				outf.writeln(Strings.concat(elem, Strings.tab));
 			}
@@ -295,14 +301,35 @@ public class PlotterAccuracy extends VariantCounter {
 
 			HashSet<String> variantsAboveThresholdHash = new HashSet<String>();
 			variantsAboveThresholdHash.addAll(variantsAboveThresholds);
+			System.out.println(variantsAboveThresholds.size() + " variants above threshold");
 			TextFile outf2 = new TextFile(out + labels[f] + "-missing.txt", TextFile.W);
+			System.out.println("missing var:\t" + outf2.getFullPath());
+			int missingnr = 0;
 			for (VCFVariant var : allvars) {
-				String variant = var.getChrObj().toString() + "_" + var.getPos() + "_" + var.getId();
+				String variant = var.getChrObj().getNumber() + "_" + var.getPos() + "_" + var.getId();
 				if (!variantsAboveThresholdHash.contains(variant)) {
-					outf2.writeln(variant + "\t" + var.getMinorAllele() + "\tt" + Strings.concat(var.getAlleles(), Strings.comma) + "\t" + var.getMAF());
+					outf2.writeln(variant + "\t" + var.getMinorAllele() + "\t" + Strings.concat(var.getAlleles(), Strings.comma) + "\t" + var.getMAF());
+					missingnr++;
 				}
 			}
-			outf.close();
+			System.out.println(missingnr + " missing");
+			outf2.close();
+
+
+			TextFile outf3 = new TextFile(out + labels[f] + "-neverimputed.txt", TextFile.W);
+			System.out.println("missing var:\t" + outf3.getFullPath());
+			HashSet<String> variantsImputedHash = new HashSet<String>();
+			variantsImputedHash.addAll(variantsSeen);
+			missingnr = 0;
+			for (VCFVariant var : allvars) {
+				String variant = var.getChrObj().getNumber() + "_" + var.getPos() + "_" + var.getId();
+				if (!variantsImputedHash.contains(variant)) {
+					outf3.writeln(variant + "\t" + var.getMinorAllele() + "\t" + Strings.concat(var.getAlleles(), Strings.comma) + "\t" + var.getMAF());
+					missingnr++;
+				}
+			}
+			System.out.println(missingnr + " missing");
+			outf3.close();
 
 		}
 

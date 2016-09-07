@@ -146,8 +146,6 @@ public class ApproximateBayesPosterior {
 	}
 
 
-
-
 	private double abf(double beta, double se, double prior) {
 		double variance = se * se;
 		double theta = beta; // Math.log(beta);
@@ -159,7 +157,7 @@ public class ApproximateBayesPosterior {
 
 			double p0 = n1.probability(theta);
 			double p1 = n2.probability(theta);
-			double abf = p0 / p1;
+			double abf = p1 / p0;
 			return abf;
 
 
@@ -173,6 +171,17 @@ public class ApproximateBayesPosterior {
 		 */
 
 		return 0;
+	}
+
+	private double abf2(double beta, double se, double prior) {
+		double variance = se * se;
+		double theta = beta; // Math.log(beta);
+		double nullVariance = (Math.log(prior) / 1.96) * (Math.log(prior) / 1.96); // 0.04
+		double r = variance / (variance + nullVariance);
+		double z = theta / se;
+		double abf = (1 / (Math.sqrt(1 - r))) * Math.exp(-(z * z) / 2 * r);
+		return abf;
+
 	}
 
 }
