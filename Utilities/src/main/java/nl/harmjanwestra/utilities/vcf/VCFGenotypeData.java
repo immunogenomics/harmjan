@@ -15,7 +15,7 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 
 	private ArrayList<VCFGenotypeFilter> genotypeFilters;
 	TextFile tf = null;
-	VCFVariant next = null;
+	String next = null;
 
 	public VCFGenotypeData(TextFile tf, HashSet<String> excludeTheseSamples, ArrayList<VCFGenotypeFilter> genotypeFilters) throws IOException {
 		this.tf = tf;
@@ -63,7 +63,7 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 		}
 
 		if (ln != null) {
-			next = new VCFVariant(ln);
+			next = ln; // new VCFVariant(ln);
 		} else {
 			next = null;
 		}
@@ -97,11 +97,11 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 
 	@Override
 	public VCFVariant next() {
-		VCFVariant current = next;
+		VCFVariant current = new VCFVariant(next, genotypeFilters, true);
 		try {
 			String ln = tf.readLine();
 			if (ln != null) {
-				next = new VCFVariant(ln, genotypeFilters, true);
+				next = ln; // new VCFVariant(ln, genotypeFilters, true);
 			} else {
 				next = null;
 			}
@@ -109,7 +109,8 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
-		return current;
+//		return current;
+		return null;
 	}
 
 	@Override
@@ -121,30 +122,30 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 		this.tf.close();
 	}
 
-	public VCFVariant nextLoadGenotypesOnly() {
-		VCFVariant current = next;
-		try {
-
-			String ln = tf.readLine();
-			if (ln != null) {
-				next = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
-			} else {
-				next = null;
-			}
-
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
-		}
-		return current;
-	}
+//	public VCFVariant nextLoadGenotypesOnly() {
+//		VCFVariant current = next;
+//		try {
+//
+//			String ln = tf.readLine();
+//			if (ln != null) {
+//				next = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
+//			} else {
+//				next = null;
+//			}
+//
+//		} catch (IOException ex) {
+//			throw new RuntimeException(ex);
+//		}
+//		return current;
+//	}
 
 	public VCFVariant nextLoadHeader() {
-		VCFVariant current = next;
+		VCFVariant current = new VCFVariant(next, VCFVariant.PARSE.HEADER);
 		try {
 
 			String ln = tf.readLine();
 			if (ln != null) {
-				next = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				next = ln; // new VCFVariant(ln, VCFVariant.PARSE.HEADER);
 			} else {
 				next = null;
 			}
@@ -152,7 +153,8 @@ public class VCFGenotypeData implements Iterator<VCFVariant> {
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
-		return current;
+//		return current;
+		return null;
 	}
 
 

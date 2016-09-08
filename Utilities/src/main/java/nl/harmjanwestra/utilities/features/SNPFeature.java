@@ -106,4 +106,12 @@ public class SNPFeature extends Feature {
 	public void setAFControls(double AFControls) {
 		this.AFControls = AFControls;
 	}
+
+	public double getAFCases() {
+		return AFCases;
+	}
+
+	public double getAFControls() {
+		return AFControls;
+	}
 }

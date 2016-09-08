@@ -84,6 +84,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		}
 
 		result.getSnp().setHwep(hwep);
+		if (variant.getAlleleFrequenciesCases() != null) {
+			result.getSnp().setAFCases(variant.getAlleleFrequenciesCases()[0]);
+			result.getSnp().setAFControls(variant.getAlleleFrequenciesControls()[0]);
+		}
+
 
 		//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
 		String output = variant.getId()

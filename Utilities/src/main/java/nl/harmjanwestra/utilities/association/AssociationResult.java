@@ -138,6 +138,8 @@ public class AssociationResult {
 				+ "\t" + snp.getImputationQualityScore()
 				+ "\t" + n
 				+ "\t" + snp.getMaf()
+				+ "\t" + snp.getAFCases()
+				+ "\t" + snp.getAFControls()
 				+ "\t" + snp.getHwep();
 
 

@@ -62,7 +62,7 @@ public class VCFGenotypeDataBinary extends BinaryFile {
 //			}
 //		}
 
-		return new VCFVariant(chr, pos, id, alleleStr, info, alleles, dosages);
+		return new VCFVariant(chr, pos, id, alleleStr, info, alleles, dosages, null);
 
 	}
 
