@@ -8,6 +8,7 @@ import nl.harmjanwestra.utilities.features.FeatureTree;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
 import nl.harmjanwestra.utilities.individuals.Individual;
 import nl.harmjanwestra.utilities.plink.PlinkFamFile;
+import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.io.Gpio;
@@ -46,7 +47,7 @@ public class VCFVariantStats {
 		String[] vcfFiles = vcf1.split(",");
 
 		int threads = Runtime.getRuntime().availableProcessors();
-		
+
 		System.out.println("Booting up threadpool: " + threads);
 		ExecutorService exService = Executors.newFixedThreadPool(threads);
 		CompletionService<String> jobHandler = new ExecutorCompletionService<String>(exService);
@@ -519,12 +520,15 @@ public class VCFVariantStats {
 
 		private final String ln;
 		private final boolean[] samplesToInclude;
-		private final DiseaseStatus[] sampleDiseaseStatus;
+
+		private final SampleAnnotation sampleAnnotation;
 
 		public VariantStatsTask(String in, boolean[] samplesToInclude, DiseaseStatus[] sampleDiseaseStatus) {
 			ln = in;
 			this.samplesToInclude = samplesToInclude;
-			this.sampleDiseaseStatus = sampleDiseaseStatus;
+			sampleAnnotation = new SampleAnnotation();
+			sampleAnnotation.setSampleDiseaseStatus(sampleDiseaseStatus);
+
 		}
 
 		@Override
@@ -532,11 +536,12 @@ public class VCFVariantStats {
 			String chrStr = ln.substring(0, 100);
 			String[] chrStrElems = chrStr.split("\t");
 			Chromosome chr = Chromosome.parseChr(chrStrElems[0]);
+
 			if (!chr.equals(Chromosome.X)) {
-				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, samplesToInclude);
+				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, samplesToInclude, sampleAnnotation);
 				// AC / AN / AF
 
-				variant.recalculateMAFAndCallRate(null, sampleDiseaseStatus);
+				variant.recalculateMAFAndCallRate();
 
 				String AN = "AN=" + variant.getTotalAlleleCount();
 				String AF = "AF=" + Strings.concat(variant.getAlleleFrequencies(), Strings.comma, 1, variant.getAlleles().length);
@@ -546,7 +551,7 @@ public class VCFVariantStats {
 				String hwep = "HWEP=" + variant.getHwep();
 
 				String infoString = AC + ";" + AF + ";" + AN + ";" + INFO + ";" + callrate + ";" + hwep;
-				if (sampleDiseaseStatus != null) {
+				if (sampleAnnotation.getSampleDiseaseStatus() != null) {
 					String AFCASES = "AFCASES=" + Strings.concat(variant.getAlleleFrequenciesControls(), Strings.comma, 1, variant.getAlleles().length);
 					String AFCONTROLS = "AFCONTROLS=" + Strings.concat(variant.getAlleleFrequenciesControls(), Strings.comma, 1, variant.getAlleles().length);
 					String hwepcases = "HWEPCASES=" + variant.getHwepCases();

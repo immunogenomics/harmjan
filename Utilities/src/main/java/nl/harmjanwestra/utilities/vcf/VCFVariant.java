@@ -77,12 +77,22 @@ public class VCFVariant {
 	private double hwepCases;
 	private double hwepControls;
 
+	private SampleAnnotation sampleAnnotation;
+	private double MAFControls;
+
 	public VCFVariant(String ln) {
 		this(ln, PARSE.ALL);
 	}
 
 	public VCFVariant(String ln, boolean ignoregender) {
 		this.ignoregender = ignoregender;
+		parse(ln, PARSE.ALL);
+	}
+
+	public VCFVariant(String ln, ArrayList<VCFGenotypeFilter> filters, boolean ignoregender, SampleAnnotation annotation) {
+		this.ignoregender = ignoregender;
+		this.sampleAnnotation = annotation;
+		this.filters = filters;
 		parse(ln, PARSE.ALL);
 	}
 
@@ -99,7 +109,17 @@ public class VCFVariant {
 	public VCFVariant(String ln, PARSE p, boolean[] samplesToInclude) {
 		this.samplesToInclude = samplesToInclude;
 		parse(ln, p);
+	}
 
+	public VCFVariant(String ln, PARSE p, boolean[] samplesToInclude, SampleAnnotation sampleAnnotation) {
+		this.samplesToInclude = samplesToInclude;
+		this.sampleAnnotation = sampleAnnotation;
+		parse(ln, p);
+	}
+
+	public VCFVariant(String ln, PARSE p, SampleAnnotation sampleAnnotation) {
+		this.sampleAnnotation = sampleAnnotation;
+		parse(ln, p);
 	}
 
 	public VCFVariant(String chr, Integer pos, String id, String alleleStr, String info, DoubleMatrix2D alleles, DoubleMatrix2D dosages) {
@@ -767,10 +787,6 @@ public class VCFVariant {
 		return dosages != null;
 	}
 
-	public void recalculateMAFAndCallRate() {
-		recalculateMAFAndCallRate(null, null);
-	}
-
 	public int[] getNrAllelesObservedCases() {
 		return nrAllelesObservedCases;
 	}
@@ -787,23 +803,29 @@ public class VCFVariant {
 		return alleleFrequenciesControls;
 	}
 
-	public void recalculateMAFAndCallRate(Gender[] individualGender, DiseaseStatus[] sampleDiseaseStatus) {
 
-		if (individualGender != null && individualGender.length != genotypeAlleles.rows()) {
+	public void recalculateMAFAndCallRate() {
 
-			throw new IllegalArgumentException("Sample gender status length does not match number of loaded genotypes. " + individualGender.length + " gender status vs " + genotypeAlleles.rows() + " genotypes");
+		DiseaseStatus[] sampleDiseaseStatus = null;
+		Gender[] individualGender = null;
+		if (sampleAnnotation != null) {
 
-		}
-		if (sampleDiseaseStatus != null && sampleDiseaseStatus.length != genotypeAlleles.rows()) {
+			if (sampleAnnotation.getIndividualGender() != null && sampleAnnotation.getIndividualGender().length != genotypeAlleles.rows()) {
+				throw new IllegalArgumentException("Sample gender status length does not match number of loaded genotypes. " + sampleAnnotation.getIndividualGender().length + " gender status vs " + genotypeAlleles.rows() + " genotypes");
+			}
+			sampleDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
 
-			throw new IllegalArgumentException("Sample disease status length does not match number of loaded genotypes. " + sampleDiseaseStatus.length + " disease status vs " + genotypeAlleles.rows() + " genotypes");
-
+			if (sampleAnnotation.getSampleDiseaseStatus() != null && sampleAnnotation.getSampleDiseaseStatus().length != genotypeAlleles.rows()) {
+				throw new IllegalArgumentException("Sample disease status length does not match number of loaded genotypes. " + sampleAnnotation.getSampleDiseaseStatus().length + " disease status vs " + genotypeAlleles.rows() + " genotypes");
+			}
+			individualGender = sampleAnnotation.getIndividualGender();
 		}
 
 		int nrCalled = 0;
 		int nrCalledCases = 0;
 		int nrCalledControls = 0;
 		nrAllelesObserved = new int[nrAllelesObserved.length];
+
 		if (sampleDiseaseStatus != null) {
 			nrAllelesObservedCases = new int[alleles.length];
 			nrAllelesObservedControls = new int[alleles.length];
@@ -950,7 +972,7 @@ public class VCFVariant {
 			}
 		}
 
-		calculateHWEP(sampleDiseaseStatus);
+		calculateHWEP();
 
 		if (nrAllelesThatHaveAlleleFrequency == 2) {
 			biallelic = true;
@@ -961,10 +983,6 @@ public class VCFVariant {
 		}
 	}
 
-	public void calculateHWEP() {
-		calculateHWEP(null);
-	}
-
 	public double getHwepCases() {
 		return hwepCases;
 	}
@@ -973,7 +991,16 @@ public class VCFVariant {
 		return hwepControls;
 	}
 
-	public void calculateHWEP(DiseaseStatus[] sampleDiseaseStatus) {
+	public void calculateHWEP() {
+
+
+		DiseaseStatus[] sampleDiseaseStatus = null;
+		if (sampleAnnotation != null) {
+			sampleDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
+			if (sampleAnnotation.getSampleDiseaseStatus() != null && sampleAnnotation.getSampleDiseaseStatus().length != genotypeAlleles.rows()) {
+				throw new IllegalArgumentException("Sample disease status length does not match number of loaded genotypes. " + sampleAnnotation.getSampleDiseaseStatus().length + " disease status vs " + genotypeAlleles.rows() + " genotypes");
+			}
+		}
 
 		if (sampleDiseaseStatus != null && sampleDiseaseStatus.length != genotypeAlleles.rows()) {
 			throw new IllegalArgumentException("Sample disease status length does not match number of loaded genotypes. " + sampleDiseaseStatus.length + " disease status vs " + genotypeAlleles.rows() + " genotypes");
@@ -1413,6 +1440,34 @@ public class VCFVariant {
 
 		return builder.toString();
 
+	}
+
+	public double getMAFControls() {
+		if (alleleFrequenciesControls != null) {
+			double min = 1;
+			for (double d : alleleFrequenciesControls) {
+				if (d < min) {
+					min = d;
+				}
+			}
+			return min;
+		} else {
+			return getMAF();
+		}
+	}
+
+	public double getMAFCases() {
+		if (alleleFrequenciesCases != null) {
+			double min = 1;
+			for (double d : alleleFrequenciesCases) {
+				if (d < min) {
+					min = d;
+				}
+			}
+			return min;
+		} else {
+			return getMAF();
+		}
 	}
 
 	public enum PARSE {

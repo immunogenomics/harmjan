@@ -20,6 +20,7 @@ import nl.harmjanwestra.utilities.individuals.Individual;
 import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
 import nl.harmjanwestra.utilities.plink.PlinkFamFile;
+import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
@@ -54,8 +55,8 @@ public class LRTest {
 	private HashSet<String> snpLimit;
 	private ArrayList<Feature> bedRegions = null;
 	private boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
-	protected DoubleMatrix2D finalCovariates;
-	protected DiseaseStatus[] finalDiseaseStatus;
+
+	protected SampleAnnotation sampleAnnotation;
 	private ProgressBar progressBar;
 
 	public LRTest(LRTestOptions options) throws IOException {
@@ -198,7 +199,7 @@ public class LRTest {
 
 		// keep a list of genotypes to condition on
 		int iter = 0;
-		ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+		ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional = new ArrayList<>();
 
 		ArrayList<String> conditionalVariantIds = new ArrayList<String>();
 		AssociationFile associationFile = new AssociationFile();
@@ -225,10 +226,9 @@ public class LRTest {
 			// TODO: conditional on dosages is separate from conditional on genotypes.. ?
 			LRTestTask task = new LRTestTask(variant,
 					iter,
-					finalDiseaseStatus,
-					finalCovariates,
 					conditional,
 					alleleOffsetGenotypes,
+					sampleAnnotation,
 					options);
 
 			if (nullmodelresult != null) {
@@ -379,8 +379,8 @@ public class LRTest {
 			System.out.println("Problem with matching samples...");
 			return false;
 		} else {
-			finalDiseaseStatus = new DiseaseStatus[sampleToIntGenotypes.size()];
-			finalCovariates = new DenseDoubleMatrix2D(sampleToIntGenotypes.size(), covariates.columns());
+			DiseaseStatus[] finalDiseaseStatus = new DiseaseStatus[sampleToIntGenotypes.size()];
+			DoubleMatrix2D finalCovariates = new DenseDoubleMatrix2D(sampleToIntGenotypes.size(), covariates.columns());
 
 			TextFile sampleListOut = new TextFile(options.getOutputdir() + "samplelist.txt", TextFile.W);
 			System.out.println(options.getOutputdir() + "samplelist.txt");
@@ -434,6 +434,11 @@ public class LRTest {
 			System.out.println(nrControls + " controls ");
 			System.out.println(nrUnknown + " unknown ");
 			System.out.println(nrTotal + " with covariates");
+
+			sampleAnnotation = new SampleAnnotation();
+//			sampleAnnotation.setIndividualGender(individualGender);
+			sampleAnnotation.setCovariates(finalCovariates);
+			sampleAnnotation.setSampleDiseaseStatus(finalDiseaseStatus);
 
 			return true;
 		}
@@ -491,14 +496,13 @@ public class LRTest {
 
 
 		for (VCFVariant variant : allVariants) {
-			ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+			ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional = new ArrayList<>();
 
 			LRTestTask task = new LRTestTask(variant,
 					0,
-					finalDiseaseStatus,
-					finalCovariates,
 					conditional,
 					0,
+					sampleAnnotation,
 					options);
 
 			jobHandler.submit(task);
@@ -575,7 +579,7 @@ public class LRTest {
 					conditionalVariantsForRegion.add(bestVariantLastIter);
 
 					// now put the data in the correct data structure.. recode and whatever
-					ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+					ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional = new ArrayList<>();
 
 
 //						String model = "";
@@ -587,10 +591,8 @@ public class LRTest {
 						modelgenes.add(variant.toString());
 //							model += " + " + variant.getId();
 						conditional.add(new Pair<>(variant,
-								lqr.filterAndRecodeGenotypes(variant.getGenotypeAllelesAsMatrix2D(),
-										finalDiseaseStatus,
-										variant.getAlleles().length,
-										finalCovariates.rows())));
+								lqr.determineMissingGenotypes(variant.getGenotypeAllelesAsMatrix2D(),
+										sampleAnnotation.getCovariates().rows())));
 						alleleOffsetGenotypes += variant.getAlleles().length - 1;
 					}
 					modelsout.writeln(remainingRegions.get(regionId).toString() + "\t" + i + "\t" + Strings.concat(modelgenes, Strings.semicolon));
@@ -603,10 +605,9 @@ public class LRTest {
 						VCFVariant variant = variantsInRegion.get(v);
 						LRTestTask task = new LRTestTask(variant,
 								i,
-								finalDiseaseStatus,
-								finalCovariates,
 								conditional,
 								alleleOffsetGenotypes,
+								sampleAnnotation,
 								options);
 
 						jobHandler.submit(task);
@@ -704,8 +705,7 @@ public class LRTest {
 					bedRegions,
 					options,
 					genotypeSamplesWithCovariatesAndDiseaseStatus,
-					finalDiseaseStatus,
-					finalCovariates,
+					sampleAnnotation,
 					snpLimit);
 			jobHandler.submit(task);
 			linessubmitted++;
@@ -813,7 +813,12 @@ public class LRTest {
 					for (int i = 0; i < variants.size(); i++) {
 						for (int j = i + 1; j < variants.size(); j++) {
 							// submit job to queue;
-							LRTestExhaustiveTask lrtet = new LRTestExhaustiveTask(variants, i, j, genotypeSamplesWithCovariatesAndDiseaseStatus, finalDiseaseStatus, finalCovariates, options);
+							LRTestExhaustiveTask lrtet = new LRTestExhaustiveTask(variants,
+									i,
+									j,
+									genotypeSamplesWithCovariatesAndDiseaseStatus,
+									sampleAnnotation,
+									options);
 							lrtet.setResultNullmodel(nullmodelresult, nrNullColumns);
 							jobHandler.submit(lrtet);
 							submitted++;
@@ -1027,28 +1032,17 @@ public class LRTest {
 	}
 
 	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
-																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
 																int firstColumnToRemove,
 																int lastColumnToRemove) {
 		// get a random variant
 		// prepare the matrix
-		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
-		Triple<int[], boolean[], Triple<Integer, Double, Double>> qcdata = lrq.filterAndRecodeGenotypes(
-				variant.getGenotypeAllelesAsMatrix2D(),
-				finalDiseaseStatus,
-				variant.getAlleles().length,
-				finalCovariates.rows());
-
-		Triple<Integer, Double, Double> stats = qcdata.getRight();
 
 		// generate pseudocontrol genotypes
-		LRTestTask lrt = new LRTestTask();
+		LRTestTask lrt = new LRTestTask(sampleAnnotation);
 		Pair<DoubleMatrix2D, double[]> xandy = lrt.prepareMatrices(
 				variant,
-				qcdata.getLeft(),
-				conditional,
-				finalDiseaseStatus,
-				finalCovariates
+				conditional
 		);
 
 		// remove collinear variables and prune

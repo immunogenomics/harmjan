@@ -71,15 +71,13 @@ public class LRTestHaploTestTask {
 
 		// recode the genotypes to the same ordering as the covariate table
 		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
-		Triple<int[], boolean[], Triple<Integer, Double, Double>> qcdata = lrq.filterAndRecodeGenotypes(
+		Triple<int[], boolean[], Integer> qcdata = lrq.determineMissingGenotypes(
 				haplotypeAllelles,
-				finalDiseaseStatus,
-				haplotypeDosages.columns() + 1,
 				finalCovariates.rows());
 
-		Triple<Integer, Double, Double> stats = qcdata.getRight();
-		double maf = stats.getMiddle();
-		double hwep = stats.getRight();
+
+//		double maf = stats.getMiddle();
+//		double hwep = stats.getRight();
 
 		// generate pseudocontrol genotypes
 		Pair<DoubleMatrix2D, double[]> xandy = prepareMatrices(
@@ -94,8 +92,14 @@ public class LRTestHaploTestTask {
 		double[] y = xandy.getRight(); // get the phenotypes for all non-missing genotypes
 		DoubleMatrix2D x = xandy.getLeft();
 
+		// TODO: replace these:
+		double maf = 0.1;
+		double hwep = 0.1;
+
+		System.out.println("Need to recalculate MAF and HWEP");
 		AssociationResult result = pruneAndTest(x, y, 1, 1 + (nrAlleles - 1), maf);
 
+		result = null;
 		if (result == null) {
 			return new Triple<>(null, null, null);
 		}

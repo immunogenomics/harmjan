@@ -39,15 +39,23 @@ public class LRTestHaplotype extends LRTest {
 
 	LRTestHaploTestTask lrht = new LRTestHaploTestTask();
 
+	private DiseaseStatus[] finalDiseaseStatus;
+	private DoubleMatrix2D finalCovariates;
+
+
 	public LRTestHaplotype(LRTestOptions options) throws IOException {
 		super(options);
 		exService = Executors.newFixedThreadPool(options.getNrThreads());
+		this.finalDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
+		this.finalCovariates = sampleAnnotation.getCovariates();
 		testHaplotype();
 		exService.shutdown();
 	}
 
 
 	public void testHaplotype() throws IOException {
+
+
 
 		System.out.println("Testing haplotype thingies");
 		options.setSplitMultiAllelic(true);
@@ -99,6 +107,8 @@ public class LRTestHaplotype extends LRTest {
 		multivariate(out, hapdata, haplotypeWithFrequencyAboveThreshold, variants, refhapcol);
 
 		// perform multivariate test
+
+
 
 		Triple<String, AssociationResult, VCFVariant> result = lrht.calc(null,
 				referenceHaplotype,

@@ -145,6 +145,8 @@ public class AssociationFile {
 		int combinedIdCol = -1;
 		int ncol = -1;
 		int mafcol = -1;
+		int afcasescol = -1;
+		int afcontrolscol = -1;
 		int impqualscorecol = -1;
 		int deviancenullcol = -1;
 		int deviancegenocol = -1;
@@ -188,6 +190,10 @@ public class AssociationFile {
 						ncol = i;
 					} else if (e.equals("MAF")) {
 						mafcol = i;
+					} else if (e.equals("AFCases")) {
+						afcasescol = i;
+					} else if (e.equals("AFControls")) {
+						afcontrolscol = i;
 					} else if (e.equals("HWEP")) {
 						hwepcol = i;
 					} else if (e.equals("DevianceNull")) {
@@ -235,6 +241,8 @@ public class AssociationFile {
 					double hwep = 0d;
 					double deviancenull = 0d;
 					double deviancegeno = 0d;
+					double afcases = 0d;
+					double afcontrols = 0d;
 					int df = 0;
 					double[] beta = null;
 					double[] se = null;
@@ -283,6 +291,22 @@ public class AssociationFile {
 					if (mafcol != -1) {
 						try {
 							maf = Double.parseDouble(elems[mafcol]);
+						} catch (NumberFormatException e) {
+
+						}
+					}
+
+					if (afcasescol != -1) {
+						try {
+							afcases = Double.parseDouble(elems[mafcol]);
+						} catch (NumberFormatException e) {
+
+						}
+					}
+
+					if (afcontrolscol != -1) {
+						try {
+							afcontrols = Double.parseDouble(elems[mafcol]);
 						} catch (NumberFormatException e) {
 
 						}
@@ -394,6 +418,8 @@ public class AssociationFile {
 						result.setSnp(snp);
 						result.setN(n);
 						snp.setMaf(maf);
+						snp.setAFCases(afcases);
+						snp.setAFControls(afcases);
 						result.setDevianceNull(deviancenull);
 						result.setDevianceGeno(deviancegeno);
 						result.setDf(df);
@@ -433,6 +459,8 @@ public class AssociationFile {
 				"\tImputationQualScore" +
 				"\tN" +
 				"\tMAF" +
+				"\tAFCases" +
+				"\tAFControls" +
 				"\tHWEP" +
 				"\tDevianceNull" +
 				"\tDevianceGeno" +

@@ -6,12 +6,13 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
-import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
+import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -33,62 +34,48 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 	private VCFVariant variant;
 	private int iter;
-	private DiseaseStatus[] finalDiseaseStatus;
-	private DoubleMatrix2D finalCovariates;
-	private ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional;
+	private ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional;
 	private int alleleOffsetGenotypes;
 	private LRTestOptions options;
 	private DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 	private LogisticRegressionResult resultCovars;
 	private int nrCovars;
+	SampleAnnotation sampleAnnotation;
 
-
-	public LRTestTask() {
+	public LRTestTask(SampleAnnotation sampleAnnotation) {
+		this.sampleAnnotation = sampleAnnotation;
 	}
 
 	public LRTestTask(VCFVariant variant,
 					  int iter,
-					  DiseaseStatus[] finalDiseaseStatus,
-					  DoubleMatrix2D finalCovariates,
-					  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
+					  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
 					  int alleleOffsetGenotypes,
+					  SampleAnnotation sampleAnnotation,
 					  LRTestOptions options) {
 		this.variant = variant;
 		this.iter = iter;
-		this.finalDiseaseStatus = finalDiseaseStatus;
-		this.finalCovariates = finalCovariates;
 		this.conditional = conditional;
 		this.alleleOffsetGenotypes = alleleOffsetGenotypes;
 		this.options = options;
+		this.sampleAnnotation = sampleAnnotation;
 	}
 
 	@Override
 	public Triple<String, AssociationResult, VCFVariant> call() {
 		// recode the genotypes to the same ordering as the covariate table
-		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
-		Triple<int[], boolean[], Triple<Integer, Double, Double>> qcdata = lrq.filterAndRecodeGenotypes(
-				variant.getGenotypeAllelesAsMatrix2D(),
-				finalDiseaseStatus,
-				variant.getAlleles().length,
-				finalCovariates.rows());
-
-		Triple<Integer, Double, Double> stats = qcdata.getRight();
-		double maf = stats.getMiddle();
-		double hwep = stats.getRight();
 
 		// generate pseudocontrol genotypes
 		Pair<DoubleMatrix2D, double[]> xandy = prepareMatrices(
 				variant,
-				qcdata.getLeft(),
-				conditional,
-				finalDiseaseStatus,
-				finalCovariates
+				conditional
 		);
 
 		int nrAlleles = variant.getAlleles().length;
 		double[] y = xandy.getRight(); // get the phenotypes for all non-missing genotypes
 		DoubleMatrix2D x = xandy.getLeft();
 
+		double maf = variant.getMAFControls();
+		double hwep = variant.getHwepControls();
 
 		AssociationResult result = pruneAndTest(x, y, 1, 1 + (nrAlleles - 1), variant, maf);
 
@@ -114,10 +101,14 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	public Pair<DoubleMatrix2D, double[]> prepareMatrices(VCFVariant variant,
-														  int[] left,
-														  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional,
-														  DiseaseStatus[] finalDiseaseStatus,
-														  DoubleMatrix2D finalCovariates) {
+														  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional) {
+
+		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
+		Triple<int[], boolean[], Integer> qcdata = lrq.determineMissingGenotypes(
+				variant.getGenotypeAllelesAsMatrix2D(),
+				sampleAnnotation.getCovariates().rows());
+
+		int[] left = qcdata.getLeft();
 
 		// prepare genotype matrix
 		DoubleMatrix2D x = variant.getDosagesAsMatrix2D();
@@ -128,7 +119,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		if (conditional != null && !conditional.isEmpty()) {
 			for (int c = 0; c < conditional.size(); c++) {
-				Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>> conditionalData = conditional.get(c);
+				Pair<VCFVariant, Triple<int[], boolean[], Integer>> conditionalData = conditional.get(c);
 				VCFVariant var2 = conditionalData.getLeft();
 				int[] left2 = conditionalData.getRight().getLeft();
 
@@ -141,6 +132,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 		}
 		// now append covariates
+		DoubleMatrix2D finalCovariates = sampleAnnotation.getCovariates();
+		DiseaseStatus[] finalDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
+
 		x = DoubleFactory2D.dense.appendColumns(x, finalCovariates);
 
 		// add intercept column

@@ -968,7 +968,9 @@ public class VCFFunctions {
 					filters.add(new ReadDepthFilter(minimalReadDepth));
 				}
 
-				VCFVariant variant = new VCFVariant(ln, filters, true);
+				SampleAnnotation annotation = new SampleAnnotation();
+				annotation.setIndividualGender(sampleIsFemale);
+				VCFVariant variant = new VCFVariant(ln, filters, true, annotation);
 
 				short[] depths = variant.getApproximateDepth();
 
@@ -1000,8 +1002,9 @@ public class VCFFunctions {
 				boolean filterout = false;
 				String alt = "";
 				Chromosome chr = Chromosome.parseChr(variant.getChr());
+
 				if (sampleIsFemale != null && (chr.equals(Chromosome.X) || chr.equals(Chromosome.Y))) {
-					variant.recalculateMAFAndCallRate(sampleIsFemale, null);
+					variant.recalculateMAFAndCallRate();
 				}
 
 				if (variant.getCallrate() < callratethreshold) {

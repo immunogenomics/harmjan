@@ -2,14 +2,13 @@ package nl.harmjanwestra.gwas.tasks;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
-import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
-import umcg.genetica.math.stats.HWE;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,28 +21,25 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 
 	private LRTestOptions options;
 	private boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
-	private DoubleMatrix2D finalCovariates;
-	private DiseaseStatus[] finalDiseaseStatus;
 	private String ln;
 	private ArrayList<Feature> regions;
 	private HashSet<String> limitVariants;
+	private SampleAnnotation sampleAnnotation;
 
 	public LRTestVariantQCTask() {
 	}
 
 	public LRTestVariantQCTask(String ln,
-	                           ArrayList<Feature> regions,
-	                           LRTestOptions options,
-	                           boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
-	                           DiseaseStatus[] finalDiseaseStatus,
-	                           DoubleMatrix2D finalCovariates,
-	                           HashSet<String> limitVariants) {
+							   ArrayList<Feature> regions,
+							   LRTestOptions options,
+							   boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
+							   SampleAnnotation sampleAnnotation,
+							   HashSet<String> limitVariants) {
 		this.regions = regions;
 		this.options = options;
 		this.ln = ln;
 		this.genotypeSamplesWithCovariatesAndDiseaseStatus = genotypeSamplesWithCovariatesAndDiseaseStatus;
-		this.finalDiseaseStatus = finalDiseaseStatus;
-		this.finalCovariates = finalCovariates;
+		this.sampleAnnotation = sampleAnnotation;
 		this.limitVariants = limitVariants;
 	}
 
@@ -69,7 +65,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				variant = null;
 				ln = null;
 			} else {
-				variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus);
+				variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation);
 				if (!variant.hasImputationDosages()) {
 					impqual = 1d;
 				} else if (variant.getAlleles().length > 2) {
@@ -84,18 +80,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 
 				if (impqual == null || impqual > options.getImputationqualitythreshold()) {
 					// parse the genotype, do some QC checks
-					Triple<int[], boolean[], Triple<Integer, Double, Double>> unfilteredGenotypeData = filterAndRecodeGenotypes(
-							variant.getGenotypeAllelesAsMatrix2D(),
-							finalDiseaseStatus,
-							variant.getAlleles().length,
-							finalCovariates.rows());
-
-					Triple<Integer, Double, Double> qc = unfilteredGenotypeData.getRight();
-
-					maf = qc.getMiddle();
-					hwep = qc.getRight();
-
-					if (maf < options.getMafthresholdD() || hwep < options.getHWEPThreshold()) {
+					if (variant.getMAFControls() < options.getMafthresholdD() || variant.getHwepControls() < options.getHWEPThreshold()) {
 						variant = null;
 					} else {
 						variantPassesQC = true;
@@ -138,36 +123,11 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 	}
 
 	// recalculate MAF, HWE, etc, using CASE/Control labels
-	public Triple<int[], boolean[], Triple<Integer, Double, Double>> filterAndRecodeGenotypes(
+	public Triple<int[], boolean[], Integer> determineMissingGenotypes(
 			DoubleMatrix2D genotypeAlleles,
-			DiseaseStatus[] diseaseStatus,
-			int nrAlleles,
 			int nrsamples) {
 
 		int individualCounter = 0;
-
-		// first iterate the genotyped samples to load the genotypes
-		// calculate maf and hwep
-
-		// initialize hwep stuff
-		int nrCombinations = (nrAlleles * (nrAlleles + 1)) / 2;
-		int[] obsControls = new int[nrCombinations];
-		int[] obsAll = new int[nrCombinations];
-		int[] nrHomozygous = new int[nrAlleles];
-		int nrCalledAll = 0;
-		int nrCalledControls = 0;
-
-		int[][] index = new int[nrAlleles][nrAlleles];
-
-		int ctr = 0;
-		for (int i = 0; i < nrAlleles; i++) {
-			for (int j = i; j < nrAlleles; j++) {
-				index[i][j] = ctr;
-				index[j][i] = ctr;
-				ctr++;
-			}
-		}
-
 		int nrWithMissingGenotypes = 0;
 		boolean[] genotypeMissing = new boolean[nrsamples];
 		for (int i = 0; i < genotypeAlleles.rows(); i++) {
@@ -175,19 +135,6 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 			if (b1 == -1 || Double.isNaN(b1)) {
 				nrWithMissingGenotypes++;
 				genotypeMissing[individualCounter] = true;
-			} else {
-				int b2 = (int) genotypeAlleles.getQuick(i, 1);
-				int id = index[b1][b2];
-				if (diseaseStatus[individualCounter].equals(DiseaseStatus.CONTROL)) { // controls
-
-					if (b1 == b2) {
-						nrHomozygous[b1]++;
-					}
-					obsControls[id]++;
-					nrCalledControls++;
-				}
-				obsAll[id]++;
-				nrCalledAll++;
 			}
 			individualCounter++;
 		}
@@ -200,76 +147,6 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				missingctr++;
 			}
 		}
-
-
-		double[] freqs = new double[nrAlleles];
-		for (int i = 0; i < nrAlleles; i++) {
-			for (int j = 0; j < nrAlleles; j++) {
-				int id = index[i][j];
-				if (i == j) {
-					freqs[i] += (2 * obsAll[id]);
-				} else {
-					freqs[i] += obsAll[id];
-				}
-			}
-		}
-		for (int i = 0; i < nrAlleles; i++) {
-			freqs[i] /= (nrCalledAll * 2);
-		}
-
-		double hwep = 0;
-		boolean debug = true;
-		if (nrAlleles == 2 && !debug) {
-			hwep = HWE.calculateExactHWEPValue(obsControls[1], obsControls[0], obsControls[2]);
-		} else {
-			ctr = 0;
-
-			double[] freqscontrols = new double[nrAlleles];
-			for (int i = 0; i < nrAlleles; i++) {
-				for (int j = 0; j < nrAlleles; j++) {
-					int id = index[i][j];
-					if (i == j) {
-						freqscontrols[i] += (2 * obsControls[id]);
-					} else {
-						freqscontrols[i] += obsControls[id];
-					}
-				}
-			}
-			for (int i = 0; i < nrAlleles; i++) {
-				freqscontrols[i] /= (nrCalledControls * 2);
-			}
-
-			double chisq = 0;
-			for (int i = 0; i < nrAlleles; i++) {
-				for (int j = i; j < nrAlleles; j++) {
-					double expectedFreq;
-					if (i == j) {
-						expectedFreq = (freqscontrols[i] * freqscontrols[i]) * nrCalledControls; // homozygote freq
-					} else {
-						expectedFreq = (2 * (freqscontrols[i] * freqscontrols[j])) * nrCalledControls; // heterozygote freq
-					}
-					double observedFreq = obsControls[ctr];
-					double oe = (observedFreq - expectedFreq);
-					if (oe != 0 && expectedFreq != 0) {
-						chisq += ((oe * oe) / expectedFreq);
-					}
-					ctr++;
-				}
-			}
-
-			int df = (nrCombinations - nrAlleles);
-			hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
-		}
-
-		double maf = 1;
-		for (int i = 0; i < freqs.length; i++) {
-			double d = freqs[i];
-			if (d < maf) {
-				maf = d;
-			}
-		}
-
-
-		return new Triple<>(missingGenotypeIds, genotypeMissing, new Triple<>(nrWithMissingGenotypes, maf, hwep));
+		return new Triple<>(missingGenotypeIds, genotypeMissing, nrWithMissingGenotypes);
 	}
 }

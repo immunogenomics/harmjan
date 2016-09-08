@@ -14,6 +14,8 @@ public class SNPFeature extends Feature {
 	private double maf;
 	private double hwep;
 	private double cr;
+	private double AFCases;
+	private double AFControls;
 
 	public double getImputationQualScore() {
 		return imputationQualScore;
@@ -95,5 +97,13 @@ public class SNPFeature extends Feature {
 	@Override
 	public String toString() {
 		return getChromosome().getName() + "_" + getStart() + "_" + name;
+	}
+
+	public void setAFCases(double AFCases) {
+		this.AFCases = AFCases;
+	}
+
+	public void setAFControls(double AFControls) {
+		this.AFControls = AFControls;
 	}
 }

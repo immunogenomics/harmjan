@@ -3,13 +3,13 @@ package nl.harmjanwestra.gwas.tasks;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import nl.harmjanwestra.gwas.CLI.LRTestOptions;
-import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.association.AssociationResultPairwise;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
+import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -27,9 +27,9 @@ import java.util.concurrent.Callable;
 public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise> {
 
 	private final boolean[] genotypesWithCovariatesAndDiseaseStatus;
-	private final DiseaseStatus[] finalDiseaseStatus;
-	private final DoubleMatrix2D finalCovariates;
+
 	private final LRTestOptions options;
+	private final SampleAnnotation sampleAnnotation;
 	private int snpid1;
 	private int snpid2;
 	private ArrayList<VCFVariant> variants;
@@ -38,16 +38,14 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 	private int nrCovars;
 
 	public LRTestExhaustiveTask(ArrayList<VCFVariant> variants, int i, int j,
-	                            boolean[] genotypesWithCovariatesAndDiseaseStatus,
-	                            DiseaseStatus[] finalDiseaseStatus,
-	                            DoubleMatrix2D finalCovariates,
-	                            LRTestOptions options) {
+								boolean[] genotypesWithCovariatesAndDiseaseStatus,
+								SampleAnnotation sampleAnnotation,
+								LRTestOptions options) {
 		this.variants = variants;
 		this.snpid1 = i;
 		this.snpid2 = j;
 		this.genotypesWithCovariatesAndDiseaseStatus = genotypesWithCovariatesAndDiseaseStatus;
-		this.finalDiseaseStatus = finalDiseaseStatus;
-		this.finalCovariates = finalCovariates;
+		this.sampleAnnotation = sampleAnnotation;
 		this.options = options;
 	}
 
@@ -56,40 +54,28 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 
 		VCFVariant variant1 = variants.get(snpid1);
 		VCFVariant variant2 = variants.get(snpid2);
-		LRTestTask taskObj = new LRTestTask();
+		LRTestTask taskObj = new LRTestTask(sampleAnnotation);
 
 		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
-		Triple<int[], boolean[], Triple<Integer, Double, Double>> qcdata1 = lrq.filterAndRecodeGenotypes(
-				variant1.getGenotypeAllelesAsMatrix2D(),
-				finalDiseaseStatus,
-				variant1.getAlleles().length,
-				finalCovariates.rows());
-
-		Triple<Integer, Double, Double> stats1 = qcdata1.getRight();
-		double maf1 = stats1.getMiddle();
-		double hwep1 = stats1.getRight();
 
 
-		Triple<int[], boolean[], Triple<Integer, Double, Double>> qcdata2 = lrq.filterAndRecodeGenotypes(
+		Triple<int[], boolean[], Integer> qcdata2 = lrq.determineMissingGenotypes(
 				variant2.getGenotypeAllelesAsMatrix2D(),
-				finalDiseaseStatus,
-				variant2.getAlleles().length,
-				finalCovariates.rows());
-
-		Triple<Integer, Double, Double> stats2 = qcdata2.getRight();
-		double maf2 = stats2.getMiddle();
-		double hwep2 = stats2.getRight();
+				sampleAnnotation.getCovariates().rows());
 
 
-		ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Triple<Integer, Double, Double>>>> conditional = new ArrayList<>();
+		double maf1 = variant1.getMAFControls();
+		double hwep1 = variant1.getHwepControls();
+		double maf2 = variant2.getMAFControls();
+		double hwep2 = variant2.getHwepControls();
+
+
+		ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional = new ArrayList<>();
 		conditional.add(new Pair<>(variant2, qcdata2));
 
 		Pair<DoubleMatrix2D, double[]> xandy = taskObj.prepareMatrices(
 				variant1,
-				qcdata1.getLeft(),
-				conditional,
-				finalDiseaseStatus,
-				finalCovariates
+				conditional
 		);
 
 		int numberOfColumns = variant1.getAlleles().length - 1 + variant2.getAlleles().length - 1;
@@ -139,11 +125,11 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 	}
 
 	private AssociationResultPairwise pruneAndTest(DoubleMatrix2D x,
-	                                               double[] y,
-	                                               int firstColumnToRemove,
-	                                               int lastColumnToRemove,
-	                                               LRTestTask testObj) throws IOException {
-		LRTestTask lrt = new LRTestTask();
+												   double[] y,
+												   int firstColumnToRemove,
+												   int lastColumnToRemove,
+												   LRTestTask testObj) throws IOException {
+		LRTestTask lrt = new LRTestTask(sampleAnnotation);
 		Pair<DoubleMatrix2D, boolean[]> pruned = lrt.removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 
