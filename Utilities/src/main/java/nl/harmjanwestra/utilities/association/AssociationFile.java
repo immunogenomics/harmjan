@@ -298,7 +298,7 @@ public class AssociationFile {
 
 					if (afcasescol != -1) {
 						try {
-							afcases = Double.parseDouble(elems[mafcol]);
+							afcases = Double.parseDouble(elems[afcasescol]);
 						} catch (NumberFormatException e) {
 
 						}
@@ -306,7 +306,7 @@ public class AssociationFile {
 
 					if (afcontrolscol != -1) {
 						try {
-							afcontrols = Double.parseDouble(elems[mafcol]);
+							afcontrols = Double.parseDouble(elems[afcontrolscol]);
 						} catch (NumberFormatException e) {
 
 						}
@@ -419,7 +419,7 @@ public class AssociationFile {
 						result.setN(n);
 						snp.setMaf(maf);
 						snp.setAFCases(afcases);
-						snp.setAFControls(afcases);
+						snp.setAFControls(afcontrols);
 						result.setDevianceNull(deviancenull);
 						result.setDevianceGeno(deviancegeno);
 						result.setDf(df);

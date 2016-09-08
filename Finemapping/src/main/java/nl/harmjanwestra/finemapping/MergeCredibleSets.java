@@ -7,6 +7,7 @@ import nl.harmjanwestra.utilities.association.approximatebayesposterior.Approxim
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,25 +53,74 @@ public class MergeCredibleSets {
 		}
 
 
-		for (int d = 0; d < regions.size(); d++) {
-			for (int i = 0; i < assocFiles.length; i++) {
-
-			}
-		}
-
+		int len = 5;
 		TextFile out = new TextFile(outfile, TextFile.R);
-		for (int d = 0; d < regions.size(); d++) {
-			int len = crediblesets[0][d].length;
-			Feature region = regions.get(d);
-			if (len <= 5) {
-				// print
+		String header2 = "";
+		String header1 = "region";
+		for (int i = 0; i < data.length; i++) {
+			header1 += "\tNrVariantsInCredibleSet\tSumPosteriorTop5Variants\tVariants\tAlleles\tOR\tPval\tPosterior";
+		}
+		out.writeln(header1);
+		for (int regionId = 0; regionId < regionsWithCredibleSets.size(); regionId++) {
+			Feature region = regionsWithCredibleSets.get(regionId);
 
+			// region nrCrediblesetVariants posteriorsumtop5 topvariants alleles or pval posterior
+			ArrayList<ArrayList<AssociationResult>> resultsPerDs = new ArrayList<>();
+			for (int i = 0; i < data.length; i++) {
+				ArrayList<AssociationResult> topResults = getTopVariants(data, i, regionId, len);
+				resultsPerDs.add(topResults);
+			}
+
+			double[] regionsums = new double[data.length];
+			for (int snpId = 0; snpId < len; snpId++) {
 				String ln = "";
-				for (int i = 0; i < data.length; i++) {
-					ArrayList<AssociationResult> topResults = getTopVariants(data, i, d, len);
+
+				if (snpId == 0) {
+					ln = region.toBedString();
+					for (int datasetId = 0; datasetId < data.length; datasetId++) {
+						double sum = 0;
+						AssociationResult r = data[datasetId][regionId][snpId];
+						for (int var = 0; var < 5; var++) {
+							sum += data[datasetId][regionId][var].getPosterior();
+						}
+						ln += "\t" + crediblesets[datasetId][regionId].length
+								+ "\t" + sum
+								+ "\t" + r.getSnp().toString()
+								+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
+								+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
+								+ "\t" + r.getLog10Pval()
+								+ "\t" + r.getPosterior();
+						regionsums[datasetId] += r.getPosterior();
+					}
+				} else {
+					ln = "";
+					for (int datasetId = 0; datasetId < data.length; datasetId++) {
+
+						AssociationResult r = data[datasetId][regionId][snpId];
+						if (regionsums[datasetId] < 0.9) {
+							ln += "\t"
+									+ "\t"
+									+ "\t" + r.getSnp().toString()
+									+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
+									+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
+									+ "\t" + r.getLog10Pval()
+									+ "\t" + r.getPosterior();
+						} else {
+							ln += "\t"
+									+ "\t"
+									+ "\t"
+									+ "\t"
+									+ "\t"
+									+ "\t"
+									+ "\t";
+						}
+						regionsums[datasetId] += r.getPosterior();
+
+
+					}
 
 				}
-
+				out.writeln(ln);
 			}
 		}
 		out.close();

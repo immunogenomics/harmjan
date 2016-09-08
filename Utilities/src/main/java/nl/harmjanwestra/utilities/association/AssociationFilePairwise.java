@@ -32,7 +32,11 @@ public class AssociationFilePairwise {
 				"\tImputationQualScore2" +
 				"\tN" +
 				"\tMAF1" +
+				"\tAFCases1" +
+				"\tAFControls1" +
 				"\tMAF2" +
+				"\tAFCases2" +
+				"\tAFControls2" +
 				"\tHWEP" +
 				"\tHWEP2" +
 				"\tDistance" +
@@ -74,6 +78,10 @@ public class AssociationFilePairwise {
 		int Ncol = -1;
 		int MAF1col = -1;
 		int MAF2col = -1;
+		int AFCases1Col = -1;
+		int AFCases2Col = -1;
+		int AFControls1Col = -1;
+		int AFControls2Col = -1;
 		int HWEPcol = -1;
 		int HWEP2col = -1;
 		int Distancecol = -1;
@@ -203,6 +211,20 @@ public class AssociationFilePairwise {
 						case "Log10(p)":
 							Log10pcol = i;
 							break;
+
+
+						case "AFCases1":
+							AFCases1Col = i;
+							break;
+						case "AFControls1":
+							AFControls1Col = i;
+							break;
+						case "AFCases2":
+							AFCases2Col = i;
+							break;
+						case "AFControls2":
+							AFControls2Col = i;
+							break;
 					}
 				}
 			} else {
@@ -265,6 +287,20 @@ public class AssociationFilePairwise {
 					if (MAF2col != -1) {
 						snp2.setMaf(Double.parseDouble(elems[MAF2col]));
 					}
+
+					if (AFCases1Col != -1) {
+						snp1.setAFCases(Double.parseDouble(elems[AFCases1Col]));
+					}
+					if (AFControls1Col != -1) {
+						snp1.setAFControls(Double.parseDouble(elems[AFControls1Col]));
+					}
+					if (AFCases2Col != -1) {
+						snp2.setAFCases(Double.parseDouble(elems[AFCases2Col]));
+					}
+					if (AFControls2Col != -1) {
+						snp2.setAFControls(Double.parseDouble(elems[AFControls2Col]));
+					}
+
 					if (HWEPcol != -1) {
 						snp1.setHwep(Double.parseDouble(elems[HWEPcol]));
 					}

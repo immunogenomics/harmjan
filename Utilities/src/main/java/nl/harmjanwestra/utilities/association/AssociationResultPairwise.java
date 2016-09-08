@@ -13,16 +13,16 @@ public class AssociationResultPairwise extends AssociationResult {
 	private double ldRSquared;
 	private Double ldDprime;
 
-	public void setSnp2(SNPFeature snp2) {
-		this.snp2 = snp2;
-	}
-
 	public double getLdRSquared() {
 		return ldRSquared;
 	}
 
 	public SNPFeature getSnp2() {
 		return snp2;
+	}
+
+	public void setSnp2(SNPFeature snp2) {
+		this.snp2 = snp2;
 	}
 
 	public void setLDRSquared(double LD) {
@@ -52,7 +52,11 @@ public class AssociationResultPairwise extends AssociationResult {
 				+ "\t" + snp2.getImputationQualityScore()
 				+ "\t" + n
 				+ "\t" + snp.getMaf()
+				+ "\t" + snp.getAFCases()
+				+ "\t" + snp.getAFControls()
 				+ "\t" + snp2.getMaf()
+				+ "\t" + snp2.getAFCases()
+				+ "\t" + snp2.getAFControls()
 				+ "\t" + snp.getHwep()
 				+ "\t" + snp2.getHwep()
 				+ "\t" + (snp.getStart() - snp2.getStart())
