@@ -134,7 +134,17 @@ public class VCFFilter {
 
 					if (varFiltered.getCallrate() >= callratethreshold && varFiltered.getMAF() >= mafthreshold) {
 						String[] elems = ln.split("\t");
-						int gtcol = varFiltered.getGTCol();
+
+						String infoblock = elems[8];
+						String[] format = Strings.colon.split(infoblock);
+
+						int gtcol = -1;
+						for (int q = 0; q < format.length; q++) {
+							if (format[q].equals("GT")) {
+								gtcol = q;
+							}
+						}
+
 						String sep = varFiltered.getSeparator();
 						double[][] alleles = varFiltered.getGenotypeAlleles();
 						// write back, keep annotations..
