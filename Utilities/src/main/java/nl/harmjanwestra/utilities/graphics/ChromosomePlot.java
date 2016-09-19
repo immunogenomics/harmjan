@@ -4,7 +4,7 @@ import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
-import nl.harmjanwestra.utilities.enums.Strand;
+import nl.harmjanwestra.utilities.features.GFFFile;
 import nl.harmjanwestra.utilities.graphics.themes.ComplementaryColor;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 import umcg.genetica.io.text.TextFile;
@@ -111,8 +111,10 @@ public class ChromosomePlot extends DefaultGraphics {
 		}
 
 		ArrayList<ArrayList<Feature>> associatedLociPerDisease = new ArrayList<ArrayList<Feature>>();
-		for (String gff : gffLocusFiles) {
-			associatedLociPerDisease.add(readGFF(gff, onlySuggestedLoci));
+		GFFFile gff = new GFFFile();
+		for (int f = 0; f < gffLocusFiles.length; f++) {
+			String gfffile = gffLocusFiles[f];
+			associatedLociPerDisease.add(gff.readGFF(gfffile, onlySuggestedLoci));
 		}
 
 
@@ -478,8 +480,11 @@ public class ChromosomePlot extends DefaultGraphics {
 
 		ArrayList<ArrayList<Feature>> associatedLociPerDisease = new ArrayList<ArrayList<Feature>>();
 		HashSet<Feature> allLociHash = new HashSet<Feature>();
-		for (String gff : gffLocusFiles) {
-			ArrayList<Feature> lociForDisease = readGFF(gff, onlySuggestedLoci);
+
+		GFFFile gff = new GFFFile();
+		for (int f=0;f<gffLocusFiles.length;f++) {
+			String gfffile = gffLocusFiles[f];
+			ArrayList<Feature> lociForDisease = gff.readGFF(gfffile, onlySuggestedLoci);
 			associatedLociPerDisease.add(lociForDisease);
 			allLociHash.addAll(lociForDisease);
 		}
@@ -606,55 +611,4 @@ public class ChromosomePlot extends DefaultGraphics {
 		close();
 	}
 
-	private ArrayList<Feature> readGFF(String gff, boolean onlySuggestedLoci) throws IOException {
-		TextFile tf = new TextFile(gff, TextFile.R);
-		String[] elems = tf.readLineElems(TextFile.tab);
-		ArrayList<Feature> output = new ArrayList<Feature>();
-		while (elems != null) {
-			if (elems[0].startsWith("#")) {
-
-			} else {
-
-				Chromosome chr = Chromosome.parseChr(elems[0]);
-				Integer start = Integer.parseInt(elems[3]);
-				Integer stop = Integer.parseInt(elems[4]);
-				String info = elems[8];
-				String[] infoElems = info.split(";");
-				boolean isCandidate = false;
-				Feature f = new Feature();
-				f.setChromosome(chr);
-				f.setStrand(Strand.NEG);
-				f.setStart(start);
-				f.setStop(stop);
-				for (int i = 0; i < infoElems.length; i++) {
-					if (infoElems[i].startsWith("is_candidate")) {
-						String[] data = infoElems[i].split("=");
-						if (data[1].equals("1")) {
-							isCandidate = true;
-						}
-					} else if (infoElems[i].startsWith("Name")) {
-						String[] data = infoElems[i].split("=");
-						f.setName(data[1]);
-					}
-				}
-
-
-				if (onlySuggestedLoci) {
-					if (isCandidate) {
-						if (f.getName().equals("ACOXL")) {
-							System.out.println("found it");
-						}
-						output.add(f);
-					}
-				} else {
-					output.add(f);
-				}
-
-
-			}
-			elems = tf.readLineElems(TextFile.tab);
-		}
-		tf.close();
-		return output;
-	}
 }

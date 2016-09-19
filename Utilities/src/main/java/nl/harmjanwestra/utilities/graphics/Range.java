@@ -32,19 +32,38 @@ public class Range {
 
 	}
 
-	public Range(double[][] histogram) {
+	public Range(double[][] dataY) {
 
 		minX = 0;
-		maxX = histogram[0].length;
+		maxX = dataY[0].length;
 
-		for (int i = 0; i < histogram.length; i++) {
-			double min = ArrayMath.min(histogram[i]);
+		for (int i = 0; i < dataY.length; i++) {
+			double min = ArrayMath.min(dataY[i]);
 			if (min < minY) {
 				minY = min;
 			}
-			double max = ArrayMath.max(histogram[i]);
+			double max = ArrayMath.max(dataY[i]);
 			if (max > maxY) {
 				maxY = max;
+			}
+		}
+	}
+
+	public Range(double[][][] dataY) {
+		maxY = -Double.MAX_VALUE;
+		minY = Double.MAX_VALUE;
+
+		for (int r = 0; r < dataY.length; r++) {
+			for (int c = 0; c < dataY[r].length; c++) {
+				for (int q = 0; q < dataY[r][c].length; q++) {
+					double v = dataY[r][c][q];
+					if (v > maxY) {
+						maxY = v;
+					}
+					if (v < minY) {
+						minY = v;
+					}
+				}
 			}
 		}
 	}

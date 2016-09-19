@@ -81,6 +81,8 @@ public class ChrPlot {
 					"/Data/Ref/ImmunoBase/ImmunoBase/Hs_GRCh37-T1D-assoc_genesGFF"
 			};
 
+
+
 			plot.plot(cytoband, gfffiles, true, regions);
 
 //			plot.heatmap(gfffiles, true);
