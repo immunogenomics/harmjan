@@ -95,8 +95,6 @@ public class CircularHeatmapPanel extends Panel {
 
 			double groupdeg = (groups.size() - 1) * degreesPerGroup;
 			degreesPerSegment = (360d - degreesForRowNames - groupdeg) / data[0].length;
-//			degreesPerSegment -= groupdeg;
-
 
 			for (int group = 0; group < groups.size(); group++) {
 				int s = groups.get(group).getLeft();
@@ -197,13 +195,18 @@ public class CircularHeatmapPanel extends Panel {
 				int col0 = groups.get(group).getLeft();
 				int col1 = groups.get(group).getMiddle();
 				int diff = col1 - col0;
-				double angle0 = degreesPerSegment * col0;
-				angle0 -= (degreesPerGroup / 2);
-				double deg = degreesPerSegment * diff;
-				angle0 -= (degreesForRowNames) + (degreesForRowNames / 2) - (degreesPerSegment / 2);
-				angle0 += (group * degreesPerGroup);
 
-				angle0 += 0.55;
+				double angle0 = angleOffSet - (degreesPerSegment * col0) - (group * degreesPerGroup);
+//				double degreesPerSubCol = degreesPerSegment / diff;
+				double deg = degreesPerSegment; // degreesPerSubCol * diff;
+//
+//				double angle0 = degreesPerSegment * col0;
+//				angle0 -= (degreesPerGroup / 2);
+//				double deg = degreesPerSegment * diff;
+//				angle0 -= (degreesForRowNames) + (degreesForRowNames / 2) - (degreesPerSegment / 2);
+//				angle0 += (group * degreesPerGroup);
+//
+//				angle0 += 0.55;
 
 				int dsWidth2 = (int) Math.floor(maxWidth - (widthPerDataset * 0));
 				double remainder2 = (maxWidth - dsWidth2) / 2;

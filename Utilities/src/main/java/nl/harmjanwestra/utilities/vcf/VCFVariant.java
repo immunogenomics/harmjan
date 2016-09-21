@@ -822,11 +822,11 @@ public class VCFVariant {
 			sampleDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
 			individualGender = sampleAnnotation.getIndividualGender();
 		} else {
-			System.out.println("sampleAnnotation is null");
-			Exception e = new Exception("");
-			System.out.println("Constructor: " + constructor);
-			e.printStackTrace();
-			System.exit(-1);
+//			System.out.println("sampleAnnotation is null");
+//			Exception e = new Exception("");
+//			System.out.println("Constructor: " + constructor);
+//			e.printStackTrace();
+//			System.exit(-1);
 		}
 
 		int nrCalled = 0;

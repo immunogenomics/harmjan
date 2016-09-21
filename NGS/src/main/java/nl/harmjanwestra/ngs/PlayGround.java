@@ -42,10 +42,12 @@ public class PlayGround {
 //		}
 
 		PlayGround pg = new PlayGround();
-		String plink = "/Data/Homozygosity/EGCUT/EGCUT";
-		String outdir = "/Data/Homozygosity/EGCUT/hg19/liftover/EGCUT";
+		String plink = args[0];
+		String outdir = args[1];
+		String liftover = args[2];
+		String liftoverchain = args[3];
 		try {
-			pg.liftOver(plink, outdir);
+			pg.liftOver(plink, outdir, liftover, liftoverchain);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -3464,7 +3466,7 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 //		}
 //	}
 
-	public void liftOver(String plinkDataset, String outfile) throws IOException {
+	public void liftOver(String plinkDataset, String outfile, String liftovertool, String liftoverchain) throws IOException {
 		PedAndMapFunctions pedAndMapFunctions = new PedAndMapFunctions();
 		VCFFunctions vcfFunctions = new VCFFunctions();
 		ProcessBuilder pb = null;
@@ -3477,19 +3479,19 @@ Missing	Missing	2487762	rs2227313	G	A	1	NA	NA	NA	1
 		String lifted = bedout + "-lifted.bed";
 		String unlifted = bedout + "-unlifted.bed";
 //
-		pb = new ProcessBuilder("/Data/ImmunoChip/SequencingProject/liftOver", bedout,
-				"/Data/ImmunoChip/SequencingProject/hg18ToHg19.over.chain.gz", lifted, unlifted);
+		pb = new ProcessBuilder(liftovertool, bedout,
+				liftoverchain, lifted, unlifted);
 		ProcessRunner.run(pb);
 
 		String hg19map = outfile + "_hg19.map";
 		pedAndMapFunctions.convertPostLiftOverMAP(plinkDataset + ".map", hg19map, lifted);
 
-		String hg19mapupd = outfile + "_hg19_dbSNP138.map";
-		String dbsnpvcf = "/Data/Projects/2014-FR-Reseq/GATKResources/dbsnp_138.b37.vcf.gz";
-		pedAndMapFunctions.updateRSNames(dbsnpvcf, hg19map, hg19mapupd);
-
-		String hg19mapupddedup = outfile + "_hg19_dbSNP138_dedup.map";
-		pedAndMapFunctions.deduplicateMAP(hg19mapupd, hg19mapupddedup);
+//		String hg19mapupd = outfile + "_hg19_dbSNP138.map";
+//		String dbsnpvcf = "/Data/Projects/2014-FR-Reseq/GATKResources/dbsnp_138.b37.vcf.gz";
+//		pedAndMapFunctions.updateRSNames(dbsnpvcf, hg19map, hg19mapupd);
+//
+//		String hg19mapupddedup = outfile + "_hg19_dbSNP138_dedup.map";
+//		pedAndMapFunctions.deduplicateMAP(hg19mapupd, hg19mapupddedup);
 	}
 
 	public void liftOverAndFilterPlinkDataset(String plinkDataset, String removeFile, String outdir, String regionFile) throws IOException {
