@@ -18,6 +18,7 @@ public class LDPanel extends Panel {
 	private ArrayList<Pair<Integer, Integer>> positions;
 	private ArrayList<Double> vals;
 	private Feature region;
+	private boolean plottopvalues = false;
 
 	public LDPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -97,7 +98,7 @@ public class LDPanel extends Panel {
 				/// System.out.println(objs.get(i).p + "\t" + pos1 + "\t" + perc1 + "\t" + startX1 + "\t" + pos2 + "\t" + perc2 + "\t" + startY1);
 				g2d.setColor(new Color(color, color, color));
 				g2d.fillRect((int) Math.floor(startX1), (int) Math.floor(startY1), ppbpi, ppbpi);
-				if (yperc == 1) {
+				if (yperc == 1 && plottopvalues) {
 					g2d.setColor(new Color(255, 0, 0));
 					g2d.fillOval((int) Math.floor(startX1) - 5, (int) Math.floor(startY1) - 5, 10, 10);
 				}

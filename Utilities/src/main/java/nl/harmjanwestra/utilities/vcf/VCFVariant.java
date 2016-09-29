@@ -22,11 +22,44 @@ import java.util.regex.Pattern;
 /**
  * Created by hwestra on 4/21/15.
  */
+
+enum PHASE {
+	UNPHASED("/", Pattern.compile("/")),
+	PHASED("|", Pattern.compile("\\|"));
+
+	private final String ph;
+	private final Pattern pattern;
+
+	PHASE(String ph, Pattern pattern) {
+		this.ph = ph;
+		this.pattern = pattern;
+	}
+
+	public static PHASE getPhase(String character) {
+		if (character.contains("|")) {
+			return PHASE.PHASED;
+		} else {
+			return PHASE.UNPHASED;
+		}
+	}
+
+	public String getSep() {
+		return ph;
+	}
+
+	public Pattern getPattern() {
+		return pattern;
+	}
+
+	public String toString() {
+		return ph;
+	}
+}
+
 public class VCFVariant {
 
 	private static final int nrHeaderElems = 9;
-	private static final Pattern slash = Pattern.compile("/");
-	private static final Pattern pipe = Pattern.compile("\\|");
+
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
 	private final HashMap<String, String> info = new HashMap<String, String>();
 	private boolean[] samplesToInclude;
@@ -54,7 +87,9 @@ public class VCFVariant {
 	private int qual = -1;
 	private String filter = null;
 	private double MAF;
-	private String separator = "/";
+	// private String separator = new String("/").intern();
+
+	private PHASE phase;
 	private boolean ignoregender;
 	private int totalCalledAlleles;
 
@@ -314,12 +349,13 @@ public class VCFVariant {
 										String gt = sampleToken;
 										if (!nullGenotype.equals(gt)) {
 
-											String[] gtElems = slash.split(gt);
-											separator = "/";
-											if (gtElems.length == 1) { // phased genotypes ??
-												gtElems = pipe.split(gt);
-												separator = "|";
-											}
+											PHASE phase = PHASE.getPhase(gt);
+											String[] gtElems = phase.getPattern().split(gt);
+											this.phase = phase;
+//											if (gtElems.length == 1) { // phased genotypes ??
+//												gtElems = pipe.split(gt);
+//												phase = PHASE.PHASED;
+//											}
 
 											if (!gtElems[0].equals(".")) {
 
@@ -752,7 +788,7 @@ public class VCFVariant {
 			if (builder.length() > 0) {
 				builder.append("\t");
 			}
-			builder.append(al1).append(separator).append(al2);
+			builder.append(al1).append(phase.toString()).append(al2);
 			if (genotypeProbabilies != null) {
 
 				// samples x alleles
@@ -873,47 +909,7 @@ public class VCFVariant {
 			int gt1 = (int) genotypeAlleles.getQuick(i, 0);
 			if (gt1 != -1) {
 				int gt2 = (int) genotypeAlleles.getQuick(i, 1);
-				if (chromosome.equals(Chromosome.X)) {
-					if (ignoregender || (gender != null && gender == Gender.FEMALE)) {
-						nrCalled++;
-						nrAllelesObserved[gt1]++;
-						nrAllelesObserved[gt2]++;
-						if (diseaseStatus != null) {
-							if (diseaseStatus == DiseaseStatus.CASE) {
-								nrAllelesObservedCases[gt1]++;
-								nrAllelesObservedCases[gt2]++;
-								nrCalledCases++;
-							} else if (diseaseStatus == DiseaseStatus.CONTROL) {
-								nrAllelesObservedControls[gt1]++;
-								nrAllelesObservedControls[gt2]++;
-								nrCalledControls++;
-							}
-						}
-
-					} else if (individualGender == null) {
-//						System.err.println("ERROR: cannot calculateWithinDataset chr X MAF if gender information unavailable.");
-//						throw new IllegalArgumentException("ERROR: cannot calculateWithinDataset chr X MAF if gender information unavailable.");
-					}
-				} else if (chromosome.equals(Chromosome.Y)) {
-					if (ignoregender || (gender != null && gender == Gender.MALE)) {
-						nrCalled++;
-						nrAllelesObserved[gt1]++;
-						nrAllelesObserved[gt2]++;
-						if (diseaseStatus != null) {
-							if (diseaseStatus == DiseaseStatus.CASE) {
-								nrAllelesObservedCases[gt1]++;
-								nrAllelesObservedCases[gt2]++;
-								nrCalledCases++;
-							} else if (diseaseStatus == DiseaseStatus.CONTROL) {
-								nrAllelesObservedControls[gt1]++;
-								nrAllelesObservedControls[gt2]++;
-								nrCalledControls++;
-							}
-						}
-					} else if (individualGender == null) {
-//						System.err.println("ERROR: cannot calculateWithinDataset chr Y MAF if gender information unavailable.");
-					}
-				} else {
+				if (chromosome.isAutosome()) {
 					nrCalled++;
 					nrAllelesObserved[gt1]++;
 					nrAllelesObserved[gt2]++;
@@ -928,67 +924,129 @@ public class VCFVariant {
 							nrCalledControls++;
 						}
 					}
+				} else {
+					if (chromosome.equals(Chromosome.X)) {
+						if (ignoregender || (gender != null && gender == Gender.FEMALE)) {
+							nrCalled++;
+							nrAllelesObserved[gt1]++;
+							nrAllelesObserved[gt2]++;
+							if (diseaseStatus != null) {
+								if (diseaseStatus == DiseaseStatus.CASE) {
+									nrAllelesObservedCases[gt1]++;
+									nrAllelesObservedCases[gt2]++;
+									nrCalledCases++;
+								} else if (diseaseStatus == DiseaseStatus.CONTROL) {
+									nrAllelesObservedControls[gt1]++;
+									nrAllelesObservedControls[gt2]++;
+									nrCalledControls++;
+								}
+							}
+
+						} else if (individualGender == null) {
+//						System.err.println("ERROR: cannot calculateWithinDataset chr X MAF if gender information unavailable.");
+//						throw new IllegalArgumentException("ERROR: cannot calculateWithinDataset chr X MAF if gender information unavailable.");
+						}
+					} else if (chromosome.equals(Chromosome.Y)) {
+						if (ignoregender || (gender != null && gender == Gender.MALE)) {
+							nrCalled++;
+							nrAllelesObserved[gt1]++;
+							nrAllelesObserved[gt2]++;
+							if (diseaseStatus != null) {
+								if (diseaseStatus == DiseaseStatus.CASE) {
+									nrAllelesObservedCases[gt1]++;
+									nrAllelesObservedCases[gt2]++;
+									nrCalledCases++;
+								} else if (diseaseStatus == DiseaseStatus.CONTROL) {
+									nrAllelesObservedControls[gt1]++;
+									nrAllelesObservedControls[gt2]++;
+									nrCalledControls++;
+								}
+							}
+						} else if (individualGender == null) {
+//						System.err.println("ERROR: cannot calculateWithinDataset chr Y MAF if gender information unavailable.");
+						}
+					}
 				}
+
+
 			}
 		}
 
-
-		callrate = (double) nrCalled / nrIndividuals;
-
-		int totalAllelesObs = nrCalled * 2;
-
-		int nrAllelesThatHaveAlleleFrequency = 0;
-		double minAlleleFreq = 2;
 		alleleFrequencies = new double[nrAllelesObserved.length];
 		if (sampleDiseaseStatus != null) {
 			alleleFrequenciesCases = new double[nrAllelesObserved.length];
 			alleleFrequenciesControls = new double[nrAllelesObserved.length];
 		}
-		minorAllele = null;
-		totalCalledAlleles = totalAllelesObs;
 
-		for (int i = 0; i < nrAllelesObserved.length; i++) {
-			double alleleFreq = (double) nrAllelesObserved[i] / totalAllelesObs;
-			alleleFrequencies[i] = alleleFreq;
+		if (nrCalled == 0) {
+			callrate = 0;
+			MAF = 0;
+			MAFControls = 0;
+			minorAllele = null;
+			totalCalledAlleles = 0;
 
-			if (sampleDiseaseStatus != null) {
-				alleleFrequenciesCases[i] = (double) nrAllelesObservedCases[i] / (nrCalledCases * 2);
-				alleleFrequenciesControls[i] = (double) nrAllelesObservedControls[i] / (nrCalledControls * 2);
-			}
-
-
-			if (nrAllelesObserved[i] > 0) {
-				nrAllelesThatHaveAlleleFrequency++;
-				if (alleleFreq < minAlleleFreq) {
-					if (i == 0) {
-						minorAllele = alleles[0];
-					} else {
-						minorAllele = alleles[i];
-					}
-					minAlleleFreq = alleleFreq;
+			hwep = 0;
+			hwepCases = 0;
+			hwepControls = 0;
+			for (int i = 0; i < nrAllelesObserved.length; i++) {
+				alleleFrequencies[i] = 0;
+				if (sampleDiseaseStatus != null) {
+					alleleFrequenciesCases[i] = 0;
+					alleleFrequenciesControls[i] = 0;
 				}
 			}
-		}
 
-		MAF = minAlleleFreq;
-		if (MAF == 1) { // flip alleles if monomorphic
-			MAF = 0;
-			if (minorAllele.equals(alleles[0])) {
-				minorAllele = alleles[1];
-			} else {
-				minorAllele = alleles[0];
-			}
-		}
-
-		calculateHWEP();
-
-		if (nrAllelesThatHaveAlleleFrequency == 2) {
-			biallelic = true;
-		} else if (nrAllelesThatHaveAlleleFrequency > 2) {
-			multiallelic = true;
-		} else {
 			monomorphic = true;
+		} else {
+			callrate = (double) nrCalled / nrIndividuals;
+			int totalAllelesObs = nrCalled * 2;
+			int nrAllelesThatHaveAlleleFrequency = 0;
+			double minAlleleFreq = 2;
+			minorAllele = null;
+			totalCalledAlleles = totalAllelesObs;
+			for (int i = 0; i < nrAllelesObserved.length; i++) {
+				double alleleFreq = (double) nrAllelesObserved[i] / totalAllelesObs;
+				alleleFrequencies[i] = alleleFreq;
+
+				if (sampleDiseaseStatus != null) {
+					alleleFrequenciesCases[i] = (double) nrAllelesObservedCases[i] / (nrCalledCases * 2);
+					alleleFrequenciesControls[i] = (double) nrAllelesObservedControls[i] / (nrCalledControls * 2);
+				}
+
+
+				if (nrAllelesObserved[i] > 0) {
+					nrAllelesThatHaveAlleleFrequency++;
+					if (alleleFreq < minAlleleFreq) {
+						if (i == 0) {
+							minorAllele = alleles[0];
+						} else {
+							minorAllele = alleles[i];
+						}
+						minAlleleFreq = alleleFreq;
+					}
+				}
+			}
+
+			MAF = minAlleleFreq;
+			if (MAF == 1) { // flip alleles if monomorphic
+				MAF = 0;
+				if (minorAllele.equals(alleles[0])) {
+					minorAllele = alleles[1];
+				} else {
+					minorAllele = alleles[0];
+				}
+			}
+			if (nrAllelesThatHaveAlleleFrequency == 2) {
+				biallelic = true;
+			} else if (nrAllelesThatHaveAlleleFrequency > 2) {
+				multiallelic = true;
+			} else {
+				monomorphic = true;
+			}
+			calculateHWEP();
 		}
+
+
 	}
 
 	public double getHwepCases() {
@@ -1260,7 +1318,7 @@ public class VCFVariant {
 //	}
 
 	public String getSeparator() {
-		return separator;
+		return phase.toString();
 	}
 
 	public boolean isIndel() {
@@ -1423,7 +1481,7 @@ public class VCFVariant {
 	}
 
 	public boolean isPhased() {
-		return separator.equals("|");
+		return phase.equals(PHASE.PHASED);
 	}
 
 	public boolean isAutosomal() {

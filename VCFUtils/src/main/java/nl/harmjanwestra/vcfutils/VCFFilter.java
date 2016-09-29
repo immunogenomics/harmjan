@@ -109,28 +109,33 @@ public class VCFFilter {
 					double meanQual = 0;
 
 					short[] rd = varFiltered.getApproximateDepth();
-					for (int i = 0; i < rd.length; i++) {
-						meanDepth += rd[i];
-						if (rd[i] >= distlen) {
-							rdf[distlen - 1]++;
-						} else {
-							rdf[rd[i]]++;
+					if(rd!=null) {
+						for (int i = 0; i < rd.length; i++) {
+							meanDepth += rd[i];
+							if (rd[i] >= distlen) {
+								rdf[distlen - 1]++;
+							} else {
+								rdf[rd[i]]++;
+							}
 						}
+						meanDepth /= rd.length;
 					}
 
 					short[] gq = varFiltered.getGenotypeQuals();
-					for (int i = 0; i < gq.length; i++) {
-						meanQual += gq[i];
+					if(gq!=null) {
+						for (int i = 0; i < gq.length; i++) {
+							meanQual += gq[i];
 
-						if (gq[i] >= crf.length) {
-							gqf[gqf.length - 1]++;
-						} else {
-							gqf[gq[i]]++;
+							if (gq[i] >= crf.length) {
+								gqf[gqf.length - 1]++;
+							} else {
+								gqf[gq[i]]++;
+							}
 						}
+						meanQual /= gq.length;
 					}
 
-					meanDepth /= rd.length;
-					meanQual /= gq.length;
+
 
 					if (varFiltered.getCallrate() >= callratethreshold && varFiltered.getMAF() >= mafthreshold) {
 						String[] elems = ln.split("\t");

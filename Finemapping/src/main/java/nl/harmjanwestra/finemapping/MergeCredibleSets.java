@@ -14,6 +14,7 @@ import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,7 +57,8 @@ public class MergeCredibleSets {
 					"T1D",
 					"Joint"
 			};
-			c.makePlot(bedregions, assocfiles, datasetnames, genenames, "/Data/tmp/credibleSetPlot.pdf");
+			double threshold = 7.5E-7;
+			c.makePlot(bedregions, assocfiles, datasetnames, genenames, "/Data/tmp/credibleSetPlot.pdf", threshold);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
@@ -230,7 +232,7 @@ public class MergeCredibleSets {
 	}
 
 
-	private void makePlot(String bedregions, String[] assocFiles, String[] datasetNames, String genenamefile, String outfile) throws IOException, DocumentException {
+	private void makePlot(String bedregions, String[] assocFiles, String[] datasetNames, String genenamefile, String outfile, double threshold) throws IOException, DocumentException {
 
 
 		HashMap<String, String> locusToGene = new HashMap<String, String>();
@@ -266,8 +268,16 @@ public class MergeCredibleSets {
 				ArrayList<AssociationResult> allDatasetData = f.read(assocFiles[i], regions.get(d));
 				data[i][d] = allDatasetData.toArray(new AssociationResult[0]);
 				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, 0.9);
+
+				boolean abovethresh = false;
+				for (AssociationResult r : credibleSet) {
+					if (r.getPval() < threshold) {
+						abovethresh = true;
+					}
+				}
+
 				crediblesets[i][d] = credibleSet.toArray(new AssociationResult[0]);
-				if (credibleSet.size() <= 5) {
+				if (credibleSet.size() <= 5 && abovethresh) {
 					hasSet = true;
 				}
 			}
@@ -312,11 +322,11 @@ public class MergeCredibleSets {
 						double posterior = topResults.get(s).getPosterior();
 						if (sum < 0.9) {
 							String variant = topResults.get(s).getSnp().getName();
-							if (!variantToInt.containsKey(variant)) {
+							boolean isSignificant = (topResults.get(s).getPval() < threshold);
+							if (!variantToInt.containsKey(variant) && isSignificant) {
 								variantToInt.put(variant, variantToInt.size());
 								variantsInRegion.add(variant);
 							}
-
 						}
 						sum += posterior;
 					}
@@ -337,20 +347,33 @@ public class MergeCredibleSets {
 						if (variantId != null) {
 							if (variantId > dataForPlotting[i][regionCtr].length - 1) {
 								System.out.println();
-								System.out.println("WEIRNESSSSSSSSSSSSSSSSS: " + variant);
+								System.out.println("WEIRDNESSSSSSSSSSSSSSSSS: " + variant);
 								System.out.println();
 							} else {
-								dataForPlotting[i][regionCtr][variantId] = posterior;
-								dataForPlotting2[i][regionCtr][variantId] = 1;
+								if (dsResults.get(s).getPval() < threshold) {
+									dataForPlotting[i][regionCtr][variantId] = 0.10 + (0.90 * posterior);
+									dataForPlotting2[i][regionCtr][variantId] = 1;
+								} else {
+									dataForPlotting[i][regionCtr][variantId] = 0;
+									dataForPlotting2[i][regionCtr][variantId] = 0;
+								}
 							}
 
 						}
 					}
 				}
-				groupnames.add(locusToGene.get(region.toString()));
 
-				groups.add(new Triple<Integer, Integer, String>(regionCtr, regionCtr + 1, locusToGene.get(region.toString())));
-				System.out.println("region\t" + region.toString() + "\t" + locusToGene.get(region.toString()));
+				DecimalFormat decimalFormat = new DecimalFormat("#");
+				decimalFormat.setGroupingUsed(true);
+				decimalFormat.setGroupingSize(3);
+
+				String locusName = region.getChromosome().toString() + ":" + decimalFormat.format(region.getStart()) + "-" + decimalFormat.format(region.getStop());
+				// locusName = region.toString();
+				locusName += "; " + locusToGene.get(region.toString());
+				groupnames.add(locusName);
+
+				groups.add(new Triple<Integer, Integer, String>(regionCtr, regionCtr + 1, locusName));
+				System.out.println("region\t" + region.toString() + "\t" + locusName);
 				regionCtr++;
 			}
 		}

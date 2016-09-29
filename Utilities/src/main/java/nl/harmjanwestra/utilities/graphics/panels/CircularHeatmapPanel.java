@@ -192,13 +192,15 @@ public class CircularHeatmapPanel extends Panel {
 			g2d.setColor(theme.getDarkerColor(theme.getDarkGrey(), 0.5));
 			g2d.setStroke(theme.getStroke());
 			for (int group = 0; group < groups.size(); group++) {
-				int col0 = groups.get(group).getLeft();
-				int col1 = groups.get(group).getMiddle();
+				int col0 = groups.get(group).getLeft() - 1;
+				int col1 = groups.get(group).getMiddle() - 1;
 				int diff = col1 - col0;
 
 				double angle0 = angleOffSet - (degreesPerSegment * col0) - (group * degreesPerGroup);
+
 //				double degreesPerSubCol = degreesPerSegment / diff;
 				double deg = degreesPerSegment; // degreesPerSubCol * diff;
+				double angle1 = angle0 - deg;
 //
 //				double angle0 = degreesPerSegment * col0;
 //				angle0 -= (degreesPerGroup / 2);
@@ -212,10 +214,10 @@ public class CircularHeatmapPanel extends Panel {
 				double remainder2 = (maxWidth - dsWidth2) / 2;
 				int x02 = (int) Math.floor(startX + remainder2);
 				int y02 = (int) Math.floor(startY + remainder2);
-				Arc2D arc2 = new Arc2D.Double(x02, y02, maxWidth, maxWidth, -angle0, -deg, Arc2D.PIE);
+				Arc2D arc2 = new Arc2D.Double(x02, y02, maxWidth, maxWidth, angle1, -deg, Arc2D.PIE);
 				g2d.draw(arc2);
 
-				Arc2D arc = new Arc2D.Double(x0, y0, dsWidth, dsWidth, -angle0, -deg, Arc2D.PIE);
+				Arc2D arc = new Arc2D.Double(x0, y0, dsWidth, dsWidth, angle1, -deg, Arc2D.PIE);
 //				g2d.setColor(new Color(220, 220, 220));
 				g2d.draw(arc);
 
@@ -276,22 +278,24 @@ public class CircularHeatmapPanel extends Panel {
 			// g2d.drawLine(originXi, originYi, xy0.getLeft(), xy0.getRight());
 
 
-			if (angle0 > 90) {
-				angle0 = degreesPerSegment * column;
-				angle0 -= (degreesForRowNames) + (degreesForRowNames / 2);
-				// angle0 += (degreesPerSegment);
-				angle0 += (group * degreesPerGroup);
+//			if (angle0 > 90) {
+//
+//
+////				angle0 = degreesPerSegment * column;
+////				angle0 -= (degreesForRowNames); // + (degreesForRowNames / 2) ;
+////				// angle0 += (degreesPerSegment);
+////				angle0 += (group * degreesPerGroup) - (degreesPerGroup / 2);
+//				double radius = (double) (maxWidth + 30) / 2;
+//				int strlen = metrics.stringWidth(colnames[column]);
+//				radius += strlen;
+//				Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius, originX, originY, angle0);
+//				angle0 += 180;
+//				drawRotate(g2d, xy0.getLeft(), xy0.getRight(), angle0, colnames[column]);
+//			} else {
 				double radius = (double) (maxWidth + 30) / 2;
-				int strlen = metrics.stringWidth(colnames[column]);
-				radius += strlen;
-				Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius, originX, originY, angle0);
-				angle0 += 180;
-				drawRotate(g2d, xy0.getLeft(), xy0.getRight(), angle0, colnames[column]);
-			} else {
-				double radius = (double) (maxWidth + 30) / 2;
 				Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius, originX, originY, angle0);
 				drawRotate(g2d, xy0.getLeft(), xy0.getRight(), angle0, colnames[column]);
-			}
+//			}
 			System.out.println(column + "\t" + colnames[column] + "\t" + angle0);
 
 
