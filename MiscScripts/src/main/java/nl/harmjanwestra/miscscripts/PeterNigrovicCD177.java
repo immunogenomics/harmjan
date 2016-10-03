@@ -34,11 +34,13 @@ public class PeterNigrovicCD177 {
 
 	public static void main(String[] args) {
 		String tabixrefprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chr";
-		String ib = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ra_okada_4_19_1.tab";
-		String bed = "/Data/Projects/PeterNigrovic/CD177/cd177.bed";
+//		String ib = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ra_okada_4_19_1.tab";
+		String ib = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ic_ra_eyre_4_19_1.tab";
+
+		String bed = "/Data/Projects/PeterNigrovic/SH2B3/sh2b3.bed";
 		String annotationfile = "/Data/Ref/Annotation/UCSC/genes.gtf";
 		String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
-		String out = "/Data/Projects/PeterNigrovic/CD177/cd177out";
+		String out = "/Data/Projects/PeterNigrovic/SH2B3/sh2b3out-eyre";
 
 		PeterNigrovicCD177 c = new PeterNigrovicCD177();
 		try {
