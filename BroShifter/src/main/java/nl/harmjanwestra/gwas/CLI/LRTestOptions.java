@@ -17,7 +17,7 @@ public class LRTestOptions {
 		option = Option.builder()
 				.longOpt("conditions")
 				.hasArg()
-				.desc("Run second iteration conditional on these variants, in specified order (semicolon separated). Format: chrx-start-rsname;chrx2-start2-rsname2")
+				.desc("Run second iteration conditional on a set of predefined variants. Specify file in format: region iter variant pval")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -283,8 +283,7 @@ public class LRTestOptions {
 			}
 
 			if (cmd.hasOption("conditions")) {
-				this.conditional = cmd.getOptionValue("conditional");
-				this.maxIter = 1;
+				this.conditional = cmd.getOptionValue("conditions");
 			}
 
 			if (cmd.hasOption("e")) {
