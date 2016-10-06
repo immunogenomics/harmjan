@@ -43,6 +43,18 @@ public class AssociationResultMerger {
 
 	private void concat(String fileStr, String outfile) throws IOException {
 		String[] files = fileStr.split(",");
+
+		if (files.length == 1) {
+			if (files[0].contains("CHR")) {
+				String[] tmpfiles = new String[22];
+				for (int i = 1; i < 23; i++) {
+					tmpfiles[i - 1] = files[0].replaceAll("CHR", "" + i);
+					System.out.println("Looking for: " + tmpfiles[i - 1]);
+				}
+				files = tmpfiles;
+			}
+		}
+
 		TextFile out = new TextFile(outfile, TextFile.W);
 		boolean headerwritten = false;
 

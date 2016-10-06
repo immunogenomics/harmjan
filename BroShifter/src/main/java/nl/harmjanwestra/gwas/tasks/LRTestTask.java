@@ -74,10 +74,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		double[] y = xandy.getRight(); // get the phenotypes for all non-missing genotypes
 		DoubleMatrix2D x = xandy.getLeft();
 
-		double maf = variant.getMAFControls();
+		double mafControls = variant.getMAFControls();
 		double hwep = variant.getHwepControls();
 
-		AssociationResult result = pruneAndTest(x, y, 1, 1 + (nrAlleles - 1), variant, maf);
+		AssociationResult result = pruneAndTest(x, y, 1, 1 + (nrAlleles - 1), variant, mafControls);
 
 		if (result == null) {
 			return new Triple<>(null, null, null);
@@ -91,17 +91,17 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 
 		//								SNP	Chr	Pos	ImputationQual	MAF	OverlapOK	MAFOk	ImpQualOK
-		String output = variant.getId()
+		String logoutput = variant.getId()
 				+ "\t" + variant.getChr()
 				+ "\t" + variant.getPos()
 				+ "\t" + Strings.concat(variant.getAlleles(), Strings.comma)
 				+ "\t" + variant.getMinorAllele()
 				+ "\t" + variant.getImputationQualityScore()
-				+ "\t" + maf
+				+ "\t" + mafControls
 				+ "\t" + hwep
 				+ "\t" + true;
 
-		return new Triple<>(output, result, variant);
+		return new Triple<>(logoutput, result, variant);
 //		} // end maf > threshold
 	}
 

@@ -2345,22 +2345,26 @@ public class VCFFunctions {
 
 		HashMap<Chromosome, TextFile> textFiles = new HashMap<Chromosome, TextFile>();
 
-		VCFGenotypeData d = new VCFGenotypeData(vcfIn);
+
 		int ctr = 0;
-		while (d.hasNext()) {
-			VCFVariant v = d.next();
-			Feature f = v.asFeature();
-			ctr++;
-			if (f.getChromosome().equals(Chromosome.NA)) {
-				System.out.println("unknown chromosome found..?");
-			} else {
-				if (!textFiles.containsKey(f.getChromosome())) {
-					textFiles.put(f.getChromosome(), new TextFile(outdirprefix + "-" + f.getChromosome().getName() + ".vcf.gz", TextFile.W));
+		TextFile in = new TextFile(vcfIn, TextFile.R);
+		String lnin = in.readLine();
+		while (lnin != null) {
+			if (!lnin.startsWith("#")) {
+				VCFVariant variant = new VCFVariant(lnin, VCFVariant.PARSE.HEADER);
+				Feature f = variant.asFeature();
+				ctr++;
+				if (f.getChromosome().equals(Chromosome.NA)) {
+					System.out.println("unknown chromosome found..?");
+				} else {
+					if (!textFiles.containsKey(f.getChromosome())) {
+						textFiles.put(f.getChromosome(), new TextFile(outdirprefix + "-" + f.getChromosome().getName() + ".vcf.gz", TextFile.W));
+					}
 				}
 			}
-
+			lnin = in.readLine();
 		}
-		d.close();
+		in.close();
 
 		Set<Chromosome> chromosomes = textFiles.keySet();
 

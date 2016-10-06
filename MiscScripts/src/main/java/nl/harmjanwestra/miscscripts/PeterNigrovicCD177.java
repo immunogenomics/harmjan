@@ -21,10 +21,7 @@ import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Created by hwestra on 9/29/16.
@@ -34,17 +31,19 @@ public class PeterNigrovicCD177 {
 
 	public static void main(String[] args) {
 		String tabixrefprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chr";
-//		String ib = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ra_okada_4_19_1.tab";
-		String ib = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ic_ra_eyre_4_19_1.tab";
+		String ib = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ra_okada_4_19_1.tab";
+//		String ib = "/Data/ImmunoChip/ImmunoBase/ImmunoChip/hg19_gwas_ic_ra_eyre_4_19_1.tab";
 
-		String bed = "/Data/Projects/PeterNigrovic/SH2B3/sh2b3.bed";
+		String bed = "/Data/Projects/PeterNigrovic/CD177/cd177.bed";
 		String annotationfile = "/Data/Ref/Annotation/UCSC/genes.gtf";
 		String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
-		String out = "/Data/Projects/PeterNigrovic/SH2B3/sh2b3out-eyre";
+		String out = "/Data/Projects/PeterNigrovic/CD177/cd177out";
+		String eqtlfile = "/Data/Projects/PeterNigrovic/CD177/cd177bioseqtl.txt";
 
 		PeterNigrovicCD177 c = new PeterNigrovicCD177();
 		try {
-			c.runImmunoBase(ib, bed, annotationfile, tabixrefprefix, tabixsamplelimit, out);
+			c.runImmunoBase(ib, bed, annotationfile, tabixrefprefix, tabixsamplelimit, out, "rs201821720", 0.1, eqtlfile);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
@@ -54,7 +53,15 @@ public class PeterNigrovicCD177 {
 
 	}
 
-	public void runImmunoBase(String ib, String bed, String annotationfile, String tabixrefprefix, String tabixsamplelimit, String out) throws IOException, DocumentException {
+	public void runImmunoBase(String ib,
+							  String bed,
+							  String annotationfile,
+							  String tabixrefprefix,
+							  String tabixsamplelimit,
+							  String out,
+							  String queryVariant,
+							  double ldthreshold,
+							  String eqtlfile) throws IOException, DocumentException {
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bed);
@@ -159,24 +166,40 @@ public class PeterNigrovicCD177 {
 			TextFile allvarsoutld = new TextFile(out + f.toString() + "-all1kgvars-ld.txt", TextFile.W);
 			allvarsoutld.writeln("Pos1\tId1\tPos2\tId2\tR-squared");
 			DetermineLD ldcalc = new DetermineLD();
+
+			VCFVariant querySNP = null;
+			HashMap<String, Double> proxyvariants = new HashMap<String, Double>();
 			for (int i = 0; i < vcfVariants.size(); i++) {
 				VCFVariant var1 = vcfVariants.get(i);
 				for (int j = i + 1; j < vcfVariants.size(); j++) {
 					VCFVariant var2 = vcfVariants.get(j);
 					Pair<Double, Double> d = ldcalc.getLD(var1, var2);
+					if (queryVariant != null && (queryVariant.equals(var1.getId()) || queryVariant.equals(var2.getId()))) {
+						double r = d.getRight();
+
+						if (queryVariant.equals(var1.getId())) {
+							querySNP = var1;
+							proxyvariants.put(var2.getId(), r);
+						} else {
+							querySNP = var2;
+							proxyvariants.put(var1.getId(), r);
+						}
+					}
+
+
 					if (d != null && !Double.isNaN(d.getRight())) {
 						positions.add(new Pair<>(var1.getPos(), var2.getPos()));
 						ld.add(d.getRight());
 						allvarsoutld.writeln(var1.getPos() + "\t" + var1.getId() + "\t" + var2.getPos() + "\t" + var2.getId() + "\t" + d.getRight());
 					} else {
 						allvarsoutld.writeln(var1.getPos() + "\t" + var1.getId() + "\t" + var2.getPos() + "\t" + var2.getId() + "\tNaN");
-						System.out.println("edgecase:\t" + var1.getPos()
-								+ "\t" + Strings.concat(var1.getAlleles(), Strings.semicolon)
-								+ "\t" + var1.getId()
-								+ "\t" + var2.getPos()
-								+ "\t" + Strings.concat(var2.getAlleles(), Strings.semicolon)
-								+ "\t" + var2.getId()
-								+ "\tNaN");
+//						System.out.println("edgecase:\t" + var1.getPos()
+//								+ "\t" + Strings.concat(var1.getAlleles(), Strings.semicolon)
+//								+ "\t" + var1.getId()
+//								+ "\t" + var2.getPos()
+//								+ "\t" + Strings.concat(var2.getAlleles(), Strings.semicolon)
+//								+ "\t" + var2.getId()
+//								+ "\tNaN");
 					}
 				}
 			}
@@ -186,6 +209,56 @@ public class PeterNigrovicCD177 {
 			ldPanel.setData(f, positions, ld);
 			grid.addPanel(ldPanel);
 			grid.draw(out + f.toString() + "-ld.pdf");
+
+			int alleleAA = 0;
+			int alleleAB = 0;
+			int alleleBB = 0;
+			byte[] gtvector = querySNP.getGenotypesAsByteVector();
+			for (int i = 0; i < querySNP.getNrSamples(); i++) {
+				if (gtvector[i] == 0) {
+					alleleAA++;
+				} else if (gtvector[i] == 1) {
+					alleleAB++;
+				} else {
+					alleleBB++;
+				}
+			}
+
+
+			outtf = new TextFile(out + f.toString() + "-assoc-proxies.txt", TextFile.W);
+			outtf.writeln(associationFile.getHeader() + "\tLD");
+
+
+//			HashSet<String> allSNPs = new HashSet<String>();
+			for (AssociationResult r : associationresults) {
+				if (proxyvariants.containsKey(r.getSnp().getName())) {
+					outtf.writeln(r.toString() + "\t" + proxyvariants.get(r.getSnp().getName()));
+				}
+			}
+
+			outtf.close();
+
+			System.out.println();
+			System.out.println("Allele counts");
+			System.out.println(querySNP.getAlleles()[0] + querySNP.getAlleles()[0] + "\t" + alleleAA);
+			System.out.println(querySNP.getAlleles()[0] + querySNP.getAlleles()[1] + "\t" + alleleAB);
+			System.out.println(querySNP.getAlleles()[1] + querySNP.getAlleles()[1] + "\t" + alleleBB);
+
+			TextFile tfein = new TextFile(eqtlfile, TextFile.R);
+			TextFile tfeout = new TextFile(out + f.toString() + "-assoc-eqtls.txt", TextFile.W);
+			tfeout.writeln("Pval\tSNP\tLD");
+			String[] eelems = tfein.readLineElems(TextFile.tab);
+			while (eelems != null) {
+				String pval = eelems[0];
+				String snp = eelems[1];
+				if (proxyvariants.containsKey(snp)) {
+					tfeout.writeln(pval + "\t" + snp + "\t" + proxyvariants.get(snp));
+				}
+				eelems = tfein.readLineElems(TextFile.tab);
+			}
+			tfeout.close();
+
+			tfein.close();
 		}
 
 
