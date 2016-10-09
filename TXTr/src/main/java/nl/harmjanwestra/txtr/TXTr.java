@@ -48,6 +48,13 @@ public class TXTr {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("pattern")
+				.desc("input contains CHR pattern")
+				.build();
+		OPTIONS.addOption(option);
+
+
 		option = Option.builder("n")
 				.desc("Nr lines for splitting")
 				.hasArg()
@@ -104,7 +111,7 @@ public class TXTr {
 					if (cmd.hasOption("multilineheader")) {
 						multilineheader = true;
 					}
-					t.mergeSkipHeader(input, output, multilineheader, commaseparated);
+					t.mergeSkipHeader(input, output, multilineheader, commaseparated, cmd.hasOption("pattern"));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -147,10 +154,15 @@ public class TXTr {
 		in.close();
 	}
 
-	public void mergeSkipHeader(String fileList, String output, boolean multilinehashtagheader, boolean commasep) throws IOException {
+	public void mergeSkipHeader(String fileList, String output, boolean multilinehashtagheader, boolean commasep, boolean pattern) throws IOException {
 
 		String[] files = null;
-		if (commasep) {
+		if (pattern) {
+			files = new String[22];
+			for (int i = 1; i < 23; i++) {
+				files[i - 1] = fileList.replaceAll("CHR", "" + i);
+			}
+		} else if (commasep) {
 			files = fileList.split(",");
 		} else {
 			TextFile tf1 = new TextFile(fileList, TextFile.R);
