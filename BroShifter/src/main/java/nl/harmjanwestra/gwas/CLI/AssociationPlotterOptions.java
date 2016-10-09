@@ -43,7 +43,27 @@ public class AssociationPlotterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("thresholds")
+				.hasArg()
+				.desc("File with bonferroni threshold per region")
+				.build();
+		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("ldprefix")
+				.hasArg()
+				.desc("Tabix ld prefix")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("ldlimit")
+				.hasArg()
+				.desc("Tabix ld: limit to a list of samples")
+				.build();
+		OPTIONS.addOption(option);
+		
 		option = Option.builder("o")
 				.hasArg()
 				.desc("Output prefix")
@@ -70,6 +90,9 @@ public class AssociationPlotterOptions {
 
 	private Double maxp;
 	private double credibleSetThreshold = 0.9;
+	private String significanceThresholdFile;
+	private String LDPrefix;
+	private String LDLimit;
 
 	public Double getMaxp() {
 		return maxp;
@@ -140,6 +163,15 @@ public class AssociationPlotterOptions {
 				run = false;
 			}
 
+			if (cmd.hasOption("ldprefix")) {
+				LDPrefix = cmd.getOptionValue("ldprefix");
+			}
+
+			if (cmd.hasOption("ldlimit")) {
+				LDLimit = cmd.getOptionValue("ldlimit");
+			}
+
+
 			if (cmd.hasOption("r")) {
 				bedregionfile = cmd.getOptionValue("r");
 			} else {
@@ -163,6 +195,10 @@ public class AssociationPlotterOptions {
 			} else {
 				System.out.println("Please provide input: -s");
 				run = false;
+			}
+
+			if (cmd.hasOption("thresholds")) {
+				significanceThresholdFile = cmd.getOptionValue("thresholds");
 			}
 
 			if (cmd.hasOption("m")) {
@@ -190,5 +226,18 @@ public class AssociationPlotterOptions {
 
 	public double getCredibleSetThreshold() {
 		return credibleSetThreshold;
+	}
+
+	public String getSignificanceThresholdFile() {
+
+		return significanceThresholdFile;
+	}
+
+	public String getLDPrefix() {
+		return LDPrefix;
+	}
+
+	public String getLDLimit() {
+		return LDLimit;
 	}
 }

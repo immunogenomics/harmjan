@@ -182,6 +182,18 @@ public class DefaultGraphics {
 		return g2d;
 	}
 
+	public Color interpolateColor(Color color1, Color color2, double blending) {
+		double inverse_blending = 1 - blending;
+		int red = (int) Math.floor(color1.getRed() * blending + color2.getRed() * inverse_blending);
+		int green = (int) Math.floor(color1.getGreen() * blending + color2.getGreen() * inverse_blending);
+		int blue = (int) Math.floor(color1.getBlue() * blending + color2.getBlue() * inverse_blending);
+
+//note that if i pass float values they have to be in the range of 0.0-1.0
+//and not in 0-255 like the ones i get returned by the getters.
+		Color blended = new Color(red, green, blue);
+		return blended;
+	}
+
 	public double determineUnit(double range) {
 
 		double divisor = Math.log10(range);

@@ -23,7 +23,9 @@ public class AssociationPanel extends Panel {
 	double maxPval = Double.NaN;
 	boolean plotGWASSignificance = true;
 	private ArrayList<Pair<Integer, Double>> ld;
-	private boolean[][] markDifferentColor;
+	private boolean[][] markDifferentShape;
+	private double threshold;
+	private double[] LDData;
 
 	public AssociationPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -52,8 +54,9 @@ public class AssociationPanel extends Panel {
 		maxPval = d;
 	}
 
-	public void setPlotGWASSignificance(boolean b) {
+	public void setPlotGWASSignificance(boolean b, double threshold) {
 		plotGWASSignificance = b;
+		this.threshold = threshold;
 	}
 
 	public double getMaxP() {
@@ -213,7 +216,8 @@ public class AssociationPanel extends Panel {
 
 		// draw red line near 5E-8)
 		if (plotGWASSignificance) {
-			double gwas = -Math.log10(5E-8);
+
+			double gwas = -Math.log10(threshold);
 			if (maxPval >= gwas) {
 				double yperc = gwas / maxPval;
 				int pixelY = (int) Math.ceil(yperc * nrPixelsY);
@@ -222,13 +226,13 @@ public class AssociationPanel extends Panel {
 
 
 				g2d.setFont(theme.getSmallFont());
-				int strwidth = getStringWidth(g2d, "GWAS Significance");
+				int strwidth = getStringWidth(g2d, "Significance");
 
 
 				g2d.setColor(Color.white);
 				g2d.fillRect(x0 + marginX + 10 - 2, plotStarty - pixelY - 5, strwidth + 6, 10);
 				g2d.setColor(new Color(208, 83, 77));
-				g2d.drawString("GWAS Significance", x0 + marginX + 8, plotStarty - pixelY - 5);
+				g2d.drawString("Significance", x0 + marginX + 8, plotStarty - pixelY - 5);
 			}
 			g2d.setFont(defaultfont);
 		}
@@ -288,8 +292,8 @@ public class AssociationPanel extends Panel {
 		for (int z = allPValues.size() - 1; z > -1; z--) {
 			ArrayList<Pair<Integer, Double>> toPlot = allPValues.get(z);
 			boolean[] mark = null;
-			if (markDifferentColor != null) {
-				mark = markDifferentColor[z];
+			if (markDifferentShape != null) {
+				mark = markDifferentShape[z];
 			}
 			if (toPlot != null) {
 				g2d.setColor(colors[z]);
@@ -309,21 +313,52 @@ public class AssociationPanel extends Panel {
 					double yperc = pval / maxPval;
 					int pixelY = (int) Math.ceil(yperc * nrPixelsY);
 
-					int dotsize = 2 + (int) Math.ceil(yperc * 10);
+					int dotsize = 2; //+ (int) Math.ceil(yperc * 10);
 					if (z == 0) {
 //						dotsize = 8 + (int) Math.ceil(yperc * 10);
 					}
 
-					if (mark != null && mark[v]) {
-						Color col = g2d.getColor();
-						g2d.setColor(highlight);
-						g2d.fillOval(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
-						g2d.setColor(col);
-					} else {
+					if (mark != null && !mark[v]) {
+						g2d.setColor(colors[z]);
+						if (LDData != null) {
+							Color c1 = highlight;
+							Color c2 = colors[0];
+							double LD = LDData[v];
+							if (!Double.isNaN(LD) && LD >= 0 && LD <= 1) {
+								g2d.setColor(g.interpolateColor(c2, c1, LD));
+							}
+						}
 						g2d.fillOval(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
 					}
+				}
 
+				for (int v = 0; v < toPlot.size(); v++) {
+					if (mark != null && mark[v]) {
+						Pair<Integer, Double> p = toPlot.get(v);
+						Integer pos = p.getLeft();
+						Double pval = p.getRight();
 
+						// x-coord
+						int relativeStart = pos - region.getStart();
+						double percStart = (double) relativeStart / regionSize;
+						int pixelStartX = x0 + marginX + (int) Math.ceil(percStart * nrPixelsX);
+
+						// y-coord
+						double yperc = pval / maxPval;
+						int pixelY = (int) Math.ceil(yperc * nrPixelsY);
+
+						int dotsize = 2; //+ (int) Math.ceil(yperc * 10);
+						g2d.setColor(colors[z]);
+						if (LDData != null) {
+							Color c1 = highlight;
+							Color c2 = colors[0];
+							double LD = LDData[v];
+							if (!Double.isNaN(LD) && LD >= 0 && LD <= 1) {
+								g2d.setColor(g.interpolateColor(c2, c1, LD));
+							}
+						}
+						g2d.fillRect(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
+					}
 				}
 
 				int adv = metrics.stringWidth(datasetNames[z]);
@@ -335,12 +370,12 @@ public class AssociationPanel extends Panel {
 
 	}
 
-	public void setLdInfo(ArrayList<Pair<Integer, Double>> ldsqr) {
-		this.ld = ldsqr;
+	public void setMarkDifferentShape(boolean[] markDifferentShape) {
+		this.markDifferentShape = new boolean[1][0];
+		this.markDifferentShape[0] = markDifferentShape;
 	}
 
-	public void setMarkDifferentColor(boolean[] markDifferentColor) {
-		this.markDifferentColor = new boolean[1][0];
-		this.markDifferentColor[0] = markDifferentColor;
+	public void setLDData(double[] LDData) {
+		this.LDData = LDData;
 	}
 }

@@ -260,7 +260,7 @@ public class AssociationPlotterOld {
 		pvalpanel.setTitle("Pvalues");
 		pvalpanel.setDataSingleDs(region, null, pvals, "Pvalues");
 		pvalpanel.setMaxPVal(maxp);
-		pvalpanel.setMarkDifferentColor(mark);
+		pvalpanel.setMarkDifferentShape(mark);
 		grid.addPanel(pvalpanel, 1, 0);
 
 		try {
@@ -518,14 +518,14 @@ public class AssociationPlotterOld {
 		pvalpanel.setTitle("Pvalues");
 		pvalpanel.setDataSingleDs(region, zoomregionhash, pvals, "Pvalues");
 		pvalpanel.setMaxPVal(maxp);
-		pvalpanel.setMarkDifferentColor(mark);
+		pvalpanel.setMarkDifferentShape(mark);
 		grid.addPanel(pvalpanel, 1, 0);
 
 		AssociationPanel abfpanel = new AssociationPanel(1, 1);
 		abfpanel.setTitle("Posteriors");
 		abfpanel.setDataSingleDs(region, zoomregionhash, posteriors, "Posteriors");
 		abfpanel.setMaxPVal(maxposterior);
-		abfpanel.setMarkDifferentColor(mark);
+		abfpanel.setMarkDifferentShape(mark);
 		grid.addPanel(abfpanel, 1, 1);
 
 //		// add annotations
@@ -800,25 +800,25 @@ public class AssociationPlotterOld {
 
 								AssociationPanel mafPanel = new AssociationPanel(1, 1);
 								mafPanel.setDataSingleDs(region, sequencedRegionsHash, mafs, "Minor Allele Frequency " + ref);
-								mafPanel.setPlotGWASSignificance(false);
+//								mafPanel.setPlotGWASSignificance(false);
 								grid.addPanel(mafPanel, 3, refId);
 
 							}
 
 							AssociationPanel bayespanel = new AssociationPanel(1, 1);
 							bayespanel.setDataSingleDs(region, sequencedRegionsHash, bayesFactors, "Bayes factors " + ref + " - " + modelStr);
-							bayespanel.setPlotGWASSignificance(false);
+//							bayespanel.setPlotGWASSignificance(false);
 //							bayespanel.setLdInfo(ldsqr);
 							bfgrid.addPanel(bayespanel, run + 1, refId);
 
 							AssociationPanel averagebayespanel = new AssociationPanel(1, 1);
-							averagebayespanel.setPlotGWASSignificance(false);
+//							averagebayespanel.setPlotGWASSignificance(false);
 //							averagebayespanel.setLdInfo(ldsqr);
-							averagebayespanel.setMarkDifferentColor(mark);
+							averagebayespanel.setMarkDifferentShape(mark);
 							averagebayespanel.setDataSingleDs(region, sequencedRegionsHash, averageBayesFactors, "Posteriors " + ref + " - " + modelStr);
 							abfgrid.addPanel(averagebayespanel, run + 1, refId);
 
-							pvalpanel.setMarkDifferentColor(mark);
+							pvalpanel.setMarkDifferentShape(mark);
 							assocPanels.add(pvalpanel);
 							assocPanelsBayes.add(bayespanel);
 							assocPanelsABF.add(averagebayespanel);

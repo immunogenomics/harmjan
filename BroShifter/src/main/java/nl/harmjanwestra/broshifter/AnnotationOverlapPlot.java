@@ -238,7 +238,7 @@ public class AnnotationOverlapPlot {
 			genePanel.setData(region, overlappingGenesList);
 
 			AssociationPanel assocPanel = new AssociationPanel(assocPanelRows, 1);
-			assocPanel.setMarkDifferentColor(mark);
+			assocPanel.setMarkDifferentShape(mark);
 
 			assocPanel.setDataSingleDs(region, null, allPvalues, region.toString());
 
@@ -381,7 +381,7 @@ public class AnnotationOverlapPlot {
 			genePanel.setData(region, overlappingGenesList);
 
 			AssociationPanel assocPanel = new AssociationPanel(assocPanelRows, 1);
-			assocPanel.setMarkDifferentColor(mark);
+			assocPanel.setMarkDifferentShape(mark);
 
 			assocPanel.setDataSingleDs(region, null, allPvalues, region.toString());
 

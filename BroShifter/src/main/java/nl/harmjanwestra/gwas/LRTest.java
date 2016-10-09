@@ -469,6 +469,10 @@ public class LRTest {
 	public void testConditional() throws IOException {
 
 
+		if (options.getConditional() != null) {
+			System.out.println("Using " + options.getConditional() + " for conditoinal analysis..");
+		}
+
 		AssociationFile associationFile = new AssociationFile();
 		String header = associationFile.getHeader();
 
