@@ -94,9 +94,8 @@ public class AssociationPanel extends Panel {
 		Font defaultfont = theme.getMediumFont();
 		g2d.setFont(defaultfont);
 
-		g2d.drawString("Targeted regions in sequencing", x0 + marginX, y0 + marginY - 20);
-
 		if (sequencedRegions != null) {
+			g2d.drawString("Targeted regions in sequencing", x0 + marginX, y0 + marginY - 20);
 			for (Feature f : sequencedRegions) {
 				if (f.overlaps(region)) {
 					int start = f.getStart();
@@ -212,7 +211,7 @@ public class AssociationPanel extends Panel {
 
 
 		// determine unit
-		double steps = maxPval / 10;
+		double steps = maxPval / 2;
 
 		// draw red line near 5E-8)
 		if (plotGWASSignificance) {
@@ -232,7 +231,7 @@ public class AssociationPanel extends Panel {
 				g2d.setColor(Color.white);
 				g2d.fillRect(x0 + marginX + 10 - 2, plotStarty - pixelY - 5, strwidth + 6, 10);
 				g2d.setColor(new Color(208, 83, 77));
-				g2d.drawString("Significance", x0 + marginX + 8, plotStarty - pixelY - 5);
+				g2d.drawString("Significance", x0 + marginX + 12, plotStarty - pixelY + 3);
 			}
 			g2d.setFont(defaultfont);
 		}
@@ -273,20 +272,39 @@ public class AssociationPanel extends Panel {
 			xunit *= 2;
 		}
 
-		for (int i = region.getStart(); i < region.getStop(); i++) {
-			if (i % xunit == 0) {
-				int relativeStart = i - region.getStart();
-				double percStart = (double) relativeStart / regionSize;
-				int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
-				g2d.drawLine(x0 + marginX + pixelStart, plotStarty + 5, x0 + marginX + pixelStart, plotStarty + 10);
-				String formattedString = decimalFormat.format(i);
-				int adv = metrics.stringWidth(formattedString);
-				int hgt = metrics.getHeight();
+		int[] tickpos = new int[]{
+				region.getStart() + (xunit - (region.getStart() % xunit)),
+				region.getStop() - ((region.getStop() % xunit))
+		};
 
-				g2d.drawString(formattedString, x0 + marginX + pixelStart - (adv / 2), plotStarty + 25);
-			}
+		for (int i = 0; i < tickpos.length; i++) {
+
+			int relativeStart = tickpos[i] - region.getStart();
+			double percStart = (double) relativeStart / regionSize;
+			int pixelStart = (int) Math.ceil(percStart * nrPixelsX);
+			g2d.drawLine(x0 + marginX + pixelStart, plotStarty + 5, x0 + marginX + pixelStart, plotStarty + 10);
+			String formattedString = decimalFormat.format(tickpos[i]);
+			int adv = metrics.stringWidth(formattedString);
+			int hgt = metrics.getHeight();
+			g2d.drawString(formattedString, x0 + marginX + pixelStart - (adv / 2), plotStarty + 25);
+
 		}
 
+
+		if (LDData != null) {
+			for (int i = 0; i < 101; i++) {
+				double ld = i / 100d;
+				Color c2 = highlight;
+				Color c1 = new Color(98, 182, 177); // colors[0];
+				Color interpolate = g.interpolateColor(c2, c1, ld);
+				g2d.setColor(interpolate);
+				g2d.fillRect(10 + i, 10, 1, 10);
+			}
+			g2d.setColor(colors[0]);
+
+			g2d.drawString("0", 10, 35);
+			g2d.drawString("1", 105, 35);
+		}
 
 		// plot the values
 		for (int z = allPValues.size() - 1; z > -1; z--) {
@@ -299,65 +317,15 @@ public class AssociationPanel extends Panel {
 				g2d.setColor(colors[z]);
 
 				for (int v = 0; v < toPlot.size(); v++) {
-					Pair<Integer, Double> p = toPlot.get(v);
-					Integer pos = p.getLeft();
-					Double pval = p.getRight();
-
-					// x-coord
-					int relativeStart = pos - region.getStart();
-					double percStart = (double) relativeStart / regionSize;
-					int pixelStartX = x0 + marginX + (int) Math.ceil(percStart * nrPixelsX);
-
-					// y-coord
-
-					double yperc = pval / maxPval;
-					int pixelY = (int) Math.ceil(yperc * nrPixelsY);
-
-					int dotsize = 2; //+ (int) Math.ceil(yperc * 10);
-					if (z == 0) {
-//						dotsize = 8 + (int) Math.ceil(yperc * 10);
-					}
 
 					if (mark != null && !mark[v]) {
-						g2d.setColor(colors[z]);
-						if (LDData != null) {
-							Color c1 = highlight;
-							Color c2 = colors[0];
-							double LD = LDData[v];
-							if (!Double.isNaN(LD) && LD >= 0 && LD <= 1) {
-								g2d.setColor(g.interpolateColor(c2, c1, LD));
-							}
-						}
-						g2d.fillOval(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
+						dot(g2d, toPlot, v, z, regionSize, nrPixelsX, nrPixelsY, colors, highlight, g, plotStarty, mark[v]);
 					}
 				}
 
 				for (int v = 0; v < toPlot.size(); v++) {
 					if (mark != null && mark[v]) {
-						Pair<Integer, Double> p = toPlot.get(v);
-						Integer pos = p.getLeft();
-						Double pval = p.getRight();
-
-						// x-coord
-						int relativeStart = pos - region.getStart();
-						double percStart = (double) relativeStart / regionSize;
-						int pixelStartX = x0 + marginX + (int) Math.ceil(percStart * nrPixelsX);
-
-						// y-coord
-						double yperc = pval / maxPval;
-						int pixelY = (int) Math.ceil(yperc * nrPixelsY);
-
-						int dotsize = 2; //+ (int) Math.ceil(yperc * 10);
-						g2d.setColor(colors[z]);
-						if (LDData != null) {
-							Color c1 = highlight;
-							Color c2 = colors[0];
-							double LD = LDData[v];
-							if (!Double.isNaN(LD) && LD >= 0 && LD <= 1) {
-								g2d.setColor(g.interpolateColor(c2, c1, LD));
-							}
-						}
-						g2d.fillRect(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
+						dot(g2d, toPlot, v, z, regionSize, nrPixelsX, nrPixelsY, colors, highlight, g, plotStarty, mark[v]);
 					}
 				}
 
@@ -368,6 +336,64 @@ public class AssociationPanel extends Panel {
 			}
 		}
 
+	}
+
+
+	private void dot(Graphics2D g2d,
+					 ArrayList<Pair<Integer, Double>> toPlot,
+					 int v,
+					 int z,
+					 int regionSize,
+					 int nrPixelsX,
+					 int nrPixelsY,
+					 Color[] colors,
+					 Color highlight,
+					 DefaultGraphics g,
+					 int plotStarty,
+					 boolean mark) {
+		Pair<Integer, Double> p = toPlot.get(v);
+		Integer pos = p.getLeft();
+		Double pval = p.getRight();
+
+		// x-coord
+		int relativeStart = pos - region.getStart();
+		double percStart = (double) relativeStart / regionSize;
+		int pixelStartX = x0 + marginX + (int) Math.ceil(percStart * nrPixelsX);
+
+		// y-coord
+		double yperc = pval / maxPval;
+		int pixelY = (int) Math.ceil(yperc * nrPixelsY);
+
+
+		g2d.setStroke(new BasicStroke(0.5f));
+		g2d.setColor(colors[z]);
+		Color interpolate = null;
+		if (LDData != null) {
+			Color c2 = highlight;
+			Color c1 = new Color(98, 182, 177); // colors[0];
+			double LD = LDData[v];
+			if (Double.isNaN(LD) || LD < 0 && LD > 1) {
+				LD = 0;
+			}
+			interpolate = g.interpolateColor(c2, c1, LD);
+			int b = interpolate.getBlue();
+			int r = interpolate.getRed();
+			int gr = interpolate.getGreen();
+			interpolate = new Color(r, gr, b, 190);
+			g2d.setColor(interpolate);
+
+		}
+		if (mark) {
+			int dotsize = 2 + (int) Math.ceil(yperc * 10);
+			g2d.fillRect(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
+//			g2d.setColor(Color.white);
+//			g2d.drawRect(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
+		} else {
+			int dotsize = 2 + (int) Math.ceil(yperc * 10);
+			g2d.fillOval(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
+//			g2d.setColor(Color.white);
+//			g2d.drawRect(pixelStartX - (dotsize / 2), plotStarty - pixelY - (dotsize / 2), dotsize, dotsize);
+		}
 	}
 
 	public void setMarkDifferentShape(boolean[] markDifferentShape) {

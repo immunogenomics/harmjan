@@ -192,9 +192,6 @@ public class AssociationPlotterOptions {
 
 			if (cmd.hasOption("s")) {
 				sequencedRegionsFile = cmd.getOptionValue("s");
-			} else {
-				System.out.println("Please provide input: -s");
-				run = false;
 			}
 
 			if (cmd.hasOption("thresholds")) {

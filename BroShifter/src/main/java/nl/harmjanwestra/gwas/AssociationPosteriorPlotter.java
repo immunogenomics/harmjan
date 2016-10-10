@@ -7,6 +7,7 @@ import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
@@ -27,6 +28,30 @@ import java.util.*;
  * Created by Harm-Jan on 01/13/16.
  */
 public class AssociationPosteriorPlotter {
+
+
+	public static void main(String[] args) {
+		String[] arguments = new String[]{
+				"--plotposteriors",
+				"-a", "/Data/Ref/Annotation/UCSC/genes.gtf",
+				"-i", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+				"-n", "RA",
+				"-o", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/plottest/ra",
+				"-p",
+				"-r", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/ctla4.bed",
+				"--ldprefix", "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz",
+				"--ldlimit", "/Data/Ref/1kg-europeanpopulations.txt.gz",
+				"--thresholds", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/RA.txt"
+		};
+		AssociationPlotterOptions options = new AssociationPlotterOptions(arguments);
+		try {
+			AssociationPosteriorPlotter p = new AssociationPosteriorPlotter(options);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (DocumentException e) {
+			e.printStackTrace();
+		}
+	}
 
 	AssociationPlotterOptions options;
 
@@ -50,25 +75,40 @@ public class AssociationPosteriorPlotter {
 
 		HashMap<Feature, Double> regionThresholds = new HashMap<Feature, Double>();
 		if (thresholdFile != null) {
+			System.out.println("Loading significance thresholds: " + thresholdFile);
 			TextFile tf = new TextFile(thresholdFile, TextFile.R);
 			String[] elems = tf.readLineElems(TextFile.tab);
 			while (elems != null) {
 				if (elems.length >= 3) {
-					Feature f = Feature.parseFeature(elems[0]);
+					String[] felems = elems[0].split("_");
+					String[] posElems = felems[1].split("-");
+					Chromosome chr = Chromosome.parseChr(felems[0]);
+					Integer start = Integer.parseInt(posElems[0]);
+					if (start.equals(204446380)) {
+						System.out.println("meh");
+					}
+					Integer stop = Integer.parseInt(posElems[1]);
+					Feature f = new Feature(chr, start, stop);
 					double d = Double.parseDouble(elems[2]);
 					regionThresholds.put(f, d);
 				}
 				elems = tf.readLineElems(TextFile.tab);
 			}
 			tf.close();
-
+			System.out.println(regionThresholds.size() + " thresholds loaded.");
 		}
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedregionfile);
-		ArrayList<Feature> sequencedRegionsList = reader.readAsList(sequencedRegionsFile);
-		HashSet<Feature> sequencedRegions = new HashSet<Feature>();
-		sequencedRegions.addAll(sequencedRegionsList);
+
+		ArrayList<Feature> sequencedRegionsList = null;
+		HashSet<Feature> sequencedRegions = null;
+		if (sequencedRegionsFile != null) {
+			sequencedRegionsList = reader.readAsList(sequencedRegionsFile);
+			sequencedRegions = new HashSet<Feature>();
+			sequencedRegions.addAll(sequencedRegionsList);
+		}
+
 
 		String[] assocNames = associationFileNames.split(",");
 		String[] assocFiles = associationFiles.split(",");
@@ -78,7 +118,8 @@ public class AssociationPosteriorPlotter {
 
 		for (Feature region : regions) {
 			boolean regionhasvariants = false;
-			Double threshold = regionThresholds.get(region);
+			Double threshold = regionThresholds.get(new Feature(region.getChromosome(), region.getStart(), region.getStop()));
+			System.out.println(threshold + " for region: " + region.toString());
 			if (threshold == null) {
 				threshold = 5E-8;
 			}
@@ -112,10 +153,11 @@ public class AssociationPosteriorPlotter {
 			ArrayList<Gene> overlappingGenesList = new ArrayList<>();
 			overlappingGenesList.addAll(overlappingGenes);
 
-			Grid grid = new Grid(400, 300, 2, assocFiles.length, 100, 100);
+			int gridrows = 2;
 			if (plotPosteriors) {
-				grid = new Grid(400, 300, 3, assocFiles.length, 100, 100);
+				gridrows = 3;
 			}
+			Grid grid = new Grid(300, 150, gridrows, assocFiles.length, 100, 100);
 
 			GenePanel genePanel = new GenePanel(1, 1);
 			genePanel.setData(region, overlappingGenesList);
@@ -165,13 +207,13 @@ public class AssociationPosteriorPlotter {
 					double p = r.getLog10Pval();
 					if (!Double.isNaN(p) && !Double.isInfinite(p)) {
 						pvals.add(new Pair<>(r.getSnp().getStart(), r.getLog10Pval()));
-						variants.add(r.getSnp().getStart() + "_" + r.getSnp().getName());
+						variants.add("" + r.getSnp().getStart());
 						if (maxP == null) {
 							maxP = r.getLog10Pval();
-							maxVar = r.getSnp().getStart() + "_" + r.getSnp().getName();
+							maxVar = "" + r.getSnp().getStart();
 						} else if (r.getLog10Pval() > maxP) {
 							maxP = r.getLog10Pval();
-							maxVar = r.getSnp().getStart() + "_" + r.getSnp().getName();
+							maxVar = "" + r.getSnp().getStart();
 						}
 					} else {
 						System.err.println("issue with: " + r.toString());
@@ -195,13 +237,34 @@ public class AssociationPosteriorPlotter {
 					TabixReader.Iterator window = VCFTabix.query(tabixfile, region);
 
 					String next = window.next();
+					int found = 0;
+					HashSet<String> variantsFound = new HashSet<String>();
 					while (next != null) {
 						VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.HEADER);
-						Integer index = variantsPresentIndex.get(variant.getPos() + "_" + variant.getId());
+						if (next.contains("rs76824122")) {
+							System.out.println("Found it");
+						}
+						Integer index = variantsPresentIndex.get("" + variant.getPos());
 						if (index != null) {
 							variantArr[index] = new VCFVariant(next, VCFVariant.PARSE.ALL, sampleLimit);
+							found++;
+							variantsFound.add("" + variant.getPos());
+						}
+						next = window.next();
+					}
+
+
+					int notfound = 0;
+					for (String snp : variantsPresentIndex.keySet()) {
+						if (!variantsFound.contains(snp)) {
+							System.out.println("Could not find: " + snp);
+							notfound++;
 						}
 					}
+					System.out.println(found + " variants found in LD reference");
+					System.out.println(notfound + " variants not in LD reference?");
+//					System.exit(-1);
+
 
 					Integer maxVarIndex = variantsPresentIndex.get(maxVar);
 					ldData[maxVarIndex] = 1d;
