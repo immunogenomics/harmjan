@@ -15,11 +15,21 @@ public class HeatmapPanel extends Panel {
 	private String[][] labels;
 	private String[] rowLabels;
 	private String[] colLabels;
+	private MODE plotMode;
 
 	public void setRange(Range range) {
 		this.range = range;
 	}
 
+	public void setPlotMode(MODE plotMode) {
+		this.plotMode = plotMode;
+	}
+
+	public enum MODE {
+		UPPER,
+		LOWER,
+		FULL
+	}
 
 	public HeatmapPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -53,28 +63,81 @@ public class HeatmapPanel extends Panel {
 
 		int startY = marginY + y0;
 		int startX = marginX + x0;
-		for (int i = 0; i < data.length; i++) {
 
-			int dy = (i * boxHeight) + startY;
+		if (plotMode.equals(MODE.FULL)) {
+			for (int i = 0; i < data.length; i++) {
 
-			for (int j = 0; j < data[i].length; j++) {
-				int dx = startX + (j * boxWidth);
-				double v = data[i][j];
-				double yPerc = range.getRelativePositionY(v);
+				int dy = (i * boxHeight) + startY;
 
-				// generate a color
-				int op = (int) Math.ceil(253 * yPerc);
+				for (int j = 0; j < data[i].length; j++) {
+					int dx = startX + (j * boxWidth);
+					double v = data[i][j];
+					double yPerc = range.getRelativePositionY(v);
 
-				if (op > 255) {
-					System.out.println("ERRORRR: " + yPerc + "\t" + op);
-					System.exit(-1);
+					// generate a color
+					int op = (int) Math.ceil(253 * yPerc);
+
+					if (op > 255) {
+						System.out.println("ERRORRR: " + yPerc + "\t" + op);
+						System.exit(-1);
+					}
+					Color c = new Color(0, 128, 255, op);
+
+					g2d.setColor(c);
+
+					g2d.fillRect(dx, dy, boxWidth, boxHeight);
+
 				}
-				Color c = new Color(0, 128, 255, op);
+			}
+		} else if (plotMode.equals(MODE.UPPER)) {
+			for (int i = 0; i < data.length; i++) {
 
-				g2d.setColor(c);
+				int dy = (i * boxHeight) + startY;
 
-				g2d.fillRect(dx, dy, boxWidth, boxHeight);
+				for (int j = i + 1; j < data[i].length; j++) {
+					int dx = startX + (j * boxWidth);
+					double v = data[i][j];
+					double yPerc = range.getRelativePositionY(v);
 
+					// generate a color
+					int op = (int) Math.ceil(253 * yPerc);
+
+					if (op > 255) {
+						System.out.println("ERRORRR: " + yPerc + "\t" + op);
+						System.exit(-1);
+					}
+					Color c = new Color(0, 128, 255, op);
+
+					g2d.setColor(c);
+
+					g2d.fillRect(dx, dy, boxWidth, boxHeight);
+
+				}
+			}
+		} else if (plotMode.equals(MODE.LOWER)) {
+			for (int i = 0; i < data.length; i++) {
+
+				int dy = (i * boxHeight) + startY;
+
+				for (int j = 0; j < i + 1; j++) {
+					int dx = startX + (j * boxWidth);
+					double v = data[i][j];
+					double yPerc = range.getRelativePositionY(v);
+
+					// generate a color
+					int op = (int) Math.ceil(253 * yPerc);
+
+					if (op > 255) {
+						System.out.println("ERRORRR: " + yPerc + "\t" + op);
+						System.exit(-1);
+					}
+					Color c = new Color(0, 128, 255, op);
+
+					g2d.setColor(c);
+
+					g2d.fillRect(dx, dy, boxWidth, boxHeight);
+
+				}
 			}
 		}
 

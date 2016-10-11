@@ -146,6 +146,7 @@ public class AssociationPanel extends Panel {
 			}
 		}
 
+		DefaultTheme
 
 		Color[] colors = new Color[nrDatasets];
 		for (int i = 0; i < colors.length; i++) {
@@ -318,14 +319,14 @@ public class AssociationPanel extends Panel {
 
 				for (int v = 0; v < toPlot.size(); v++) {
 
-					if (mark != null && !mark[v]) {
-						dot(g2d, toPlot, v, z, regionSize, nrPixelsX, nrPixelsY, colors, highlight, g, plotStarty, mark[v]);
+					if (mark == null || !mark[v]) {
+						dot(g2d, toPlot, v, z, regionSize, nrPixelsX, nrPixelsY, colors, highlight, g, plotStarty, false);
 					}
 				}
 
 				for (int v = 0; v < toPlot.size(); v++) {
 					if (mark != null && mark[v]) {
-						dot(g2d, toPlot, v, z, regionSize, nrPixelsX, nrPixelsY, colors, highlight, g, plotStarty, mark[v]);
+						dot(g2d, toPlot, v, z, regionSize, nrPixelsX, nrPixelsY, colors, highlight, g, plotStarty, true);
 					}
 				}
 

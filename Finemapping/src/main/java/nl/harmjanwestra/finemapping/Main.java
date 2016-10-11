@@ -6,4 +6,7 @@ package nl.harmjanwestra.finemapping;
 
 
 public class Main {
+	public static void main(String[] args){
+
+	}
 }

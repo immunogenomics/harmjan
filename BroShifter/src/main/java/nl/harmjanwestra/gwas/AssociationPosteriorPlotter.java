@@ -34,15 +34,38 @@ public class AssociationPosteriorPlotter {
 		String[] arguments = new String[]{
 				"--plotposteriors",
 				"-a", "/Data/Ref/Annotation/UCSC/genes.gtf",
-				"-i", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-				"-n", "RA",
-				"-o", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/plottest/ra",
-				"-p",
+				"-i",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/META-assoc0.3-COSMO-iter2-merged.txt.gz," +
+						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter2-merged.txt.gz," +
+						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA-assoc0.3-COSMO-iter2-merged.txt.gz",
+				"-n", "META,T1D,RA",
+				"-o", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/cd28/iter2",
 				"-r", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/ctla4.bed",
 				"--ldprefix", "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz",
 				"--ldlimit", "/Data/Ref/1kg-europeanpopulations.txt.gz",
-				"--thresholds", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/RA.txt"
+				"--thresholds", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/META.txt," +
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/T1D.txt," +
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/RA.txt,"
+
 		};
+
+//		String[] arguments = new String[]{
+//				"--plotposteriors",
+//				"-a", "/Data/Ref/Annotation/UCSC/genes.gtf",
+//				"-i",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/META-assoc0.3-COSMO-merged-posterior.txt.gz," +
+//						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D-assoc0.3-COSMO-merged-posterior.txt.gz," +
+//						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+//				"-n", "META,T1D,RA",
+//				"-o", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/cd28/iter0",
+//				"-p",
+//				"-r", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/ctla4.bed",
+//				"--ldprefix", "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz",
+//				"--ldlimit", "/Data/Ref/1kg-europeanpopulations.txt.gz",
+////				"--thresholds", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/RA.txt"
+//		};
+
+		//
 		AssociationPlotterOptions options = new AssociationPlotterOptions(arguments);
 		try {
 			AssociationPosteriorPlotter p = new AssociationPosteriorPlotter(options);
@@ -73,29 +96,32 @@ public class AssociationPosteriorPlotter {
 		String ldrpefix = options.getLDPrefix();
 		String ldlimit = options.getLDLimit();
 
-		HashMap<Feature, Double> regionThresholds = new HashMap<Feature, Double>();
+		ArrayList<HashMap<Feature, Double>> regionThresholds = new ArrayList<HashMap<Feature, Double>>();
 		if (thresholdFile != null) {
-			System.out.println("Loading significance thresholds: " + thresholdFile);
-			TextFile tf = new TextFile(thresholdFile, TextFile.R);
-			String[] elems = tf.readLineElems(TextFile.tab);
-			while (elems != null) {
-				if (elems.length >= 3) {
-					String[] felems = elems[0].split("_");
-					String[] posElems = felems[1].split("-");
-					Chromosome chr = Chromosome.parseChr(felems[0]);
-					Integer start = Integer.parseInt(posElems[0]);
-					if (start.equals(204446380)) {
-						System.out.println("meh");
+			String[] thresholdFiles = thresholdFile.split(",");
+			for (int s = 0; s < thresholdFiles.length; s++) {
+				System.out.println("Loading significance thresholds: " + thresholdFile);
+				TextFile tf = new TextFile(thresholdFiles[s], TextFile.R);
+				HashMap<Feature, Double> regionThresholdsHash = new HashMap<Feature, Double>();
+				String[] elems = tf.readLineElems(TextFile.tab);
+				while (elems != null) {
+					if (elems.length >= 3) {
+						String[] felems = elems[0].split("_");
+						String[] posElems = felems[1].split("-");
+						Chromosome chr = Chromosome.parseChr(felems[0]);
+						Integer start = Integer.parseInt(posElems[0]);
+						Integer stop = Integer.parseInt(posElems[1]);
+						Feature f = new Feature(chr, start, stop);
+						double d = Double.parseDouble(elems[2]);
+						regionThresholdsHash.put(f, d);
 					}
-					Integer stop = Integer.parseInt(posElems[1]);
-					Feature f = new Feature(chr, start, stop);
-					double d = Double.parseDouble(elems[2]);
-					regionThresholds.put(f, d);
+					elems = tf.readLineElems(TextFile.tab);
 				}
-				elems = tf.readLineElems(TextFile.tab);
+				tf.close();
+				regionThresholds.add(regionThresholdsHash);
+				System.out.println(regionThresholdsHash.size() + " thresholds loaded.");
 			}
-			tf.close();
-			System.out.println(regionThresholds.size() + " thresholds loaded.");
+
 		}
 
 		BedFileReader reader = new BedFileReader();
@@ -118,28 +144,6 @@ public class AssociationPosteriorPlotter {
 
 		for (Feature region : regions) {
 			boolean regionhasvariants = false;
-			Double threshold = regionThresholds.get(new Feature(region.getChromosome(), region.getStart(), region.getStop()));
-			System.out.println(threshold + " for region: " + region.toString());
-			if (threshold == null) {
-				threshold = 5E-8;
-			}
-//			Collection<Gene> allgenes = annotation.getGenes();
-//			for (Gene g : allgenes) {
-//				String geneid = g.getGeneId();
-//				if(geneid.equals("PUS10")){
-//					System.out.println(g.toString());
-//				}
-//
-//			}
-
-
-//			for (Gene g : genes) {
-//				String geneid = g.getGeneId();
-//				if(geneid.equals("PUS10")){
-//					System.out.println(g.toString());
-//				}
-//
-//			}
 
 			TreeSet<Gene> genes = annotation.getGeneTree();
 			Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
@@ -157,7 +161,7 @@ public class AssociationPosteriorPlotter {
 			if (plotPosteriors) {
 				gridrows = 3;
 			}
-			Grid grid = new Grid(300, 150, gridrows, assocFiles.length, 100, 100);
+			Grid grid = new Grid(200, 100, gridrows, assocFiles.length, 100, 100);
 
 			GenePanel genePanel = new GenePanel(1, 1);
 			genePanel.setData(region, overlappingGenesList);
@@ -168,7 +172,16 @@ public class AssociationPosteriorPlotter {
 			ArrayList<AssociationPanel> allPanels = new ArrayList<>();
 			Double maxP = null;
 			for (int i = 0; i < assocFiles.length; i++) {
+				Double threshold = null;
+				if (regionThresholds != null) {
+					threshold = regionThresholds.get(i).get(new Feature(region.getChromosome(), region.getStart(), region.getStop()));
+					System.out.println(threshold + " for region: " + region.toString());
+				} else {
+					threshold = 5E-8;
+				}
 
+				Double maxPDs = null;
+				String maxVar = null;
 				System.out.println("Reading: " + assocFiles[i]);
 				ArrayList<AssociationResult> associations = assocFile.read(assocFiles[i], region);
 				HashSet<AssociationResult> credibleSetSet = new HashSet<>();
@@ -200,7 +213,7 @@ public class AssociationPosteriorPlotter {
 
 
 				ArrayList<String> variants = new ArrayList<String>();
-				String maxVar = null;
+
 
 				for (int a = 0; a < associations.size(); a++) {
 					AssociationResult r = associations.get(a);
@@ -210,15 +223,22 @@ public class AssociationPosteriorPlotter {
 						variants.add("" + r.getSnp().getStart());
 						if (maxP == null) {
 							maxP = r.getLog10Pval();
-							maxVar = "" + r.getSnp().getStart();
 						} else if (r.getLog10Pval() > maxP) {
 							maxP = r.getLog10Pval();
+						}
+						if (maxPDs == null) {
+							maxPDs = r.getLog10Pval();
+							maxVar = "" + r.getSnp().getStart();
+						} else if (r.getLog10Pval() > maxPDs) {
+							maxPDs = r.getLog10Pval();
 							maxVar = "" + r.getSnp().getStart();
 						}
 					} else {
 						System.err.println("issue with: " + r.toString());
 					}
 				}
+
+				System.out.println(maxVar + " is the max var.");
 
 				double[] ldData = null;
 				if (ldrpefix != null) {
@@ -241,9 +261,7 @@ public class AssociationPosteriorPlotter {
 					HashSet<String> variantsFound = new HashSet<String>();
 					while (next != null) {
 						VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.HEADER);
-						if (next.contains("rs76824122")) {
-							System.out.println("Found it");
-						}
+
 						Integer index = variantsPresentIndex.get("" + variant.getPos());
 						if (index != null) {
 							variantArr[index] = new VCFVariant(next, VCFVariant.PARSE.ALL, sampleLimit);
@@ -267,6 +285,11 @@ public class AssociationPosteriorPlotter {
 
 
 					Integer maxVarIndex = variantsPresentIndex.get(maxVar);
+					if (maxVarIndex == null) {
+						System.out.println(maxVar + " not found for dataset " + assocFiles[i]);
+						System.exit(-1);
+
+					}
 					ldData[maxVarIndex] = 1d;
 					VCFVariant topVariant = variantArr[maxVarIndex];
 					DetermineLD ldcalc = new DetermineLD();
