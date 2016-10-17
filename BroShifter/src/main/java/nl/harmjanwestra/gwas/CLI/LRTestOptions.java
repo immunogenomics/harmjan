@@ -205,7 +205,7 @@ public class LRTestOptions {
 	public boolean splitMultiAllelicIntoMultipleVariants;
 	private ANALYSIS analysisType = ANALYSIS.NORMAL;
 	private String conditional;
-	private double HWEPThreshold = 1E-5;
+	private double HWEPThreshold = 1E-4;
 	private String vcf;
 	private String outputdir;
 	private String diseaseStatusFile;

@@ -17,14 +17,6 @@ public class SNPFeature extends Feature {
 	private double AFCases;
 	private double AFControls;
 
-	public double getImputationQualScore() {
-		return imputationQualScore;
-	}
-
-	public void setImputationQualScore(double imputationQualScore) {
-		this.imputationQualScore = imputationQualScore;
-	}
-
 	public double getMaf() {
 		return maf;
 	}

@@ -14,11 +14,17 @@ import java.util.HashSet;
  */
 public class VCFTabix {
 
+	private final String tabixfile;
+	private final TabixReader treader;
 
-	public static boolean[] getSampleFilter(String tabixfile, String tabixsamplelimit) throws IOException {
+	public VCFTabix(String filename) throws IOException {
+		this.tabixfile = filename;
+		treader = new TabixReader(tabixfile);
+
+	}
+
+	public boolean[] getSampleFilter(String tabixsamplelimit) throws IOException {
 		boolean[] samplesToInclude = null;
-
-
 		VCFGenotypeData d = new VCFGenotypeData(tabixfile);
 		ArrayList<String> tabixSamples = d.getSamples();
 		samplesToInclude = new boolean[tabixSamples.size()];
@@ -31,20 +37,20 @@ public class VCFTabix {
 			elems = tf.readLineElems(Strings.whitespace);
 		}
 		tf.close();
-
 		for (int s = 0; s < tabixSamples.size(); s++) {
 			if (allSamplesInListSet.contains(tabixSamples.get(s))) {
 				samplesToInclude[s] = true;
 			}
 		}
-
 		return samplesToInclude;
 	}
 
-	public static TabixReader.Iterator query(String tabixfile, Feature region) throws IOException {
-		TabixReader treader = new TabixReader(tabixfile);
+	public TabixReader.Iterator query(Feature region) throws IOException {
 		TabixReader.Iterator window = treader.query(region.getChromosome().getNumber() + ":" + (region.getStart() - 10) + "-" + (region.getStop() + 10));
 		return window;
 	}
 
+	public void close() {
+		treader.close();
+	}
 }

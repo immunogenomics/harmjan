@@ -56,7 +56,16 @@ public class Grid {
 		System.out.println("Init: " + nrRowsTmp + " x " + nrColsTmp);
 
 		this.figureWidth = (nrCols * panelWidth) + ((nrCols - 1) * marginBetweenPanels) + (2 * marginX);
+		if (this.figureWidth > 14400) {
+			System.out.println("WARNING: figureWidth > 14400: " + this.figureWidth);
+			this.figureWidth = 14000;
+		}
 		this.figureHeight = (nrRows * panelHeight) + ((nrRows - 1) * marginBetweenPanels) + (2 * marginY);
+		if (this.figureHeight > 14400) {
+			System.out.println("WARNING: figureheight > 14400: " + this.figureHeight);
+			this.figureHeight = 14000;
+
+		}
 
 		if (isInitialized) {
 			// copy contents

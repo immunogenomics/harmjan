@@ -14,8 +14,8 @@ import java.util.TreeSet;
 
 /**
  * @author Harm-Jan
- *
- * I've found this class to be very unsafe and confusing.
+ *         <p>
+ *         I've found this class to be very unsafe and confusing.
  */
 public class Track extends Feature {
 	//
@@ -137,8 +137,16 @@ public class Track extends Feature {
 	}
 
 	public void addFeatures(ArrayList<Feature> features) {
-		this.features.addAll(features);
-		this.allFeatures.addAll(features);
+		// TODO: I should really kill this class.......
+		if (this.features == null) {
+			FeatureTree tree = new FeatureTree(features);
+			this.features = tree.getFeatureTree();
+			this.allFeatures = new ArrayList<>();
+			this.allFeatures.addAll(features);
+		} else {
+			this.features.addAll(features);
+			this.allFeatures.addAll(features);
+		}
 		System.out.println(this.features.size() + " features loaded into track");
 	}
 

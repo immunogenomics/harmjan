@@ -43,7 +43,7 @@ public class BroShifterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
-		option = Option.builder("p")
+		option = Option.builder()
 				.hasArg()
 				.desc("Number of permutations to run [default = 10000]")
 				.longOpt("iterations")
@@ -143,7 +143,7 @@ public class BroShifterOptions {
 	public boolean trimRegions = false;
 	public int defaultRegionExtend = 100;
 	public int nrThreads = 1;
-	public double credibleSetThreshold = 0.95;
+	public double credibleSetThreshold = 0.90;
 	public DISTANCEWEIGHT distanceweight = DISTANCEWEIGHT.NONE;
 	public String geneAnnotationFile;
 	// TODO: allow code to determine mean + sd annotation size

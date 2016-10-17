@@ -35,12 +35,12 @@ public class AssociationPosteriorPlotter {
 				"--plotposteriors",
 				"-a", "/Data/Ref/Annotation/UCSC/genes.gtf",
 				"-i",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/META-assoc0.3-COSMO-iter2-merged.txt.gz," +
-						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter2-merged.txt.gz," +
-						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA-assoc0.3-COSMO-iter2-merged.txt.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/META-assoc0.3-COSMO-iter1-merged.txt.gz," +
+						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter1-merged.txt.gz," +
+						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA-assoc0.3-COSMO-iter1-merged.txt.gz",
 				"-n", "META,T1D,RA",
-				"-o", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/cd28/iter2",
-				"-r", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/ctla4.bed",
+				"-o", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/testcond",
+				"-r", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/TNFAIP3.bed",
 				"--ldprefix", "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz",
 				"--ldlimit", "/Data/Ref/1kg-europeanpopulations.txt.gz",
 				"--thresholds", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/META.txt," +
@@ -57,12 +57,14 @@ public class AssociationPosteriorPlotter {
 //						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D-assoc0.3-COSMO-merged-posterior.txt.gz," +
 //						"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
 //				"-n", "META,T1D,RA",
-//				"-o", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/cd28/iter0",
+//				"-o", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/tnfaip3",
 //				"-p",
-//				"-r", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/ctla4.bed",
+//				"-r", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/TNFAIP3.bed",
 //				"--ldprefix", "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz",
 //				"--ldlimit", "/Data/Ref/1kg-europeanpopulations.txt.gz",
-////				"--thresholds", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/RA.txt"
+//				"--thresholds", "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/META.txt," +
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/T1D.txt," +
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/RA.txt,"
 //		};
 
 		//
@@ -95,12 +97,14 @@ public class AssociationPosteriorPlotter {
 		String thresholdFile = options.getSignificanceThresholdFile();
 		String ldrpefix = options.getLDPrefix();
 		String ldlimit = options.getLDLimit();
+		double defaultsignificancethreshold = options.getDefaultSignificance();
 
-		ArrayList<HashMap<Feature, Double>> regionThresholds = new ArrayList<HashMap<Feature, Double>>();
+		ArrayList<HashMap<Feature, Double>> regionThresholds = null;
 		if (thresholdFile != null) {
+			regionThresholds = new ArrayList<HashMap<Feature, Double>>();
 			String[] thresholdFiles = thresholdFile.split(",");
 			for (int s = 0; s < thresholdFiles.length; s++) {
-				System.out.println("Loading significance thresholds: " + thresholdFile);
+				System.out.println("Loading significance thresholds: " + thresholdFiles[s]);
 				TextFile tf = new TextFile(thresholdFiles[s], TextFile.R);
 				HashMap<Feature, Double> regionThresholdsHash = new HashMap<Feature, Double>();
 				String[] elems = tf.readLineElems(TextFile.tab);
@@ -177,7 +181,7 @@ public class AssociationPosteriorPlotter {
 					threshold = regionThresholds.get(i).get(new Feature(region.getChromosome(), region.getStart(), region.getStop()));
 					System.out.println(threshold + " for region: " + region.toString());
 				} else {
-					threshold = 5E-8;
+					threshold = defaultsignificancethreshold;
 				}
 
 				Double maxPDs = null;
@@ -250,11 +254,12 @@ public class AssociationPosteriorPlotter {
 					}
 
 					String tabixfile = ldrpefix.replaceAll("CHR", "" + region.getChromosome().getNumber());
+					VCFTabix tabix = new VCFTabix(tabixfile);
 					boolean[] sampleLimit = null;
 					if (ldlimit != null) {
-						sampleLimit = VCFTabix.getSampleFilter(tabixfile, ldlimit);
+						sampleLimit = tabix.getSampleFilter(ldlimit);
 					}
-					TabixReader.Iterator window = VCFTabix.query(tabixfile, region);
+					TabixReader.Iterator window = tabix.query(region);
 
 					String next = window.next();
 					int found = 0;
@@ -270,7 +275,7 @@ public class AssociationPosteriorPlotter {
 						}
 						next = window.next();
 					}
-
+					tabix.close();
 
 					int notfound = 0;
 					for (String snp : variantsPresentIndex.keySet()) {

@@ -7,6 +7,7 @@ import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.graphics.Grid;
+import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.HeatmapPanel;
 import nl.harmjanwestra.utilities.graphics.panels.LDPanel;
 import nl.harmjanwestra.utilities.math.DetermineLD;
@@ -28,48 +29,17 @@ public class ExhaustivePlot {
 
 
 	public static void main(String[] args) {
-		// make the actual plot
-//		Grid grid = new Grid(400, 400, 1, 1, 100, 100);
-//
-//		LDPanel panel = new LDPanel(1, 1);
-//		Feature region = new Feature();
-//		region.setStart(0);
-//		region.setStop(10);
-//		ArrayList<Pair<Integer, Integer>> positions = new ArrayList<>();
-//		ArrayList<Double> pvals = new ArrayList<>();
-//
-//		positions.add(new Pair<Integer, Integer>(1, 1));
-//		positions.add(new Pair<Integer, Integer>(2, 1));
-//		positions.add(new Pair<Integer, Integer>(3, 1));
-//		positions.add(new Pair<Integer, Integer>(2, 2));
-//		positions.add(new Pair<Integer, Integer>(2, 3));
-//		positions.add(new Pair<Integer, Integer>(3, 3));
-//
-//		pvals.add(1d);
-//		pvals.add(0.2);
-//		pvals.add(0.2);
-//		pvals.add(1d);
-//		pvals.add(0.5);
-//		pvals.add(1d);
-//
-//
-//		String output = "/Data/tmp/exhaustive/test.png";
-//
-//		panel.setData(region, positions, pvals);
-//
-//		try {
-//			grid.addPanel(panel);
-//			grid.draw(output);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		} catch (DocumentException e) {
-//			e.printStackTrace();
-//		}
+
 
 		ExhaustivePlot p = new ExhaustivePlot();
-		String output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/plottest/exhaustive";
+		String output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/CD28Exhaustive";
 		Feature region = new Feature();
 		// Chr2_204446380-204816382
+
+		// TNFAIP3
+//		region.setChromosome(Chromosome.SIX);
+//		region.setStart(137882875);
+//		region.setStop(138275085);
 		region.setChromosome(Chromosome.TWO);
 		region.setStart(204446380);
 		region.setStop(204816382);
@@ -243,6 +213,17 @@ public class ExhaustivePlot {
 		tf2.close();
 
 		Collections.sort(assocVals);
+		System.out.println(assocVals.get(0).getSnp1() + "\t" + assocVals.get(0).getSnp2() + "\t" + assocVals.get(0).getP());
+
+		int loc1 = 137999562;
+		int loc2 = 138243739;
+		for (AssocPair p : assocVals) {
+			if ((p.getSnp1().getStart() == loc1 || p.getSnp2().getStart() == loc1) &&
+					(p.getSnp1().getStart() == loc2 || p.getSnp2().getStart() == loc2)) {
+				System.out.println(p.getSnp1() + "\t" + p.getSnp2() + "\t" + p.getP());
+			}
+		}
+
 		HashSet<SNPFeature> topSNPs = new HashSet<SNPFeature>();
 
 		for (AssocPair p : assocVals) {
@@ -270,23 +251,33 @@ public class ExhaustivePlot {
 			rowlabels[q] = allSNPFeatures.get(q).getName();
 		}
 		// iterate through all assoc PVals to get pairs corresponding to snp set
+		double maxPval = 0;
+		double minPval = Double.MAX_VALUE;
 		for (AssocPair p : assocVals) {
 			if (topSNPs.contains(p.getSnp1()) && topSNPs.contains(p.getSnp2())) {
 				Integer id1 = topSNPIndex.get(p.getSnp1());
 				Integer id2 = topSNPIndex.get(p.getSnp2());
 				vals[id1][id2] = p.getP();
 				vals[id2][id1] = p.getP();
+				if (p.getP() > maxPval) {
+					maxPval = p.getP();
+				}
+				if (p.getP() < minPval) {
+					minPval = p.getP();
+				}
 			}
 		}
 
+
 		// get the LD for these variants
-		String tabix = tabixPrefix.replaceAll("CHR", "" + region.getChromosome().getNumber());
+		String tabixfile = tabixPrefix.replaceAll("CHR", "" + region.getChromosome().getNumber());
+		VCFTabix tabix = new VCFTabix(tabixfile);
 		boolean[] includeSamples = null;
 		if (tabixsamplelimit != null) {
-			includeSamples = VCFTabix.getSampleFilter(tabix, tabixsamplelimit);
+			includeSamples = tabix.getSampleFilter(tabixsamplelimit);
 		}
 
-		TabixReader.Iterator window = VCFTabix.query(tabix, region);
+		TabixReader.Iterator window = tabix.query(region);
 		String next = window.next();
 		VCFVariant[] vcfVariants = new VCFVariant[topSNPs.size()];
 		while (next != null) {
@@ -297,7 +288,7 @@ public class ExhaustivePlot {
 			}
 			next = window.next();
 		}
-
+		tabix.close();
 		double[][] ldmatrix = new double[topSNPs.size()][topSNPs.size()];
 		DetermineLD ldcalc = new DetermineLD();
 		for (int i = 0; i < vcfVariants.length; i++) {
@@ -309,11 +300,14 @@ public class ExhaustivePlot {
 		System.out.println("meh2");
 
 
+		Range pvalRange = new Range(0, minPval, 1, maxPval);
+		pvalRange.roundY();
 		Grid grid = new Grid(600, 600, 1, 1, 100, 100);
 		HeatmapPanel panel = new HeatmapPanel(1, 1);
 		panel.setData(vals, rowlabels, rowlabels);
 		panel.setPlotMode(HeatmapPanel.MODE.LOWER);
 		grid.addPanel(panel);
+		panel.setRange(pvalRange);
 		grid.draw(output + "-pvals.pdf");
 
 		grid = new Grid(600, 600, 1, 1, 100, 100);

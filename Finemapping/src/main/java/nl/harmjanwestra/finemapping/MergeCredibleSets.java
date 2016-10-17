@@ -29,36 +29,31 @@ public class MergeCredibleSets {
 	public static void main(String[] args) {
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String genenames = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
-		String[] assocfiles = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz"
-		};
-		String[] datasetnames = new String[]{
-				"Joint",
-				"T1D",
-				"RA"
-		};
-		String outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/mergedCredibleSets.txt";
+
 
 		try {
 			MergeCredibleSets c = new MergeCredibleSets();
 //			c.run(bedregions, assocfiles, datasetnames, genenames, outfile);
 
 
-			assocfiles = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
+			String outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets.txt";
+			String outplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-plot.pdf";
+			String[] assocfiles = new String[]{
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz"
 
 			};
-			datasetnames = new String[]{
+			String[] datasetnames = new String[]{
 					"RA",
 					"T1D",
-					"Joint"
+					"Combined"
 			};
 			double threshold = 7.5E-7;
-			c.makePlot(bedregions, assocfiles, datasetnames, genenames, "/Data/tmp/credibleSetPlot.pdf", threshold);
+			int nrVariantsInCredibleSet = 10;
+			double maxPosteriorCredibleSet = 0.9;
+			c.run(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet);
+			c.makePlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
@@ -66,7 +61,11 @@ public class MergeCredibleSets {
 		}
 	}
 
-	public void run(String bedregions, String[] assocFiles, String[] datasetNames, String genenamefile, String outfile) throws IOException {
+	public void run(String bedregions,
+					String[] assocFiles,
+					String[] datasetNames,
+					String genenamefile,
+					String outfile, double maxPosteriorCredibleSet, int maxNrVariantsInCredibleSet) throws IOException {
 
 
 		HashMap<String, String> locusToGene = new HashMap<String, String>();
@@ -101,9 +100,9 @@ public class MergeCredibleSets {
 			for (int i = 0; i < assocFiles.length; i++) {
 				ArrayList<AssociationResult> allDatasetData = f.read(assocFiles[i], regions.get(d));
 				data[i][d] = allDatasetData.toArray(new AssociationResult[0]);
-				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, 0.9);
+				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, maxPosteriorCredibleSet);
 				crediblesets[i][d] = credibleSet.toArray(new AssociationResult[0]);
-				if (credibleSet.size() <= 5) {
+				if (credibleSet.size() <= maxNrVariantsInCredibleSet) {
 					hasSet = true;
 				}
 			}
@@ -115,7 +114,7 @@ public class MergeCredibleSets {
 		HashSet<Feature> regionsWithCredibleSetsHash = new HashSet<Feature>();
 		regionsWithCredibleSetsHash.addAll(regionsWithCredibleSets);
 
-		int len = 5;
+		int len = maxNrVariantsInCredibleSet;
 		TextFile out = new TextFile(outfile, TextFile.W);
 		TextFile outg = new TextFile(outfile + "-genes.txt", TextFile.W);
 		String header2 = "\t\t";
@@ -173,7 +172,7 @@ public class MergeCredibleSets {
 
 					boolean allSNPsPrinted = true;
 					for (int datasetId = 0; datasetId < data.length; datasetId++) {
-						if (regionsums[datasetId] < 0.9) {
+						if (regionsums[datasetId] < maxPosteriorCredibleSet) {
 							allSNPsPrinted = false;
 						}
 					}
@@ -202,7 +201,7 @@ public class MergeCredibleSets {
 								}
 
 								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
-								if (regionsums[datasetId] < 0.9) {
+								if (regionsums[datasetId] < maxPosteriorCredibleSet) {
 									ln += r.getSnp().toString()
 											+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
 											+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
@@ -232,7 +231,7 @@ public class MergeCredibleSets {
 	}
 
 
-	private void makePlot(String bedregions, String[] assocFiles, String[] datasetNames, String genenamefile, String outfile, double threshold) throws IOException, DocumentException {
+	private void makePlot(String bedregions, String[] assocFiles, String[] datasetNames, String genenamefile, String outfile, double threshold, double maxPosteriorCredibleSet, int nrVariantsInCredibleSet) throws IOException, DocumentException {
 
 
 		HashMap<String, String> locusToGene = new HashMap<String, String>();
@@ -267,7 +266,7 @@ public class MergeCredibleSets {
 			for (int i = 0; i < assocFiles.length; i++) {
 				ArrayList<AssociationResult> allDatasetData = f.read(assocFiles[i], regions.get(d));
 				data[i][d] = allDatasetData.toArray(new AssociationResult[0]);
-				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, 0.9);
+				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, maxPosteriorCredibleSet);
 
 				boolean abovethresh = false;
 				for (AssociationResult r : credibleSet) {
@@ -277,7 +276,7 @@ public class MergeCredibleSets {
 				}
 
 				crediblesets[i][d] = credibleSet.toArray(new AssociationResult[0]);
-				if (credibleSet.size() <= 5 && abovethresh) {
+				if (credibleSet.size() <= nrVariantsInCredibleSet && abovethresh) {
 					hasSet = true;
 				}
 			}
@@ -289,14 +288,7 @@ public class MergeCredibleSets {
 		HashSet<Feature> regionsWithCredibleSetsHash = new HashSet<Feature>();
 		regionsWithCredibleSetsHash.addAll(regionsWithCredibleSets);
 
-		int len = 5;
-
-
-		/*
-
-[dataset][locus][variants];
-
-		  */
+		int len = nrVariantsInCredibleSet;
 
 		double[][][] dataForPlotting = new double[data.length][regionsWithCredibleSets.size()][];
 		double[][][] dataForPlotting2 = new double[data.length][regionsWithCredibleSets.size()][];
@@ -320,7 +312,7 @@ public class MergeCredibleSets {
 					double sum = 0;
 					for (int s = 0; s < topResults.size(); s++) {
 						double posterior = topResults.get(s).getPosterior();
-						if (sum < 0.9) {
+						if (sum < maxPosteriorCredibleSet) {
 							String variant = topResults.get(s).getSnp().getName();
 							boolean isSignificant = (topResults.get(s).getPval() < threshold);
 							if (!variantToInt.containsKey(variant) && isSignificant) {

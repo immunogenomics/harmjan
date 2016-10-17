@@ -2,10 +2,7 @@ package nl.harmjanwestra.broshifter;
 
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.features.FeatureMerger;
-import nl.harmjanwestra.utilities.features.PeakFeature;
-import nl.harmjanwestra.utilities.features.Track;
+import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.peakfiles.XLSFile;
 import umcg.genetica.text.Strings;
 
@@ -22,6 +19,7 @@ public class AnnotationLoader {
 								 int bpToExtendAnnotation,
 								 boolean mergeoverlapping,
 								 ArrayList<Feature> regions) throws IOException {
+
 
 		ArrayList<Feature> allAnnotations = null;
 		ArrayList<Feature> tmpFeatures = null;

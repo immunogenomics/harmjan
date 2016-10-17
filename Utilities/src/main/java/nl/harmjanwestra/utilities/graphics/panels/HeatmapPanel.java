@@ -127,16 +127,15 @@ public class HeatmapPanel extends Panel {
 					// generate a color
 					int op = (int) Math.ceil(253 * yPerc);
 
-					if (op > 255) {
-						System.out.println("ERRORRR: " + yPerc + "\t" + op);
-						System.exit(-1);
+					if (op > 255 || op < 0 || Double.isNaN(op) || Double.isInfinite(op)) {
+						System.out.println("WARNING: " + yPerc + "\t" + op + "\t" + v + "\t" + i + "\t" + j);
+					} else {
+						Color c = new Color(0, 128, 255, op);
+
+						g2d.setColor(c);
+
+						g2d.fillRect(dx, dy, boxWidth, boxHeight);
 					}
-					Color c = new Color(0, 128, 255, op);
-
-					g2d.setColor(c);
-
-					g2d.fillRect(dx, dy, boxWidth, boxHeight);
-
 				}
 			}
 		}

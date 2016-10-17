@@ -9,6 +9,7 @@ import umcg.genetica.text.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by Harm-Jan on 02/27/16.
@@ -17,17 +18,68 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		if (args.length < 2) {
-			System.out.println("usage: dirin dirout");
-		} else {
-			Main m = new Main();
-			try {
+//		if (args.length < 2) {
+//			System.out.println("usage: dirin dirout");
+//		} else {
+//			Main m = new Main();
+//			try {
+//
+//				m.split(args[0], args[1]);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
 
-				m.split(args[0], args[1]);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		Main m = new Main();
+		try {
+			m.annotate("/Data/Enhancers/ChromHMM/celltypenames.txt",
+					"/Data/Enhancers/ChromHMM/allChromHMM.txt",
+					"/Data/Enhancers/ChromHMM/allChromHMM-desc.txt");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
+	}
+
+	public void annotate(String samplenamefile, String bedfilefile, String out) throws IOException {
+
+		HashMap<String, String> ecodes = new HashMap<String, String>();
+		TextFile tf = new TextFile(samplenamefile, TextFile.R);
+		String[] elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+			if (elems.length > 1) {
+				String ecode = elems[0];
+				String desc = elems[1];
+				ecodes.put(ecode, desc);
+			}
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
+
+		TextFile bedin = new TextFile(bedfilefile, TextFile.R);
+		TextFile outf = new TextFile(out, TextFile.W);
+
+		String ln = bedin.readLine();
+		while (ln != null) {
+
+			String f = Gpio.getFileName(ln);
+
+
+			// E129_25_imputed12marks_mnemonics-9_TxReg.bed.gz
+			String[] lnelems = f.split("_");
+			String tissue = ecodes.get(lnelems[0]);
+			lnelems = f.split("-")[1].split("_");
+			String type = lnelems[1].substring(0, lnelems[1].length() - 7);
+
+			if(!type.equals("Quies")) {
+				String desc = type + " / " + tissue;
+				outf.writeln(desc + "\t" + ln);
+			}
+			ln = bedin.readLine();
+		}
+
+		outf.close();
+		bedin.close();
 
 	}
 

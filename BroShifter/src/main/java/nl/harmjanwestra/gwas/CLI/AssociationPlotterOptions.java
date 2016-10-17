@@ -44,6 +44,13 @@ public class AssociationPlotterOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("threshold")
+				.hasArg()
+				.desc("Single significance threshold for all regions")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("thresholds")
 				.hasArg()
 				.desc("File with bonferroni threshold per region")
@@ -63,7 +70,7 @@ public class AssociationPlotterOptions {
 				.desc("Tabix ld: limit to a list of samples")
 				.build();
 		OPTIONS.addOption(option);
-		
+
 		option = Option.builder("o")
 				.hasArg()
 				.desc("Output prefix")
@@ -93,6 +100,7 @@ public class AssociationPlotterOptions {
 	private String significanceThresholdFile;
 	private String LDPrefix;
 	private String LDLimit;
+	private double defaultSignificance = 5E-8;
 
 	public Double getMaxp() {
 		return maxp;
@@ -194,6 +202,11 @@ public class AssociationPlotterOptions {
 				sequencedRegionsFile = cmd.getOptionValue("s");
 			}
 
+			if (cmd.hasOption("threshold")) {
+				defaultSignificance = Double.parseDouble(cmd.getOptionValue("threshold"));
+			}
+
+
 			if (cmd.hasOption("thresholds")) {
 				significanceThresholdFile = cmd.getOptionValue("thresholds");
 			}
@@ -236,5 +249,9 @@ public class AssociationPlotterOptions {
 
 	public String getLDLimit() {
 		return LDLimit;
+	}
+
+	public double getDefaultSignificance() {
+		return defaultSignificance;
 	}
 }

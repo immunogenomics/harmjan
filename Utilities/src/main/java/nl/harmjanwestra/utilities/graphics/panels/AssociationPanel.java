@@ -146,8 +146,7 @@ public class AssociationPanel extends Panel {
 			}
 		}
 
-		DefaultTheme
-
+	
 		Color[] colors = new Color[nrDatasets];
 		for (int i = 0; i < colors.length; i++) {
 			switch (i) {

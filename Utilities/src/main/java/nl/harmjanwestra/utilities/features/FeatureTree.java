@@ -81,4 +81,12 @@ public class FeatureTree {
 
 		return name;
 	}
+
+	public TreeSet<Feature> getFeatureTree() {
+		return treeSet;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }
