@@ -39,7 +39,7 @@ public class LRTestHaplotype extends LRTest {
 
 	LRTestHaploTestTask lrht = new LRTestHaploTestTask();
 
-	private DiseaseStatus[] finalDiseaseStatus;
+	private DiseaseStatus[][] finalDiseaseStatus;
 	private DoubleMatrix2D finalCovariates;
 
 
@@ -54,7 +54,6 @@ public class LRTestHaplotype extends LRTest {
 
 
 	public void testHaplotype() throws IOException {
-
 
 
 		System.out.println("Testing haplotype thingies");
@@ -107,7 +106,6 @@ public class LRTestHaplotype extends LRTest {
 		multivariate(out, hapdata, haplotypeWithFrequencyAboveThreshold, variants, refhapcol);
 
 		// perform multivariate test
-
 
 
 		Triple<String, AssociationResult, VCFVariant> result = lrht.calc(null,
@@ -245,7 +243,7 @@ public class LRTestHaplotype extends LRTest {
 
 		double[] y = new double[finalDiseaseStatus.length];
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
-			y[i] = finalDiseaseStatus[i].getNumber();
+			y[i] = finalDiseaseStatus[i][0].getNumber();
 		}
 		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, finalCovariates);
 
@@ -349,7 +347,7 @@ public class LRTestHaplotype extends LRTest {
 
 		double[] y = new double[finalDiseaseStatus.length];
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
-			y[i] = finalDiseaseStatus[i].getNumber();
+			y[i] = finalDiseaseStatus[i][0].getNumber();
 		}
 
 		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, finalCovariates);
@@ -561,7 +559,7 @@ public class LRTestHaplotype extends LRTest {
 		System.out.println("Reference Haplotype: " + lrht.getHaplotypeDesc(haplotypeFrequencyData.getMiddle(), variants));
 
 		// prune haplotypes, covariates and disease status
-		DiseaseStatus[] remainingdiseaseStatus = new DiseaseStatus[keepTheseIndividuals.size()];
+		DiseaseStatus[][] remainingdiseaseStatus = new DiseaseStatus[keepTheseIndividuals.size()][1];
 		DoubleMatrix2D remainingCovariates = new DenseDoubleMatrix2D(keepTheseIndividuals.size(), finalCovariates.columns());
 		DoubleMatrix2D haplotypeMatrix = new DenseDoubleMatrix2D(keepTheseIndividuals.size(), haplotypesAboveThreshold.size());
 		BitVector[][] remainingHaplotypes = new BitVector[keepTheseIndividuals.size()][2];
@@ -587,13 +585,14 @@ public class LRTestHaplotype extends LRTest {
 
 				remainingHaplotypes[ictr] = haps;
 
-				remainingdiseaseStatus[ictr] = finalDiseaseStatus[i];
+				remainingdiseaseStatus[ictr][0] = finalDiseaseStatus[i][0];
 				for (int c = 0; c < finalCovariates.columns(); c++) {
 					remainingCovariates.setQuick(ictr, c, finalCovariates.getQuick(i, c));
 				}
 				ictr++;
 			}
 		}
+
 		finalDiseaseStatus = remainingdiseaseStatus;
 		finalCovariates = remainingCovariates;
 

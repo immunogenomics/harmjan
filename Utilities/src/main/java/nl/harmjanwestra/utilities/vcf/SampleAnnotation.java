@@ -8,7 +8,7 @@ import nl.harmjanwestra.utilities.enums.Gender;
  * Created by hwestra on 9/7/16.
  */
 public class SampleAnnotation {
-	private DiseaseStatus[] sampleDiseaseStatus;
+	private DiseaseStatus[][] sampleDiseaseStatus;
 	private Gender[] individualGender;
 	private String[] sampleName;
 
@@ -22,11 +22,11 @@ public class SampleAnnotation {
 
 	private DoubleMatrix2D covariates;
 
-	public DiseaseStatus[] getSampleDiseaseStatus() {
+	public DiseaseStatus[][] getSampleDiseaseStatus() {
 		return sampleDiseaseStatus;
 	}
 
-	public void setSampleDiseaseStatus(DiseaseStatus[] sampleDiseaseStatus) {
+	public void setSampleDiseaseStatus(DiseaseStatus[][] sampleDiseaseStatus) {
 		this.sampleDiseaseStatus = sampleDiseaseStatus;
 	}
 

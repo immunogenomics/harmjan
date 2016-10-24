@@ -28,7 +28,6 @@ public class BaseAnnot {
 	}
 
 
-
 	// TODO: AT / GC SNPs??
 	public static Boolean flipalleles(String allelesSNP1, String alleleAssessedSNP1, String allelesSNP2, String alleleAssessedSNP2) {
 
@@ -220,5 +219,13 @@ public class BaseAnnot {
 			output[i] = toByte(alleleStr[i]);
 		}
 		return output;
+	}
+
+	public static boolean isDNABase(double v) {
+		if (v == A || v == C || v == T || v == G) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

@@ -263,16 +263,26 @@ public class LRTest {
 			excl.close();
 			System.out.println("Loaded: " + excludeTheseSamples.size() + " samples to exclude from " + options.getSamplesToExclude());
 		}
-		HashMap<String, DiseaseStatus> diseaseStatus = new HashMap<String, DiseaseStatus>();
+		HashMap<String, DiseaseStatus[]> diseaseStatus = new HashMap<String, DiseaseStatus[]>();
 
 		// load disease status
 		TextFile tf = new TextFile(options.getDiseaseStatusFile(), TextFile.R);
 		String[] elems = tf.readLineElems(Strings.tab);
 		while (elems != null) {
 			String sample = elems[0];
-			String statusStr = elems[1];
 			if (excludeTheseSamples == null || !excludeTheseSamples.contains(sample)) {
-				diseaseStatus.put(sample, DiseaseStatus.parseStatus(statusStr));
+				DiseaseStatus[] sampleDiseaseStatus;
+				if (elems.length > 2) {
+					sampleDiseaseStatus = new DiseaseStatus[elems.length - 1];
+					for (int i = 1; i < elems.length; i++) {
+						sampleDiseaseStatus[i - 1] = DiseaseStatus.parseStatus(elems[i]);
+					}
+				} else {
+					String statusStr = elems[1];
+					sampleDiseaseStatus = new DiseaseStatus[1];
+					sampleDiseaseStatus[0] = DiseaseStatus.parseStatus(statusStr);
+				}
+				diseaseStatus.put(sample, sampleDiseaseStatus);
 			}
 			elems = tf.readLineElems(Strings.tab);
 		}
@@ -378,7 +388,7 @@ public class LRTest {
 			System.out.println("Problem with matching samples...");
 			return false;
 		} else {
-			DiseaseStatus[] finalDiseaseStatus = new DiseaseStatus[sampleToIntGenotypes.size()];
+			DiseaseStatus[][] finalDiseaseStatus = new DiseaseStatus[sampleToIntGenotypes.size()][0];
 			DoubleMatrix2D finalCovariates = new DenseDoubleMatrix2D(sampleToIntGenotypes.size(), covariates.columns());
 
 			TextFile sampleListOut = new TextFile(options.getOutputdir() + "samplelist.txt", TextFile.W);
@@ -410,10 +420,12 @@ public class LRTest {
 					id = sampleToIntGenotypes.get(altToSample.get(sample));
 				}
 				if (id != null) {
-					finalDiseaseStatus[id] = diseaseStatus.get(sample);
-					if (finalDiseaseStatus[id].equals(DiseaseStatus.CONTROL)) {
+
+
+					finalDiseaseStatus[id][0] = diseaseStatus.get(sample)[0];
+					if (finalDiseaseStatus[id][0].equals(DiseaseStatus.CONTROL)) {
 						nrControls++;
-					} else if (finalDiseaseStatus[id].equals(DiseaseStatus.CASE)) {
+					} else if (finalDiseaseStatus[id][0].equals(DiseaseStatus.CASE)) {
 						nrCases++;
 					} else {
 						nrUnknown++;

@@ -36,7 +36,7 @@ public class LRTestHaploTestTask {
 			ArrayList<BitVector> haplotypesToTest,
 			ArrayList<BitVector> conditionalHaplotypes,
 			BitVector[][] sampleData,
-			DiseaseStatus[] finalDiseaseStatus,
+			DiseaseStatus[][] finalDiseaseStatus,
 			DoubleMatrix2D finalCovariates,
 
 			int startpos,
@@ -140,10 +140,10 @@ public class LRTestHaploTestTask {
 	}
 
 	public Pair<DoubleMatrix2D, double[]> prepareMatrices(DoubleMatrix2D x,
-	                                                      int[] left,
-	                                                      DoubleMatrix2D conditionalDosages,
-	                                                      DiseaseStatus[] finalDiseaseStatus,
-	                                                      DoubleMatrix2D finalCovariates) {
+														  int[] left,
+														  DoubleMatrix2D conditionalDosages,
+														  DiseaseStatus[][] finalDiseaseStatus,
+														  DoubleMatrix2D finalCovariates) {
 
 		// prepare genotype matrix
 		HashSet<Integer> missingGenotypeIds = new HashSet<Integer>();
@@ -165,7 +165,7 @@ public class LRTestHaploTestTask {
 		if (missingGenotypeIds.isEmpty()) {
 			double[] y = new double[finalDiseaseStatus.length];
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
-				y[i] = finalDiseaseStatus[i].getNumber();
+				y[i] = finalDiseaseStatus[i][0].getNumber();
 			}
 			return new Pair<>(x, y);
 		} else {
@@ -179,7 +179,7 @@ public class LRTestHaploTestTask {
 			int ctr = 0;
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
 				if (!missingGenotypeIds.contains(i)) {
-					y[ctr] = finalDiseaseStatus[i].getNumber();
+					y[ctr] = finalDiseaseStatus[i][0].getNumber();
 					ctr++;
 				}
 			}
@@ -242,10 +242,10 @@ public class LRTestHaploTestTask {
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-	                                       double[] y,
-	                                       int firstColumnToRemove,
-	                                       int lastColumnToRemove,
-	                                       double maf) {
+										   double[] y,
+										   int firstColumnToRemove,
+										   int lastColumnToRemove,
+										   double maf) {
 
 
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
@@ -375,9 +375,9 @@ public class LRTestHaploTestTask {
 
 
 	public Pair<DoubleMatrix2D, DoubleMatrix2D> getHaplotypeData(BitVector haplotypeToTest,
-	                                                             BitVector referenceHaplotype,
-	                                                             ArrayList<BitVector> allHaplotypes,
-	                                                             BitVector[][] sampleData) {
+																 BitVector referenceHaplotype,
+																 ArrayList<BitVector> allHaplotypes,
+																 BitVector[][] sampleData) {
 
 		DoubleMatrix2D haplotypeAlleles = new DenseDoubleMatrix2D(sampleData.length, 2);
 		DoubleMatrix2D haplotypeDosages = null;
