@@ -138,7 +138,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		}
 		// now append covariates
 		DoubleMatrix2D finalCovariates = sampleAnnotation.getCovariates();
-		DiseaseStatus[] finalDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
+		DiseaseStatus[][] finalDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
 
 		x = DoubleFactory2D.dense.appendColumns(x, finalCovariates);
 
@@ -150,7 +150,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		if (missingGenotypeIds.isEmpty()) {
 			double[] y = new double[finalDiseaseStatus.length];
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
-				y[i] = finalDiseaseStatus[i].getNumber();
+				y[i] = finalDiseaseStatus[i][0].getNumber();
 			}
 			return new Pair<>(x, y);
 		} else {
@@ -164,7 +164,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			int ctr = 0;
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
 				if (!missingGenotypeIds.contains(i)) {
-					y[ctr] = finalDiseaseStatus[i].getNumber();
+					y[ctr] = finalDiseaseStatus[i][0].getNumber();
 					ctr++;
 				}
 			}

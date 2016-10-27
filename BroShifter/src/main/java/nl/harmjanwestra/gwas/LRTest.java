@@ -420,8 +420,7 @@ public class LRTest {
 					id = sampleToIntGenotypes.get(altToSample.get(sample));
 				}
 				if (id != null) {
-
-
+					finalDiseaseStatus[id] = new DiseaseStatus[1];
 					finalDiseaseStatus[id][0] = diseaseStatus.get(sample)[0];
 					if (finalDiseaseStatus[id][0].equals(DiseaseStatus.CONTROL)) {
 						nrControls++;
@@ -695,7 +694,6 @@ public class LRTest {
 							System.exit(-1);
 						}
 					} else {
-						System.exit(-1);
 						bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion, null);
 						bestVariantLastIter = bestAssocLastIter.getLeft();
 					}
