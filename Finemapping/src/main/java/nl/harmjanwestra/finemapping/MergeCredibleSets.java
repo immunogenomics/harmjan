@@ -26,27 +26,43 @@ import java.util.*;
  */
 public class MergeCredibleSets {
 
-	int promotordistance = 2500;
+	static boolean windows = true;
+	int promotordistance = 1000;
 
 	public static void main(String[] args) {
-		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-//		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
-		String genenames = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
-		String geneAnnotation = "/Data/Ref/Annotation/UCSC/genes.gtf";
+
 
 		try {
 			MergeCredibleSets c = new MergeCredibleSets();
 //			c.run(bedregions, assocfiles, datasetnames, genenames, outfile);
 
 
+			String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+//		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
+			String genenames = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
+			String geneAnnotation = "/Data/Ref/Annotation/UCSC/genes.gtf";
 			String outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets.txt";
 			String outplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-plot-2k5promoter.pdf";
 			String[] assocfiles = new String[]{
 					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
 					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
 					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz"
-
 			};
+			if (windows) {
+				bedregions = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\LocusDefinitions\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+				genenames = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\AllLoci-GenesPerLocus.txt";
+				geneAnnotation = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\genes.gtf.gz";
+
+				outfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-09-06-SummaryStats\\NormalHWEP1e4\\MergedCredibleSets\\mergedCredibleSets.txt";
+				outplot = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-09-06-SummaryStats\\NormalHWEP1e4\\MergedCredibleSets\\mergedCredibleSets-plot-2k5promoter.pdf";
+				assocfiles = new String[]{
+						"D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-09-06-SummaryStats\\NormalHWEP1e4\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+						"D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-09-06-SummaryStats\\NormalHWEP1e4\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+						"D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-09-06-SummaryStats\\NormalHWEP1e4\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
+				};
+			}
+
+
 			String[] datasetnames = new String[]{
 					"RA",
 					"T1D",
@@ -55,21 +71,23 @@ public class MergeCredibleSets {
 			double threshold = 7.5E-7;
 			int nrVariantsInCredibleSet = 10;
 			double maxPosteriorCredibleSet = 0.9;
-//			c.run(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet);
-			c.makePlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+			c.run(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			c.makePlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (DocumentException e) {
-			e.printStackTrace();
+//		} catch (DocumentException e) {
+//			e.printStackTrace();
 		}
 	}
 
 	public void run(String bedregions,
-					String[] assocFiles,
-					String[] datasetNames,
-					String genenamefile,
-					String outfile, double maxPosteriorCredibleSet, int maxNrVariantsInCredibleSet) throws IOException {
+	                String[] assocFiles,
+	                String[] datasetNames,
+	                String genenamefile,
+	                String outfile, double maxPosteriorCredibleSet, int maxNrVariantsInCredibleSet, String annot) throws IOException {
 
+		GTFAnnotation annotation = new GTFAnnotation(annot);
+		TreeSet<Gene> genes = annotation.getGeneTree();
 
 		HashMap<String, String> locusToGene = new HashMap<String, String>();
 		TextFile genefiletf = new TextFile(genenamefile, TextFile.R);
@@ -121,11 +139,14 @@ public class MergeCredibleSets {
 		int len = maxNrVariantsInCredibleSet;
 		TextFile out = new TextFile(outfile, TextFile.W);
 		TextFile outg = new TextFile(outfile + "-genes.txt", TextFile.W);
+		TextFile outa = new TextFile(outfile + "-coding.txt", TextFile.W);
+		TextFile outi = new TextFile(outfile + "-indel.txt", TextFile.W);
 		String header2 = "\t\t";
 
 		String header1 = "region\tgene";
 		for (int i = 0; i < data.length; i++) {
 			header2 += datasetNames[i]
+					+ "\t"
 					+ "\t"
 					+ "\t"
 					+ "\t"
@@ -143,8 +164,10 @@ public class MergeCredibleSets {
 					"\tAFControls" +
 					"\tOR" +
 					"\tPval" +
-					"\tPosterior";
+					"\tPosterior" +
+					"\tAnnotation";
 		}
+
 		out.writeln(header2);
 		out.writeln(header1);
 		for (int regionId = 0; regionId < regions.size(); regionId++) {
@@ -152,9 +175,37 @@ public class MergeCredibleSets {
 			if (regionsWithCredibleSetsHash.contains(region)) {
 				// region nrCrediblesetVariants posteriorsumtop5 topvariants alleles or pval posterior
 				ArrayList<ArrayList<AssociationResult>> resultsPerDs = new ArrayList<>();
+				SNPClass[][][] variantAnnotations = new SNPClass[data.length][][];
 				for (int i = 0; i < data.length; i++) {
 					ArrayList<AssociationResult> topResults = getTopVariants(data, i, regionId, len);
 					resultsPerDs.add(topResults);
+
+					ArrayList<SNPFeature> variants = new ArrayList<>();
+
+					for (int q = 0; q < topResults.size(); q++) {
+						variants.add(topResults.get(q).getSnp());
+					}
+					variantAnnotations[i] = annotateVariants(variants, region, genes);
+
+					for (int q = 0; q < variantAnnotations[i].length; q++) {
+						if (variantAnnotations[i][q][0] != null && variantAnnotations[i][q][0].equals(SNPClass.EXONIC)) {
+							AssociationResult r = topResults.get(q);
+							double p = r.getPosterior();
+							if (p > 0.20) {
+								String outln = datasetNames[i] + "\t" + region.toString() + "\t" + locusToGene.get(region.toString()) + "\t" + p + "\t" + r.getSnp().getName() + "\t" + r.getPval();
+								outa.writeln(outln);
+							}
+						} else if (variantAnnotations[i][q][2] != null && variantAnnotations[i][q][2].equals(SNPClass.INDEL)) {
+							AssociationResult r = topResults.get(q);
+							double p = r.getPosterior();
+							if (p > 0.20) {
+								String outln = datasetNames[i] + "\t" + region.toString() + "\t" + locusToGene.get(region.toString()) + "\t" + p + "\t" + r.getSnp().getName() + "\t" + r.getPval();
+								outi.writeln(outln);
+							}
+						}
+					}
+
+
 				}
 
 
@@ -189,6 +240,23 @@ public class MergeCredibleSets {
 						if (snpId == 0) {
 							ln = region.toString() + "\t" + locusToGene.get(region.toString());
 							for (int datasetId = 0; datasetId < data.length; datasetId++) {
+								String annotStr = "";
+								if (variantAnnotations[datasetId].length > snpId) {
+									SNPClass[] snpAnnotation = variantAnnotations[datasetId][snpId];
+									if (snpAnnotation != null) {
+										for (int a = 0; a < snpAnnotation.length; a++) {
+											if (snpAnnotation[a] != null) {
+												if (annotStr.length() == 0) {
+													annotStr += snpAnnotation[a].getName();
+												} else {
+													annotStr += ";" + snpAnnotation[a].getName();
+												}
+											}
+										}
+									}
+								}
+
+
 								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
 								ln += "\t" + crediblesets[datasetId][regionId].length
 										+ "\t" + sumsperregion[datasetId]
@@ -198,12 +266,29 @@ public class MergeCredibleSets {
 										+ "\t" + r.getSnp().getAFControls()
 										+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
 										+ "\t" + r.getLog10Pval()
-										+ "\t" + r.getPosterior();
+										+ "\t" + r.getPosterior()
+										+ "\t" + annotStr;
 								regionsums[datasetId] += r.getPosterior();
 							}
 						} else {
 
 							for (int datasetId = 0; datasetId < data.length; datasetId++) {
+								String annotStr = "";
+								if (variantAnnotations[datasetId].length > snpId) {
+									SNPClass[] snpAnnotation = variantAnnotations[datasetId][snpId];
+									if (snpAnnotation != null) {
+										for (int a = 0; a < snpAnnotation.length; a++) {
+											if (snpAnnotation[a] != null) {
+												if (annotStr.length() == 0) {
+													annotStr += snpAnnotation[a].getName();
+												} else {
+													annotStr += ";" + snpAnnotation[a].getName();
+												}
+											}
+										}
+									}
+								}
+
 								if (datasetId == 0) {
 									ln = "\t\t\t\t";
 								} else {
@@ -218,9 +303,11 @@ public class MergeCredibleSets {
 											+ "\t" + r.getSnp().getAFControls()
 											+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
 											+ "\t" + r.getLog10Pval()
-											+ "\t" + r.getPosterior();
+											+ "\t" + r.getPosterior()
+											+ "\t" + annotStr;
 								} else {
 									ln += "\t"
+											+ "\t"
 											+ "\t"
 											+ "\t"
 											+ "\t"
@@ -239,6 +326,8 @@ public class MergeCredibleSets {
 
 
 		}
+		outi.close();
+		outa.close();
 		outg.close();
 		out.close();
 
