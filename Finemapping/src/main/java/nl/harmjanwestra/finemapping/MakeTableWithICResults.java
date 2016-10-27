@@ -32,21 +32,21 @@ public class MakeTableWithICResults {
 			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chr";
 			String tabixSampleFile = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 
-			String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Normal/ComparisonsWithICAnalysis/";
-			String indir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Normal/";
+			String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ComparisonsWithICAnalysis/";
+			String indir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/";
 
 //			/// RA
-//			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
-//			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-//			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed";
-//			outfile = outdir + "2016-06-19-RA-LocusComparisonWithOkada-OkadaSignificant.txt";
-//			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
-//
-//			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
-//			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-//			locusFile = indir + "RA-assoc0.3-COSMO-significantregions-75e7.bed";
-//			outfile = outdir + "2016-06-19-RA-LocusComparisonWithOkada-SignificantLoci.txt";
-//			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
+			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed";
+			outfile = outdir + "2016-06-19-RA-LocusComparisonWithOkada-OkadaSignificant.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
+
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
+			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			locusFile = indir + "RA-significantloci-75e7.bed";
+			outfile = outdir + "2016-06-19-RA-LocusComparisonWithOkada-SignificantLoci.txt";
+			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
 //			// T1D
 			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
@@ -57,20 +57,20 @@ public class MakeTableWithICResults {
 
 			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
 			fmAssocFile = indir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = indir + "T1D-assoc0.3-COSMO-significantregions-75e7.bed";
+			locusFile = indir + "T1D-significantloci-75e7.bed";
 			outfile = outdir + "2016-06-19-T1D-LocusComparisonWithOnengutCC-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
 			// ComparisonsToMeta
 			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz";
 			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = indir + "META-assoc0.3-COSMO-significantregions-75e7.bed";
+			locusFile = indir + "META-significantloci-75e7.bed";
 			outfile = outdir + "2016-06-19-RA-LocusComparisonWithMeta-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
 			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz";
 			fmAssocFile = indir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = indir + "META-assoc0.3-COSMO-significantregions-75e7.bed";
+			locusFile = indir + "META-significantloci-75e7.bed";
 			outfile = outdir + "2016-06-19-T1D-LocusComparisonWithMeta-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
@@ -83,7 +83,6 @@ public class MakeTableWithICResults {
 
 		String[] header1 = new String[]{"",
 				"",
-				"", "",
 				"",
 				"", "",
 				"",
@@ -96,7 +95,6 @@ public class MakeTableWithICResults {
 		};
 		String[] header2 = new String[]{"",
 				"",
-				"", "",
 				"",
 				"", "",
 				"",
@@ -109,9 +107,8 @@ public class MakeTableWithICResults {
 		};
 		String[] header3 = new String[]{"Locus",
 				"TopVariantGWAS",
-				"TopVariantGWASPresentInRef", "TopVariantGWASMultiAllele",
 				"TopVariantFinemap",
-				"TopVariantFinemapPresentInRef", "TopVariantFinemapMultiAllele",
+				"AFCases", "AFControls","ImpQual",
 				"Distance",
 				"LD(dprime)",
 				"LD(rsquared)"
@@ -175,12 +172,15 @@ public class MakeTableWithICResults {
 				out.writeln(
 						region.toString()
 								+ "\t" + bestICResult.getSnp().toString()
-								+ "\t" + var1PresentInRef
-								+ "\t" + var1MultiAllele
+//								+ "\t" + var1PresentInRef
+//								+ "\t" + var1MultiAllele
 
 								+ "\t" + bestFMResult.getSnp().toString()
-								+ "\t" + var2PresentInRef
-								+ "\t" + var2MultiAllele
+								+ "\t" + bestFMResult.getSnp().getAFCases()
+								+ "\t" + bestFMResult.getSnp().getAFControls()
+								+ "\t" + bestFMResult.getSnp().getImputationQualityScore()
+//								+ "\t" + var2PresentInRef
+//								+ "\t" + var2MultiAllele
 
 								+ "\t" + (bestICResult.getSnp().getStart() - bestFMResult.getSnp().getStart())
 								+ "\t" + ld.getLeft()

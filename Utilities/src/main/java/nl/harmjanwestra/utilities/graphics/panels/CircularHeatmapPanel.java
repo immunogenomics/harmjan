@@ -1,5 +1,6 @@
 package nl.harmjanwestra.utilities.graphics.panels;
 
+import nl.harmjanwestra.utilities.enums.SNPClass;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
@@ -18,25 +19,31 @@ import java.util.HashMap;
 public class CircularHeatmapPanel extends Panel {
 
 
-	private double[][][] data; // format [dataset][bin][subbin]
+	private double[][][] data; // format [dataset][group][bin]
 	private String[] rownames;
-	private String[] colnames;
+
+	private String[] groupnames;
+
+	private String[][] binnames;
+	private SNPClass[][][] annotations; // [group][bin][annotations]
 	private ArrayList<Triple<Integer, Integer, String>> groups;
+	private Range range;
+
 
 	public CircularHeatmapPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
 	}
 
 
-	public void setData(String[] rowNames, String[] columnNames, double[][][] data) {
+	public void setData(String[] rowNames, String[] groupnames, double[][][] data) {
 		this.rownames = rowNames;
-		this.colnames = columnNames;
+		this.groupnames = groupnames;
 		this.data = data;
 	}
 
-	public void setData(String[] rowNames, String[] columnNames, double[][] data) {
+	public void setData(String[] rowNames, String[] groupnames, double[][] data) {
 		this.rownames = rowNames;
-		this.colnames = columnNames;
+		this.groupnames = groupnames;
 
 		this.data = new double[data.length][data[0].length][1];
 		for (int r = 0; r < data.length; r++) {
@@ -46,10 +53,23 @@ public class CircularHeatmapPanel extends Panel {
 		}
 	}
 
+	public void setBinnames(String[][] binnames) {
+		this.binnames = binnames;
+	}
+
+	public void setAnnotations(SNPClass[][][] annotations) {
+		this.annotations = annotations;
+	}
+
 	@Override
 	public void draw(DefaultGraphics g) {
 
-		Range rangeValues = new Range(data);
+		Range rangeValues = null;
+		if (range != null) {
+			rangeValues = range;
+		} else {
+			rangeValues = new Range(data);
+		}
 
 		int nrRows = data.length + 1;
 //		int nrCols = data[0].length + 1;
@@ -105,6 +125,13 @@ public class CircularHeatmapPanel extends Panel {
 			}
 		}
 
+		int minalpha = 25;
+		double[] alphabins = new double[5];
+		for (int d = 0; d < alphabins.length; d++) {
+			double perc = (1d / alphabins.length) * (d + 1);
+			alphabins[d] = minalpha + ((255 - minalpha) * perc);
+		}
+
 		// draw values per dataset.
 		for (int dataset = 0; dataset < data.length; dataset++) {
 			// plot a white circle first
@@ -118,70 +145,63 @@ public class CircularHeatmapPanel extends Panel {
 
 			Color color = theme.getColor(dataset);
 
-			for (int column = 0; column < data[dataset].length; column++) {
+			for (int groupNum = 0; groupNum < data[dataset].length; groupNum++) {
 
-				int group = 0;
+				// TODO: need to get rid of this
+				int groupId = 0;
 				if (colToGroup != null) {
-					group = colToGroup.get(column);
+					groupId = colToGroup.get(groupNum);
 				}
 
-				double angle0 = angleOffSet - (degreesPerSegment * column) - (group * degreesPerGroup);
-				double degreesPerSubCol = degreesPerSegment / data[dataset][column].length;
-				System.out.println("colvsangle 0:\t" + column + "\t" + group + "\t" + angle0 + "\t" + degreesPerSegment + "\t" + degreesPerGroup);
-				for (int subcol = 0; subcol < data[dataset][column].length; subcol++) {
+				double angle0 = angleOffSet - (degreesPerSegment * groupNum) - (groupId * degreesPerGroup);
+				double degreesPerSubCol = degreesPerSegment / data[dataset][groupNum].length;
+				System.out.println("colvsangle 0:\t" + groupNum + "\t" + groupId + "\t" + angle0 + "\t" + degreesPerSegment + "\t" + degreesPerGroup);
+				for (int bin = 0; bin < data[dataset][groupNum].length; bin++) {
+					double angle1 = (angle0 - (degreesPerSubCol * bin));
+					double value = data[dataset][groupNum][bin];
 
-
-					double angle1 = (angle0 - (degreesPerSubCol * subcol));
-//					System.out.println("colvsangle 1:\t" + column + "\t" + angle1 + "\t" + degreesPerSubCol);
-
-
-					double value = data[dataset][column][subcol];
-
-
-					double perc = rangeValues.getRelativePositionY(value);
-
-					double alpha = 255 * perc;
-					if (alpha < 0) {
-						alpha = 0;
-					} else if (alpha > 255) {
-						alpha = 255;
-					}
-
-					Color color2 = new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) Math.floor(alpha));
-
-					if (value >= 0) {
-						g2d.setColor(color2);
-
+					if (Double.isNaN(value)) {
+						// plot a grey thingy
+						g2d.setColor(new Color(0, 0, 220));
 						Arc2D arc = new Arc2D.Double(x0, y0, dsWidth, dsWidth, angle1, -degreesPerSubCol, Arc2D.PIE);
 						g2d.fill(arc);
-
 						if (data[dataset].length < 200) {
-
 							g2d.setColor(new Color(220, 220, 220));
 							g2d.draw(arc);
 						}
+					} else {
+						double perc = rangeValues.getRelativePositionY(value);
 
+						int alphabin = (int) Math.floor(perc * alphabins.length);
+						if (alphabin >= alphabins.length) {
+							alphabin = alphabins.length - 1;
+						}
+
+						Color color2 = new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) Math.floor(alphabins[alphabin]));
+
+						if (value >= 0) {
+							g2d.setColor(color2);
+
+							Arc2D arc = new Arc2D.Double(x0, y0, dsWidth, dsWidth, angle1, -degreesPerSubCol, Arc2D.PIE);
+							g2d.fill(arc);
+
+							if (data[dataset].length < 200) {
+
+								g2d.setColor(new Color(220, 220, 220));
+								g2d.draw(arc);
+							}
+						} else {
+							System.out.println("Did not expect value: " + value + "\t" + groupNum + "\t" + bin);
+						}
 					}
+
+
 				}
 
 			}
 		}
 
-//		// draw sector lines
-//		g2d.setColor(theme.getDarkGrey());
-//		for (int column = 0; column < data[0].length; column++) {
-//			double angle0 = degreesPerSegment * column;
-//
-//			int originX = (int) Math.floor(startX + (maxWidth / 2));
-//			int originY = (int) Math.floor(startY + (maxWidth / 2));
-//			Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle((maxWidth / 2), originX, originY, angle0);
-//
-//			g2d.drawLine(originX, originY, xy0.getLeft(), xy0.getRight());
-//
-//		}
-
 		// fill inner circle with white
-
 		int dsWidth = (int) Math.floor(maxWidth - (widthPerDataset * data.length));
 		double remainder = (maxWidth - dsWidth) / 2;
 		int x0 = (int) Math.floor(startX + remainder);
@@ -234,7 +254,6 @@ public class CircularHeatmapPanel extends Panel {
 		FontMetrics metrics = g2d.getFontMetrics(theme.getLargeFont());
 
 		g2d.setColor(theme.getDarkGrey());
-
 		for (int d = 0; d < rownames.length; d++) {
 
 			int strlen = metrics.stringWidth(rownames[d]) / 2;
@@ -251,53 +270,99 @@ public class CircularHeatmapPanel extends Panel {
 			int midpointY2 = (int) Math.floor(startY + (remainder2));
 			int actualMidPointY1 = (midpointY1 + midpointY2) / 2;
 			g2d.drawString(rownames[d], midpointX, actualMidPointY1);
-
 		}
 
-		// draw column names
-		for (int column = 0; column < data[0].length; column++) {
+		// draw group names
+		for (int group = 0; group < data[0].length; group++) {
 
-			double angle0 = degreesPerSegment * column;
+			double angle0 = degreesPerSegment * group;
 			angle0 -= (degreesForRowNames) + (degreesForRowNames / 2) - (degreesPerSegment / 2);
 
-			int group = 0;
+			int groupId = 0;
 			if (colToGroup != null) {
-				group = colToGroup.get(column);
+				groupId = colToGroup.get(group);
 			}
 
-			angle0 += (group * degreesPerGroup);
+			angle0 += (groupId * degreesPerGroup);
 
 			// use the outer edge
 			double originX = startX + (maxWidth / 2);
 			double originY = startX + (maxWidth / 2);
 
+			double radius = (double) (maxWidth + 30) / 2;
+			Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius, originX, originY, angle0);
+			drawRotate(g2d, xy0.getLeft(), xy0.getRight(), angle0, groupnames[group]);
+			System.out.println(group + "\t" + groupnames[group] + "\t" + angle0);
+		}
 
-//			g2d.drawString(colnames[column], xy0.getLeft(), xy0.getRight());
+		// draw annotations, if any....
+		if (annotations != null) {
+
+			double radius = (double) (maxWidth + 30) / 2;
+
+			// [group][bin][annotations]
+			for (int groupNum = 0; groupNum < annotations.length; groupNum++) {
+
+				// TODO: need to get rid of this
+				int groupId = 0;
+				if (colToGroup != null) {
+					groupId = colToGroup.get(groupNum);
+				}
+
+				double angle0 = angleOffSet - (degreesPerSegment * groupNum) - (groupId * degreesPerGroup);
+				angle0 = (degreesPerSegment * groupNum) + (groupId * degreesPerGroup) + 90 + (degreesForRowNames / 2);
+				double degreesPerSubCol = degreesPerSegment / annotations[groupNum].length;
 
 
-			// g2d.drawLine(originXi, originYi, xy0.getLeft(), xy0.getRight());
+				// iterate snps
+				for (int bin = 0; bin < annotations[groupNum].length; bin++) {
+					double angle1 = (angle0 + (degreesPerSubCol * bin)) + (degreesPerSubCol / 2);
+					System.out.println("colvsangle 0:\t" + groupNum + "\t" + groupId + "\t1: " + angle0 + "\t2: " + angle1 + "\t" + degreesPerSegment + "\t" + degreesPerGroup);
+					for (int a = 0; a < annotations[groupNum][bin].length; a++) {
 
 
-//			if (angle0 > 90) {
-//
-//
-////				angle0 = degreesPerSegment * column;
-////				angle0 -= (degreesForRowNames); // + (degreesForRowNames / 2) ;
-////				// angle0 += (degreesPerSegment);
-////				angle0 += (group * degreesPerGroup) - (degreesPerGroup / 2);
-//				double radius = (double) (maxWidth + 30) / 2;
-//				int strlen = metrics.stringWidth(colnames[column]);
-//				radius += strlen;
-//				Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius, originX, originY, angle0);
-//				angle0 += 180;
-//				drawRotate(g2d, xy0.getLeft(), xy0.getRight(), angle0, colnames[column]);
-//			} else {
-				double radius = (double) (maxWidth + 30) / 2;
-				Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius, originX, originY, angle0);
-				drawRotate(g2d, xy0.getLeft(), xy0.getRight(), angle0, colnames[column]);
-//			}
-			System.out.println(column + "\t" + colnames[column] + "\t" + angle0);
+						if(bin == 3 && groupNum == 5){
 
+							System.out.println("Found it");
+						}
+
+						SNPClass c = annotations[groupNum][bin][a];
+
+						double radius2 = radius + (a * 15);
+						// use the outer edge
+						double originX = startX + (maxWidth / 2);
+						double originY = startX + (maxWidth / 2);
+						Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius2, originX, originY, angle1 - 180);
+
+						int circlesize = 8;
+						int halfcircle = 4;
+						g2d.setColor(new Color(200, 200, 200));
+						g2d.drawOval(xy0.getLeft() - halfcircle, xy0.getRight() - halfcircle, circlesize, circlesize);
+
+						if (c != null && !c.equals(SNPClass.NONCODING) && !c.equals(SNPClass.INTRONIC)) {
+							Color col = theme.getColor(c.getNumber());
+							g2d.setColor(col);
+							g2d.fillOval(xy0.getLeft() - halfcircle, xy0.getRight() - halfcircle, circlesize, circlesize);
+						}
+					}
+				}
+			}
+		}
+
+		// draw a small legend in the top left corner
+		for (int d = 0; d < data.length; d++) {
+			Color color = theme.getColor(d);
+			int y = (int) Math.floor(startY + (d * 15));
+
+			for (int q = 0; q < alphabins.length; q++) {
+
+
+
+				int x = (int) Math.floor(startX + (q * 10));
+				Color color2 = new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) Math.floor(alphabins[q]));
+				g2d.setColor(color2);
+				g2d.fillRect(x, y, 10, 10);
+			}
 
 		}
 
@@ -306,5 +371,9 @@ public class CircularHeatmapPanel extends Panel {
 
 	public void setGroups(ArrayList<Triple<Integer, Integer, String>> groups) {
 		this.groups = groups;
+	}
+
+	public void setRange(Range range) {
+		this.range = range;
 	}
 }

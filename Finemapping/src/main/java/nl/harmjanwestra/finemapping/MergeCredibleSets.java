@@ -6,30 +6,33 @@ import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.AssociationResultPValuePair;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.enums.SNPClass;
+import nl.harmjanwestra.utilities.enums.Strand;
+import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
+import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.CircularHeatmapPanel;
+import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * Created by hwestra on 9/7/16.
  */
 public class MergeCredibleSets {
 
+	int promotordistance = 2500;
 
 	public static void main(String[] args) {
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+//		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
 		String genenames = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
-
+		String geneAnnotation = "/Data/Ref/Annotation/UCSC/genes.gtf";
 
 		try {
 			MergeCredibleSets c = new MergeCredibleSets();
@@ -37,7 +40,7 @@ public class MergeCredibleSets {
 
 
 			String outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets.txt";
-			String outplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-plot.pdf";
+			String outplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-plot-2k5promoter.pdf";
 			String[] assocfiles = new String[]{
 					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
 					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
@@ -52,8 +55,8 @@ public class MergeCredibleSets {
 			double threshold = 7.5E-7;
 			int nrVariantsInCredibleSet = 10;
 			double maxPosteriorCredibleSet = 0.9;
-			c.run(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet);
-			c.makePlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet);
+//			c.run(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet);
+			c.makePlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
@@ -90,6 +93,7 @@ public class MergeCredibleSets {
 
 		// [dataset][region][variants]
 		AssociationResult[][][] crediblesets = new AssociationResult[assocFiles.length][regions.size()][];
+
 		AssociationResult[][][] data = new AssociationResult[assocFiles.length][regions.size()][];
 
 
@@ -128,11 +132,15 @@ public class MergeCredibleSets {
 					+ "\t"
 					+ "\t"
 					+ "\t"
+					+ "\t"
+					+ "\t"
 					+ "\t";
 			header1 += "\tNrVariantsInCredibleSet" +
-					"\tSumPosteriorTop5Variants" +
+					"\tSumPosteriorTop" + maxNrVariantsInCredibleSet + "Variants" +
 					"\tVariants" +
 					"\tAlleles" +
+					"\tAFCases" +
+					"\tAFControls" +
 					"\tOR" +
 					"\tPval" +
 					"\tPosterior";
@@ -186,6 +194,8 @@ public class MergeCredibleSets {
 										+ "\t" + sumsperregion[datasetId]
 										+ "\t" + r.getSnp().toString()
 										+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
+										+ "\t" + r.getSnp().getAFCases()
+										+ "\t" + r.getSnp().getAFControls()
 										+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
 										+ "\t" + r.getLog10Pval()
 										+ "\t" + r.getPosterior();
@@ -204,11 +214,15 @@ public class MergeCredibleSets {
 								if (regionsums[datasetId] < maxPosteriorCredibleSet) {
 									ln += r.getSnp().toString()
 											+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
+											+ "\t" + r.getSnp().getAFCases()
+											+ "\t" + r.getSnp().getAFControls()
 											+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
 											+ "\t" + r.getLog10Pval()
 											+ "\t" + r.getPosterior();
 								} else {
 									ln += "\t"
+											+ "\t"
+											+ "\t"
 											+ "\t"
 											+ "\t"
 											+ "\t";
@@ -231,8 +245,11 @@ public class MergeCredibleSets {
 	}
 
 
-	private void makePlot(String bedregions, String[] assocFiles, String[] datasetNames, String genenamefile, String outfile, double threshold, double maxPosteriorCredibleSet, int nrVariantsInCredibleSet) throws IOException, DocumentException {
+	private void makePlot(String bedregions, String[] assocFiles, String[] datasetNames, String genenamefile, String outfile, double threshold, double maxPosteriorCredibleSet, int nrVariantsInCredibleSet, String annot) throws IOException, DocumentException {
 
+
+		GTFAnnotation annotation = new GTFAnnotation(annot);
+		TreeSet<Gene> genes = annotation.getGeneTree();
 
 		HashMap<String, String> locusToGene = new HashMap<String, String>();
 		TextFile genefiletf = new TextFile(genenamefile, TextFile.R);
@@ -292,10 +309,12 @@ public class MergeCredibleSets {
 
 		double[][][] dataForPlotting = new double[data.length][regionsWithCredibleSets.size()][];
 		double[][][] dataForPlotting2 = new double[data.length][regionsWithCredibleSets.size()][];
+		SNPClass[][][] snpClasses = new SNPClass[regionsWithCredibleSets.size()][][]; // [regions][snps][annotations]
+		String[][] snpNames = new String[regionsWithCredibleSets.size()][];
 
 		int regionCtr = 0;
 		ArrayList<Triple<Integer, Integer, String>> groups = new ArrayList<Triple<Integer, Integer, String>>();
-		ArrayList<String> allColNames = new ArrayList<>();
+
 		ArrayList<String> groupnames = new ArrayList<>();
 		int prevCtr = 0;
 		for (int regionId = 0; regionId < regions.size(); regionId++) {
@@ -304,7 +323,10 @@ public class MergeCredibleSets {
 				// region nrCrediblesetVariants posteriorsumtop5 topvariants alleles or pval posterior
 				ArrayList<ArrayList<AssociationResult>> resultsPerDs = new ArrayList<>();
 				HashMap<String, Integer> variantToInt = new HashMap<String, Integer>();
-				ArrayList<String> variantsInRegion = new ArrayList<String>();
+
+
+				ArrayList<String> variantsNamesInRegion = new ArrayList<String>();
+				ArrayList<SNPFeature> variantsInRegion = new ArrayList<SNPFeature>();
 				for (int i = 0; i < data.length; i++) {
 					ArrayList<AssociationResult> topResults = getTopVariants(data, i, regionId, len);
 					resultsPerDs.add(topResults);
@@ -317,18 +339,27 @@ public class MergeCredibleSets {
 							boolean isSignificant = (topResults.get(s).getPval() < threshold);
 							if (!variantToInt.containsKey(variant) && isSignificant) {
 								variantToInt.put(variant, variantToInt.size());
-								variantsInRegion.add(variant);
+								variantsInRegion.add(topResults.get(s).getSnp());
+								variantsNamesInRegion.add(variant);
 							}
 						}
 						sum += posterior;
 					}
 				}
 
-				allColNames.addAll(variantsInRegion);
+				snpNames[regionCtr] = variantsNamesInRegion.toArray(new String[0]);
+				snpClasses[regionCtr] = annotateVariants(variantsInRegion, region, genes); //new SNPClass[variantToInt.size()];
+
 
 				for (int i = 0; i < data.length; i++) {
 					dataForPlotting[i][regionCtr] = new double[variantToInt.size()];
 					dataForPlotting2[i][regionCtr] = new double[variantToInt.size()];
+
+					// fill with nans
+					for (int q = 0; q < variantToInt.size(); q++) {
+						dataForPlotting[i][regionCtr][q] = Double.NaN;
+						dataForPlotting2[i][regionCtr][q] = Double.NaN;
+					}
 
 					ArrayList<AssociationResult> dsResults = resultsPerDs.get(i);
 					for (int s = 0; s < dsResults.size(); s++) {
@@ -343,11 +374,11 @@ public class MergeCredibleSets {
 								System.out.println();
 							} else {
 								if (dsResults.get(s).getPval() < threshold) {
-									dataForPlotting[i][regionCtr][variantId] = 0.10 + (0.90 * posterior);
+									dataForPlotting[i][regionCtr][variantId] = posterior;
 									dataForPlotting2[i][regionCtr][variantId] = 1;
 								} else {
-									dataForPlotting[i][regionCtr][variantId] = 0;
-									dataForPlotting2[i][regionCtr][variantId] = 0;
+									dataForPlotting[i][regionCtr][variantId] = Double.NaN;
+									dataForPlotting2[i][regionCtr][variantId] = Double.NaN;
 								}
 							}
 
@@ -373,7 +404,9 @@ public class MergeCredibleSets {
 
 		Grid grid = new Grid(1000, 1000, 1, 1, 100, 0);
 		CircularHeatmapPanel panel = new CircularHeatmapPanel(1, 1);
+		panel.setRange(new Range(0, 0, 1, 1));
 		panel.setData(datasetNames, groupnames.toArray(new String[0]), dataForPlotting);
+		panel.setAnnotations(snpClasses);
 		panel.setGroups(groups);
 		grid.addPanel(panel);
 		grid.draw(outfile);
@@ -381,10 +414,88 @@ public class MergeCredibleSets {
 		grid = new Grid(1000, 1000, 1, 1, 100, 0);
 		panel = new CircularHeatmapPanel(1, 1);
 		panel.setData(datasetNames, groupnames.toArray(new String[0]), dataForPlotting2);
+		panel.setAnnotations(snpClasses);
 		panel.setGroups(groups);
 		grid.addPanel(panel);
 		grid.draw(outfile + "-bin.pdf");
 
+	}
+
+	private SNPClass[][] annotateVariants(ArrayList<SNPFeature> variantsInRegion, Feature region, TreeSet<Gene> genes) {
+
+		if (region.getStart() == 204446380) {
+			System.out.println("Found it!");
+		}
+
+		Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
+		Gene geneStop = new Gene("", region.getChromosome(), Strand.POS, region.getStop(), region.getStop());
+		SortedSet<Gene> overlappingGenes = genes.subSet(geneStart, true, geneStop, true);
+		SNPClass[][] output = new SNPClass[variantsInRegion.size()][3];
+
+		// gene overlap
+		for (Gene g : overlappingGenes) {
+
+			for (int i = 0; i < variantsInRegion.size(); i++) {
+				boolean isGenic = false;
+				boolean isExonic = false;
+				SNPFeature variant = variantsInRegion.get(i);
+				if (variant.overlaps(g)) {
+					// get exons
+					isGenic = true;
+					ArrayList<Transcript> transcripts = g.getTranscripts();
+					for (Transcript t : transcripts) {
+						ArrayList<Exon> exons = t.getExons();
+						for (Exon e : exons) {
+							if (e.overlaps(variant)) {
+								isExonic = true;
+							}
+						}
+					}
+				} else {
+					// check whether it is in the promotor
+					Feature promotor = null;
+					if (g.getStrand().equals(Strand.POS)) {
+						promotor = new Feature(g.getChromosome(), g.getStart() - promotordistance, g.getStop());
+					} else {
+						promotor = new Feature(g.getChromosome(), g.getStart(), g.getStop() + promotordistance);
+					}
+					if (promotor.overlaps(variant)) {
+						output[i][1] = SNPClass.PROMOTER;
+					}
+				}
+
+				// give priority to coding, exonic annotation, if for example the variant overlaps two genes.
+				if (output[i][0] == null || !output[i][0].equals(SNPClass.EXONIC)) {
+					if (isGenic) {
+						if (isExonic) {
+							output[i][0] = SNPClass.EXONIC;
+						} else {
+							output[i][0] = SNPClass.INTRONIC;
+						}
+					} else {
+						output[i][0] = SNPClass.NONCODING;
+					}
+				}
+			}
+
+			// assign indel status
+			for (int i = 0; i < variantsInRegion.size(); i++) {
+				SNPFeature variant = variantsInRegion.get(i);
+				String[] alleles = variant.getAlleles();
+				boolean indel = false;
+				for (String s : alleles) {
+					if (s.length() > 1) {
+						indel = true;
+					}
+				}
+				if (indel) {
+					output[i][2] = SNPClass.INDEL;
+				}
+			}
+
+		}
+
+		return output;
 	}
 
 	private ArrayList<AssociationResult> getTopVariants(AssociationResult[][][] data, int i, int d, int len) {

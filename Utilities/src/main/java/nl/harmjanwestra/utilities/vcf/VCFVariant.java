@@ -844,7 +844,7 @@ public class VCFVariant {
 
 	public void recalculateMAFAndCallRate() {
 
-		DiseaseStatus[] sampleDiseaseStatus = null;
+		DiseaseStatus[][] sampleDiseaseStatus = null;
 		Gender[] individualGender = null;
 		if (sampleAnnotation != null) {
 
@@ -903,7 +903,7 @@ public class VCFVariant {
 				gender = individualGender[i];
 			}
 			if (sampleDiseaseStatus != null) {
-				diseaseStatus = sampleDiseaseStatus[i];
+				diseaseStatus = sampleDiseaseStatus[0][i];
 			}
 
 			int gt1 = (int) genotypeAlleles.getQuick(i, 0);
@@ -1060,7 +1060,7 @@ public class VCFVariant {
 	public void calculateHWEP() {
 
 
-		DiseaseStatus[] sampleDiseaseStatus = null;
+		DiseaseStatus[][] sampleDiseaseStatus = null;
 		if (sampleAnnotation != null) {
 			sampleDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
 			if (sampleAnnotation.getSampleDiseaseStatus() != null && sampleAnnotation.getSampleDiseaseStatus().length != genotypeAlleles.rows()) {
@@ -1091,7 +1091,7 @@ public class VCFVariant {
 				int a1 = (int) genotypeAlleles.getQuick(i, 0);
 				DiseaseStatus diseaseStatus = null;
 				if (sampleDiseaseStatus != null) {
-					diseaseStatus = sampleDiseaseStatus[i];
+					diseaseStatus = sampleDiseaseStatus[0][i];
 				}
 				if (a1 != -1) {
 					int a2 = (int) genotypeAlleles.getQuick(i, 1);
@@ -1170,7 +1170,7 @@ public class VCFVariant {
 			for (int i = 0; i < genotypeAlleles.rows(); i++) {
 				DiseaseStatus diseaseStatus = null;
 				if (sampleDiseaseStatus != null) {
-					diseaseStatus = sampleDiseaseStatus[i];
+					diseaseStatus = sampleDiseaseStatus[0][i];
 				}
 				int a1 = (int) genotypeAlleles.getQuick(i, 0);
 				if (a1 != -1) {
