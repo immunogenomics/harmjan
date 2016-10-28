@@ -77,7 +77,7 @@ public class Bonferroninator {
 			String annot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/genes.gtf.gz";
 			GTFAnnotation annotation = new GTFAnnotation(annot);
 			TreeSet<Gene> genes = annotation.getGeneTree();
-
+			int maxiter = 4;
 			for (int d = 0; d < diseases.length; d++) {
 
 				HashMap<String, Double> thresholds = new HashMap<String, Double>();
@@ -93,10 +93,10 @@ public class Bonferroninator {
 				String output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/" + diseases[d] + "-conditional-significant.txt";
 				TextFile outtf = new TextFile(output, TextFile.W);
 				outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tThreshold");
-				for (int a = 0; a < assocFiles.length; a++) {
-					System.out.println(a + "\t" + d);
-					String assoc = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/" + diseases[d] + "-assoc0.3-COSMO-iter0-merged.txt.gz";
-					b.determineTopAssocPerRegion(a, diseaseRegions[d], defaultthreshold, assoc, thresholds, genes, outtf);
+				for (int iter = 0; iter < maxiter; iter++) {
+					System.out.println(iter + "\t" + d);
+					String assoc = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/" + diseases[d] + "-assoc0.3-COSMO-iter" + iter + "-merged.txt.gz";
+					b.determineTopAssocPerRegion(iter, diseaseRegions[d], defaultthreshold, assoc, thresholds, genes, outtf);
 				}
 				outtf.close();
 
@@ -142,10 +142,14 @@ public class Bonferroninator {
 			}
 
 			// determine if it is significant
-			if(max!=null) {
+			if (max != null) {
 				String regionStr = region.toString();
+
 				Double threshold = bonferroniThresholds.get(regionStr);
-				if ((a == 0 && max.getPval() < defaultthreshold) || max.getPval() < threshold) {
+				if (a == 0) {
+					threshold = defaultthreshold;
+				}
+				if (max.getPval() < threshold) {
 					// write to disk
 					out.writeln(a + "\t" + region.toString() + "\t" + Strings.concat(genesArr, Strings.semicolon) + "\t" + max.getSnp().toString() + "\t" + max.getPval() + "\t" + max.getLog10Pval() + "\t" + threshold);
 				}

@@ -145,6 +145,13 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("startiter")
+				.hasArg()
+				.desc("Start with this iteration (only valid if used in conjunction with --conditions)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("limittosamplesinfam")
 				.desc("Force testing on all samples in fam path")
 				.build();
@@ -181,6 +188,12 @@ public class LRTestOptions {
 				.build();
 		OPTIONS.addOption(option);
 	}
+
+	public Integer getStartIter() {
+		return startIter;
+	}
+
+	private int startIter = 0;
 
 	private boolean limittosamplesinfam = false;
 
@@ -367,6 +380,15 @@ public class LRTestOptions {
 					maxIter = Integer.parseInt(nStr);
 				} catch (NumberFormatException e) {
 					System.out.println(nStr + " is not an integer for option --maxiter");
+				}
+			}
+
+			if (cmd.hasOption("startiter")) {
+				String nStr = cmd.getOptionValue("startiter");
+				try {
+					startIter = Integer.parseInt(nStr);
+				} catch (NumberFormatException e) {
+					System.out.println(nStr + " is not an integer for option --startiter");
 				}
 			}
 
