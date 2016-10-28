@@ -26,7 +26,7 @@ public class LocusToGene {
 		String bed = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\AllICLoci.bed";
 		String output = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\AllLoci-GenesPerLocus.txt";
 		try {
-//			t.run(annot, bed, output);
+//			t.determineRegionSignificanceThresholds(annot, bed, output);
 
 			output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
 			String file = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz-credibleSets-sets.txt";

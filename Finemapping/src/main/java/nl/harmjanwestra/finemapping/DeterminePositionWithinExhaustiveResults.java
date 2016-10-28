@@ -43,7 +43,7 @@ public class DeterminePositionWithinExhaustiveResults {
 //			assocfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-TNFAIP3-chr";
 //			modelfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-chr";
 //			outputfile = "/Data/tmp/2016-06-20/RA-TNFAIP3";
-//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//			d.determineRegionSignificanceThresholds(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
 		} catch (IOException e) {
 			e.printStackTrace();

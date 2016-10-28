@@ -34,7 +34,7 @@ public class MergeCredibleSets {
 
 		try {
 			MergeCredibleSets c = new MergeCredibleSets();
-//			c.run(bedregions, assocfiles, datasetnames, genenames, outfile);
+//			c.determineRegionSignificanceThresholds(bedregions, assocfiles, datasetnames, genenames, outfile);
 
 
 			String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";

@@ -3,11 +3,18 @@ package nl.harmjanwestra.finemapping;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.Gene;
+import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Created by hwestra on 8/19/16.
@@ -26,14 +33,25 @@ public class Bonferroninator {
 		try {
 
 			String[] significantRegionFiles = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-significantregions-75e7.bed",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-significantregions-75e7.bed",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-significantregions-75e7.bed",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Normal/RA-assoc0.3-COSMO-significantregions-75e7.bed",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Normal/T1D-assoc0.3-COSMO-significantregions-75e7.bed",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Normal/META-assoc0.3-COSMO-significantregions-75e7.bed",
 			};
 			String[] assocFiles = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/RA-assoc0.3-COSMO-merged.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/T1D-assoc0.3-COSMO-merged.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA-assoc0.3-COSMO-iter0-merged.txt.gz",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter0-merged.txt.gz",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/META-assoc0.3-COSMO-iter0-merged.txt.gz"
+			};
+
+			String[] bonferroniOut = new String[]{
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA.txt",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D.txt",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/META.txt"
+			};
+			String[] diseaseRegions = new String[]{
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DLoci.bed",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt"
 			};
 
 			double defaultthreshold = 7.5E-7;
@@ -43,27 +61,98 @@ public class Bonferroninator {
 			System.out.println("---");
 			System.out.println();
 
-			assocfile = assocFiles[0];
-			diseasespecificregionfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed";
-			out = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/RA.txt";
-			b.run(assocfile, allregionsfile, diseasespecificregionfile, out, defaultthreshold, significantthreshold);
+			for (int a = 0; a < assocFiles.length; a++) {
+				assocfile = assocFiles[a];
+				diseasespecificregionfile = diseaseRegions[a];
+				b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
+			}
 
-			// T1D
-			assocfile = assocFiles[1];
-			diseasespecificregionfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DLoci.bed";
-			out = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/T1D.txt";
-			b.run(assocfile, allregionsfile, diseasespecificregionfile, out, defaultthreshold, significantthreshold);
+			String[] diseases = new String[]{
+					"RA",
+					"T1D",
+					"META"
+			};
 
-			// joint
-			assocfile = assocFiles[2];
-			diseasespecificregionfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
-			out = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/BonferroniThresholds/META.txt";
-			b.run(assocfile, allregionsfile, diseasespecificregionfile, out, defaultthreshold, significantthreshold);
+
+			String annot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/genes.gtf.gz";
+			GTFAnnotation annotation = new GTFAnnotation(annot);
+			TreeSet<Gene> genes = annotation.getGeneTree();
+
+			for (int d = 0; d < diseases.length; d++) {
+
+				HashMap<String, Double> thresholds = new HashMap<String, Double>();
+
+				TextFile tf = new TextFile(bonferroniOut[d], TextFile.R);
+				String[] elems = tf.readLineElems(TextFile.tab);
+				while (elems != null) {
+					thresholds.put(elems[0], Double.parseDouble(elems[2]));
+					elems = tf.readLineElems(TextFile.tab);
+				}
+				tf.close();
+
+				String output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/" + diseases[d] + "-conditional-significant.txt";
+				TextFile outtf = new TextFile(output, TextFile.W);
+				outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tThreshold");
+				for (int a = 0; a < assocFiles.length; a++) {
+					System.out.println(a + "\t" + d);
+					String assoc = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/" + diseases[d] + "-assoc0.3-COSMO-iter0-merged.txt.gz";
+					b.determineTopAssocPerRegion(a, diseaseRegions[d], defaultthreshold, assoc, thresholds, genes, outtf);
+				}
+				outtf.close();
+
+			}
 
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void determineTopAssocPerRegion(int a, String regionfile, double defaultthreshold,
+											String assoc, HashMap<String, Double> bonferroniThresholds, TreeSet<Gene> geneset, TextFile out) throws IOException {
+
+
+		BedFileReader reader = new BedFileReader();
+		ArrayList<Feature> allRegions = reader.readAsList(regionfile);
+		AssociationFile assocF = new AssociationFile();
+		for (int r = 0; r < allRegions.size(); r++) {
+			Feature region = allRegions.get(r);
+
+			Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
+			Gene geneStop = new Gene("", region.getChromosome(), Strand.POS, region.getStop(), region.getStop());
+			SortedSet<Gene> overlappingGenes = geneset.subSet(geneStart, true, geneStop, true);
+
+			String[] genesArr = new String[overlappingGenes.size()];
+			int ctr = 0;
+			for (Gene g : overlappingGenes) {
+				genesArr[ctr] = g.getName();
+				ctr++;
+			}
+
+			ArrayList<AssociationResult> results = assocF.read(assoc, region);
+
+			// get top result
+			AssociationResult max = null;
+			for (AssociationResult result : results) {
+				if (max == null) {
+					max = result;
+				} else if (result.getLog10Pval() > max.getLog10Pval()) {
+					max = result;
+				}
+			}
+
+			// determine if it is significant
+			if(max!=null) {
+				String regionStr = region.toString();
+				Double threshold = bonferroniThresholds.get(regionStr);
+				if ((a == 0 && max.getPval() < defaultthreshold) || max.getPval() < threshold) {
+					// write to disk
+					out.writeln(a + "\t" + region.toString() + "\t" + Strings.concat(genesArr, Strings.semicolon) + "\t" + max.getSnp().toString() + "\t" + max.getPval() + "\t" + max.getLog10Pval() + "\t" + threshold);
+				}
+			}
+
+		}
+
 	}
 
 	public double determineTopNumberOfVariantsWithinSignificantRegions(String[] significantRegionFiles, String[] assocFiles) throws IOException {
@@ -88,7 +177,7 @@ public class Bonferroninator {
 	}
 
 
-	public void run(String assocFile, String allRegionsFile, String diseaseSpecificRegionsFile, String out, double origThreshold, double significantThreshold) throws IOException {
+	public void determineRegionSignificanceThresholds(String assocFile, String allRegionsFile, String diseaseSpecificRegionsFile, String out, double origThreshold, double significantThreshold) throws IOException {
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> allRegions = reader.readAsList(allRegionsFile);
