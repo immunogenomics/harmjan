@@ -46,11 +46,32 @@ public class VCFTabix {
 	}
 
 	public TabixReader.Iterator query(Feature region) throws IOException {
-		TabixReader.Iterator window = treader.query(region.getChromosome().getNumber() + ":" + (region.getStart() - 10) + "-" + (region.getStop() + 10));
+		System.out.println(region.toString());
+		int start = region.getStart() - 10;
+		if (start < 0) {
+			start = 1;
+		}
+		int stop = region.getStop() + 10;
+		if (stop > region.getChromosome().getLength()) {
+			stop = region.getChromosome().getLength();
+		}
+
+		TabixReader.Iterator window = treader.query(region.getChromosome().getNumber() + ":" + start + "-" + stop);
 		return window;
 	}
 
 	public void close() {
 		treader.close();
+	}
+
+	public ArrayList<VCFVariant> getAllVariants(Feature f, boolean[] samplefilter) throws IOException {
+		TabixReader.Iterator iterator = query(f);
+		String next = iterator.next();
+		ArrayList<VCFVariant> output = new ArrayList<>();
+		while (next != null) {
+			output.add(new VCFVariant(next, VCFVariant.PARSE.ALL, samplefilter));
+			next = iterator.next();
+		}
+		return output;
 	}
 }

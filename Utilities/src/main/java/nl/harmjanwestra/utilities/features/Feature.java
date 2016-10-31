@@ -48,11 +48,11 @@ public class Feature {
 	}
 
 	public static Feature parseFeature(String regionStr) {
-		String[] elems = regionStr.split("\\_");
+		String[] elems = regionStr.split("_");
 		if (elems.length == 2) {
 			Chromosome chr = Chromosome.parseChr(elems[0]);
 			String posStr = elems[1];
-			String[] posStrElems = posStr.split("\\-");
+			String[] posStrElems = posStr.split("-");
 			if (posStrElems.length == 2) {
 				int start = Integer.parseInt(posStrElems[0]);
 				int stop = Integer.parseInt(posStrElems[1]);

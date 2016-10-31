@@ -8,6 +8,7 @@ import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.enums.Gender;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.matrix.ShortMatrix2D;
 import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
 import umcg.genetica.io.trityper.util.BaseAnnot;
@@ -1308,6 +1309,13 @@ public class VCFVariant {
 
 	public Feature asFeature() {
 		Feature output = new Feature(Chromosome.parseChr(chr), pos, pos);
+		output.setName(id);
+		return output;
+
+	}
+
+	public SNPFeature asSNPFeature() {
+		SNPFeature output = new SNPFeature(Chromosome.parseChr(chr), pos, pos);
 		output.setName(id);
 		return output;
 
