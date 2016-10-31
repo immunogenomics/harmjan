@@ -16,7 +16,14 @@ public class ProxyFinderOptions {
 		option = Option.builder()
 				.longOpt("tabix")
 				.hasArg()
-				.desc("Prefix for tabix path [format /path/to/chr$i.vcf.gz]")
+				.desc("Prefix for tabix path [format /path/to/chrCHR.vcf.gz]. Replace the chromosome number with CHR (will be replaced by chr number depending on input SNP).")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("samplefilter")
+				.hasArg()
+				.desc("Limit samples to individuals in this list")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -77,6 +84,7 @@ public class ProxyFinderOptions {
 	}
 
 	public String tabixrefprefix;
+	public String samplefilter;
 	public int windowsize = 1000000;
 	public double threshold = 0.8;
 	public String snpfile;
@@ -103,6 +111,10 @@ public class ProxyFinderOptions {
 
 			if (cmd.hasOption("w")) {
 				windowsize = Integer.parseInt(cmd.getOptionValue("w"));
+			}
+
+			if (cmd.hasOption("samplefilter")) {
+				samplefilter = cmd.getOptionValue("samplefilter");
 			}
 
 			if (cmd.hasOption("pairwise")) {

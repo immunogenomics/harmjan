@@ -6,7 +6,9 @@ import nl.harmjanwestra.gwas.CLI.ProxyFinderOptions;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.math.DetermineLD;
+import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
@@ -42,13 +44,20 @@ public class ProxyFinder {
 
 	// use tabix to find proxies
 	public void findProxies() throws IOException {
-		ArrayList<Feature> snps = new ArrayList<Feature>();
+		ArrayList<SNPFeature> snps = new ArrayList<SNPFeature>();
 		TextFile tf = new TextFile(options.snpfile, TextFile.R);
 		String ln = tf.readLine();
 		while (ln != null) {
 			String[] elems = ln.split("\t");
 			if (elems.length >= 4) {
-				Feature snp = new Feature();
+				SNPFeature snp = new SNPFeature();
+				snp.setStart(Integer.parseInt(elems[2]));
+				snp.setStop(snp.getStart());
+				snp.setName(elems[3]);
+				snp.setChromosome(Chromosome.parseChr(elems[1]));
+				snps.add(snp);
+			} else if (elems.length == 2) {
+				SNPFeature snp = SNPFeature.parseFeature(elems[1]);
 				snp.setStart(Integer.parseInt(elems[2]));
 				snp.setStop(snp.getStart());
 				snp.setName(elems[3]);
@@ -67,7 +76,8 @@ public class ProxyFinder {
 
 			boolean allfilespresent = true;
 			for (Feature queryVariantFeature : snps) {
-				if (!Gpio.exists(options.tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz")) {
+				String tabixfile = options.tabixrefprefix.replaceAll("CHR", "" + queryVariantFeature.getChromosome().getNumber());
+				if (!Gpio.exists(tabixfile)) {
 					System.out.println("Could not find required path: " + options.tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz");
 					allfilespresent = false;
 				}
@@ -330,14 +340,24 @@ public class ProxyFinder {
 	}
 
 	private synchronized VCFVariant getSNP(Feature snp) throws IOException {
-		String tabixfile = options.tabixrefprefix + snp.getChromosome().getNumber() + ".vcf.gz";
-		TabixReader reader = new TabixReader(tabixfile);
-		TabixReader.Iterator inputSNPiter = reader.query(snp.getChromosome().getNumber() + ":" + (snp.getStart() - 1) + "-" + (snp.getStart() + 1));
+
+		String tabixfile = options.tabixrefprefix.replace("CHR", "" + snp.getChromosome().getNumber());
+		VCFTabix tabix = new VCFTabix(tabixfile);
+
+		boolean[] snpSampleFilter = null;
+		if (options.samplefilter != null) {
+			snpSampleFilter = tabix.getSampleFilter(options.samplefilter);
+		}
+
+		Feature snpF = new Feature(snp);
+		snp.setStart(snpF.getStart() - 1);
+		snp.setStop(snpF.getStop() + 1);
+		TabixReader.Iterator inputSNPiter = tabix.query(snpF);
 		String snpStr = inputSNPiter.next();
 		VCFVariant testSNPObj1 = null;
-//		System.out.println("Query: " + snp.toString());
+
 		while (snpStr != null) {
-			VCFVariant variant = new VCFVariant(snpStr);
+			VCFVariant variant = new VCFVariant(snpStr, VCFVariant.PARSE.ALL, snpSampleFilter);
 			if (variant.asFeature().overlaps(snp)) {
 				if (variant.getId().equals(snp.getName())) {
 					testSNPObj1 = variant;
@@ -346,7 +366,7 @@ public class ProxyFinder {
 
 			snpStr = inputSNPiter.next();
 		}
-		reader.close();
+		tabix.close();
 		return testSNPObj1;
 	}
 
@@ -401,15 +421,24 @@ public class ProxyFinder {
 				return output;
 			}
 
-			String tabixfile = tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz";
-			TabixReader reader = new TabixReader(tabixfile);
-			TabixReader.Iterator window = reader.query(queryVariantFeature.getChromosome().getNumber() + ":" + (queryVariantFeature.getStart() - windowsize) + "-" + (queryVariantFeature.getStart() + windowsize));
+
+			String tabixfile = options.tabixrefprefix.replace("CHR", "" + testSNPObj.getChrObj().getNumber());
+			VCFTabix tabix = new VCFTabix(tabixfile);
+			Feature SNPRegion = testSNPObj.asFeature();
+			SNPRegion.setStart(SNPRegion.getStart() - windowsize);
+			SNPRegion.setStop(SNPRegion.getStop() + windowsize);
+			TabixReader.Iterator window = tabix.query(SNPRegion);
 			String next = window.next();
+
+			boolean[] snpSampleFilter = null;
+			if (options.samplefilter != null) {
+				snpSampleFilter = tabix.getSampleFilter(options.samplefilter);
+			}
 
 			DetermineLD ldcalc = new DetermineLD();
 			while (next != null) {
 				// correlate
-				VCFVariant variant = new VCFVariant(next);
+				VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL, snpSampleFilter);
 				if (!variant.equals(testSNPObj)) {
 					// correlate
 					if (variant.getMAF() > 0.005 && variant.getAlleles().length == 2) {
@@ -419,7 +448,6 @@ public class ProxyFinder {
 
 						// TODO: should replace with actual linkage
 						if (rsq >= threshold) {
-
 							output.add(queryVariantFeature.getChromosome().toString()
 									+ "\t" + queryVariantFeature.getStart()
 									+ "\t" + queryVariantFeature.getName()
@@ -433,7 +461,7 @@ public class ProxyFinder {
 				}
 				next = window.next();
 			}
-			reader.close();
+			tabix.close();
 			if (output.isEmpty()) {
 				output.add(selfStr);
 			}

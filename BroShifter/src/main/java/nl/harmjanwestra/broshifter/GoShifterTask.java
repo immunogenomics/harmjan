@@ -329,12 +329,13 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 	// load variants snp --> list of proxies
 	// assume ProxyFinder output
 	private ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> loadSNPs(String snpfile) throws IOException {
+
+
+		// TABIX support in future version?
+
 		TextFile in = new TextFile(snpfile, TextFile.R);
 		String[] elems = in.readLineElems(TextFile.tab);
-
-
 		HashMap<SNPFeature, HashSet<SNPFeature>> tmp = new HashMap<>();
-
 		while (elems != null) {
 
 			Chromosome chr = Chromosome.parseChr(elems[0]);

@@ -106,4 +106,17 @@ public class SNPFeature extends Feature {
 	public double getAFControls() {
 		return AFControls;
 	}
+
+	public static SNPFeature parseFeature(String str) {
+
+		String[] elems = str.split("_");
+		Chromosome chr = Chromosome.parseChr(elems[0]);
+		String[] poselems = elems[1].split("-");
+		Integer s1 = Integer.parseInt(poselems[0]);
+		String name = poselems[1];
+
+		SNPFeature out = new SNPFeature(chr, s1, s1);
+		out.setName(name);
+		return out;
+	}
 }

@@ -47,11 +47,30 @@ public class GoShifter {
 
 		// TODO: this input path needs some standard formatting or something
 		TextFile tf = new TextFile(listOfAnnotations, TextFile.R);
-		ArrayList<String> annotationFiles = tf.readAsArrayList();
+		String[] elems = tf.readLineElems(TextFile.tab);
+		ArrayList<String> annotationFiles = new ArrayList<>();
+		ArrayList<String> annotationFileNames = new ArrayList<>();
+
+		while (elems != null) {
+			if (elems.length > 1) {
+				String file = elems[1];
+				String name = elems[2];
+				annotationFileNames.add(name);
+				annotationFiles.add(file);
+			} else {
+				String f = elems[0];
+				annotationFiles.add(f);
+			}
+
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
 		System.out.println(annotationFiles.size() + " annotation files in: " + listOfAnnotations);
 		tf.close();
 
-		annotationFiles = checkFiles(annotationFiles);
+		Pair<ArrayList<String>, ArrayList<String>> p = checkFiles(annotationFiles, annotationFileNames);
+		annotationFileNames = p.getRight();
+		annotationFiles = p.getLeft();
 		System.out.println(annotationFiles.size() + " annotation files found on disk.");
 
 		// start threadpool
@@ -176,16 +195,18 @@ public class GoShifter {
 	}
 
 
-	private ArrayList<String> checkFiles(ArrayList<String> annotationFiles) {
+	private Pair<ArrayList<String>, ArrayList<String>> checkFiles(ArrayList<String> annotationFiles, ArrayList<String> annotationFileNames) {
 		ArrayList<String> filesPresent = new ArrayList<String>();
+		ArrayList<String> filesNamesPresent = new ArrayList<String>();
 		for (int i = 0; i < annotationFiles.size(); i++) {
 			if (Gpio.exists(annotationFiles.get(i))) {
 				filesPresent.add(annotationFiles.get(i));
+				filesNamesPresent.add(annotationFileNames.get(i));
 			} else {
 				System.err.println("WARNING: could not find path: " + annotationFiles.get(i));
 			}
 		}
-		return filesPresent;
+		return new Pair<ArrayList<String>, ArrayList<String>>(filesPresent, filesNamesPresent);
 	}
 
 

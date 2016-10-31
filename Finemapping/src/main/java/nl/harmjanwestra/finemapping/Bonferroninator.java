@@ -64,20 +64,20 @@ public class Bonferroninator {
 			for (int a = 0; a < assocFiles.length; a++) {
 				assocfile = assocFiles[a];
 				diseasespecificregionfile = diseaseRegions[a];
-				b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
+				// b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
 			}
 
 			String[] diseases = new String[]{
 					"RA",
 					"T1D",
-					"META"
+//					"META"
 			};
 
 
 			String annot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/genes.gtf.gz";
 			GTFAnnotation annotation = new GTFAnnotation(annot);
 			TreeSet<Gene> genes = annotation.getGeneTree();
-			int maxiter = 4;
+			int maxiter = 2;
 			for (int d = 0; d < diseases.length; d++) {
 
 				HashMap<String, Double> thresholds = new HashMap<String, Double>();
@@ -90,12 +90,12 @@ public class Bonferroninator {
 				}
 				tf.close();
 
-				String output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/" + diseases[d] + "-conditional-significant.txt";
+				String output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-bestAssocPerRegion.txt";
 				TextFile outtf = new TextFile(output, TextFile.W);
-				outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tThreshold");
+				outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
 				for (int iter = 0; iter < maxiter; iter++) {
 					System.out.println(iter + "\t" + d);
-					String assoc = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/" + diseases[d] + "-assoc0.3-COSMO-iter" + iter + "-merged.txt.gz";
+					String assoc = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
 					b.determineTopAssocPerRegion(iter, diseaseRegions[d], defaultthreshold, assoc, thresholds, genes, outtf);
 				}
 				outtf.close();
@@ -149,10 +149,23 @@ public class Bonferroninator {
 				if (a == 0) {
 					threshold = defaultthreshold;
 				}
+				boolean significant = false;
 				if (max.getPval() < threshold) {
 					// write to disk
-					out.writeln(a + "\t" + region.toString() + "\t" + Strings.concat(genesArr, Strings.semicolon) + "\t" + max.getSnp().toString() + "\t" + max.getPval() + "\t" + max.getLog10Pval() + "\t" + threshold);
+					significant = true;
 				}
+				out.writeln(a +
+						"\t" + region.toString()
+						+ "\t" + Strings.concat(genesArr, Strings.semicolon)
+						+ "\t" + max.getSnp().toString()
+						+ "\t" + max.getPval()
+						+ "\t" + max.getLog10Pval()
+						+ "\t" + threshold
+						+ "\t" + significant
+						+ "\t" + results.size()
+						+ "\t" + (0.05 / results.size())
+						+ "\t" + (max.getPval() < (0.05 / results.size()))
+				);
 			}
 
 		}
