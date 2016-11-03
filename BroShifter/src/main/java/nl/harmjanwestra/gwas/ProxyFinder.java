@@ -30,7 +30,6 @@ public class ProxyFinder {
 
 	public ProxyFinder(ProxyFinderOptions options) throws IOException {
 		this.options = options;
-
 		if (options.locusld) {
 			locusLD();
 		} else if (options.pairwise) {
@@ -57,11 +56,8 @@ public class ProxyFinder {
 				snp.setChromosome(Chromosome.parseChr(elems[1]));
 				snps.add(snp);
 			} else if (elems.length == 2) {
-				SNPFeature snp = SNPFeature.parseFeature(elems[1]);
-				snp.setStart(Integer.parseInt(elems[2]));
-				snp.setStop(snp.getStart());
-				snp.setName(elems[3]);
-				snp.setChromosome(Chromosome.parseChr(elems[1]));
+				System.out.println(elems[0] + "\t" + elems[1]);
+				SNPFeature snp = SNPFeature.parseSNPFeature(elems[1]);
 				snps.add(snp);
 			}
 			ln = tf.readLine();

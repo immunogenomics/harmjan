@@ -26,8 +26,8 @@ import java.util.*;
  */
 public class MergeCredibleSets {
 
-	static boolean windows = true;
-	int promotordistance = 1000;
+	static boolean windows = false;
+	int promotordistance = 2500;
 
 	public static void main(String[] args) {
 
@@ -40,7 +40,7 @@ public class MergeCredibleSets {
 			String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
 			String genenames = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
-			String geneAnnotation = "/Data/Ref/Annotation/UCSC/genes.gtf";
+			String geneAnnotation = "/Data/Ref/Annotation/UCSC/genes.gtf.gz";
 			String outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets.txt";
 			String outplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-plot-2k5promoter.pdf";
 			String[] assocfiles = new String[]{

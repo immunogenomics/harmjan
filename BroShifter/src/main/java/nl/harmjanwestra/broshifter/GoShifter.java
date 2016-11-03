@@ -52,9 +52,9 @@ public class GoShifter {
 		ArrayList<String> annotationFileNames = new ArrayList<>();
 
 		while (elems != null) {
-			if (elems.length > 1) {
+			if (elems.length == 2) {
 				String file = elems[1];
-				String name = elems[2];
+				String name = elems[0];
 				annotationFileNames.add(name);
 				annotationFiles.add(file);
 			} else {
@@ -195,7 +195,8 @@ public class GoShifter {
 	}
 
 
-	private Pair<ArrayList<String>, ArrayList<String>> checkFiles(ArrayList<String> annotationFiles, ArrayList<String> annotationFileNames) {
+	private Pair<ArrayList<String>, ArrayList<String>> checkFiles(ArrayList<String> annotationFiles,
+																  ArrayList<String> annotationFileNames) {
 		ArrayList<String> filesPresent = new ArrayList<String>();
 		ArrayList<String> filesNamesPresent = new ArrayList<String>();
 		for (int i = 0; i < annotationFiles.size(); i++) {

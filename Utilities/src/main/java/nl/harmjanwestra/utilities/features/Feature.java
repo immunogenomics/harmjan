@@ -47,6 +47,7 @@ public class Feature {
 		this.nrN = feature.nrN;
 	}
 
+
 	public static Feature parseFeature(String regionStr) {
 		String[] elems = regionStr.split("_");
 		if (elems.length == 2) {

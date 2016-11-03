@@ -17,7 +17,6 @@ import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.math.stats.ChiSquare;
 import umcg.genetica.math.stats.Correlation;
-import umcg.genetica.text.Strings;
 import umcg.genetica.util.Primitives;
 
 import java.util.ArrayList;
@@ -99,7 +98,7 @@ public class LRTestHaploTestTask {
 		System.out.println("Need to recalculate MAF and HWEP");
 		AssociationResult result = pruneAndTest(x, y, 1, 1 + (nrAlleles - 1), maf);
 
-		result = null;
+//		result = null;
 		if (result == null) {
 			return new Triple<>(null, null, null);
 		}
@@ -117,22 +116,22 @@ public class LRTestHaploTestTask {
 		snp.setImputationQualityScore(imputationqualityscore);
 
 
-		if (haplotypeToTest != null) {
-			snp.setAlleles(new String[]{getHaplotypeDesc(refHaplotype, variants), getHaplotypeDesc(haplotypeToTest, variants)});
-			snp.setName(getHaplotypeDesc(haplotypeToTest, variants));
-			snp.setMinorAllele(getHaplotypeDesc(haplotypeToTest, variants));
-		} else {
-			ArrayList<String> haplotypeNames = new ArrayList<>();
-			haplotypeNames.add(getHaplotypeDesc(refHaplotype, variants));
-			for (int q = 0; q < haplotypesToTest.size(); q++) {
-				if (!haplotypesToTest.get(q).equals(refHaplotype)) {
-					haplotypeNames.add(getHaplotypeDesc(haplotypesToTest.get(q), variants));
-				}
-			}
-
-			snp.setAlleles(haplotypeNames.toArray(new String[0]));
-			snp.setMinorAllele("");
-		}
+//		if (haplotypeToTest != null) {
+//			snp.setAlleles(new String[]{getHaplotypeDesc(refHaplotype, variants), getHaplotypeDesc(haplotypeToTest, variants)});
+//			snp.setName(getHaplotypeDesc(haplotypeToTest, variants));
+//			snp.setMinorAllele(getHaplotypeDesc(haplotypeToTest, variants));
+//		} else {
+//			ArrayList<String> haplotypeNames = new ArrayList<>();
+//			haplotypeNames.add(getHaplotypeDesc(refHaplotype, variants));
+//			for (int q = 0; q < haplotypesToTest.size(); q++) {
+//				if (!haplotypesToTest.get(q).equals(refHaplotype)) {
+//					haplotypeNames.add(getHaplotypeDesc(haplotypesToTest.get(q), variants));
+//				}
+//			}
+//
+//			snp.setAlleles(haplotypeNames.toArray(new String[0]));
+//			snp.setMinorAllele("");
+//		}
 
 
 		return new Triple<>("", result, null);
@@ -457,25 +456,5 @@ public class LRTestHaploTestTask {
 		return new Pair<>(haplotypeAlleles, haplotypeDosages);
 	}
 
-	public String getHaplotypeDesc(BitVector bitVector, ArrayList<VCFVariant> variants) {
-		String hapdesc = "";
-		for (int b = 0; b < bitVector.size(); b++) {
-			if (bitVector.get(b)) {
-				hapdesc += variants.get(b).getAlleles()[1];
-			} else {
-				hapdesc += variants.get(b).getAlleles()[0];
-			}
-		}
-		return hapdesc;
-	}
 
-	public String getHaplotypeComboDescription(ArrayList<BitVector> comboToTest, ArrayList<VCFVariant> variants) {
-
-		String[] haps = new String[comboToTest.size()];
-		for (int i = 0; i < comboToTest.size(); i++) {
-			haps[i] = getHaplotypeDesc(comboToTest.get(i), variants);
-		}
-
-		return Strings.concat(haps, Strings.semicolon);
-	}
 }

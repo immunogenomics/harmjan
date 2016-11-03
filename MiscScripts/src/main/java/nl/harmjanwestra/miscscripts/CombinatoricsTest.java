@@ -1,8 +1,10 @@
 package nl.harmjanwestra.miscscripts;
 
+import org.apache.commons.math3.util.CombinatoricsUtils;
 import umcg.genetica.text.Strings;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -13,8 +15,11 @@ public class CombinatoricsTest {
 
 	public static void main(String[] args) {
 
-		CombinatoricsTest t = new CombinatoricsTest();
-		t.test();
+
+
+
+//		CombinatoricsTest t = new CombinatoricsTest();
+//		t.test();
 	}
 
 	public void test() {

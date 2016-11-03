@@ -33,20 +33,20 @@ public class Bonferroninator {
 		try {
 
 			String[] significantRegionFiles = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Normal/RA-assoc0.3-COSMO-significantregions-75e7.bed",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Normal/T1D-assoc0.3-COSMO-significantregions-75e7.bed",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Normal/META-assoc0.3-COSMO-significantregions-75e7.bed",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-significantloci-75e7.bed",
 			};
 			String[] assocFiles = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA-assoc0.3-COSMO-iter0-merged.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter0-merged.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/META-assoc0.3-COSMO-iter0-merged.txt.gz"
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/RA-assoc0.3-COSMO-iter0-merged.txt.gz",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter0-merged.txt.gz",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/META-assoc0.3-COSMO-iter0-merged.txt.gz"
 			};
 
 			String[] bonferroniOut = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/RA.txt",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/T1D.txt",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/ConditionalOnMeta/META.txt"
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/RA.txt",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/T1D.txt",
+					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/META.txt"
 			};
 			String[] diseaseRegions = new String[]{
 					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed",
@@ -70,14 +70,14 @@ public class Bonferroninator {
 			String[] diseases = new String[]{
 					"RA",
 					"T1D",
-//					"META"
+					"META"
 			};
 
 
 			String annot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/genes.gtf.gz";
 			GTFAnnotation annotation = new GTFAnnotation(annot);
 			TreeSet<Gene> genes = annotation.getGeneTree();
-			int maxiter = 2;
+			int maxiter = 3;
 			for (int d = 0; d < diseases.length; d++) {
 
 				HashMap<String, Double> thresholds = new HashMap<String, Double>();
@@ -96,7 +96,8 @@ public class Bonferroninator {
 				for (int iter = 0; iter < maxiter; iter++) {
 					System.out.println(iter + "\t" + d);
 					String assoc = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
-					b.determineTopAssocPerRegion(iter, diseaseRegions[d], defaultthreshold, assoc, thresholds, genes, outtf);
+					String regions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+					b.determineTopAssocPerRegion(iter, regions, defaultthreshold, assoc, thresholds, genes, outtf);
 				}
 				outtf.close();
 

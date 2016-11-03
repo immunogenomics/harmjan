@@ -32,18 +32,19 @@ public class ExhaustivePlot {
 
 
 		ExhaustivePlot p = new ExhaustivePlot();
-		String output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/CD28Exhaustive";
+		String output = "/Data/tmp/tnfaip3/exhaustive";
 		Feature region = new Feature();
 		// Chr2_204446380-204816382
 
 		// TNFAIP3
-//		region.setChromosome(Chromosome.SIX);
-//		region.setStart(137882875);
-//		region.setStop(138275085);
-		region.setChromosome(Chromosome.TWO);
-		region.setStart(204446380);
-		region.setStop(204816382);
-		String assocfile = "/Data/tmp/exhaustive/RA-assoc0.3-COSMO-chr2-pairwise.txt.gz";
+		region.setChromosome(Chromosome.SIX);
+		region.setStart(137882875);
+		region.setStop(138275085);
+//		region.setChromosome(Chromosome.TWO);
+//		region.setStart(204446380);
+//		region.setStop(204816382);
+
+		String assocfile = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr6-pairwise.txt.gz";
 		String tabixfile = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 		String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 		try {
