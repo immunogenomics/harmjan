@@ -40,7 +40,7 @@ public class DefaultGraphics {
 	protected DefaultGraphics() {
 	}
 
-	protected DefaultGraphics(String outputFileName, int width, int height) throws FileNotFoundException, DocumentException {
+	public DefaultGraphics(String outputFileName, int width, int height) throws FileNotFoundException, DocumentException {
 		this.initializePlot(outputFileName, width, height);
 	}
 

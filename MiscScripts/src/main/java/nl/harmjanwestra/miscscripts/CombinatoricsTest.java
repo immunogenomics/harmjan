@@ -15,12 +15,44 @@ public class CombinatoricsTest {
 
 	public static void main(String[] args) {
 
+		Iterator<int[]> combos = CombinatoricsUtils.combinationsIterator(2, 2);
 
+		while (combos.hasNext()) {
+			int[] combo = combos.next();
+			System.out.println(Strings.concat(combo, Strings.tab));
+		}
+
+		int numBits = 5;
+
+		int val = 0;
+		int[] values = new int[]{0, 1};
+		values[0] = 0;
+		values[1] = 1;
+
+		for (int i = 1; i < numBits; i++) {
+			int[] moreValues = new int[values.length * 2];
+			int start = (int) Math.pow(2, i);
+			for (int j = 0; j < values.length; j++) {
+				moreValues[j * 2] = values[j] << 1;
+				moreValues[j * 2 + 1] = values[j] << 1 | 1;
+			}
+			values = moreValues;
+		}
+
+		//print the values
+		for (int value : values) {
+
+//			BitSet set = Bits.convert(value);
+
+
+			System.out.println(Integer.toBinaryString(value));
+		}
 
 
 //		CombinatoricsTest t = new CombinatoricsTest();
 //		t.test();
 	}
+
 
 	public void test() {
 		String[] letters = new String[]{"B", "C", "D", "E"};
@@ -65,3 +97,4 @@ public class CombinatoricsTest {
 		}
 	}
 }
+

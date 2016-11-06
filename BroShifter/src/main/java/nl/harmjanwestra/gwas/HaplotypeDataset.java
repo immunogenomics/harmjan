@@ -11,7 +11,9 @@ import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Triple;
+import umcg.genetica.io.text.TextFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -285,21 +287,7 @@ public class HaplotypeDataset {
 	public String getHaplotypeDesc(int i) {
 
 		BitVector bitVector = availableHaplotypesList.get(i);
-		String hapdesc = "";
-		for (int b = 0; b < bitVector.size(); b++) {
-			String all = "";
-			if (bitVector.get(b)) {
-				all = variants.get(b).getAlleles()[1];
-			} else {
-				all = variants.get(b).getAlleles()[0];
-			}
-			if (hapdesc.length() == 0) {
-				hapdesc += all;
-			} else {
-				hapdesc += ";" + all;
-			}
-		}
-		return hapdesc;
+		return getHaplotypeDesc(bitVector);
 	}
 
 	public SNPFeature asFeature(int hap, Integer referenceHapId) {
@@ -312,14 +300,14 @@ public class HaplotypeDataset {
 		snp.setName(getVariantsAsString());
 		if (referenceHapId == null) {
 			snp.setAlleles(new String[]{"All", getHaplotypeDesc(hap)});
-			if(!availableHaplotypesList.get(hap).equals(referenceHaplotype)){
+			if (!availableHaplotypesList.get(hap).equals(referenceHaplotype)) {
 				snp.setMinorAllele(getHaplotypeDesc(hap));
 			} else {
 				snp.setMinorAllele(getHaplotypeDesc(hapToInt.get(referenceHaplotype)));
 			}
 		} else {
 			String[] alleles = new String[availableHaplotypesList.size()];
-			for(int h=0;h<availableHaplotypesList.size();h++){
+			for (int h = 0; h < availableHaplotypesList.size(); h++) {
 				alleles[h] = getHaplotypeDesc(h);
 			}
 			snp.setAlleles(alleles);
@@ -353,7 +341,7 @@ public class HaplotypeDataset {
 			if (variantStr.length() == 0) {
 				variantStr += variant.getId();
 			} else {
-				variantStr += ";" + variant.getId();
+				variantStr += "," + variant.getId();
 			}
 		}
 
@@ -420,14 +408,120 @@ public class HaplotypeDataset {
 		return new HaplotypeDataset(remainingHaplotypes, haplotypesAboveThreshold, remainingdiseaseStatus, remainingCovariates, variants);
 	}
 
+	public HaplotypeGroup collapse(Integer haplotype, boolean[] varCombo, int ctr) throws IOException {
 
-//	public String getHaplotypeComboDescription(ArrayList<BitVector> comboToTest, ArrayList<VCFVariant> variants) {
-//
-//		String[] haps = new String[comboToTest.size()];
-//		for (int i = 0; i < comboToTest.size(); i++) {
-//			haps[i] = getHaplotypeDesc(comboToTest.get(i), variants);
-//		}
-//
-//		return Strings.concat(haps, Strings.semicolon);
-//	}
+		HashSet<BitVector> haplotypesToCollapseOn = new HashSet<>();
+		if (haplotype != null) {
+			// collapse on a single haplotype
+			haplotypesToCollapseOn.add(availableHaplotypesList.get(haplotype));
+		} else {
+			// use set to determine on which alleles to collapse
+			for (int a = 0; a < availableHaplotypesList.size(); a++) {
+				BitVector v = availableHaplotypesList.get(a);
+				ArrayList<Integer> positions = new ArrayList<>();
+				for (int i = 0; i < varCombo.length; i++) {
+					if (varCombo[i]) {
+						positions.add(i);
+					}
+				}
+
+				boolean include = true;
+				for (int pos : positions) {
+					if (!v.get(pos)) {
+						include = false;
+					}
+				}
+				if (include) {
+					haplotypesToCollapseOn.add(v);
+				}
+			}
+		}
+
+		if (haplotypesToCollapseOn.isEmpty()) {
+			return null;
+		}
+
+		// now collapse on selected haplotypes
+		DoubleMatrix2D haplotypeMatrixCollapsed = new DenseDoubleMatrix2D(getNrIndividuals(), 1);
+		ArrayList<BitVector> group0 = new ArrayList<>();
+		ArrayList<BitVector> group1 = new ArrayList<>();
+
+
+		System.out.println(haplotypesToCollapseOn.size() + " haps to collapse on.");
+		for (int a = 0; a < availableHaplotypesList.size(); a++) {
+			BitVector hap = getAvailableHaplotypesList().get(a);
+			if (haplotypesToCollapseOn.contains(hap)) {
+				group1.add(hap);
+				System.out.println("including:\t" + getHaplotypeDesc(a));
+			} else {
+				group0.add(hap);
+			}
+		}
+
+		TextFile outf = new TextFile("/Data/tmp/tnfaip3/haplogroupout-" + ctr + ".txt", TextFile.W);
+
+		String header = "ind";
+		for (int a = 0; a < availableHaplotypesList.size(); a++) {
+			header += "\t" + getHaplotypeDesc(a);
+		}
+
+		HaplotypeGroup groupaaaa = new HaplotypeGroup(haplotypeMatrixCollapsed, group0, group1, variants, finalDiseaseStatus);
+		String desc = groupaaaa.getHaplotypeDesc(group1);
+		header += "\thap1\thap2\tcollapsed (" + desc + ")";
+
+		outf.writeln(header);
+
+
+		for (int i = 0; i < finalDiseaseStatus.length; i++) {
+			BitVector[] haps = haplotypePairs[i];
+
+			boolean hap1Selected = haplotypesToCollapseOn.contains(haps[0]);
+			boolean hap2Selected = haplotypesToCollapseOn.contains(haps[1]);
+
+			String hapStr = "";
+			for (int a = 0; a < availableHaplotypesList.size(); a++) {
+				double haplo = getHaplotype(a).get(i, 0);
+				if (hapStr.length() == 0) {
+					hapStr += "" + haplo;
+				} else {
+					hapStr += "\t" + haplo;
+				}
+			}
+
+
+			if (hap1Selected && hap2Selected) {
+				haplotypeMatrixCollapsed.set(i, 0, 2);
+			} else if (hap1Selected || hap2Selected) {
+				haplotypeMatrixCollapsed.set(i, 0, 1);
+			}
+
+			outf.writeln(i + "\t" + hapStr + "\t" + getHaplotypeDesc(haps[0]) + "\t" + getHaplotypeDesc(haps[1]) + "\t" + haplotypeMatrixCollapsed.get(i, 0));
+		}
+		outf.close();
+
+		HaplotypeGroup group = new HaplotypeGroup(haplotypeMatrixCollapsed, group0, group1, variants, finalDiseaseStatus);
+
+
+		return group;
+	}
+
+	private String getHaplotypeDesc(BitVector hap) {
+		String hapdesc = "";
+		for (int b = 0; b < hap.size(); b++) {
+			String all = "";
+			if (hap.get(b)) {
+				all = variants.get(b).getAlleles()[1];
+			} else {
+				all = variants.get(b).getAlleles()[0];
+			}
+			if (hapdesc.length() == 0) {
+				hapdesc += all;
+			} else {
+				hapdesc += "|" + all;
+			}
+		}
+		return hapdesc;
+
+	}
+
 }
