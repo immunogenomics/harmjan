@@ -8,6 +8,7 @@ package nl.harmjanwestra.utilities.features;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.Strand;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
@@ -160,6 +161,9 @@ public class Feature {
 			return true;
 
 		}
+		if (this.chromosome == null || that.chromosome == null) {
+			return false;
+		}
 		if (this.chromosome.getNumber() != that.chromosome.getNumber()) {
 //            System.out.println("chr diff");
 			return false;
@@ -277,5 +281,14 @@ public class Feature {
 
 	public int getSize() {
 		return stop - start;
+	}
+
+	public boolean overlaps(ArrayList<Feature> regions) {
+		for(Feature f: regions){
+			if(this.overlaps(f)){
+				return true;
+			}
+		}
+		return false;
 	}
 }

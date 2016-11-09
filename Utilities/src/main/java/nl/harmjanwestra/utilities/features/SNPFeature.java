@@ -14,8 +14,8 @@ public class SNPFeature extends Feature {
 	private double maf;
 	private double hwep;
 	private double cr;
-	private double AFCases;
-	private double AFControls;
+	private double[] AFCases;
+	private double[] AFControls;
 
 	public double getMaf() {
 		return maf;
@@ -92,20 +92,41 @@ public class SNPFeature extends Feature {
 	}
 
 	public void setAFCases(double AFCases) {
+		this.AFCases = new double[]{
+				AFCases
+		};
+	}
+
+	public void setAFCases(double[] AFCases) {
 		this.AFCases = AFCases;
 	}
 
 	public void setAFControls(double AFControls) {
+		this.AFControls = new double[]{AFControls};
+	}
+
+	public void setAFControls(double[] AFControls) {
 		this.AFControls = AFControls;
 	}
 
 	public double getAFCases() {
-		return AFCases;
+		if(AFCases == null ){
+			return 0;
+		} else {
+			return AFCases[0];
+		}
+
 	}
 
 	public double getAFControls() {
-		return AFControls;
+		if(AFControls == null ){
+			return 0;
+		} else {
+			return AFControls[0];
+		}
+
 	}
+
 
 	public static SNPFeature parseSNPFeature(String str) {
 
@@ -123,5 +144,13 @@ public class SNPFeature extends Feature {
 		} else {
 			return null;
 		}
+	}
+
+	public double[] getAFCasesArray() {
+		return AFCases;
+	}
+
+	public double[] getAFControlsArray() {
+		return AFControls;
 	}
 }

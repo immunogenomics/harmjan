@@ -62,4 +62,12 @@ public class EQTL extends Feature {
 	public void setSnp(SNPFeature snp) {
 		this.snp = snp;
 	}
+
+	@Override
+	public String toString() {
+		return "EQTL{" +
+				"genename='" + genename + '\'' +
+				", snp=" + snp +
+				'}';
+	}
 }

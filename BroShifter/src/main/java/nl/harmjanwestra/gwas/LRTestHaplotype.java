@@ -16,15 +16,14 @@ import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
 import nl.harmjanwestra.utilities.sets.Bits;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.ChiSquare;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.Executors;
 
 /**
@@ -58,14 +57,157 @@ public class LRTestHaplotype extends LRTest {
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(options.getBedfile());
 		ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt", regions);
+		Collections.sort(variants, new VCFVariantComparator());
+
 		if (variants.isEmpty()) {
 			System.out.println("Sorry no variants found.");
 			System.exit(-1);
 		}
 
-		// perform univariate test
-		System.out.println();
 
+//		univariate(variants);
+
+//		exhaustive(variants);
+
+//		collapse(variants);
+
+//		multivariate(variants);
+
+		conditional(variants);
+
+		System.exit(-1);
+	}
+
+	private void conditional(ArrayList<VCFVariant> variants) {
+		HaplotypeDataset dspruned = getPrunedHaplotypes(variants);
+		DoubleMatrix2D intercept = dspruned.getIntercept();
+		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
+		double[] y = dspruned.getDiseaseStatus();
+		LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+
+		ArrayList<BitVector> haps = dspruned.getAvailableHaplotypesList();
+
+		// get snp that contributes to most haplotypes
+		int[] snpctr = new int[variants.size()];
+		for (int q = 0; q < haps.size(); q++) {
+			BitVector v = haps.get(q);
+			for (int z = 0; z < v.size(); z++) {
+				if (v.get(z)) {
+					snpctr[z]++;
+				}
+			}
+		}
+		int maxSNP = -1;
+		int startsnp = -1;
+		ArrayList<Pair<Integer, Integer>> snps = new ArrayList<>();
+		for (int v = 0; v < snpctr.length; v++) {
+			if (snpctr[v] > maxSNP) {
+				startsnp = v;
+				maxSNP = snpctr[v];
+			}
+			snps.add(new Pair<>(v, snpctr[v]));
+
+		}
+
+		System.out.println("Start ctr: " + maxSNP + "\tsnp: " + startsnp);
+		Collections.sort(snps, new PairSorter());
+
+		ArrayList<Integer> groupVars = new ArrayList<>();
+		for (int v = 0; v < snps.size(); v++) {
+			System.out.println(snps.get(v).getLeft() + "\t" + snps.get(v).getRight());
+			dspruned.createGroups(groupVars);
+		}
+
+
+	}
+
+	class PairSorter implements Comparator<Pair<Integer, Integer>> {
+
+		@Override
+		public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
+			return -o1.getRight().compareTo(o2.getRight());
+		}
+	}
+
+	private void multivariate(ArrayList<VCFVariant> variants) throws IOException {
+		HaplotypeDataset dspruned = getPrunedHaplotypes(variants);
+		DoubleMatrix2D intercept = dspruned.getIntercept();
+		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
+		double[] y = dspruned.getDiseaseStatus();
+		LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+
+
+		Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
+		DoubleMatrix2D haps = data.getLeft();
+		DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
+		DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
+		LogisticRegressionResult resultX = reg.univariate(y, x);
+
+		int nrRemaining = haps.columns();
+		double devx = resultX.getDeviance();
+		double devnull = resultCovars.getDeviance();
+		double[] betasmlelr = new double[nrRemaining];
+		double[] stderrsmlelr = new double[nrRemaining];
+		double[] or = new double[nrRemaining];
+		double[] orhi = new double[nrRemaining];
+		double[] orlo = new double[nrRemaining];
+
+
+		for (int q = 1; q < nrRemaining + 1; q++) {
+			double beta = -resultX.getBeta()[q];
+			double se = resultX.getStderrs()[q];
+			betasmlelr[q - 1] = beta;
+			stderrsmlelr[q - 1] = se;
+
+			double OR = Math.exp(beta);
+			double orLow = Math.exp(beta - 1.96 * se);
+			double orHigh = Math.exp(beta + 1.96 * se);
+			or[q - 1] = OR;
+			orhi[q - 1] = orHigh;
+			orlo[q - 1] = orLow;
+		}
+
+
+		double deltaDeviance = devnull - devx;
+		int df = 1;
+		double p = ChiSquare.getP(df, deltaDeviance);
+
+		AssociationResult result = new AssociationResult();
+		result.setDevianceNull(devnull);
+		result.setDevianceGeno(devx);
+		result.setDf(df);
+		result.setDfalt(x.columns());
+		result.setDfnull(xprime.columns());
+
+		result.setBeta(betasmlelr);
+		result.setSe(stderrsmlelr);
+		result.setPval(p);
+
+
+		SNPFeature snp = dspruned.asFeature(data.getRight(), dspruned.getReferenceHaplotypeId());
+		result.setSnp(snp);
+		result.setN(x.rows());
+
+		snp.setImputationQualityScore(1d);
+
+		String outloc = options.getOutputdir() + "haptest-multivariate.txt";
+		TextFile out = new TextFile(outloc, TextFile.W);
+
+		AssociationFile f = new AssociationFile();
+		out.writeln(f.getHeader());
+		out.writeln(result.toString());
+		out.close();
+
+
+		HaplotypeMultivariatePlot plot = new HaplotypeMultivariatePlot();
+		try {
+			plot.run(dspruned, data.getRight(), result, options.getOutputdir() + "haptest-multivariate.pdf");
+		} catch (DocumentException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private HaplotypeDataset getPrunedHaplotypes(ArrayList<VCFVariant> variants) {
 		HaplotypeDataset ds = HaplotypeDataset.create(variants, finalDiseaseStatus, finalCovariates, options.getGenotypeProbThreshold(), exService);
 		int nrHapsPrev = ds.getAvailableHaplotypesList().size();
 
@@ -81,13 +223,11 @@ public class LRTestHaplotype extends LRTest {
 			pruningiter++;
 		}
 
-//		univariate(dspruned);
+		return dspruned;
+	}
 
-//		exhaustive(variants);
+	private void pruneHaplotypes(ArrayList<VCFVariant> variants) {
 
-		collapse(variants);
-
-		System.exit(-1);
 	}
 
 	private void collapse(ArrayList<VCFVariant> variants) throws IOException {
@@ -334,20 +474,7 @@ public class LRTestHaplotype extends LRTest {
 					selectedVars.add(variants.get(combo[q]));
 				}
 
-				HaplotypeDataset ds = HaplotypeDataset.create(selectedVars, finalDiseaseStatus, finalCovariates, options.getGenotypeProbThreshold(), exService);
-
-				int nrHapsPrev = ds.getAvailableHaplotypesList().size();
-				HaplotypeDataset dspruned = null;
-				int delta = 1;
-				int pruningiter = 0;
-				while (delta > 0) {
-					System.out.println();
-					System.out.println("Pruning iteration " + pruningiter);
-					dspruned = ds.prune(options.getHaplotypeFrequencyThreshold());
-					delta = nrHapsPrev - dspruned.getAvailableHaplotypesList().size();
-					nrHapsPrev = dspruned.getAvailableHaplotypesList().size();
-					pruningiter++;
-				}
+				HaplotypeDataset dspruned = getPrunedHaplotypes(selectedVars);
 
 				for (int hap = 0; hap < dspruned.getNrHaplotypes(); hap++) {
 					DoubleMatrix2D intercept = dspruned.getIntercept();
@@ -487,8 +614,12 @@ public class LRTestHaplotype extends LRTest {
 	}
 
 
-	private void univariate(HaplotypeDataset dspruned) throws IOException {
+	private void univariate(ArrayList<VCFVariant> variants) throws IOException {
 
+		// perform univariate test
+		System.out.println();
+
+		HaplotypeDataset dspruned = getPrunedHaplotypes(variants);
 		System.out.println("Univariate tests");
 
 		String outloc = options.getOutputdir() + "haptest-univariate.txt";

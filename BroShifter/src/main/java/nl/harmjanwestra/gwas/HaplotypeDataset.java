@@ -10,8 +10,10 @@ import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.console.ProgressBar;
+import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +40,8 @@ public class HaplotypeDataset {
 	private int nrHaplotypes;
 	private DenseDoubleMatrix2D haplotypeMatrix;
 	private HashMap<BitVector, Integer> hapToInt;
+	private int minorHapId = -1;
+	private double minAlleleFreq;
 
 
 	public HaplotypeDataset(BitVector[][] haplotypePairs,
@@ -272,12 +276,17 @@ public class HaplotypeDataset {
 		double maxfreq = -1;
 		System.out.println("Haplotype frequencies:");
 		System.out.println("Haplotype\tCases\tControls");
+		minAlleleFreq = 1;
 		for (int i = 0; i < availableHaplotypesList.size(); i++) {
 			haplotypeFrequenciesCases[i] /= totalChromosomesCases;
 			haplotypeFrequenciesControls[i] /= totalChromosomesControls;
 			if (haplotypeFrequenciesControls[i] > maxfreq) {
 				reference = availableHaplotypesList.get(i);
 				maxfreq = haplotypeFrequenciesControls[i];
+			}
+			if (haplotypeFrequenciesControls[i] < minAlleleFreq) {
+				minorHapId = i;
+				minAlleleFreq = haplotypeFrequenciesControls[i];
 			}
 			System.out.println(getHaplotypeDesc(i) + "\t" + haplotypeFrequenciesCases[i] + "\t" + haplotypeFrequenciesControls[i]);
 		}
@@ -313,6 +322,34 @@ public class HaplotypeDataset {
 			snp.setAlleles(alleles);
 			snp.setMinorAllele(getHaplotypeDesc(hap));
 		}
+
+		return snp;
+	}
+
+	public SNPFeature asFeature(ArrayList<BitVector> haps, Integer referenceHapId) {
+		Chromosome chr = variants.get(0).getChrObj();
+		int start = variants.get(0).getPos();
+		int stop = variants.get(variants.size() - 1).getPos();
+
+		double[] afsControls = new double[haps.size()];
+		double[] afsCases = new double[haps.size()];
+		String[] hapDescs = new String[haps.size()];
+		for (int b = 0; b < haps.size(); b++) {
+			Integer id = hapToInt.get(haps.get(b));
+			afsControls[b] = haplotypeFrequenciesControls[id];
+			afsCases[b] = haplotypeFrequenciesCases[id];
+			hapDescs[b] = getHaplotypeDesc(id);
+		}
+
+		SNPFeature snp = new SNPFeature(chr, start, stop);
+		snp.setAFCases(afsCases);
+		snp.setAFControls(afsControls);
+		snp.setName(getVariantsAsString());
+
+
+		snp.setAlleles(new String[]{getHaplotypeDesc(referenceHapId), Strings.concat(hapDescs, Strings.comma)});
+		snp.setMinorAllele(getHaplotypeDesc(minorHapId));
+
 
 		return snp;
 	}
@@ -524,4 +561,88 @@ public class HaplotypeDataset {
 
 	}
 
+	public Pair<DoubleMatrix2D, ArrayList<BitVector>> getHaplotypesExcludeReference() {
+
+		Integer id = hapToInt.get(referenceHaplotype);
+		DoubleMatrix2D matrix = new DenseDoubleMatrix2D(haplotypeMatrix.rows(), haplotypeMatrix.columns() - 1);
+		for (int i = 0; i < haplotypeMatrix.rows(); i++) {
+			int ctr = 0;
+			for (int j = 0; j < haplotypeMatrix.columns(); j++) {
+				if (j != id) {
+					matrix.setQuick(i, ctr, haplotypeMatrix.getQuick(i, j));
+					ctr++;
+				}
+			}
+		}
+
+		ArrayList<BitVector> remainingHaps = new ArrayList<>();
+		for (int i = 0; i < availableHaplotypesList.size(); i++) {
+			if (i != id) {
+				remainingHaps.add(availableHaplotypesList.get(i));
+			}
+		}
+
+		return new Pair<DoubleMatrix2D, ArrayList<BitVector>>(matrix, remainingHaps);
+	}
+
+	public Integer getReferenceHaplotypeId() {
+		return hapToInt.get(referenceHaplotype);
+	}
+
+	public void createGroups(ArrayList<Integer> groupVars) {
+
+		ArrayList<ArrayList<BitVector>> hapspervar = new ArrayList<>();
+		for (int i = 0; i < groupVars.size(); i++) {
+			Integer v = groupVars.get(i);
+			ArrayList<BitVector> haps = new ArrayList<>();
+			for (int b = 0; b < availableHaplotypesList.size(); b++) {
+				BitVector vector = availableHaplotypesList.get(b);
+				if (vector.get(v)) {
+					haps.add(vector);
+				}
+			}
+		}
+
+		// create a new haplogroup is any of the variants
+		// overlap haplotypes.. i.e. when a hap is present for > 1 variants
+		int[] hapsctr = new int[availableHaplotypesList.size()];
+		for (int i = 0; i < hapspervar.size(); i++) {
+			ArrayList<BitVector> haps = hapspervar.get(i);
+			for (int j = 0; j < haps.size(); j++) {
+				Integer id = hapToInt.get(haps.get(j));
+				hapsctr[id]++;
+			}
+		}
+
+		HashSet<Integer> ctrHash = new HashSet<Integer>();
+		for (int i = 0; i < hapsctr.length; i++) {
+			ctrHash.add(hapsctr[i]);
+		}
+
+		ArrayList<ArrayList<BitVector>> groups = new ArrayList<>();
+		for (Integer q : ctrHash) {
+			ArrayList<BitVector> group = new ArrayList<>();
+			for (int z = 0; z < hapsctr.length; z++) {
+				if (q.equals(hapsctr[z])) {
+					group.add(availableHaplotypesList.get(z));
+				}
+			}
+			groups.add(group);
+		}
+
+		DoubleMatrix2D matrix = new DenseDoubleMatrix2D(haplotypeMatrix.rows(), groups.size());
+		for (int g = 0; g < groups.size(); g++) {
+			ArrayList<BitVector> group = groups.get(g);
+
+			for (int i = 0; i < haplotypeMatrix.rows(); i++) {
+				for (int z = 0; z < group.size(); z++) {
+					BitVector v = group.get(z);
+					Integer id = hapToInt.get(v);
+					double val = haplotypeMatrix.get(i, id);
+					double val2 = matrix.getQuick(i, g);
+					matrix.setQuick(i, g, val + val2);
+				}
+			}
+		}
+	}
 }

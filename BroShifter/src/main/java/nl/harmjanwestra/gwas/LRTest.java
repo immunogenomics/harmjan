@@ -1031,7 +1031,7 @@ public class LRTest {
 							}
 						}
 						returned++;
-						pb.set(returned);
+						pb.iterate();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					} catch (ExecutionException e) {
