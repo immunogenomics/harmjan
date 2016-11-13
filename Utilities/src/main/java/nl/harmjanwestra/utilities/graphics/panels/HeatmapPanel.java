@@ -151,6 +151,14 @@ public class HeatmapPanel extends Panel {
 			int dy = y0 - (boxHeight * tickNr);
 
 			double yPerc = range.getRelativePositionY(i);
+			if (yPerc > 1) {
+				yPerc = 1;
+				System.out.println("Weird value: " + i + "\t" + range.getMaxY());
+			} else if (yPerc < 0) {
+
+				System.out.println("Weird value: " + i + "\t" + range.getMinY());
+				yPerc = 0;
+			}
 			int op = (int) Math.ceil(253 * yPerc);
 
 

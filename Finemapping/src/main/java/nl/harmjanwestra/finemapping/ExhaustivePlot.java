@@ -2,6 +2,7 @@ package nl.harmjanwestra.finemapping;
 
 import com.itextpdf.text.DocumentException;
 import htsjdk.tribble.readers.TabixReader;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
@@ -30,25 +31,24 @@ public class ExhaustivePlot {
 
 	public static void main(String[] args) {
 
-
-		ExhaustivePlot p = new ExhaustivePlot();
-		String output = "/Data/tmp/tnfaip3/exhaustive";
-		Feature region = new Feature();
-		// Chr2_204446380-204816382
-
-		// TNFAIP3
-		region.setChromosome(Chromosome.SIX);
-		region.setStart(137882875);
-		region.setStop(138275085);
-//		region.setChromosome(Chromosome.TWO);
-//		region.setStart(204446380);
-//		region.setStop(204816382);
-
-		String assocfile = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr6-pairwise.txt.gz";
-		String tabixfile = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
-		String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 		try {
-			p.plotTopNSNPs(region, assocfile, output, 25, tabixfile, tabixsamplelimit);
+			BedFileReader reader = new BedFileReader();
+			ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/regions.txt");
+			String[] diseases = new String[]{"RA", "T1D"};
+			for (String d : diseases) {
+				for (Feature region : regions) {
+					ExhaustivePlot p = new ExhaustivePlot();
+					String output = "/Data/Projects/2016-Finemapping/Exhaustive/plots/" + d + "-" + region.toString();
+
+					String assocfile = "/Data/Projects/2016-Finemapping/Exhaustive/" + d + "-assoc0.3-COSMO-chr" + region.getChromosome().getNumber() + "-pairwise.txt.gz";
+					String tabixfile = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
+					String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
+
+					p.plotTopNSNPs(region, assocfile, output, 25, tabixfile, tabixsamplelimit);
+				}
+			}
+
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
@@ -225,15 +225,15 @@ public class ExhaustivePlot {
 			}
 		}
 
-		HashSet<SNPFeature> topSNPs = new HashSet<SNPFeature>();
+		System.out.println(assocVals.size() + " values loaded");
 
-		for (AssocPair p : assocVals) {
-			if (topSNPs.size() > topN) {
-				break;
-			} else {
-				topSNPs.add(p.getSnp1());
-				topSNPs.add(p.getSnp2());
-			}
+		HashSet<SNPFeature> topSNPs = new HashSet<SNPFeature>();
+		int ctr = 0;
+		while (topSNPs.size() < topN) {
+			AssocPair p = assocVals.get(ctr);
+			topSNPs.add(p.getSnp1());
+			topSNPs.add(p.getSnp2());
+			ctr++;
 		}
 
 		// sort top SNPs by position
@@ -258,13 +258,16 @@ public class ExhaustivePlot {
 			if (topSNPs.contains(p.getSnp1()) && topSNPs.contains(p.getSnp2())) {
 				Integer id1 = topSNPIndex.get(p.getSnp1());
 				Integer id2 = topSNPIndex.get(p.getSnp2());
-				vals[id1][id2] = p.getP();
-				vals[id2][id1] = p.getP();
-				if (p.getP() > maxPval) {
-					maxPval = p.getP();
-				}
-				if (p.getP() < minPval) {
-					minPval = p.getP();
+
+				if (p.getP() > -Math.log10(7.5e-7)) {
+					vals[id1][id2] = p.getP();
+					vals[id2][id1] = p.getP();
+					if (p.getP() > maxPval) {
+						maxPval = p.getP();
+					}
+					if (p.getP() < minPval) {
+						minPval = p.getP();
+					}
 				}
 			}
 		}
@@ -300,23 +303,27 @@ public class ExhaustivePlot {
 		}
 		System.out.println("meh2");
 
+		if (vals.length != 0) {
 
-		Range pvalRange = new Range(0, minPval, 1, maxPval);
-		pvalRange.roundY();
-		Grid grid = new Grid(600, 600, 1, 1, 100, 100);
-		HeatmapPanel panel = new HeatmapPanel(1, 1);
-		panel.setData(vals, rowlabels, rowlabels);
-		panel.setPlotMode(HeatmapPanel.MODE.LOWER);
-		grid.addPanel(panel);
-		panel.setRange(pvalRange);
-		grid.draw(output + "-pvals.pdf");
+			Range pvalRange = new Range(0, minPval, 1, maxPval);
+			pvalRange.roundY();
+			Grid grid = new Grid(600, 600, 1, 1, 100, 100);
+			HeatmapPanel panel = new HeatmapPanel(1, 1);
+			panel.setData(vals, rowlabels, rowlabels);
+			panel.setPlotMode(HeatmapPanel.MODE.LOWER);
+			grid.addPanel(panel);
+			panel.setRange(pvalRange);
+			grid.draw(output + "-pvals.pdf");
 
-		grid = new Grid(600, 600, 1, 1, 100, 100);
-		panel = new HeatmapPanel(1, 1);
-		panel.setData(ldmatrix, rowlabels, rowlabels);
-		panel.setPlotMode(HeatmapPanel.MODE.UPPER);
-		grid.addPanel(panel);
-		grid.draw(output + "-ld.pdf");
+			grid = new Grid(600, 600, 1, 1, 100, 100);
+			panel = new HeatmapPanel(1, 1);
+			panel.setData(ldmatrix, rowlabels, rowlabels);
+			panel.setPlotMode(HeatmapPanel.MODE.UPPER);
+			grid.addPanel(panel);
+			grid.draw(output + "-ld.pdf");
+		} else {
+			System.out.println("Nothing to plot?");
+		}
 	}
 
 

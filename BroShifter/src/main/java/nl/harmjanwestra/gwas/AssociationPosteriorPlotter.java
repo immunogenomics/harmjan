@@ -207,7 +207,7 @@ public class AssociationPosteriorPlotter {
 					posteriorPanel.setDataSingleDs(region, sequencedRegions, posteriors, "Posteriors");
 					posteriorPanel.setMarkDifferentShape(mark);
 					posteriorPanel.setMaxPVal(0.99d);
-					grid.addPanel(posteriorPanel, 2, i);
+					grid.addPanel(posteriorPanel, 1, i);
 				}
 
 				AssociationPanel associationPanel = new AssociationPanel(1, 1);
@@ -243,9 +243,11 @@ public class AssociationPosteriorPlotter {
 				}
 
 				System.out.println(maxVar + " is the max var.");
-
+				if (!pvals.isEmpty()) {
+					regionhasvariants = true;
+				}
 				double[] ldData = null;
-				if (ldrpefix != null) {
+				if (ldrpefix != null && regionhasvariants) {
 					ldData = new double[pvals.size()];
 					HashMap<String, Integer> variantsPresentIndex = new HashMap<String, Integer>();
 					VCFVariant[] variantArr = new VCFVariant[pvals.size()];
@@ -292,30 +294,33 @@ public class AssociationPosteriorPlotter {
 					Integer maxVarIndex = variantsPresentIndex.get(maxVar);
 					if (maxVarIndex == null) {
 						System.out.println(maxVar + " not found for dataset " + assocFiles[i]);
-						System.exit(-1);
-
-					}
-					ldData[maxVarIndex] = 1d;
-					VCFVariant topVariant = variantArr[maxVarIndex];
-					DetermineLD ldcalc = new DetermineLD();
-					for (int v = 0; v < variantArr.length; v++) {
-						if (!maxVarIndex.equals(v)) {
-							Pair<Double, Double> ld = ldcalc.getLD(variantArr[v], topVariant);
-							ldData[v] = ld.getRight();
+//						System.exit(-1);
+					} else {
+						ldData[maxVarIndex] = 1d;
+						VCFVariant topVariant = variantArr[maxVarIndex];
+						DetermineLD ldcalc = new DetermineLD();
+						for (int v = 0; v < variantArr.length; v++) {
+							if (!maxVarIndex.equals(v)) {
+								Pair<Double, Double> ld = ldcalc.getLD(variantArr[v], topVariant);
+								ldData[v] = ld.getRight();
+							}
 						}
+						associationPanel.setLDData(ldData);
 					}
-					associationPanel.setLDData(ldData);
+
 				}
 
-				if (!pvals.isEmpty()) {
-					regionhasvariants = true;
-				}
 
 				associationPanel.setDataSingleDs(region, sequencedRegions, pvals, assocNames[i] + " Association P-values");
 				associationPanel.setMarkDifferentShape(mark);
 				associationPanel.setPlotGWASSignificance(true, threshold);
 				allPanels.add(associationPanel);
-				grid.addPanel(associationPanel, 1, i);
+				if (plotPosteriors) {
+					grid.addPanel(associationPanel, 2, i);
+				} else {
+					grid.addPanel(associationPanel, 1, i);
+				}
+
 			}
 
 			if (regionhasvariants) {
