@@ -13,7 +13,7 @@ import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.*;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;

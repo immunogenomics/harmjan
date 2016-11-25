@@ -30,6 +30,13 @@ public class SampleAnnotation {
 		this.sampleDiseaseStatus = sampleDiseaseStatus;
 	}
 
+	public void setSampleDiseaseStatus(DiseaseStatus[] sampleDiseaseStatus) {
+		this.sampleDiseaseStatus = new DiseaseStatus[sampleDiseaseStatus.length][1];
+		for (int q = 0; q < sampleDiseaseStatus.length; q++) {
+			this.sampleDiseaseStatus[q][0] = sampleDiseaseStatus[q];
+		}
+	}
+
 	public Gender[] getIndividualGender() {
 		return individualGender;
 	}

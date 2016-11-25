@@ -62,13 +62,13 @@ public class MakeTableWithICResults {
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
 			// ComparisonsToMeta
-			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz";
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz";
 			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
 			locusFile = indir + "META-significantloci-75e7.bed";
 			outfile = outdir + "2016-06-19-RA-LocusComparisonWithMeta-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, tabixSampleFile, outfile);
 
-			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-07-25-SummaryStats/Normal/META-assoc0.3-COSMO-merged-posterior.txt.gz";
+			icTabFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz";
 			fmAssocFile = indir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
 			locusFile = indir + "META-significantloci-75e7.bed";
 			outfile = outdir + "2016-06-19-T1D-LocusComparisonWithMeta-SignificantLoci.txt";

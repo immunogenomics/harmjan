@@ -3,37 +3,26 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.harmjanwestra.utilities.gtf;
+package nl.harmjanwestra.utilities.annotation.gtf;
 
+import nl.harmjanwestra.utilities.annotation.Annotation;
 import nl.harmjanwestra.utilities.features.Exon;
-import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.Gene;
 import nl.harmjanwestra.utilities.features.Transcript;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.TreeSet;
 
 /**
  * @author Harm-Jan
  */
-public class GTFAnnotation {
+public class GTFAnnotation extends Annotation {
 
-	private String annotationLocation;
-	private Collection<Gene> genes;
 
 	public GTFAnnotation(String annotation) throws IOException {
 		this.annotationLocation = annotation;
 		readAnnotation();
-
-	}
-
-	HashMap<String, Gene> strToGene;
-
-	public HashMap<String, Gene> getStrToGene() {
-		return strToGene;
 	}
 
 	private void readAnnotation() throws IOException {
@@ -56,7 +45,6 @@ public class GTFAnnotation {
 				GTFLine lineObj = new GTFLine(ln);
 
 
-
 				if (lineObj.getType().equals("exon") || lineObj.getType().equals("start_codon") || lineObj.getType().equals("stop_codon") || lineObj.getType().equals("transcript")
 						|| lineObj.getType().equals("gene")) {
 					Gene currentGene = null;
@@ -67,7 +55,7 @@ public class GTFAnnotation {
 
 					String transcriptName = lineObj.getTranscriptId();
 					Gene tmpGene = new Gene(geneName, lineObj.getChr(), lineObj.getStr());
-					tmpGene.setGeneId(lineObj.getGeneId());
+					tmpGene.setGeneSymbol(lineObj.getGeneId());
 					if (strToGene.containsKey(tmpGene.toString())) {
 						// continue annotating transcripts and exons with this gene
 //                System.out.println("getting gene: " + geneName);
@@ -122,33 +110,9 @@ public class GTFAnnotation {
 
 		// set the relative start and end positions of each gene and transcript
 		genes = strToGene.values();
-
-		for (Gene g : genes) {
-			g.getBounds();
-		}
+		genes.forEach(Gene::getBounds);
 
 	}
 
-	public TreeSet<Gene> getGeneTree() {
-		FeatureComparator comp = new FeatureComparator(false);
-		TreeSet<Gene> geneTree = new TreeSet<Gene>(comp);
-		for (Gene g : genes) {
-			g.getBounds();
-			geneTree.add(g);
-		}
-		comp.setAllowOverlap(true);
-		return geneTree;
-	}
 
-	public Collection<Gene> getGenes() {
-		return genes;
-	}
-
-	public TreeSet<Transcript> getTranscriptTree() {
-		TreeSet<Transcript> transcriptTree = new TreeSet<Transcript>(new FeatureComparator(true));
-		for (Gene g : genes) {
-			transcriptTree.addAll(g.getTranscripts());
-		}
-		return transcriptTree;
-	}
 }

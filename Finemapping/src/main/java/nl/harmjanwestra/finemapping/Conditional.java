@@ -6,7 +6,7 @@ import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
@@ -19,7 +19,7 @@ import java.util.TreeSet;
 /**
  * Created by hwestra on 8/19/16.
  */
-public class Bonferroninator {
+public class Conditional {
 
 	public static void main(String[] args) {
 
@@ -29,7 +29,7 @@ public class Bonferroninator {
 		String out = "";
 
 		// RA
-		Bonferroninator b = new Bonferroninator();
+		Conditional b = new Conditional();
 		try {
 
 			String[] significantRegionFiles = new String[]{
@@ -77,7 +77,7 @@ public class Bonferroninator {
 			String annot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/genes.gtf.gz";
 			GTFAnnotation annotation = new GTFAnnotation(annot);
 			TreeSet<Gene> genes = annotation.getGeneTree();
-			int maxiter = 3;
+			int maxiter = 4;
 			for (int d = 0; d < diseases.length; d++) {
 
 				HashMap<String, Double> thresholds = new HashMap<String, Double>();

@@ -3,18 +3,19 @@ package nl.harmjanwestra.gwas;
 import com.itextpdf.text.DocumentException;
 import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.gwas.CLI.AssociationPlotterOptions;
+import nl.harmjanwestra.utilities.annotation.Annotation;
+import nl.harmjanwestra.utilities.annotation.ensembl.EnsemblStructures;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.AssociationPanel;
 import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -22,7 +23,10 @@ import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.TreeSet;
 
 /**
  * Created by Harm-Jan on 01/13/16.
@@ -143,23 +147,39 @@ public class AssociationPosteriorPlotter {
 		String[] assocNames = associationFileNames.split(",");
 		String[] assocFiles = associationFiles.split(",");
 		AssociationFile assocFile = new AssociationFile();
-		GTFAnnotation annotation = new GTFAnnotation(annotationfile);
+		Annotation annotation = null;
+		if (annotationfile.endsWith(".gtf.gz") || annotationfile.endsWith(".gtf")) {
+			annotation = new GTFAnnotation(annotationfile);
+		} else {
+			annotation = new EnsemblStructures(annotationfile);
+		}
 
 
 		for (Feature region : regions) {
 			boolean regionhasvariants = false;
 
 			TreeSet<Gene> genes = annotation.getGeneTree();
-			Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
-			Gene geneStop = new Gene("", region.getChromosome(), Strand.POS, region.getStop(), region.getStop());
-			SortedSet<Gene> overlappingGenes = genes.subSet(geneStart, true, geneStop, true);
-
-			for (Gene g : overlappingGenes) {
-				System.out.println(g.toString());
-			}
 
 			ArrayList<Gene> overlappingGenesList = new ArrayList<>();
-			overlappingGenesList.addAll(overlappingGenes);
+			for (Gene g : genes) {
+				if (g.overlaps(region)) {
+					System.out.println(g.toString());
+					overlappingGenesList.add(g);
+				}
+			}
+
+			System.out.println();
+
+//			Gene geneStart = new Gene("", region.getChromosome(), Strand.POS, region.getStart(), region.getStart());
+//			Gene geneStop = new Gene("", region.getChromosome(), Strand.POS, region.getStop(), region.getStop());
+//			SortedSet<Gene> overlappingGenes = genes.subSet(geneStart, true, geneStop, true);
+
+//			for (Gene g : overlappingGenes) {
+//				System.out.println(g.toString());
+//			}
+
+
+//			overlappingGenesList.addAll(overlappingGenes);
 
 			int gridrows = 2;
 			if (plotPosteriors) {

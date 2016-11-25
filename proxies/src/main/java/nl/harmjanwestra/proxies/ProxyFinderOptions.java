@@ -1,4 +1,4 @@
-package nl.harmjanwestra.gwas.CLI;
+package nl.harmjanwestra.proxies;
 
 import org.apache.commons.cli.*;
 
@@ -16,14 +16,14 @@ public class ProxyFinderOptions {
 		option = Option.builder()
 				.longOpt("tabix")
 				.hasArg()
-				.desc("Prefix for tabix path [format /path/to/chrCHR.vcf.gz]. Replace the chromosome number with CHR (will be replaced by chr number depending on input SNP).")
+				.desc("Prefix for tabix path [format /path/to/chrCHR.vcf.gz]. Replace the chromosome number with CHR (will be replaced by chr number depending on input SNP or region).")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("samplefilter")
 				.hasArg()
-				.desc("Limit samples to individuals in this list")
+				.desc("Limit samples to individuals in this list (one sample per line)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -31,6 +31,13 @@ public class ProxyFinderOptions {
 				.longOpt("windowsize")
 				.hasArg()
 				.desc("Window size [default 1000000]")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder("m")
+				.longOpt("maf")
+				.hasArg()
+				.desc("MAF threshold [default: 0.005]")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -44,26 +51,26 @@ public class ProxyFinderOptions {
 		option = Option.builder("i")
 				.longOpt("snps")
 				.hasArg()
-				.desc("SNP path")
+				.desc("SNP path (format: 3 or 6 columns, tab separated, one or two snps per line: chr pos rsid) ")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder("r")
 				.longOpt("regions")
 				.hasArg()
-				.desc("Region path")
+				.desc("Region bed file path")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("pairwise")
-				.desc("Perform Pairwise LD calculation (format Chr_pos_rsid)")
+				.desc("Perform Pairwise LD calculation (use 6 column file for --snps)")
 				.build();
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.longOpt("locusld")
-				.desc("Perform Pairwise LD calculation within a region")
+				.desc("Perform Pairwise LD calculation within a region (provide region with --regions)")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -77,12 +84,19 @@ public class ProxyFinderOptions {
 		option = Option.builder()
 				.longOpt("threads")
 				.hasArg()
-				.desc("Nr of threads")
+				.desc("Nr of threads [default: 1]")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("matchrsid")
+				.desc("Match variants on RS id")
 				.build();
 		OPTIONS.addOption(option);
 
 	}
 
+	public boolean matchrsid = false;
 	public String tabixrefprefix;
 	public String samplefilter;
 	public int windowsize = 1000000;
@@ -93,6 +107,7 @@ public class ProxyFinderOptions {
 	public boolean pairwise;
 	public String regionfile;
 	public boolean locusld;
+	public double mafthreshold;
 
 
 	public ProxyFinderOptions(String[] args) {
@@ -107,6 +122,10 @@ public class ProxyFinderOptions {
 			} else {
 				System.out.println("Provide reference");
 				run = false;
+			}
+
+			if (cmd.hasOption("matchrsid")) {
+				matchrsid = true;
 			}
 
 			if (cmd.hasOption("w")) {
@@ -142,6 +161,10 @@ public class ProxyFinderOptions {
 			} else {
 				System.out.println("Provide output");
 				run = false;
+			}
+
+			if (cmd.hasOption("maf")) {
+				mafthreshold = Double.parseDouble(cmd.getOptionValue("maf"));
 			}
 
 			if (cmd.hasOption("threads")) {

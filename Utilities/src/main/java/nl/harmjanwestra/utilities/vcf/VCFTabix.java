@@ -24,6 +24,9 @@ public class VCFTabix {
 	}
 
 	public boolean[] getSampleFilter(String tabixsamplelimit) throws IOException {
+		if (tabixsamplelimit == null) {
+			return null;
+		}
 		boolean[] samplesToInclude = null;
 		VCFGenotypeData d = new VCFGenotypeData(tabixfile);
 		ArrayList<String> tabixSamples = d.getSamples();
@@ -46,7 +49,6 @@ public class VCFTabix {
 	}
 
 	public TabixReader.Iterator query(Feature region) throws IOException {
-		System.out.println(region.toString());
 		int start = region.getStart() - 10;
 		if (start < 0) {
 			start = 1;

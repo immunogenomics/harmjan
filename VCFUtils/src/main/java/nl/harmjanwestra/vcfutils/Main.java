@@ -630,7 +630,7 @@ public class Main {
 
 //			if (cmd.hasOption("proxy")) {
 //
-//				ProxyFinder finder = new ProxyFinder();
+//				proxyfinder finder = new proxyfinder();
 //
 //				String tabix = null;
 //				int windowsize = 1000000;

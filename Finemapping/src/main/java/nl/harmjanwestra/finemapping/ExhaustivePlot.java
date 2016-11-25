@@ -32,9 +32,11 @@ public class ExhaustivePlot {
 	public static void main(String[] args) {
 
 		try {
+			System.out.println("works");
 			BedFileReader reader = new BedFileReader();
 			ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/regions.txt");
-			String[] diseases = new String[]{"RA", "T1D"};
+//			String[] diseases = new String[]{"RA", "T1D"};
+			String[] diseases = new String[]{"RA"};
 			for (String d : diseases) {
 				for (Feature region : regions) {
 					ExhaustivePlot p = new ExhaustivePlot();
@@ -44,7 +46,13 @@ public class ExhaustivePlot {
 					String tabixfile = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 					String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 
-					p.plotTopNSNPs(region, assocfile, output, 25, tabixfile, tabixsamplelimit);
+					String snpcombos = "/Data/Projects/2016-Finemapping/Exhaustive/" + d + "/combos.txt";
+					if (region.getChromosome().equals(Chromosome.SIX)) {
+						p.findCombination(region, assocfile, snpcombos);
+//						p.plotTopNSNPs(region, assocfile, output, 25, tabixfile, tabixsamplelimit);
+					}
+
+
 				}
 			}
 
@@ -54,6 +62,143 @@ public class ExhaustivePlot {
 		} catch (DocumentException e) {
 			e.printStackTrace();
 		}
+
+	}
+
+	private void findCombination(Feature region, String assocfile, String snpcombos) throws IOException, DocumentException {
+
+
+		TextFile tfc = new TextFile(snpcombos, TextFile.R);
+
+		String[] elems = tfc.readLineElems(TextFile.tab);
+
+		SNPFeature snpf1 = null;
+		SNPFeature snpf2 = null;
+
+		while (elems != null) {
+
+			if (elems.length >= 3) {
+				Feature region1 = Feature.parseFeature(elems[0]);
+				SNPFeature feature1 = SNPFeature.parseSNPFeature(elems[1]);
+				SNPFeature feature2 = SNPFeature.parseSNPFeature(elems[2]);
+//			System.out.println(region1.toString() + "\tLooking for snp: " + feature1.toString() + " and " + feature2.toString());
+				if (region1.overlaps(region)) {
+					snpf1 = feature1;
+					snpf2 = feature2;
+				}
+			}
+			elems = tfc.readLineElems(TextFile.tab);
+		}
+		tfc.close();
+
+		if (snpf1 == null || snpf2 == null) {
+			// System.out.println("");
+		} else {
+			System.out.println(region.toString() + "\tLooking for snp: " + snpf1.toString() + " and " + snpf2.toString());
+
+			String[] variants = new String[]{"", ""};
+
+			TextFile tf2 = new TextFile(assocfile, TextFile.R);
+			String headerln = tf2.readLine();
+			elems = tf2.readLineElems(TextFile.tab);
+			double maxP = 0;
+
+			// snp index
+			HashMap<SNPFeature, Integer> snpToIn = new HashMap<SNPFeature, Integer>();
+			ArrayList<SNPFeature> allSNPs = new ArrayList<SNPFeature>();
+
+			ArrayList<AssocPair> assocVals = new ArrayList<>();
+
+			AssocPair select = null;
+
+			while (elems != null) {
+//			lineIsWhatWereLookingFor = false;
+				Feature s1 = new Feature();
+				Chromosome chr = Chromosome.parseChr(elems[0]);
+				Integer pos1 = Integer.parseInt(elems[1]);
+				String snp1Id = elems[2];
+				Integer pos2 = Integer.parseInt(elems[5]);
+				String snp2Id = elems[6];
+
+				SNPFeature snp1 = new SNPFeature();
+				snp1.setChromosome(chr);
+				snp1.setStart(pos1);
+				snp1.setStop(pos1);
+				snp1.setName(snp1Id);
+
+				if (!snpToIn.containsKey(snp1)) {
+					snpToIn.put(snp1, allSNPs.size());
+					allSNPs.add(snp1);
+				} else {
+					Integer id = snpToIn.get(snp1);
+					if (id == null) {
+						System.out.println("meh");
+					}
+					snp1 = allSNPs.get(id);
+				}
+
+				SNPFeature snp2 = new SNPFeature();
+				snp2.setChromosome(chr);
+				snp2.setStart(pos2);
+				snp2.setStop(pos2);
+				snp2.setName(snp2Id);
+
+				if (!snpToIn.containsKey(snp2)) {
+					snpToIn.put(snp2, allSNPs.size());
+					allSNPs.add(snp2);
+				} else {
+					Integer id = snpToIn.get(snp2);
+					snp2 = allSNPs.get(id);
+				}
+
+				if (region.overlaps(snp1) && region.overlaps(snp2)) {
+					String snp1str = snp1.getChromosome().getNumber() + "_" + snp1.getStart() + "_" + snp1.getName();
+					String snp2str = snp2.getChromosome().getNumber() + "_" + snp2.getStart() + "_" + snp2.getName();
+//					System.out.println(snp1str);
+//					System.exit(0);
+					Double p = Double.parseDouble(elems[elems.length - 1]);
+					if ((snp1str.equals(variants[0]) && snp2str.equals(variants[1]))
+							|| (snp1str.equals(variants[1]) && snp2str.equals(variants[0]))) {
+						System.out.println("found it.");
+					}
+
+					if (p > maxP) {
+						maxP = p;
+					}
+
+					AssocPair v = new AssocPair(snp1, snp2, p);
+					assocVals.add(v);
+
+					if ((snp1.equals(snpf1) && snp2.equals(snpf2))
+							|| (snp2.equals(snpf1) && snp1.equals(snpf2))
+							) {
+						select = v;
+					}
+
+				}
+				elems = tf2.readLineElems(TextFile.tab);
+			}
+			tf2.close();
+
+
+			if (select == null) {
+				System.out.println("Could not find pair");
+			} else {
+				int nrsmaller = 0;
+				System.out.println("P-value pair selected: " + select.getP());
+				for (AssocPair v : assocVals) {
+					if (v.getP() > select.getP()) {
+						nrsmaller++;
+						System.out.println(v.getSnp1().toString() + "\t" + v.getSnp2().toString() + "\t" + v.getP());
+					}
+				}
+
+				System.out.println(region.toString() + "\t" + nrsmaller + " values out of " + assocVals.size());
+			}
+			System.out.println();
+			System.out.println();
+		}
+
 
 	}
 

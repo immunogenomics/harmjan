@@ -3,14 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.harmjanwestra.utilities.gtf;
+package nl.harmjanwestra.utilities.annotation.gtf;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.Strand;
+import umcg.genetica.text.Strings;
+
 import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import umcg.genetica.text.Strings;
 
 /**
  *

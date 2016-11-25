@@ -9,7 +9,7 @@ import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 
@@ -307,7 +307,7 @@ public class GosiaViz2 {
 		Gene ellgene = null;
 		Collection<Gene> genes = ann.getGenes();
 		for (Gene g : genes) {
-			if (g.getGeneId().equals("DIS3L2")) {
+			if (g.getGeneSymbol().equals("DIS3L2")) {
 				System.out.println("Found it! " + g.toString());
 				ellgene = g;
 			}

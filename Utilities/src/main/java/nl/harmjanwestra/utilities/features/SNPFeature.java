@@ -17,6 +17,7 @@ public class SNPFeature extends Feature {
 	private double[] AFCases;
 	private double[] AFControls;
 
+
 	public double getMaf() {
 		return maf;
 	}
@@ -110,7 +111,7 @@ public class SNPFeature extends Feature {
 	}
 
 	public double getAFCases() {
-		if(AFCases == null ){
+		if (AFCases == null) {
 			return 0;
 		} else {
 			return AFCases[0];
@@ -119,7 +120,7 @@ public class SNPFeature extends Feature {
 	}
 
 	public double getAFControls() {
-		if(AFControls == null ){
+		if (AFControls == null) {
 			return 0;
 		} else {
 			return AFControls[0];
@@ -152,5 +153,14 @@ public class SNPFeature extends Feature {
 
 	public double[] getAFControlsArray() {
 		return AFControls;
+	}
+
+	public boolean isIndel() {
+		for (String a : alleles) {
+			if (a.length() > 1) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

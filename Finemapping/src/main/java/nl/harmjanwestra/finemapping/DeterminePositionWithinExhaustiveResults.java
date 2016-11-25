@@ -31,13 +31,13 @@ public class DeterminePositionWithinExhaustiveResults {
 //			assocfileprefix = "D:\\tmp\\2016-08-14-exhaustive\\RA-assoc0.3-COSMO-chr";
 //			modelfileprefix = "D:\\tmp\\2016-08-14-exhaustive\\models\\RA-assoc0.3-COSMO-chr";
 //			outputfile = "D:\\tmp\\2016-08-14-exhaustive\\output\\RA-exhaustiveout-PositionOfTopConditionalEffects.txt";
-//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//			d.mergeCredibleSets(regionfile, assocfileprefix, modelfileprefix, outputfile);
 //
 //			regionfile = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-07-25-SummaryStats\\Conditional\\T1D-lociWithIndependentFX.txt";
 //			assocfileprefix = "D:\\tmp\\2016-08-14-exhaustive\\T1D-assoc0.3-COSMO-chr";
 //			modelfileprefix = "D:\\tmp\\2016-08-14-exhaustive\\models\\T1D-assoc0.3-COSMO-chr";
 //			outputfile = "D:\\tmp\\2016-08-14-exhaustive\\output\\T1D-exhaustive-PositionOfTopConditionalEffects.txt";
-//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//			d.mergeCredibleSets(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
 			regionfile = "/Data/tmp/tnfaip3/tnfaip3.txt";
 			assocfileprefix = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr";

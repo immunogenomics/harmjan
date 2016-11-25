@@ -4,7 +4,7 @@ import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
@@ -91,7 +91,7 @@ public class LocusToGene {
 			ArrayList<String> genesInlocus = new ArrayList<>();
 
 			for (Gene g : overlappingGenes) {
-				genesInlocus.add(g.getGeneId());
+				genesInlocus.add(g.getGeneSymbol());
 			}
 
 			out.writeln(region.toString() + "\t" + Strings.concat(genesInlocus, Strings.semicolon));

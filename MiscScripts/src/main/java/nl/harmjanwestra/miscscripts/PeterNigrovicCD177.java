@@ -12,7 +12,7 @@ import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.AssociationPanel;
 import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
 import nl.harmjanwestra.utilities.graphics.panels.LDPanel;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;

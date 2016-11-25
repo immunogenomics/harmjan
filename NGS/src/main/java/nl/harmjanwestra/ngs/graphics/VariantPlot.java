@@ -5,7 +5,7 @@ import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFFunctions;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -736,7 +736,7 @@ public class VariantPlot extends DefaultGraphics {
 
 
 			g2d.drawLine(margin + pixelStart, y1 + 5, margin + pixelStop, y1 + 5);
-			g2d.drawString(g.getGeneId(), margin + pixelStop + 5, y1 + 10);
+			g2d.drawString(g.getGeneSymbol(), margin + pixelStop + 5, y1 + 10);
 
 		}
 

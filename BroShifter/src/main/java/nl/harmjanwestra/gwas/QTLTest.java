@@ -6,7 +6,7 @@ import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
@@ -176,7 +176,7 @@ public class QTLTest {
 					Integer start = Integer.parseInt(elems[4]);
 					Integer stop = Integer.parseInt(elems[5]);
 					Gene g = new Gene(elems[2], chr, Strand.POS, start, stop);
-					g.setGeneId(name);
+					g.setGeneSymbol(name);
 					allGenes.add(g);
 //					System.out.println(g.toString());
 				}
@@ -194,7 +194,7 @@ public class QTLTest {
 
 		HashSet<String> geneNamesFound = new HashSet<>();
 		for (Gene gene : allGenes) {
-			String name = gene.getGeneId();
+			String name = gene.getGeneSymbol();
 			if (expGeneHash.containsKey(name)) {
 				Integer id = expGeneHash.get(name);
 
@@ -591,12 +591,12 @@ public class QTLTest {
 			Integer expressionId = geneToExpGene.get(g);
 			if (expressionId == null) {
 				// all genes in the finalGeneSet should have at least one expression gene id
-				System.out.println("Something weird is going on: " + g.getGeneId() + " not found in expression data");
+				System.out.println("Something weird is going on: " + g.getGeneSymbol() + " not found in expression data");
 				System.exit(-1);
 			} else {
 
 				StringBuilder geneHeader = new StringBuilder();
-				geneHeader.append(g.getGeneId());
+				geneHeader.append(g.getGeneSymbol());
 				geneHeader.append("\t").append(g.getName());
 				geneHeader.append("\t").append(g.getChromosome().getName());
 				geneHeader.append("\t").append(g.getStart());

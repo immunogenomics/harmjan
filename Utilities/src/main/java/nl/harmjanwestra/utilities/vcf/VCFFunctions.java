@@ -2084,7 +2084,7 @@ public class VCFFunctions {
 
 	}
 
-	public FastListMultimap<Feature, VCFVariant> getVCFVariants(String vcf, HashSet<Feature> map, boolean loadGenotypes) throws IOException {
+	public FastListMultimap<Feature, VCFVariant> getVCFVariants(String vcf, HashSet<Feature> map, HashSet<Feature> select, boolean loadGenotypes) throws IOException {
 		TextFile vcftf = new TextFile(vcf, TextFile.R);
 
 		String ln = vcftf.readLine();
@@ -2094,17 +2094,15 @@ public class VCFFunctions {
 		while (ln != null) {
 			if (!ln.startsWith("##") && !ln.startsWith("#CHROM")) {
 				VCFVariant variant = null;
-				if (loadGenotypes) {
+
+				variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				if (select != null && select.contains(variant.asFeature()) && loadGenotypes) {
 					variant = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
-				} else {
-					variant = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+				} else if (select == null && loadGenotypes) {
+					variant = new VCFVariant(ln, VCFVariant.PARSE.GENOTYPES);
 				}
 
-
-				Feature f = new Feature();
-				f.setChromosome(Chromosome.parseChr(variant.getChr()));
-				f.setStart(variant.getPos());
-				f.setStop(variant.getPos());
+				Feature f = variant.asFeature();
 				if (map == null || map.contains(f)) {
 					output.put(f, variant);
 				}

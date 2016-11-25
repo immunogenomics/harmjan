@@ -48,13 +48,13 @@ public class FeatureComparator implements Comparator<Feature> {
 			return -1;
 		}
 
-		if (obj1.getStrand() == null || obj2.getStrand() == null) {
-			return 0;
-		} else if (obj1.getStrand().getNumber() > obj2.getStrand().getNumber()) {
-			return 1;
-		} else if (obj1.getStrand().getNumber() < obj2.getStrand().getNumber()) {
-			return -1;
-		}
+//		if (obj1.getStrand() == null || obj2.getStrand() == null) {
+//			return 0;
+//		} else if (obj1.getStrand().getNumber() > obj2.getStrand().getNumber()) {
+//			return 1;
+//		} else if (obj1.getStrand().getNumber() < obj2.getStrand().getNumber()) {
+//			return -1;
+//		}
 
 		return 0;
 

@@ -24,7 +24,7 @@ import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.CoveragePanel;
 import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
 import nl.harmjanwestra.utilities.graphics.panels.HistogramPanel;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;

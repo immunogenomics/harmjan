@@ -78,6 +78,9 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				}
 				overlap = true;
 
+				maf = variant.getMAFControls();
+				hwep = variant.getHwepControls();
+
 				if (impqual == null || impqual > options.getImputationqualitythreshold()) {
 					// parse the genotype, do some QC checks
 					if (variant.getMAFControls() < options.getMafthresholdD() || variant.getHwepControls() < options.getHWEPThreshold()) {
@@ -85,6 +88,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 					} else {
 						variantPassesQC = true;
 					}
+
 					ln = null;
 				} else {
 					variant = null;

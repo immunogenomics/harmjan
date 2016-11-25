@@ -21,6 +21,7 @@ import org.apache.commons.math3.util.CombinatoricsUtils;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.ChiSquare;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.*;
@@ -71,9 +72,9 @@ public class LRTestHaplotype extends LRTest {
 
 //		collapse(variants);
 
-//		multivariate(variants);
-
-		conditional(variants);
+		multivariate(variants);
+//
+//		conditional(variants);
 
 		System.exit(-1);
 	}
@@ -129,82 +130,123 @@ public class LRTestHaplotype extends LRTest {
 		}
 	}
 
-	private void multivariate(ArrayList<VCFVariant> variants) throws IOException {
-		HaplotypeDataset dspruned = getPrunedHaplotypes(variants);
-		DoubleMatrix2D intercept = dspruned.getIntercept();
-		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
-		double[] y = dspruned.getDiseaseStatus();
-		LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+	private void multivariate(ArrayList<VCFVariant> allVariants) throws IOException {
+
+		ArrayList<Feature> regions = getRegions(options.getBedfile());
+
+		for (int r = 0; r < regions.size(); r++) {
+			Feature region = regions.get(r);
+
+			ArrayList<VCFVariant> regionVariants = new ArrayList<>();
+			for (VCFVariant v : allVariants) {
+				if (v.asSNPFeature().overlaps(region)) {
+					regionVariants.add(v);
+				}
+			}
+
+			if (!regionVariants.isEmpty()) {
+				HaplotypeDataset dspruned = getPrunedHaplotypes(regionVariants);
+				DoubleMatrix2D intercept = dspruned.getIntercept();
+				DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
+				double[] y = dspruned.getDiseaseStatus();
+				LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
 
 
-		Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
-		DoubleMatrix2D haps = data.getLeft();
-		DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
-		DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
-		LogisticRegressionResult resultX = reg.univariate(y, x);
+				Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
+				DoubleMatrix2D haps = data.getLeft();
+				DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
+				DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
+				LogisticRegressionResult resultX = reg.univariate(y, x);
 
-		int nrRemaining = haps.columns();
-		double devx = resultX.getDeviance();
-		double devnull = resultCovars.getDeviance();
-		double[] betasmlelr = new double[nrRemaining];
-		double[] stderrsmlelr = new double[nrRemaining];
-		double[] or = new double[nrRemaining];
-		double[] orhi = new double[nrRemaining];
-		double[] orlo = new double[nrRemaining];
+				int nrRemaining = haps.columns();
+				double devx = resultX.getDeviance();
+				double devnull = resultCovars.getDeviance();
+				double[] betasmlelr = new double[nrRemaining];
+				double[] stderrsmlelr = new double[nrRemaining];
+				double[] or = new double[nrRemaining];
+				double[] orhi = new double[nrRemaining];
+				double[] orlo = new double[nrRemaining];
 
 
-		for (int q = 1; q < nrRemaining + 1; q++) {
-			double beta = -resultX.getBeta()[q];
-			double se = resultX.getStderrs()[q];
-			betasmlelr[q - 1] = beta;
-			stderrsmlelr[q - 1] = se;
+				for (int q = 1; q < nrRemaining + 1; q++) {
+					double beta = -resultX.getBeta()[q];
+					double se = resultX.getStderrs()[q];
+					betasmlelr[q - 1] = beta;
+					stderrsmlelr[q - 1] = se;
 
-			double OR = Math.exp(beta);
-			double orLow = Math.exp(beta - 1.96 * se);
-			double orHigh = Math.exp(beta + 1.96 * se);
-			or[q - 1] = OR;
-			orhi[q - 1] = orHigh;
-			orlo[q - 1] = orLow;
+					double OR = Math.exp(beta);
+					double orLow = Math.exp(beta - 1.96 * se);
+					double orHigh = Math.exp(beta + 1.96 * se);
+					or[q - 1] = OR;
+					orhi[q - 1] = orHigh;
+					orlo[q - 1] = orLow;
+				}
+
+
+				double deltaDeviance = devnull - devx;
+				int df = 1;
+				double p = ChiSquare.getP(df, deltaDeviance);
+
+				AssociationResult result = new AssociationResult();
+				result.setDevianceNull(devnull);
+				result.setDevianceGeno(devx);
+				result.setDf(df);
+				result.setDfalt(x.columns());
+				result.setDfnull(xprime.columns());
+
+				result.setBeta(betasmlelr);
+				result.setSe(stderrsmlelr);
+				result.setPval(p);
+
+				String snpoutf = options.getOutputdir() + region.toString() + "-haptest-haps.txt";
+				TextFile snpout = new TextFile(snpoutf, TextFile.W);
+				snpout.writeln("SNP\tAlleles\tAfCases\tAfControls");
+				for (int v = 0; v < regionVariants.size(); v++) {
+					VCFVariant var = regionVariants.get(v);
+					snpout.writeln(var.toString()
+							+ "\t" + Strings.concat(var.getAlleles(), Strings.comma)
+							+ "\t" + Strings.concat(var.getAlleleFrequenciesCases(), Strings.comma)
+							+ "\t" + Strings.concat(var.getAlleleFrequenciesControls(), Strings.comma));
+				}
+				snpout.writeln("");
+				snpout.writeln("Haplotype\tAfCases\tAfControls");
+				int nrhaps = dspruned.getNrHaplotypes();
+				for (int i = 0; i < nrhaps; i++) {
+					snpout.writeln(dspruned.getHaplotypeDesc(i)
+							+ "\t" + Strings.concat(dspruned.getHaplotypeFrequenciesCases(), Strings.comma)
+							+ "\t" + Strings.concat(dspruned.getHaplotypeFrequenciesCases(), Strings.comma));
+				}
+
+
+				snpout.close();
+
+				SNPFeature snp = dspruned.asFeature(data.getRight(), dspruned.getReferenceHaplotypeId());
+				result.setSnp(snp);
+				result.setN(x.rows());
+
+				snp.setImputationQualityScore(1d);
+
+				String outloc = options.getOutputdir() + region.toString() + "-haptest-multivariate.txt";
+				TextFile out = new TextFile(outloc, TextFile.W);
+
+				AssociationFile f = new AssociationFile();
+				out.writeln(f.getHeader());
+				out.writeln(result.toString());
+				out.close();
+
+
+				HaplotypeMultivariatePlot plot = new HaplotypeMultivariatePlot();
+				try {
+					plot.run(dspruned, data.getRight(), result, options.getOutputdir() + region.toString() + "-haptest-multivariate.pdf");
+				} catch (DocumentException e) {
+					e.printStackTrace();
+				}
+			}
+
+
 		}
 
 
-		double deltaDeviance = devnull - devx;
-		int df = 1;
-		double p = ChiSquare.getP(df, deltaDeviance);
-
-		AssociationResult result = new AssociationResult();
-		result.setDevianceNull(devnull);
-		result.setDevianceGeno(devx);
-		result.setDf(df);
-		result.setDfalt(x.columns());
-		result.setDfnull(xprime.columns());
-
-		result.setBeta(betasmlelr);
-		result.setSe(stderrsmlelr);
-		result.setPval(p);
-
-
-		SNPFeature snp = dspruned.asFeature(data.getRight(), dspruned.getReferenceHaplotypeId());
-		result.setSnp(snp);
-		result.setN(x.rows());
-
-		snp.setImputationQualityScore(1d);
-
-		String outloc = options.getOutputdir() + "haptest-multivariate.txt";
-		TextFile out = new TextFile(outloc, TextFile.W);
-
-		AssociationFile f = new AssociationFile();
-		out.writeln(f.getHeader());
-		out.writeln(result.toString());
-		out.close();
-
-
-		HaplotypeMultivariatePlot plot = new HaplotypeMultivariatePlot();
-		try {
-			plot.run(dspruned, data.getRight(), result, options.getOutputdir() + "haptest-multivariate.pdf");
-		} catch (DocumentException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private HaplotypeDataset getPrunedHaplotypes(ArrayList<VCFVariant> variants) {

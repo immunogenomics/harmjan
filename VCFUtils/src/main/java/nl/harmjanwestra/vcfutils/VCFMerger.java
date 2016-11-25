@@ -358,43 +358,69 @@ public class VCFMerger {
 		// reload the variants, get the positions with multiple variants at that position
 
 
-		VCFGenotypeData iterator = new VCFGenotypeData(refVCF);
-		VCFGenotypeData iterator2 = new VCFGenotypeData(testVCF);
+//		VCFGenotypeData iterator = new VCFGenotypeData(refVCF);
+//		VCFGenotypeData iterator2 = new VCFGenotypeData(testVCF);
 
 		HashSet<Chromosome> chromosomes = new HashSet<Chromosome>();
 
 		HashSet<Feature> allFeatures = new HashSet<Feature>();
 		System.out.println("Inventorizing variants in: " + refVCF);
-		while (iterator.hasNext()) {
-			VCFVariant f = iterator.next();
-			Feature feat = new Feature();
-			feat.setChromosome(Chromosome.parseChr(f.getChr()));
-			feat.setStart(f.getPos());
-			feat.setStop(f.getPos());
-			chromosomes.add(feat.getChromosome());
-			allFeatures.add(feat);
-		}
+		TextFile refTf = new TextFile(refVCF, TextFile.R);
+		String refLn = refTf.readLine();
 
-		System.out.println(allFeatures.size() + " features after loading ref vcf");
-		iterator.close();
+		HashSet<Feature> refFeatures = new HashSet<Feature>();
 
 		System.out.println("Inventorizing variants in: " + testVCF);
-
-		while (iterator2.hasNext()) {
-			VCFVariant f = iterator2.next();
-			Feature feat = new Feature();
-			feat.setChromosome(Chromosome.parseChr(f.getChr()));
-			feat.setStart(f.getPos());
-			feat.setStop(f.getPos());
-			chromosomes.add(feat.getChromosome());
-			allFeatures.add(feat);
+		TextFile testTf = new TextFile(testVCF, TextFile.R);
+		String testLn = testTf.readLine();
+		HashSet<Feature> testFeatures = new HashSet<Feature>();
+		int ctr1 = 0;
+		while (testLn != null) {
+			if (!testLn.startsWith("#")) {
+				VCFVariant var = new VCFVariant(testLn, VCFVariant.PARSE.HEADER);
+				allFeatures.add(var.asFeature());
+				testFeatures.add(var.asFeature());
+			}
+			ctr1++;
+			if (ctr1 % 10000 == 0) {
+				System.out.print(".");
+			}
+			testLn = testTf.readLine();
 		}
-		iterator2.close();
 		System.out.println(allFeatures.size() + " features after loading test vcf");
+
+		ctr1 = 0;
+		while (refLn != null) {
+			if (!refLn.startsWith("#")) {
+				VCFVariant var = new VCFVariant(refLn, VCFVariant.PARSE.HEADER);
+				if (keepNonOverlapping || testFeatures.contains(var.asFeature())) {
+					allFeatures.add(var.asFeature());
+					refFeatures.add(var.asFeature());
+				}
+			}
+			ctr1++;
+			if (ctr1 % 10000 == 0) {
+				System.out.print(".");
+			}
+			refLn = refTf.readLine();
+		}
+		System.out.println();
+		System.out.println(allFeatures.size() + " features after loading ref vcf");
+		refTf.close();
+
 
 		ArrayList<Feature> allFeatureArr = new ArrayList<Feature>();
 		allFeatureArr.addAll(allFeatures);
 		Collections.sort(allFeatureArr, new FeatureComparator(false));
+
+		HashSet<Feature> intersect = new HashSet<Feature>();
+		for (Feature f : testFeatures) {
+			if (refFeatures.contains(f)) {
+				intersect.add(f);
+			}
+		}
+
+		System.out.println(intersect.size() + " overlapping features.");
 
 		TextFile logOut = new TextFile(logoutfile, TextFile.W);
 		logOut.writeln("chr\t" +
@@ -431,9 +457,13 @@ public class VCFMerger {
 
 			// load the genotypes..
 			System.out.println("loading variants from: " + refVCF);
-			FastListMultimap<Feature, VCFVariant> refVariantMap = t.getVCFVariants(refVCF, chrFeatureSet, true);
+			HashSet<Feature> select = null;
+			if (!keepNonOverlapping) {
+				select = intersect;
+			}
+			FastListMultimap<Feature, VCFVariant> refVariantMap = t.getVCFVariants(refVCF, chrFeatureSet, select, true);
 			System.out.println("loading variants from: " + testVCF);
-			FastListMultimap<Feature, VCFVariant> testVariantMap = t.getVCFVariants(testVCF, chrFeatureSet, true);
+			FastListMultimap<Feature, VCFVariant> testVariantMap = t.getVCFVariants(testVCF, chrFeatureSet, select, true);
 
 			System.out.println(chr.getName() + "\t" + chrFeatures.size() + " features " + refVariantMap.size() + " in ref and " + testVariantMap.size() + " in test");
 
@@ -515,8 +545,8 @@ public class VCFMerger {
 
 									Pair<String, String> outputpair = mergeVariants(refVariant, testVariant, separatorInMergedFile);
 									if (outputpair.getRight() != null) {
-										vcf1OutTf.writeln(refVariant.toVCFString());
-										vcf2OutTf.writeln(testVariant.toVCFString());
+//										vcf1OutTf.writeln(refVariant.toVCFString());
+//										vcf2OutTf.writeln(testVariant.toVCFString());
 										mergedOut.writeln(outputpair.getRight());
 										testVariantAlreadyWritten[y] = true;
 										refVariantAlreadyMerged = true;
@@ -526,16 +556,7 @@ public class VCFMerger {
 								}
 							}
 							logOut.writeln(logoutputln);
-
-
 						}
-
-						if (refVariant.getPos() == 2985620) {
-							for (int y = 0; y < testVariants.size(); y++) {
-								System.out.println(testVariantAlreadyWritten[y] + " -- " + refVariantAlreadyMerged);
-							}
-						}
-
 					}
 				}
 
@@ -1452,8 +1473,6 @@ public class VCFMerger {
 
 
 	}
-
-
 
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,

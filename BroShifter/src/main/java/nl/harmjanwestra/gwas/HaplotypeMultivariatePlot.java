@@ -75,6 +75,13 @@ public class HaplotypeMultivariatePlot {
 			}
 		}
 
+		if (maxOr < 1) {
+			maxOr = 1;
+		}
+		if (minOR > 1) {
+			minOR = 1;
+		}
+
 		maxNrHaplotypes = testedHaps.size() + 1;
 		ArrayList<VCFVariant> variants = dataset.getVariants();
 
@@ -124,8 +131,12 @@ public class HaplotypeMultivariatePlot {
 
 
 		BitVector reference = dataset.getReferenceHaplotype();
+		int referenceId = dataset.getHaplotypeId(reference);
 
 		int hapctr = 0;
+		double[] freqsCases = dataset.getHaplotypeFrequenciesCases();
+		double[] freqsControls = dataset.getHaplotypeFrequenciesControls();
+
 		drawHap(variants,
 				reference,
 				hapctr,
@@ -141,7 +152,11 @@ public class HaplotypeMultivariatePlot {
 				hapWidth,
 				range,
 				forestPlotStartX,
-				witdhOfForestplot);
+				witdhOfForestplot,
+				freqsCases[referenceId],
+				freqsControls[referenceId]
+		);
+
 
 		ArrayList<Pair<Integer, Double>> d = new ArrayList<Pair<Integer, Double>>();
 		for (int q = 0; q < testedHaps.size(); q++) {
@@ -149,8 +164,10 @@ public class HaplotypeMultivariatePlot {
 		}
 
 		Collections.sort(d, new PairSorter());
+
 		for (int z = 0; z < d.size(); z++) {
 			int q = d.get(z).getLeft();
+			int hapid = dataset.getHaplotypeId(testedHaps.get(q));
 			drawHap(variants,
 					testedHaps.get(q),
 					z + 1,
@@ -166,7 +183,11 @@ public class HaplotypeMultivariatePlot {
 					hapWidth,
 					range,
 					forestPlotStartX,
-					witdhOfForestplot);
+					witdhOfForestplot,
+					freqsCases[hapid],
+					freqsControls[hapid]);
+
+
 		}
 
 
@@ -203,6 +224,7 @@ public class HaplotypeMultivariatePlot {
 		g2d.drawRect(x0, y0, hapWidth, blockSize);
 		g2d.drawRect(x0, y1, hapWidth, blockSize);
 
+
 		graphics.close();
 
 	}
@@ -223,7 +245,9 @@ public class HaplotypeMultivariatePlot {
 			int hapWidth,
 			Range range,
 			int forestPlotStartX,
-			int witdhOfForestplot) {
+			int witdhOfForestplot,
+			double freqsCase,
+			double freqsControl) {
 
 		ArrayList<VCFVariant> hapvars = variants;
 		ArrayList<Integer> varIds = new ArrayList<>();
@@ -251,6 +275,7 @@ public class HaplotypeMultivariatePlot {
 		BitVector v1 = hap;
 		int x1 = midpoint - halfmarginbetweenconditions;
 		x1 -= hapWidth;
+
 
 		// draw blocks not present
 		for (int j = 0; j < varIdsNotPresent.size(); j++) {
@@ -292,6 +317,17 @@ public class HaplotypeMultivariatePlot {
 		g2d.drawLine(xa, y2, xb, y2);
 		int halfblock = blockSize / 2;
 		g2d.fillOval(xc - halfblock, y2 - halfblock, blockSize, blockSize);
+
+
+		DecimalFormat format = new DecimalFormat("#.###");
+
+		String t = format.format(freqsCase);
+		int width = g2d.getFontMetrics().stringWidth(t);
+		int xt = forestPlotStartX + witdhOfForestplot + 10;
+		g2d.drawString(t, xt, y);
+		String t2 = format.format(freqsControl);
+		xt = forestPlotStartX + witdhOfForestplot + 10 + width + 10;
+		g2d.drawString(t2, xt, y);
 
 
 	}

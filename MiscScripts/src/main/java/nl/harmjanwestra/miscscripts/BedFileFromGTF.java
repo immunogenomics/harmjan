@@ -4,7 +4,7 @@ import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.FeatureMerger;
 import nl.harmjanwestra.utilities.features.Gene;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class BedFileFromGTF {
 		ArrayList<Feature> features = new ArrayList<Feature>();
 
 		for (Gene g : genesList) {
-			if (queryGenes.contains(g.getGeneId())) {
+			if (queryGenes.contains(g.getGeneSymbol())) {
 				String chrstr = g.getChromosome().toString();
 				int start = g.getStart();
 				int stop = g.getStop();

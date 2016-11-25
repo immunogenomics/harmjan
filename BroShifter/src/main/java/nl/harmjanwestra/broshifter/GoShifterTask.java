@@ -327,7 +327,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 
 
 	// load variants snp --> list of proxies
-	// assume ProxyFinder output
+	// assume proxyfinder output
 	private ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> loadSNPs(String snpfile) throws IOException {
 
 

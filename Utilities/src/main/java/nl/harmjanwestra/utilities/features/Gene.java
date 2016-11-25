@@ -11,63 +11,62 @@ import nl.harmjanwestra.utilities.enums.Strand;
 import java.util.ArrayList;
 
 /**
- *
  * @author Harm-Jan
  */
 public class Gene extends Feature {
 
-    ArrayList<Transcript> transcripts;
-    private String geneId;
+	ArrayList<Transcript> transcripts;
+	private String symbol;
 
-    public Gene(String name, Chromosome chromosome, Strand strand) {
-        this.name = name;
-        this.chromosome = chromosome;
-        this.strand = strand;
-    }
+	public Gene(String name, Chromosome chromosome, Strand strand) {
+		this.name = name;
+		this.chromosome = chromosome;
+		this.strand = strand;
+	}
 
-    public Gene(String name, Chromosome chromosome, Strand strand, int start, int stop) {
-        this.name = name;
-        this.chromosome = chromosome;
-        this.strand = strand;
-        this.start = start;
-        this.stop = stop;
+	public Gene(String name, Chromosome chromosome, Strand strand, int start, int stop) {
+		this.name = name;
+		this.chromosome = chromosome;
+		this.strand = strand;
+		this.start = start;
+		this.stop = stop;
 
-    }
+	}
 
-    public void addTranscript(Transcript t) {
-        if (transcripts == null) {
-            transcripts = new ArrayList<Transcript>();
-        }
-        transcripts.add(t);
-    }
+	public void addTranscript(Transcript t) {
+		if (transcripts == null) {
+			transcripts = new ArrayList<Transcript>();
+		}
+		transcripts.add(t);
+	}
 
-    public ArrayList<Transcript> getTranscripts() {
-        return transcripts;
-    }
+	public ArrayList<Transcript> getTranscripts() {
+		return transcripts;
+	}
 
-    @Override
-    public String toString() {
-        return "Gene{" + "chromosome=" + chromosome + ", geneId=" + geneId + ", name=" + name + ", strand=" + strand + ", start=" + start + ", stop=" + stop + '}';
-    }
+	@Override
+	public String toString() {
+		return "Gene{" + "chromosome=" + chromosome + ", symbol=" + symbol + ", name=" + name + ", strand=" + strand + ", start=" + start + ", stop=" + stop + '}';
+	}
 
-    public void getBounds() {
-        for (Transcript t : transcripts) {
+	public void getBounds() {
+		for (Transcript t : transcripts) {
 
-            if (t.getStart() < start) {
-                start = t.getStart();
-            }
-            if (t.getStop() > stop) {
-                stop = t.getStop();
-            }
+			if (t.getStart() < start) {
+				start = t.getStart();
+			}
+			if (t.getStop() > stop) {
+				stop = t.getStop();
+			}
 
-        }
-    }
+		}
+	}
 
-    public void setGeneId(String geneId) {
-        this.geneId = geneId;
-    }
+	public void setGeneSymbol(String geneId) {
+		this.symbol = geneId;
+	}
 
-    public String getGeneId(){
-        return geneId;
-    }
+	public String getGeneSymbol() {
+		return symbol;
+	}
 }

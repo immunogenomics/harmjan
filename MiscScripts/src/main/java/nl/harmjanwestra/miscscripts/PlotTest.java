@@ -6,7 +6,7 @@ import nl.harmjanwestra.utilities.features.Gene;
 import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
-import nl.harmjanwestra.utilities.gtf.GTFAnnotation;
+import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 
 import java.util.SortedSet;
 import java.util.TreeSet;

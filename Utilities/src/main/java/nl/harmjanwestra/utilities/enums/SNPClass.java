@@ -9,7 +9,8 @@ public enum SNPClass {
 	EXONIC("Exonic", 1),
 	INTRONIC("Intronic", 2),
 	PROMOTER("Promoter", 3),
-	INDEL("Indel", 4);
+	INDEL("Indel", 4),
+	UTR("UTR", 5);
 
 	private final String name;
 	private final int number;

@@ -49,8 +49,6 @@ public class Main {
 				} else {
 					new LRTest(optionsLR);
 				}
-			} else if (options.mode.equals(MainOptions.MODE.PROXYFINDER)) {
-				new ProxyFinder(new ProxyFinderOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.COUNTVARIANTS)) {
 				new CountVariants(new CountVariantsOptions(args));
 			}

@@ -104,7 +104,7 @@ public class GenePanel extends Panel {
 				while (currentGeneIndex < genesAtCurrentLevel.size()) {
 					Gene currentGene = genesAtCurrentLevel.get(currentGeneIndex);
 					ylevels.put(currentGene, ylevel);
-//					System.out.println(currentGene.getGeneId() + "\ty: " + ylevel);
+//					System.out.println(currentGene.getGeneSymbol() + "\ty: " + ylevel);
 					Pair<Integer, Integer> pixels1 = getGenePlotPositions(currentGene, region, regionWidth, plotWidth, marginXBetweenGenes, metrics);
 					boolean overlap = true;
 					if (currentGeneIndex == genesAtCurrentLevel.size() - 1) {
@@ -163,7 +163,7 @@ public class GenePanel extends Panel {
 
 			Integer geneYlevel = ylevels.get(gene);
 			if (geneYlevel == null) {
-				System.out.println(gene.getGeneId() + " not mapped to y-level?");
+				System.out.println(gene.getGeneSymbol() + " not mapped to y-level?");
 			}
 			int y1 = y0 + marginY + plotHeight - (geneYlevel * marginYBetweenGenes) - (geneYlevel * heightPerGene);
 
@@ -230,7 +230,7 @@ public class GenePanel extends Panel {
 			// draw line for gene middle
 			g2d.drawLine(startX, y1 + 5, stopX, y1 + 5);
 			// draw gene name
-			g2d.drawString(gene.getGeneId(), stopX + marginXBetweenGenes, y1 + 10);
+			g2d.drawString(gene.getGeneSymbol(), stopX + marginXBetweenGenes, y1 + 10);
 
 
 			for (Exon f : exons) {
@@ -304,7 +304,7 @@ public class GenePanel extends Panel {
 
 		int genenamewidth = 0;
 		if (metrics != null) {
-			genenamewidth = metrics.stringWidth(g.getGeneId());
+			genenamewidth = metrics.stringWidth(g.getGeneSymbol());
 		}
 		int pixelStart = (int) Math.ceil(percStart * nrPixels);
 		int pixelStop = (int) Math.ceil(percStop * nrPixels) + nrPixelsBetweenGene + genenamewidth + nrPixelsBetweenGene;
