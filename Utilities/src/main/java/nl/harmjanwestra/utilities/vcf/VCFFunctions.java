@@ -2091,6 +2091,8 @@ public class VCFFunctions {
 
 		FastListMultimap<Feature, VCFVariant> output = new FastListMultimap<Feature, VCFVariant>();
 
+		int lnNr = 0;
+		System.out.println("Loading variants from VCF: " + vcf);
 		while (ln != null) {
 			if (!ln.startsWith("##") && !ln.startsWith("#CHROM")) {
 				VCFVariant variant = null;
@@ -2109,7 +2111,12 @@ public class VCFFunctions {
 
 			}
 			ln = vcftf.readLine();
+			lnNr++;
+			if (lnNr % 10000 == 0) {
+				System.out.print(output.size() + " variants loaded. " + lnNr + " lines parsed.\r");
+			}
 		}
+		System.out.println("Done.");
 		vcftf.close();
 		return output;
 	}
@@ -2256,8 +2263,8 @@ public class VCFFunctions {
 		}
 
 		for (int i = 0; i < genotypeAlleles2.rows(); i++) {
-			String allele1 = "" + genotypeAlleles2.getQuick(i, 0);
-			String allele2 = "" + genotypeAlleles2.getQuick(i, 1);
+			String allele1 = "" + (int) genotypeAlleles2.getQuick(i, 0);
+			String allele2 = "" + (int) genotypeAlleles2.getQuick(i, 1);
 
 			if (genotypeAlleles2.getQuick(i, 0) == -1) {
 				allele1 = ".";

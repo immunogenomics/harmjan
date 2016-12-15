@@ -79,21 +79,24 @@ public class CountCodingVariants {
 
 		// now we have the variants, see if they overlap
 
-		int nrCodingCredibleSets = 0;
-		int nrTotalCredibleSets = 0;
 
-		double sumposterior = 0;
-		double sumposteriorBg = 0;
+		double sigmaposteriorIndel = 0;
+		double sigmaposteriorCoding = 0;
 
-		double sumposteriorIndel = 0;
-		double sumposteriorBgIndel = 0;
+		double sigmafractionIndel = 0;
+		double sigmafractionCoding = 0;
+
+		int nrCodingTotal = 0;
+		int nrIndelsTotal = 0;
+		int nrVariantsTotal = 0;
 
 		for (int d = 0; d < regions.size(); d++) {
 			Feature region = regions.get(d);
-			int nrCodingOverall = 0;
+			int nrCoding = 0;
 			int nrTotal = 0;
 
-			int nrIndelOverall = 0;
+
+			int nrIndel = 0;
 
 
 			ArrayList<Gene> genes = new ArrayList<>();
@@ -108,47 +111,36 @@ public class CountCodingVariants {
 				// check if variant overlaps coding region
 				SNPFeature snp = r.getSnp();
 				if (snp.isIndel()) {
-					nrIndelOverall++;
+					sigmaposteriorCoding += r.getPosterior();
+					nrIndel++;
+					nrIndelsTotal++;
 				}
 
 				boolean coding = getIsCoding(snp, genes);
 				if (coding) {
-					nrCodingOverall++;
+					sigmaposteriorIndel += r.getPosterior();
+					nrCoding++;
+					nrCodingTotal++;
 				}
 				nrTotal++;
+				nrVariantsTotal++;
 			}
 
-			for (AssociationResult r : crediblesets[d]) {
-				SNPFeature snp = r.getSnp();
 
-				boolean coding = getIsCoding(snp, genes);
-				if (snp.isIndel()) {
-					sumposteriorIndel += r.getPosterior();
-				}
-				if (coding) {
-					sumposterior += r.getPosterior();
-					nrCodingCredibleSets++;
-				}
-				nrTotalCredibleSets++;
-			}
+			sigmafractionCoding += (double) nrCoding / nrTotal;
+			sigmafractionIndel += (double) nrIndel / nrTotal;
 
-			sumposteriorBgIndel += ((double) nrIndelOverall) / nrTotal;
-
-			sumposteriorBg += (double) nrCodingOverall / nrTotal;
 		}
 
-		double perc = sumposterior / regions.size();
-		double percBg = sumposteriorBg / regions.size();
-		double percIndel = sumposteriorIndel / regions.size();
-		double percBgIndel = sumposteriorBgIndel / regions.size();
 
-		double enrichment = perc / percBg;
-		double enrichmentIndel = percIndel / percBgIndel;
+
 
 //		System.out.println("overall: " + nrCodingOverall + "\t" + nrTotal + "\t" + ((double) nrCodingOverall / nrTotal));
-		System.out.println("sumposterior: " + perc + "\t" + percBg + "\t" + enrichment);
-		System.out.println("sumposterior indel: " + percIndel + "\t" + percBgIndel + "\t" + enrichmentIndel);
-//		System.out.println("credible sets: " + nrCodingCredibleSets + "\t" + nrTotalCredibleSets + "\t" + ((double) nrCodingCredibleSets / nrTotalCredibleSets));
+		System.out.println("sumposterior: " + sigmaposteriorCoding + "\t" + sigmafractionCoding + "\t" + (sigmaposteriorCoding / sigmafractionCoding));
+		System.out.println("sumposterior indel: " + sigmaposteriorIndel + "\t" + sigmafractionIndel + "\t" + (sigmaposteriorIndel / sigmafractionIndel));
+		System.out.println("nrIndels: " + nrIndelsTotal + "\tnrCoding: " + nrCodingTotal + "\tnrTotal: " + nrVariantsTotal);
+
+		//		System.out.println("credible sets: " + nrCodingCredibleSets + "\t" + nrTotalCredibleSets + "\t" + ((double) nrCodingCredibleSets / nrTotalCredibleSets));
 
 
 	}

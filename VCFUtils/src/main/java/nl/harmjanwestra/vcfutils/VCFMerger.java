@@ -378,12 +378,13 @@ public class VCFMerger {
 		while (testLn != null) {
 			if (!testLn.startsWith("#")) {
 				VCFVariant var = new VCFVariant(testLn, VCFVariant.PARSE.HEADER);
+				chromosomes.add(var.getChrObj());
 				allFeatures.add(var.asFeature());
 				testFeatures.add(var.asFeature());
 			}
 			ctr1++;
 			if (ctr1 % 10000 == 0) {
-				System.out.print(".");
+				System.out.print(ctr1 + " lines parsed\r.");
 			}
 			testLn = testTf.readLine();
 		}
@@ -395,17 +396,20 @@ public class VCFMerger {
 				VCFVariant var = new VCFVariant(refLn, VCFVariant.PARSE.HEADER);
 				if (keepNonOverlapping || testFeatures.contains(var.asFeature())) {
 					allFeatures.add(var.asFeature());
+					chromosomes.add(var.getChrObj());
 					refFeatures.add(var.asFeature());
 				}
 			}
 			ctr1++;
 			if (ctr1 % 10000 == 0) {
-				System.out.print(".");
+				System.out.print(ctr1 + " lines parsed\r.");
 			}
 			refLn = refTf.readLine();
 		}
 		System.out.println();
-		System.out.println(allFeatures.size() + " features after loading ref vcf");
+		System.out.println(refFeatures.size() + " features after loading ref vcf");
+		System.out.println(allFeatures.size() + " total features");
+
 		refTf.close();
 
 

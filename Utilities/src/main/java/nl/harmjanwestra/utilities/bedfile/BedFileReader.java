@@ -40,33 +40,11 @@ public class BedFileReader {
 		this.filter = filter;
 	}
 
-//	public Track readAsTrack(String path, String name, boolean removeduplicates) throws IOException {
-//		nrFeatures = 0;
-//		featureLengthSum = 0;
-//		TextFile tf = new TextFile(path, TextFile.R);
-//
-//		System.out.println("Reading path: " + path);
-//
-//		// chr1	8128340	8128539	C011PABXX110504:4:2203:14692:158380	0	-
-//		String[] elems = tf.readLineElems(splitpattern);
-//		Track track = new Track(name, removeduplicates);
-//
-//		while (elems != null) {
-//			Feature f = parseElems(elems);
-//			if (f != null) {
-//				track.addFeature(f);
-//			}
-//			elems = tf.readLineElems(splitpattern);
-//		}
-//
-//		tf.close();
-//
-//		System.out.println("Average feature featureLengthSum: " + ((double) featureLengthSum / nrFeatures) + "\tNumber of elements: " + nrFeatures);
-//		track.printNrFeatures();
-//		return track;
-//	}
-
 	public ArrayList<Feature> readAsList(String file) throws IOException {
+		return readAsList(file, null);
+	}
+
+	public ArrayList<Feature> readAsList(String file, ArrayList<Feature> regions) throws IOException {
 
 		TextFile tf = new TextFile(file, TextFile.R);
 
@@ -81,7 +59,9 @@ public class BedFileReader {
 				String[] elems = splitpattern.split(ln);
 				Feature f = parseElems(elems);
 				if (f != null) {
-					allFeatures.add(f);
+					if (regions == null || annotationoverlap(f, regions)) {
+						allFeatures.add(f);
+					}
 				}
 			}
 			ln = tf.readLine();
@@ -90,6 +70,15 @@ public class BedFileReader {
 		tf.close();
 		Collections.sort(allFeatures, new FeatureComparator(false));
 		return allFeatures;
+	}
+
+	private boolean annotationoverlap(Feature r1, ArrayList<Feature> regions) {
+		for (Feature r : regions) {
+			if (r1.overlaps(r)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	protected Feature parseElems(String[] elems) {

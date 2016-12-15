@@ -15,6 +15,7 @@ import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
+import nl.harmjanwestra.utilities.graphics.panels.AnnotationTrackPanel;
 import nl.harmjanwestra.utilities.graphics.panels.CircularHeatmapPanel;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
@@ -52,6 +53,7 @@ public class MergeCredibleSets {
 			String outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets.txt";
 			String outeqtlfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-eqtls.txt";
 			String outoverlapfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-overlap.txt";
+			String outoverlapplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/annotationplots/mergedCredibleSets-";
 			String outplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-plot-promoter" + promotordistance + ".pdf";
 			String[] assocfiles = new String[]{
 					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
@@ -84,8 +86,9 @@ public class MergeCredibleSets {
 			boolean includeAllLoci = true;
 
 			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, threshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
-			c.makePlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
-			System.exit(-1);
+
+//			c.makeCircularPlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			System.exit(-1);
 
 			String[] eqtlfiles = new String[]{
 					"/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05-upd.tab",
@@ -96,26 +99,35 @@ public class MergeCredibleSets {
 					"Bios"
 			};
 //			String dbsnpvcf = "/Data/Ref/dbSNP/human_9606_b147_GRCh37p13/00-All.vcf.gz";
-//			c.rewrite("/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05.tsv", dbsnpvcf,
+//			c.rewriteEQTLFile("/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05.tsv", dbsnpvcf,
 //					"/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05-upd.tab");
 
 			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 			String tabixfilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
-			// c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 
 			String[] bedfiles = new String[]{
-					"/Data/Enhancers/TrynkaEpigenetics/hg19/alldnase.txt",
-					"/Data/Enhancers/TrynkaEpigenetics/hg19/h3k4me3files.txt"
+					"/Data/Enhancers/Roadmap/dnase-groups.txt",
+					"/Data/Enhancers/Roadmap/h3k4me3-groups.txt",
+					"/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt",
+					"/Data/Enhancers/ChromHMM/ChromHMMPromotors-groups.txt"
 			};
 			String[] bedfilenames = new String[]{
-					"DNASE", "H3K4me3"
+					"DNASE", "H3K4me3", "ChromHMM-Enhancers", "ChromHMM-Promotors"
 			};
+
+//			c.bedOverlapOld(bedregions,
+//					bedfiles,
+//					bedfilenames,
+//					assocfiles, datasetnames, genenames,
+//					outoverlapfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 
 			c.bedOverlap(bedregions,
 					bedfiles,
 					bedfilenames,
 					assocfiles, datasetnames, genenames,
-					outoverlapfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+					outoverlapfile, outoverlapplot,
+					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 //
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -124,7 +136,268 @@ public class MergeCredibleSets {
 		}
 	}
 
-	private void rewrite(String filename, String dbsnpVCF, String out) throws IOException {
+
+	private void bedOverlap(String bedregions,
+							String[] bedfiles,
+							String[] bedfilenames,
+							String[] assocFiles,
+							String[] datasetnames,
+							String genenamefile,
+							String outoverlapfile,
+							String outplot,
+							double maxPosteriorCredibleSet,
+							int maxNrVariantsInCredibleSet,
+							String geneAnnotation) throws IOException, DocumentException {
+
+		// load regions
+		BedFileReader reader = new BedFileReader();
+		ArrayList<Feature> regions = reader.readAsList(bedregions);
+
+		HashMap<String, String> locusToGene = loadLocusToGene(genenamefile);
+
+		// load annotations
+		AnnotationData[] annotationdata = new AnnotationData[bedfiles.length];
+		int totalGroups = 0;
+		for (int i = 0; i < annotationdata.length; i++) {
+			System.out.println("Loading: " + bedfiles[i]);
+			annotationdata[i] = new AnnotationData(bedfiles[i], regions);
+			totalGroups += annotationdata[i].getUniqueGroups().size();
+		}
+
+		//
+		// region variant1 pval1 posterior1 variant2 pval2 posterior2 variant3 pval3 posterior3
+		AssociationFile f = new AssociationFile();
+
+
+		// [dataset][region][variants]
+		AssociationResult[][][] crediblesets = new AssociationResult[assocFiles.length][regions.size()][];
+
+		AssociationResult[][][] data = new AssociationResult[assocFiles.length][regions.size()][];
+
+		ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
+		ArrayList<Feature> regionsWithCredibleSets = new ArrayList<>();
+
+
+		ArrayList<ArrayList<AssociationResult>> associationResults = new ArrayList<>();
+		for (int i = 0; i < assocFiles.length; i++) {
+			associationResults.add(f.read(assocFiles[i]));
+		}
+
+		for (int d = 0; d < regions.size(); d++) {
+			boolean hasSet = false;
+			Feature region = regions.get(d);
+			for (int i = 0; i < assocFiles.length; i++) {
+				ArrayList<AssociationResult> allDatasetData = filterAssocResults(associationResults.get(i), region);
+
+				data[i][d] = allDatasetData.toArray(new AssociationResult[0]);
+				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, maxPosteriorCredibleSet);
+				crediblesets[i][d] = credibleSet.toArray(new AssociationResult[0]);
+				if (credibleSet.size() <= maxNrVariantsInCredibleSet) {
+					hasSet = true;
+				}
+			}
+			if (hasSet) {
+				regionsWithCredibleSets.add(regions.get(d));
+			}
+		}
+
+		HashSet<Feature> regionsWithCredibleSetsHash = new HashSet<Feature>();
+		regionsWithCredibleSetsHash.addAll(regionsWithCredibleSets);
+
+		int len = maxNrVariantsInCredibleSet;
+
+
+		// initiate output..
+		TextFile out = new TextFile(outoverlapfile, TextFile.W);
+		String header2 = "\t\t";
+
+		String header1 = "region\tgene";
+		for (int i = 0; i < data.length; i++) {
+			header2 += datasetnames[i]
+					+ "\t\t\t";
+			header1 += "\tNrVariantsInCredibleSet" +
+					"\tVariants" +
+					"\tPosterior";
+			for (int e = 0; e < annotationdata.length; e++) {
+
+				// get groups
+				ArrayList<String> annotationGroups = annotationdata[e].getUniqueGroups();
+				for (int s = 0; s < annotationGroups.size(); s++) {
+					header1 += "\t" + bedfilenames[e] + "-" + annotationGroups.get(s) + "(" + annotationdata[e].getNrAnnotationsInGroup(s) + ")";
+					header2 += "\t";
+				}
+			}
+		}
+		out.writeln(header2);
+		out.writeln(header1);
+
+
+		// determine overlap
+		int nrDatasets = data.length;
+		int ctr = 0;
+		DecimalFormat format = new DecimalFormat("#.###");
+		for (int regionId = 0; regionId < regions.size(); regionId++) {
+			Feature region = regions.get(regionId);
+			if (regionsWithCredibleSetsHash.contains(region)) {
+				ctr++;
+				ArrayList<ArrayList<AssociationResult>> resultsPerDs = new ArrayList<>();
+				for (int datasetId = 0; datasetId < nrDatasets; datasetId++) {
+					ArrayList<AssociationResult> topResults = getTopVariants(data, datasetId, regionId, len);
+					resultsPerDs.add(topResults);
+				}
+
+				double[] regionsums = new double[data.length];
+				for (int snpId = 0; snpId < len; snpId++) {
+					String ln = "";
+					boolean allSNPsPrinted = true;
+					for (int datasetId = 0; datasetId < data.length; datasetId++) {
+						if (regionsums[datasetId] < maxPosteriorCredibleSet) {
+							allSNPsPrinted = false;
+						}
+					}
+
+					if (!allSNPsPrinted) {
+						if (snpId == 0) {
+							ln = region.toString() + "\t" + locusToGene.get(region.toString());
+
+
+							for (int datasetId = 0; datasetId < data.length; datasetId++) {
+								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
+								ln += "\t" + crediblesets[datasetId][regionId].length
+										+ "\t" + r.getSnp().toString()
+										+ "\t" + r.getPosterior();
+
+								String lnblock = "";
+								for (int an = 0; an < bedfilenames.length; an++) {
+									int nrgroups = annotationdata[an].getUniqueGroups().size();
+									for (int group = 0; group < nrgroups; group++) {
+										int overlapdata = annotationdata[an].countOverlappingAnnotations(r.getSnp(), group);
+										int nrids = annotationdata[an].getNrAnnotationsInGroup(group);
+										double perc = (double) overlapdata / nrids;
+										lnblock += "\t" + format.format(perc);
+									}
+								}
+
+								ln += lnblock;
+								regionsums[datasetId] += r.getPosterior();
+							}
+						} else {
+							ln = "\t";
+							for (int datasetId = 0; datasetId < data.length; datasetId++) {
+								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
+
+								String lnblock = "";
+								for (int an = 0; an < bedfilenames.length; an++) {
+									int nrgroups = annotationdata[an].getUniqueGroups().size();
+									for (int group = 0; group < nrgroups; group++) {
+										int overlapdata = annotationdata[an].countOverlappingAnnotations(r.getSnp(), group);
+										int nrids = annotationdata[an].getNrAnnotationsInGroup(group);
+										double perc = (double) overlapdata / nrids;
+										lnblock += "\t" + format.format(perc);
+									}
+								}
+
+								if (regionsums[datasetId] < maxPosteriorCredibleSet) {
+									ln += "\t"
+											+ "\t" + r.getSnp().toString()
+											+ "\t" + r.getPosterior();
+									ln += lnblock;
+								} else {
+									ln += "\t"
+											+ "\t"
+											+ "\t";
+									for (int e = 0; e < totalGroups; e++) {
+										ln += "\t";
+									}
+								}
+								regionsums[datasetId] += r.getPosterior();
+							}
+
+						}
+						out.writeln(ln);
+					}
+
+				}
+			}
+
+
+		}
+
+		out.close();
+
+
+		//
+		System.out.println(ctr + " regions processed.. ");
+		int qctr = 0;
+		for (int regionId = 0; regionId < regions.size(); regionId++) {
+			Feature region = regions.get(regionId);
+			if (regionsWithCredibleSetsHash.contains(region)) {
+				int bp = region.getStop() - region.getStart();
+				int bpperbin = 10;
+				int nrBins = bp / bpperbin;
+
+				System.out.println(nrBins);
+
+
+				double[][][] overlap = new double[bedfilenames.length][][]; // annotation, group, bp
+				for (int an = 0; an < bedfilenames.length; an++) {
+					int nrgroups = annotationdata[an].getUniqueGroups().size();
+					double[][] tmpoverlap = new double[nrgroups][nrBins];
+					overlap[an] = tmpoverlap;
+				}
+
+
+				int binno = 0;
+				for (int s = region.getStart(); s < region.getStop(); s += bpperbin) {
+					Feature feat = new Feature();
+					feat.setChromosome(region.getChromosome());
+					feat.setStart(s);
+					feat.setStop(s + bpperbin);
+
+					for (int an = 0; an < bedfilenames.length; an++) {
+						int nrgroups = annotationdata[an].getUniqueGroups().size();
+						for (int group = 0; group < nrgroups; group++) {
+							if (binno < nrBins) {
+								overlap[an][group][binno] = annotationdata[an].countOverlappingAnnotations(feat, group);
+//								System.out.println(overlap[an][group][binno]);
+							}
+						}
+					}
+					binno++;
+				}
+//				System.exit(-1);
+
+//				// plot output
+//
+//
+				for (int ds = 0; ds < datasetnames.length; ds++) {
+					Grid grid = new Grid(1000, 100, 1, 1, 100, 100);
+					AnnotationTrackPanel p = new AnnotationTrackPanel(1, 1);
+
+					int[] highlight = new int[crediblesets[ds][regionId].length];
+					for (int i = 0; i < highlight.length; i++) {
+						highlight[i] = crediblesets[ds][regionId][i].getSnp().getStart();
+					}
+					String[][] groupnames = null;
+					p.setData(overlap, highlight, region, groupnames);
+					p.setMarginX(10);
+					p.setMarginY(10);
+					grid.addPanel(p);
+					grid.draw(outplot + datasetnames[ds] + "-" + region.toString() + ".pdf");
+				}
+
+//
+//				qctr++;
+//				System.out.println(ctr + " regions processed.. ");
+
+			}
+		}
+
+
+	}
+
+
+	private void rewriteEQTLFile(String filename, String dbsnpVCF, String out) throws IOException {
 
 		TextFile tf = new TextFile(filename, TextFile.R);
 		tf.readLine();
@@ -194,16 +467,7 @@ public class MergeCredibleSets {
 		outf.close();
 	}
 
-	private void bedOverlap(String bedregions,
-							String[] bedfiles,
-							String[] bedfilenames,
-							String[] assocFiles,
-							String[] datasetNames,
-							String genenamefile,
-							String outfile, double maxPosteriorCredibleSet, int maxNrVariantsInCredibleSet, String annot) throws IOException {
-//		GTFAnnotation annotation = new GTFAnnotation(annot);
-//		TreeSet<Gene> genes = annotation.getGeneTree();
-
+	private HashMap<String, String> loadLocusToGene(String genenamefile) throws IOException {
 		HashMap<String, String> locusToGene = new HashMap<String, String>();
 		TextFile genefiletf = new TextFile(genenamefile, TextFile.R);
 		String[] genelems = genefiletf.readLineElems(TextFile.tab);
@@ -216,195 +480,9 @@ public class MergeCredibleSets {
 			genelems = genefiletf.readLineElems(TextFile.tab);
 		}
 		genefiletf.close();
-
-		BedFileReader reader = new BedFileReader();
-		ArrayList<Feature> regions = reader.readAsList(bedregions);
-
-		// region variant1 pval1 posterior1 variant2 pval2 posterior2 variant3 pval3 posterior3
-		AssociationFile f = new AssociationFile();
-
-
-		// [dataset][region][variants]
-		AssociationResult[][][] crediblesets = new AssociationResult[assocFiles.length][regions.size()][];
-
-		AssociationResult[][][] data = new AssociationResult[assocFiles.length][regions.size()][];
-
-		ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
-		ArrayList<Feature> regionsWithCredibleSets = new ArrayList<>();
-
-
-		ArrayList<ArrayList<AssociationResult>> associationResults = new ArrayList<>();
-		for (int i = 0; i < assocFiles.length; i++) {
-			associationResults.add(f.read(assocFiles[i]));
-		}
-
-		for (int d = 0; d < regions.size(); d++) {
-			boolean hasSet = false;
-			Feature region = regions.get(d);
-			for (int i = 0; i < assocFiles.length; i++) {
-				ArrayList<AssociationResult> allDatasetData = filterAssocResults(associationResults.get(i), region);
-				data[i][d] = allDatasetData.toArray(new AssociationResult[0]);
-				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, maxPosteriorCredibleSet);
-				crediblesets[i][d] = credibleSet.toArray(new AssociationResult[0]);
-				if (credibleSet.size() <= maxNrVariantsInCredibleSet) {
-					hasSet = true;
-				}
-			}
-			if (hasSet) {
-				regionsWithCredibleSets.add(regions.get(d));
-			}
-		}
-
-		HashSet<Feature> regionsWithCredibleSetsHash = new HashSet<Feature>();
-		regionsWithCredibleSetsHash.addAll(regionsWithCredibleSets);
-
-		int len = maxNrVariantsInCredibleSet;
-		TextFile out = new TextFile(outfile, TextFile.W);
-		String header2 = "\t\t";
-
-		String header1 = "region\tgene";
-		for (int i = 0; i < data.length; i++) {
-			header2 += datasetNames[i]
-					+ "\t\t\t\t\t";
-			header1 += "\tNrVariantsInCredibleSet" +
-					"\tVariants" +
-					"\tPosterior";
-			for (int e = 0; e < bedfilenames.length; e++) {
-				header1 += "\tOverlap-" + bedfilenames[e];
-				header2 += "\t";
-			}
-		}
-		out.writeln(header2);
-		out.writeln(header1);
-
-		// load all top eQTLs per gene for all regions (+- 1mb)
-		Pair<Feature[][][][], String[][]> annotationregions = loadAnnotations(bedfiles, regions);
-		Feature[][][][] allannotations = annotationregions.getLeft(); // [region][dataset][celltype][annotations]
-		String[][] annotationnames = annotationregions.getRight();
-
-		int nrDatasets = data.length;
-		int ctr = 0;
-		for (int regionId = 0; regionId < regions.size(); regionId++) {
-			Feature region = regions.get(regionId);
-			if (regionsWithCredibleSetsHash.contains(region)) {
-
-				ctr++;
-
-				Feature[][][] annotationsInRegion = allannotations[regionId]; // [dataset][celltype][annotations]
-
-				// get all VCFVariants in region
-				ArrayList<ArrayList<AssociationResult>> resultsPerDs = new ArrayList<>();
-
-				for (int datasetId = 0; datasetId < nrDatasets; datasetId++) {
-					ArrayList<AssociationResult> topResults = getTopVariants(data, datasetId, regionId, len);
-					resultsPerDs.add(topResults);
-				}
-
-				double[] regionsums = new double[data.length];
-				for (int snpId = 0; snpId < len; snpId++) {
-					String ln = "";
-					boolean allSNPsPrinted = true;
-					for (int datasetId = 0; datasetId < data.length; datasetId++) {
-						if (regionsums[datasetId] < maxPosteriorCredibleSet) {
-							allSNPsPrinted = false;
-						}
-					}
-
-					if (!allSNPsPrinted) {
-						if (snpId == 0) {
-							ln = region.toString() + "\t" + locusToGene.get(region.toString());
-							for (int datasetId = 0; datasetId < data.length; datasetId++) {
-								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
-								ln += "\t" + crediblesets[datasetId][regionId].length
-										+ "\t" + r.getSnp().toString()
-										+ "\t" + r.getPosterior();
-
-
-								// check overlap
-								//// [dataset][celltype][annotations]
-								String lnblock = "";
-								for (int b = 0; b < bedfilenames.length; b++) {
-									ArrayList<String> overlappingAnnotations = new ArrayList<>();
-									Feature[][] celltypeAnnotations = annotationsInRegion[b];
-									for (int c = 0; c < celltypeAnnotations.length; c++) {
-										if (determineOverlap(celltypeAnnotations[c], r.getSnp())) {
-											overlappingAnnotations.add(annotationnames[b][c]);
-										}
-									}
-									String concated = Strings.concat(overlappingAnnotations, Strings.semicolon);
-
-									if (concated.length() == 0) {
-										lnblock += "\t-";
-									} else {
-										lnblock += "\t" + concated;
-									}
-
-
-								}
-
-
-								ln += lnblock;
-								regionsums[datasetId] += r.getPosterior();
-							}
-						} else {
-							ln = "\t";
-							for (int datasetId = 0; datasetId < data.length; datasetId++) {
-								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
-
-
-								// check overlap
-								//// [dataset][celltype][annotations]
-								String lnblock = "";
-								for (int b = 0; b < bedfilenames.length; b++) {
-									ArrayList<String> overlappingAnnotations = new ArrayList<>();
-									Feature[][] celltypeAnnotations = annotationsInRegion[b];
-									for (int c = 0; c < celltypeAnnotations.length; c++) {
-										if (determineOverlap(celltypeAnnotations[c], r.getSnp())) {
-											overlappingAnnotations.add(annotationnames[b][c]);
-										}
-									}
-									String concated = Strings.concat(overlappingAnnotations, Strings.semicolon);
-
-
-									if (concated.length() == 0) {
-										lnblock += "\t-";
-									} else {
-										lnblock += "\t" + concated;
-									}
-
-
-								}
-
-								if (regionsums[datasetId] < maxPosteriorCredibleSet) {
-									ln += "\t"
-											+ "\t" + r.getSnp().toString()
-											+ "\t" + r.getPosterior();
-									ln += lnblock;
-								} else {
-									ln += "\t"
-											+ "\t"
-											+ "\t";
-									for (int e = 0; e < bedfilenames.length; e++) {
-										ln += "\t";
-									}
-								}
-
-
-								regionsums[datasetId] += r.getPosterior();
-							}
-
-						}
-						out.writeln(ln);
-					}
-
-				}
-			}
-
-
-		}
-
-		out.close();
+		return locusToGene;
 	}
+
 
 	private boolean determineOverlap(Feature[] allannotation, SNPFeature snp) {
 		for (Feature f : allannotation) {
@@ -472,18 +550,8 @@ public class MergeCredibleSets {
 //		GTFAnnotation annotation = new GTFAnnotation(annot);
 //		TreeSet<Gene> genes = annotation.getGeneTree();
 
-		HashMap<String, String> locusToGene = new HashMap<String, String>();
-		TextFile genefiletf = new TextFile(genenamefile, TextFile.R);
-		String[] genelems = genefiletf.readLineElems(TextFile.tab);
-		while (genelems != null) {
-			if (genelems.length > 1) {
-				locusToGene.put(genelems[0], genelems[1]);
-			} else {
-				locusToGene.put(genelems[0], "");
-			}
-			genelems = genefiletf.readLineElems(TextFile.tab);
-		}
-		genefiletf.close();
+		HashMap<String, String> locusToGene = loadLocusToGene(genenamefile);
+
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedregions);
@@ -642,6 +710,7 @@ public class MergeCredibleSets {
 					}
 
 				}
+				System.out.println(ctr + "/" + regionsWithCredibleSets.size() + " regions processed....");
 			}
 
 
@@ -707,12 +776,6 @@ public class MergeCredibleSets {
 //									System.out.println("select\t" + r.getSnp().toString() + "\t" + eqtl.getSnp().toString() + "\t" + distance + "\t" + rsq + "\t" + pval);
 								}
 							}
-
-//							else {
-//								System.out.println("deselect\t" + r.getSnp().toString() + "\t" + eqtl.getSnp().toString() + "\t" + distance + "\t" + rsq + "\t" + pval);
-//							}
-
-
 						}
 					}
 				}
@@ -885,18 +948,7 @@ public class MergeCredibleSets {
 
 		TreeSet<Gene> genes = annotation.getGeneTree();
 
-		HashMap<String, String> locusToGene = new HashMap<String, String>();
-		TextFile genefiletf = new TextFile(genenamefile, TextFile.R);
-		String[] genelems = genefiletf.readLineElems(TextFile.tab);
-		while (genelems != null) {
-			if (genelems.length > 1) {
-				locusToGene.put(genelems[0], genelems[1]);
-			} else {
-				locusToGene.put(genelems[0], "");
-			}
-			genelems = genefiletf.readLineElems(TextFile.tab);
-		}
-		genefiletf.close();
+		HashMap<String, String> locusToGene = loadLocusToGene(genenamefile);
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedregions);
@@ -964,12 +1016,14 @@ public class MergeCredibleSets {
 					+ "\t"
 					+ "\t"
 					+ "\t"
+					+ "\t"
 					+ "\t";
 			header1 += "\tRegionSignificant" +
 					"\tNrVariantsInCredibleSet" +
 					"\tSumPosteriorTop" + maxNrVariantsInCredibleSet + "Variants" +
 					"\tVariants" +
 					"\tAlleles" +
+					"\tINFO" +
 					"\tAFCases" +
 					"\tAFControls" +
 					"\tOR" +
@@ -1086,12 +1140,13 @@ public class MergeCredibleSets {
 										+ "\t" + sumsperregion[datasetId]
 										+ "\t" + r.getSnp().toString()
 										+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
+										+ "\t" + r.getSnp().getImputationQualityScore()
 										+ "\t" + r.getSnp().getAFCases()
 										+ "\t" + r.getSnp().getAFControls()
 										+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
 										+ "\t" + r.getLog10Pval()
 										+ "\t" + r.getPosterior()
-										+ "\t" + (r.getPval()<variantSignificanceThreshold)
+										+ "\t" + (r.getPval() < variantSignificanceThreshold)
 										+ "\t" + annotStr;
 								regionsums[datasetId] += r.getPosterior();
 							}
@@ -1135,15 +1190,17 @@ public class MergeCredibleSets {
 								if (regionsums[datasetId] < maxPosteriorCredibleSet) {
 									ln += r.getSnp().toString()
 											+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
+											+ "\t" + r.getSnp().getImputationQualityScore()
 											+ "\t" + r.getSnp().getAFCases()
 											+ "\t" + r.getSnp().getAFControls()
 											+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
 											+ "\t" + r.getLog10Pval()
 											+ "\t" + r.getPosterior()
-											+ "\t" + (r.getPval()<variantSignificanceThreshold)
+											+ "\t" + (r.getPval() < variantSignificanceThreshold)
 											+ "\t" + annotStr;
 								} else {
 									ln += "\t"
+											+ "\t"
 											+ "\t"
 											+ "\t"
 											+ "\t"
@@ -1191,8 +1248,8 @@ public class MergeCredibleSets {
 	}
 
 
-	private void makePlot(String bedregions,
-						  String[] assocFiles, String[] datasetNames, String genenamefile, String outfile, double threshold, double maxPosteriorCredibleSet, int nrVariantsInCredibleSet, String annot) throws IOException, DocumentException {
+	private void makeCircularPlot(String bedregions,
+								  String[] assocFiles, String[] datasetNames, String genenamefile, String outfile, double threshold, double maxPosteriorCredibleSet, int nrVariantsInCredibleSet, String annot) throws IOException, DocumentException {
 
 
 		AssociationFile assocFile = new AssociationFile();
@@ -1204,18 +1261,7 @@ public class MergeCredibleSets {
 		}
 		TreeSet<Gene> genes = annotation.getGeneTree();
 
-		HashMap<String, String> locusToGene = new HashMap<String, String>();
-		TextFile genefiletf = new TextFile(genenamefile, TextFile.R);
-		String[] genelems = genefiletf.readLineElems(TextFile.tab);
-		while (genelems != null) {
-			if (genelems.length > 1) {
-				locusToGene.put(genelems[0], genelems[1]);
-			} else {
-				locusToGene.put(genelems[0], "");
-			}
-			genelems = genefiletf.readLineElems(TextFile.tab);
-		}
-		genefiletf.close();
+		HashMap<String, String> locusToGene = loadLocusToGene(genenamefile);
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedregions);
@@ -1522,5 +1568,103 @@ public class MergeCredibleSets {
 		}
 
 		return null;
+	}
+}
+
+class AnnotationData {
+
+	ArrayList<String> names = new ArrayList<>();
+	ArrayList<String> files = new ArrayList<>();
+	ArrayList<String> groups = new ArrayList<String>();
+	ArrayList<String> uniqueGroupNames = new ArrayList<String>();
+	ArrayList<ArrayList<Feature>> annotations = new ArrayList<>();
+	HashMap<String, ArrayList<Integer>> groupToFile = new HashMap<>();
+
+	public AnnotationData(String filename, ArrayList<Feature> regions) throws IOException {
+		TextFile tf1 = new TextFile(filename, TextFile.R);
+		String[] elems = tf1.readLineElems(TextFile.tab); // file\tname\tgroup
+		BedFileReader reader = new BedFileReader();
+		while (elems != null) {
+			if (elems.length == 2) {
+				// file\tname
+				names.add(elems[1]);
+				groups.add("None");
+			} else if (elems.length == 3) {
+				// file\tname\tgroup
+				names.add(elems[1]);
+				groups.add(elems[2]);
+			} else {
+				groups.add("None");
+				names.add(elems[0]);
+			}
+			if (elems.length >= 1 && elems[0].trim().length() > 0) {
+				files.add(elems[0]);
+				ArrayList<Feature> tmp = reader.readAsList(elems[0], regions);
+				System.out.println(tmp.size() + " annotations overlap in: " + elems[0]);
+				annotations.add(tmp);
+			}
+
+
+			elems = tf1.readLineElems(TextFile.tab); // file\tname\tgroup
+		}
+		tf1.close();
+		System.out.println(files.size() + " files in " + filename);
+
+		for (int i = 0; i < files.size(); i++) {
+			ArrayList<Integer> ids = groupToFile.get(groups.get(i));
+			if (ids == null) {
+				ids = new ArrayList<>();
+			}
+			ids.add(i);
+			groupToFile.put(groups.get(i), ids);
+		}
+		System.out.println(groupToFile.size() + " unique annotation groups.");
+
+		HashSet<String> grouphash = new HashSet<>();
+		grouphash.addAll(groups);
+		ArrayList<String> groupsId = new ArrayList<>();
+		groupsId.addAll(grouphash);
+		Collections.sort(groupsId);
+		uniqueGroupNames = groupsId;
+	}
+
+	public ArrayList<String> getUniqueGroups() {
+		return uniqueGroupNames;
+	}
+
+	public int countOverlappingAnnotations(Feature locus, int group) {
+		String name = uniqueGroupNames.get(group);
+		ArrayList<Integer> ids = groupToFile.get(name);
+
+
+		int ctr = 0;
+		for (int g = 0; g < ids.size(); g++) {
+			Integer id = ids.get(g);
+			ArrayList<Feature> annotation = annotations.get(id);
+
+			boolean overlap = overlap(annotation, locus);
+			if (overlap) {
+				ctr++;
+			}
+		}
+
+		return ctr;
+
+	}
+
+
+	public boolean overlap(ArrayList<Feature> annotation, Feature query) {
+		for (Feature f : annotation) {
+			if (f.overlaps(query)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public int getNrAnnotationsInGroup(int group) {
+		String name = uniqueGroupNames.get(group);
+		ArrayList<Integer> ids = groupToFile.get(name);
+		return ids.size();
 	}
 }

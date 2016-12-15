@@ -49,7 +49,7 @@ public class ExhaustivePlot {
 					String snpcombos = "/Data/Projects/2016-Finemapping/Exhaustive/" + d + "/combos.txt";
 					if (region.getChromosome().equals(Chromosome.SIX)) {
 						p.findCombination(region, assocfile, snpcombos);
-//						p.plotTopNSNPs(region, assocfile, output, 25, tabixfile, tabixsamplelimit);
+						p.plotTopNSNPs(region, assocfile, output, 25, tabixfile, tabixsamplelimit);
 					}
 
 
@@ -360,15 +360,6 @@ public class ExhaustivePlot {
 
 		Collections.sort(assocVals);
 		System.out.println(assocVals.get(0).getSnp1() + "\t" + assocVals.get(0).getSnp2() + "\t" + assocVals.get(0).getP());
-
-		int loc1 = 137999562;
-		int loc2 = 138243739;
-		for (AssocPair p : assocVals) {
-			if ((p.getSnp1().getStart() == loc1 || p.getSnp2().getStart() == loc1) &&
-					(p.getSnp1().getStart() == loc2 || p.getSnp2().getStart() == loc2)) {
-				System.out.println(p.getSnp1() + "\t" + p.getSnp2() + "\t" + p.getP());
-			}
-		}
 
 		System.out.println(assocVals.size() + " values loaded");
 
