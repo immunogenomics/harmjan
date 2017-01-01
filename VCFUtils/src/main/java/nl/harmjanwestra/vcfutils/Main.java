@@ -435,6 +435,18 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("beaglescore")
+				.desc("Use Beagle calculations for imputation qual score")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("infoscore")
+				.desc("Use Impute calculations for imputation qual score")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("listsamples")
 				.desc("List samples in VCF")
 				.build();
@@ -679,8 +691,27 @@ public class Main {
 			} else if (cmd.hasOption("updateimputationquals")) {
 
 				VCFCorrelator correlator = new VCFCorrelator();
-				boolean infoscore = true;
-				correlator.updateVCFInfoScore(input, out, infoscore);
+				boolean infoscore = false;
+				boolean beaglescore = false;
+				if (cmd.hasOption("infoscore")) {
+
+					infoscore = true;
+				}
+				if (cmd.hasOption("beaglescore")) {
+					beaglescore = true;
+				}
+				Integer threads = null;
+				if (cmd.hasOption("threads")) {
+					threads = Integer.parseInt(cmd.getOptionValue("threads"));
+				}
+
+				if(input == null || out == null){
+					System.out.println("Please provide input with -i and output with -o");
+					System.out.println("Alternatively, use --infoscore or --beaglescore to calculate imputation quals in stead of correlations");
+					System.exit(-1);
+				}
+
+				correlator.updateVCFInfoScore(input, out, threads, infoscore, beaglescore);
 
 			} else if (cmd.hasOption("filtersampleoverlap")) {
 

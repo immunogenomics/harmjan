@@ -26,18 +26,26 @@ public class VCFCorrelator {
 	private boolean calculateMAFOverAllSamples = false;
 
 	public static void main(String[] args) {
-		VCFCorrelator c = new VCFCorrelator();
-		try {
-			c.updateVCFInfoScore("/Data/tmp/2016-06-10/test.vcf", "/Data/tmp/2016-06-10/testo.vcf", true);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		VCFCorrelator c = new VCFCorrelator();
+//		try {
+////			c.updateVCFInfoScore("/Data/tmp/2016-06-10/test.vcf", "/Data/tmp/2016-06-10/testo.vcf", true);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
-	public void updateVCFInfoScore(String vcfin, String vcfOut, boolean infoscore) throws IOException {
+	public void updateVCFInfoScore(String vcfin, String vcfOut, Integer threads, boolean infoscore, boolean beaglescore) throws IOException {
 		System.out.println("Will replace imputation quals.");
 		System.out.println("In: " + vcfin);
 		System.out.println("Out: " + vcfOut);
+		if (infoscore) {
+			System.out.println("Using info score");
+		} else if (beaglescore) {
+			System.out.println("Using beagle imputation AR2/DR2");
+		} else {
+			System.out.println("Will correlate dosages against best genotype predictions");
+		}
+
 		TextFile tf = new TextFile(vcfin, TextFile.R);
 		TextFile out = new TextFile(new File(vcfOut), TextFile.W, true);
 		String ln = tf.readLine();
@@ -45,7 +53,14 @@ public class VCFCorrelator {
 
 		int cores = Runtime.getRuntime().availableProcessors();
 		System.out.println("Detected " + cores + " Processors ");
-		ExecutorService threadPool = Executors.newFixedThreadPool(cores);
+		if (threads != null) {
+			if (threads < 1) {
+				threads = 1;
+			}
+		} else {
+			threads = cores;
+		}
+		ExecutorService threadPool = Executors.newFixedThreadPool(threads);
 		CompletionService<String> jobHandler = new ExecutorCompletionService<>(threadPool);
 
 		int nrRead = 0;
@@ -54,7 +69,7 @@ public class VCFCorrelator {
 			if (ln.startsWith("#")) {
 				out.writeln(ln);
 			} else {
-				VCFVariantInfoUpdater task = new VCFVariantInfoUpdater(ln, infoscore);
+				VCFVariantInfoUpdater task = new VCFVariantInfoUpdater(ln, infoscore, beaglescore);
 				jobHandler.submit(task);
 				submitted++;
 				nrRead++;
@@ -470,12 +485,14 @@ public class VCFCorrelator {
 
 	public class VCFVariantInfoUpdater implements Callable<String> {
 
+		private final boolean beaglescore;
 		private String in = null;
 		private boolean infoscore = false;
 
-		public VCFVariantInfoUpdater(String in, boolean infoscore) {
+		public VCFVariantInfoUpdater(String in, boolean infoscore, boolean beaglescore) {
 			this.in = in;
 			this.infoscore = infoscore;
+			this.beaglescore = beaglescore;
 		}
 
 		@Override
@@ -485,24 +502,30 @@ public class VCFCorrelator {
 
 			int nrAlleles = variant.getAlleles().length;
 			double rsq = 0;
+			String[] elems = Strings.tab.split(in);
 			if (nrAlleles == 2) {
 				if (infoscore) {
 					VCFImputationQualScoreImpute q = new VCFImputationQualScoreImpute();
 					q.computeAutosomal(variant);
 					rsq = q.getImpinfo();
+					elems[7] = "INFO=" + rsq;
+				} else if (beaglescore) {
+					VCFImputationQualScoreBeagle b = new VCFImputationQualScoreBeagle(variant, true);
 				} else {
 					double[] dosageArr = convertToProbsToDouble(variant);
 					double[] bestguess = convertGenotypesToDouble(variant);
 					double r = JSci.maths.ArrayMath.correlation(bestguess, dosageArr);
 					rsq = r * r;
+					elems[7] = "INFO=" + rsq;
 				}
 			} else {
 				VCFImputationQualScoreBeagle q = new VCFImputationQualScoreBeagle(variant, true);
 				rsq = q.doseR2();
+				double ar2 = q.allelicR2();
+				double dr2 = q.doseR2();
+				elems[7] = "AR2=" + ar2 + ";DR2=" + dr2;
 			}
 
-			String[] elems = Strings.tab.split(in);
-			elems[7] = "INFO=" + rsq;
 
 			return Strings.concat(elems, Strings.tab);
 		}

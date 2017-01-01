@@ -29,6 +29,7 @@ public class AssociationResult {
 
 	protected double[] OR;
 	protected AssociationResult[] subresults;
+	private double z;
 
 
 	public SNPFeature getSnp() {
@@ -235,4 +236,7 @@ public class AssociationResult {
 	}
 
 
+	public double getZ() {
+		return beta[0] / se[0];
+	}
 }
