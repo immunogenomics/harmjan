@@ -148,7 +148,7 @@ public class GosiaViz2 {
 		}
 
 		tf.close();
-		System.out.println("Done loading proxies: " + snpOverlapFile);
+		System.out.println("Done loading proxyfinder: " + snpOverlapFile);
 	}
 
 	private void loadSNPAnnotationAndSetLocusBounds(String snpAnnotationFile, int extraWindowSize) throws IOException {

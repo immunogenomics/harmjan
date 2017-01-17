@@ -1,5 +1,5 @@
 
-package nl.harmjanwestra.proxies;
+package nl.harmjanwestra.proxyfinder;
 
 import java.io.IOException;
 

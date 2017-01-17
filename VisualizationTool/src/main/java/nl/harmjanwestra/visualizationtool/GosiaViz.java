@@ -488,7 +488,7 @@ public class GosiaViz {
 						g2d.drawLine(snpXPos, figureMargin - 45, snpXPos, (height - figureMargin) + 5);
 						g2d.drawString(leadSNP.getName(), snpXPos, figureMargin - 50);
 
-						// plot the proxies
+						// plot the proxyfinder
 						g2d.setColor(new Color(255, 125, 0, 64));
 						g2d.setStroke(dashed);
 						for (String proxy : proxies) {

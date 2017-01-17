@@ -225,7 +225,7 @@ public class PeterNigrovicCD177 {
 			}
 
 
-			outtf = new TextFile(out + f.toString() + "-assoc-proxies.txt", TextFile.W);
+			outtf = new TextFile(out + f.toString() + "-assoc-proxyfinder.txt", TextFile.W);
 			outtf.writeln(associationFile.getHeader() + "\tLD");
 
 

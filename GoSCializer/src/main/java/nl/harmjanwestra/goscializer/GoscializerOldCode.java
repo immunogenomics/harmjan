@@ -262,7 +262,7 @@ public class GoscializerOldCode {
                 proxyDataLn = data.next();
             }
 
-            System.out.println(chr + "\t" + snp.name + "\tproxies: " + ldSNPs.size() + "\tlocus: " + startpos + ":" + stoppos + " - " + (stoppos - startpos));
+            System.out.println(chr + "\t" + snp.name + "\tproxyfinder: " + ldSNPs.size() + "\tlocus: " + startpos + ":" + stoppos + " - " + (stoppos - startpos));
             proxies.put(snp, ldSNPs);
 
         }
@@ -340,7 +340,7 @@ public class GoscializerOldCode {
             }
             tf.close();
 
-            System.out.println(chr + "\t" + snp.name + "\tproxies: " + ldSNPs.size());
+            System.out.println(chr + "\t" + snp.name + "\tproxyfinder: " + ldSNPs.size());
             proxies.put(snp, ldSNPs);
 
         }

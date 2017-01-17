@@ -1,4 +1,4 @@
-package nl.harmjanwestra.proxies;
+package nl.harmjanwestra.proxyfinder;
 
 import org.apache.commons.cli.*;
 
@@ -108,7 +108,6 @@ public class ProxyFinderOptions {
 	public String regionfile;
 	public boolean locusld;
 	public double mafthreshold;
-
 
 	public ProxyFinderOptions(String[] args) {
 

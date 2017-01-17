@@ -265,7 +265,7 @@ public class MPRAJohnRay {
 		DetermineLD ld = new DetermineLD();
 		for (int i = 0; i < variants.size(); i++) {
 			Feature snp1 = variants.get(i);
-			System.out.println("Getting proxies for: " + i + "/" + variants.size() + " - " + snp1.getName());
+			System.out.println("Getting proxyfinder for: " + i + "/" + variants.size() + " - " + snp1.getName());
 			String tabixfile = tabixrefprefix + snp1.getChromosome().getNumber() + ".vcf.gz";
 			TabixReader reader = new TabixReader(tabixfile);
 			TabixReader.Iterator window = reader.query(snp1.getChromosome().getNumber() + ":" + (snp1.getStart() - 10) + "-" + (snp1.getStop() + 10));
@@ -315,7 +315,7 @@ public class MPRAJohnRay {
 					nr++;
 				}
 				reader.close();
-				System.out.println(nrproxies + "/" + nrvariants + " are proxies for this snp");
+				System.out.println(nrproxies + "/" + nrvariants + " are proxyfinder for this snp");
 				output.add(snpout);
 			} else {
 				output.add(null);

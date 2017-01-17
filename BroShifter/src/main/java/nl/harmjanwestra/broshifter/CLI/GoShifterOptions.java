@@ -71,7 +71,7 @@ public class GoShifterOptions {
 
 		option = Option.builder("i")
 				.hasArg()
-				.desc("Input SNP path (with proxies: --proxy format)")
+				.desc("Input SNP path (with proxyfinder: --proxy format)")
 				.longOpt("snps")
 				.build();
 		OPTIONS.addOption(option);

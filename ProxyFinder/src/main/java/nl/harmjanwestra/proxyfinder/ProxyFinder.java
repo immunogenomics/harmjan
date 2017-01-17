@@ -1,4 +1,4 @@
-package nl.harmjanwestra.proxies;
+package nl.harmjanwestra.proxyfinder;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import htsjdk.tribble.readers.TabixReader;
@@ -32,7 +32,7 @@ public class ProxyFinder {
 	}
 
 
-	// use tabix to find proxies
+	// use tabix to find proxyfinder
 	public void findProxies() throws IOException {
 		ArrayList<SNPFeature> snps = new ArrayList<SNPFeature>();
 
@@ -74,6 +74,11 @@ public class ProxyFinder {
 					System.out.println("Could not find required path: " + options.tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz");
 					allfilespresent = false;
 				}
+				// check whether the tabix indexes are there as well..
+				if (!Gpio.exists(tabixfile + ".tbi")) {
+					System.out.println("Could not find required path: " + options.tabixrefprefix + queryVariantFeature.getChromosome().getNumber() + ".vcf.gz.tbi");
+					allfilespresent = false;
+				}
 			}
 
 			if (!allfilespresent) {
@@ -83,7 +88,12 @@ public class ProxyFinder {
 		}
 
 		System.out.println(snps.size() + " snps in " + options.snpfile);
-		System.out.println("Using: " + options.nrthreads + " threads");
+		if(options.nrthreads == 1){
+			System.out.println("Using: " + options.nrthreads + " thread");
+		} else {
+			System.out.println("Using: " + options.nrthreads + " threads");
+		}
+
 
 
 		ExecutorService threadPool = Executors.newFixedThreadPool(options.nrthreads);
@@ -98,6 +108,7 @@ public class ProxyFinder {
 
 		int returned = 0;
 		TextFile outFile = new TextFile(options.output, TextFile.W);
+		outFile.writeln("ChromA\tPosA\tRsIdA\tChromB\tPosB\tRsIdB\tDistance\tRSquared\tDprime");
 		ProgressBar pb = new ProgressBar(submit);
 		while (returned < submit) {
 			try {
@@ -118,6 +129,7 @@ public class ProxyFinder {
 		pb.close();
 		outFile.close();
 		threadPool.shutdown();
+		System.out.println("Done. Have a nice day, and don't forget your output here: " + outFile.getFullPath());
 	}
 
 	public void locusLD() throws IOException {
@@ -398,6 +410,7 @@ public class ProxyFinder {
 					+ "\t" + queryVariantFeature.getStart()
 					+ "\t" + queryVariantFeature.getName()
 					+ "\t" + 0
+					+ "\t" + 1
 					+ "\t" + 1;
 
 			VCFVariant testSNPObj = getSNP(queryVariantFeature);
@@ -434,6 +447,7 @@ public class ProxyFinder {
 
 						Pair<Double, Double> ld = ldcalc.getLD(testSNPObj, variant);
 						double rsq = ld.getRight();
+						double dpr = ld.getLeft();
 
 						if (rsq >= threshold) {
 							output.add(queryVariantFeature.getChromosome().toString()
@@ -443,7 +457,8 @@ public class ProxyFinder {
 									+ "\t" + variant.asFeature().getStart()
 									+ "\t" + variant.asFeature().getName()
 									+ "\t" + (Math.abs(queryVariantFeature.getStart() - variant.getPos()))
-									+ "\t" + rsq);
+									+ "\t" + rsq
+									+ "\t" + dpr);
 						}
 					}
 				}

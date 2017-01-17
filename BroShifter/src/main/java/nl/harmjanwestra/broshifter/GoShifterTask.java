@@ -70,7 +70,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 		ArrayList<Feature> regions = new ArrayList<>();
 
 		for (int fctr = 0; fctr < allSNPs.size(); fctr++) {
-			// load proxies
+			// load proxyfinder
 			Pair<SNPFeature, ArrayList<SNPFeature>> proxies = allSNPs.get(fctr);
 			Feature region = defineRegion(proxies, medianAnnotationLength);
 			regions.add(region);
@@ -326,7 +326,7 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 	}
 
 
-	// load variants snp --> list of proxies
+	// load variants snp --> list of proxyfinder
 	// assume proxyfinder output
 	private ArrayList<Pair<SNPFeature, ArrayList<SNPFeature>>> loadSNPs(String snpfile) throws IOException {
 

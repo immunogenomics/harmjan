@@ -145,7 +145,7 @@ public class Goscializer {
                 commandsOut.writeln(command);
 
                 // for each SNP
-                // get all proxies
+                // get all proxyfinder
             }
 
         }

@@ -251,7 +251,7 @@ public class BedOverlap {
 				} else {
 					proxies.add(queryvariant);
 				}
-				System.out.println(proxies.size() + " proxies in tabix");
+				System.out.println(proxies.size() + " proxyfinder in tabix");
 			} else {
 				System.out.println(variant.toString() + " not found in reference");
 				proxies = null;

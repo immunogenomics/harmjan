@@ -40,7 +40,7 @@
         <module>chromhmmsplitter</module>
         <module>Coverage</module>
         <module>Finemapping</module>
-        <module>proxies</module>
+        <module>ProxyFinder</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
