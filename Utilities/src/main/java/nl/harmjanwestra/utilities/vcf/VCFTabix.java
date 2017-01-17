@@ -2,6 +2,7 @@ package nl.harmjanwestra.utilities.vcf;
 
 import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.utilities.features.Feature;
+import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
@@ -19,7 +20,12 @@ public class VCFTabix {
 
 	public VCFTabix(String filename) throws IOException {
 		this.tabixfile = filename;
-		treader = new TabixReader(tabixfile);
+		if (Gpio.exists(tabixfile + ".tbi")) {
+			treader = new TabixReader(tabixfile);
+		} else {
+			System.out.println("Could not find tabix index: " + tabixfile + ".tbi");
+			treader = null;
+		}
 
 	}
 

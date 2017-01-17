@@ -191,7 +191,13 @@ public class VCFVariant {
 			output = info.get("INFO");
 		}
 		if (output != null) {
-			return Double.parseDouble(output);
+			try {
+				Double v = Double.parseDouble(output);
+				return v;
+			} catch (NumberFormatException e) {
+
+			}
+			return null;
 		}
 		return null;
 	}

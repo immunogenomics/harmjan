@@ -10,6 +10,7 @@ import nl.harmjanwestra.utilities.individuals.Individual;
 import nl.harmjanwestra.utilities.plink.PlinkFamFile;
 import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
@@ -65,26 +66,9 @@ public class VCFVariantStats {
 			if (Gpio.exists(file)) {
 				if (list != null) {
 					System.out.println("Filtering samples using list: " + list);
-					TextFile tf = new TextFile(list, TextFile.R);
-					ArrayList<String> samples = tf.readAsArrayList();
-					tf.close();
 
-					HashSet<String> sampleSet = new HashSet<String>();
-					sampleSet.addAll(samples);
-
-					VCFGenotypeData d = new VCFGenotypeData(file);
-					ArrayList<String> allSamples = d.getSamples();
-					d.close();
-					samplestoinclude = new boolean[allSamples.size()];
-					for (int q = 0; q < allSamples.size(); q++) {
-						String s = allSamples.get(q);
-						if (sampleSet.contains(s)) {
-							samplestoinclude[q] = true;
-							nroverlappingsamples++;
-						} else {
-							samplestoinclude[q] = false;
-						}
-					}
+					VCFTabix t = new VCFTabix(file);
+					samplestoinclude = t.getSampleFilter(list);
 					System.out.println(nroverlappingsamples + " samples overlap with list");
 				}
 
@@ -521,14 +505,18 @@ public class VCFVariantStats {
 		private final String ln;
 		private final boolean[] samplesToInclude;
 
-		private final SampleAnnotation sampleAnnotation;
+		private SampleAnnotation sampleAnnotation;
 
 		public VariantStatsTask(String in, boolean[] samplesToInclude, DiseaseStatus[] sampleDiseaseStatus) {
 			ln = in;
 			this.samplesToInclude = samplesToInclude;
-			sampleAnnotation = new SampleAnnotation();
-			sampleAnnotation.setSampleDiseaseStatus(sampleDiseaseStatus);
 
+			if (sampleDiseaseStatus != null) {
+				sampleAnnotation = new SampleAnnotation();
+				sampleAnnotation.setSampleDiseaseStatus(sampleDiseaseStatus);
+			} else {
+				sampleAnnotation = null;
+			}
 		}
 
 		@Override
@@ -551,7 +539,7 @@ public class VCFVariantStats {
 				String hwep = "HWEP=" + variant.getHwep();
 
 				String infoString = AC + ";" + AF + ";" + AN + ";" + INFO + ";" + callrate + ";" + hwep;
-				if (sampleAnnotation.getSampleDiseaseStatus() != null) {
+				if (sampleAnnotation != null && sampleAnnotation.getSampleDiseaseStatus() != null) {
 					String AFCASES = "AFCASES=" + Strings.concat(variant.getAlleleFrequenciesControls(), Strings.comma, 1, variant.getAlleles().length);
 					String AFCONTROLS = "AFCONTROLS=" + Strings.concat(variant.getAlleleFrequenciesControls(), Strings.comma, 1, variant.getAlleles().length);
 					String hwepcases = "HWEPCASES=" + variant.getHwepCases();
