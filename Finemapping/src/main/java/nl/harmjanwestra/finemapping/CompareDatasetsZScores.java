@@ -7,6 +7,7 @@ import nl.harmjanwestra.utilities.features.Feature;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.Correlation;
+import umcg.genetica.math.stats.ZScores;
 import umcg.genetica.text.Strings;
 
 import java.io.IOException;
@@ -27,18 +28,18 @@ public class CompareDatasetsZScores {
 		String[] assocfiles = new String[]{
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz"
 		};
 
 		String[] assocfilenames = new String[]{
 				"RA",
 				"T1D",
-//				"COSMO"
 		};
+
+		String regionToGenesFile = "";
 
 		CompareDatasetsZScores z = new CompareDatasetsZScores();
 		try {
-			z.run(assocfiles, assocfilenames, bedregions, outloc);
+			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -46,11 +47,23 @@ public class CompareDatasetsZScores {
 	}
 
 
-	public void run(String[] associationFiles, String[] assocfilenames, String bedregions, String outloc) throws IOException {
+	public void run(String[] associationFiles, String[] assocfilenames, String bedregions, String regionToGeneFile, String outloc) throws IOException {
+
+
+		HashMap<String, String> regionToGene = new HashMap<String, String>();
+
+		TextFile tf = new TextFile(regionToGeneFile, TextFile.R);
+		String[] elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+			String region = elems[0];
+			String genes = elems[1];
+			regionToGene.put(region, genes);
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedregions);
-
 
 		AssociationFile f = new AssociationFile();
 		ArrayList<ArrayList<AssociationResult>> results = new ArrayList<>();
@@ -61,8 +74,12 @@ public class CompareDatasetsZScores {
 		System.out.println(regions.size() + " regionss");
 		System.out.println(results.size() + " datasets");
 
+
 		TextFile outall = new TextFile(outloc + "allcorrel.txt", TextFile.W);
 		outall.writeln("Ds1\tDs2\tregion\tn\tcorrel\tspearman");
+		TextFile out = new TextFile(outloc + "allAsssocMeta.txt", TextFile.W);
+		out.writeln("Region\tgenes\tpos\trsid1\tZ1\tBeta1\tse1\tn1\tor1\tAlleles1\tminorAllele1"
+				+ "\trsid2\tZ2\tBeta2\tse2\tn2\tor2\tAlleles2\tminorAllele2\tMetaZ\tMetaP\tMetaZAbs\tMetaPAbs");
 		for (Feature region : regions) {
 			System.out.println(region.toString());
 			for (int a = 0; a < results.size(); a++) {
@@ -71,6 +88,7 @@ public class CompareDatasetsZScores {
 				System.out.println(ares.size() + " in A dataset for region");
 				HashMap<String, AssociationResult> map1 = hash(ares);
 				for (int b = a + 1; b < results.size(); b++) {
+
 					// find shared assocs
 					System.out.println(a + " vs " + b);
 					ArrayList<AssociationResult> bres = results.get(b);
@@ -78,7 +96,6 @@ public class CompareDatasetsZScores {
 					System.out.println(bres.size() + " in B dataset for region");
 					ArrayList<AssociationResult> shared = new ArrayList<>();
 					HashMap<String, Integer> sharedIndex = new HashMap<>();
-
 
 					for (AssociationResult r : bres) {
 						String str = r.getSnp().toString();
@@ -92,6 +109,7 @@ public class CompareDatasetsZScores {
 					AssociationResult[] resultA = new AssociationResult[shared.size()];
 
 					double[] z1 = new double[shared.size()];
+
 					for (int q = 0; q < ares.size(); q++) {
 						Integer id = sharedIndex.get(ares.get(q).getSnp().toString());
 						if (id != null) {
@@ -101,14 +119,13 @@ public class CompareDatasetsZScores {
 
 					}
 					double[] z2 = new double[shared.size()];
+
 					for (int q = 0; q < shared.size(); q++) {
 						z2[q] = shared.get(q).getZ();
 					}
 
-					String fname = outloc + assocfilenames[a] + "-" + assocfilenames[b] + "-" + region.toString() + ".txt";
-					TextFile out = new TextFile(fname, TextFile.W);
-					out.writeln("pos\trsid1\tZ1\tBeta1\tor1\tAlleles1\tminorAllele1"
-							+ "rsid2\t\tZ2\tBeta2\tor2\tAlleles2\tminorAllele2");
+//					String fname = outloc + assocfilenames[a] + "-" + assocfilenames[b] + "-" + region.toString() + ".txt";
+
 					for (int i = 0; i < z1.length; i++) {
 						String allelesA = Strings.concat(resultA[i].getSnp().getAlleles(), Strings.comma);
 						String minorAlleleA = resultA[i].getSnp().getMinorAllele();
@@ -116,14 +133,47 @@ public class CompareDatasetsZScores {
 						double orA = resultA[i].getORs()[0];
 						String rsA = resultA[i].getSnp().getName();
 
+						double seA = resultA[i].getSe()[0];
+						int nA = resultA[i].getN();
+
 						String allelesB = Strings.concat(shared.get(i).getSnp().getAlleles(), Strings.comma);
 						String minorAlleleB = shared.get(i).getSnp().getMinorAllele();
 						double betaB = shared.get(i).getBeta()[0];
 						double orB = shared.get(i).getORs()[0];
 						String rsB = shared.get(i).getSnp().getName();
 
-						out.writeln(shared.get(i).getSnp().getStart() + "\t" + rsA + "\t" + z1[i] + "\t" + betaA + "\t" + orA + "\t" + allelesA + "\t" + minorAlleleA
-								+ "\t" + rsB + "\t" + z2[i] + "\t" + betaB + "\t" + orB + "\t" + allelesB + "\t" + minorAlleleB);
+						double seB = shared.get(i).getSe()[0];
+						int nB = shared.get(i).getN();
+
+						double metaZ = ZScores.getWeightedZ(new double[]{z1[i], z2[i]}, new int[]{nA, nB});
+						double metaP = ZScores.zToP(metaZ);
+
+						double metaZAbs = ZScores.getWeightedZ(new double[]{Math.abs(Math.abs(z1[i])), Math.abs(z2[i])}, new int[]{nA, nB});
+						double metaPAbs = ZScores.zToP(metaZAbs);
+
+						out.writeln(region.toString()
+								+ "\t" + regionToGene.get(region.toString())
+								+ "\t" + shared.get(i).getSnp().getStart()
+								+ "\t" + rsA
+								+ "\t" + z1[i]
+								+ "\t" + betaA
+								+ "\t" + seA
+								+ "\t" + nA
+								+ "\t" + orA
+								+ "\t" + allelesA
+								+ "\t" + minorAlleleA
+								+ "\t" + rsB
+								+ "\t" + z2[i]
+								+ "\t" + betaB
+								+ "\t" + seB
+								+ "\t" + nB
+								+ "\t" + orB
+								+ "\t" + allelesB
+								+ "\t" + minorAlleleB
+								+ "\t" + metaZ
+								+ "\t" + metaP
+								+ "\t" + metaZAbs
+								+ "\t" + metaPAbs);
 					}
 
 					double corr = Correlation.correlate(z1, z2);
@@ -133,12 +183,12 @@ public class CompareDatasetsZScores {
 
 					outall.writeln(assocfilenames[a] + "-" + assocfilenames[b] + "\t" + region.toString() + "\t" + z1.length + "\t" + corr + "\t" + spear);
 
-					out.close();
 
 				}
 			}
 		}
 		outall.close();
+		out.close();
 
 
 	}

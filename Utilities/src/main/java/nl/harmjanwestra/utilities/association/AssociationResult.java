@@ -2,6 +2,7 @@ package nl.harmjanwestra.utilities.association;
 
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
+import umcg.genetica.math.stats.ZScores;
 import umcg.genetica.text.Strings;
 
 
@@ -236,7 +237,15 @@ public class AssociationResult {
 	}
 
 
-	public double getZ() {
+	public double getT() {
 		return beta[0] / se[0];
+	}
+
+	public double getZ2() {
+		return ZScores.pToZ(pval);
+	}
+
+	public double getZ() {
+		return ZScores.betaToZ(beta[0], se[0], n);
 	}
 }
