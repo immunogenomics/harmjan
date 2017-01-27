@@ -358,34 +358,27 @@ public class ZScores {
 		return x;
 	}
 
-	public static double betaToZ(double beta, double se, int n) {
+
+	public static double betaToP(double beta, double se, int n) {
 		cern.jet.random.tdouble.engine.DoubleRandomEngine randomEngine = new cern.jet.random.tdouble.engine.DRand();
 		cern.jet.random.tdouble.StudentT tDistColt = new cern.jet.random.tdouble.StudentT(n - 2, randomEngine);
-		return betaToZ(beta, se, tDistColt);
+		return betaToP(beta, se, tDistColt);
 	}
 
-	public static double betaToZ(double beta, double se, StudentT tDistColt) {
+	public static double betaToP(double beta, double se, StudentT tDistColt) {
 		double t = beta / se;
-		double pValueColt = 1;
-		double zScoreColt = 0;
-
 		if (t < 0) {
-			pValueColt = 2 * tDistColt.cdf(t);
-			if (pValueColt < 2.0E-323) {
-				pValueColt = 2.0E-323;
-			}
-			zScoreColt = Probability.normalInverse(pValueColt);
-			//zScoreColt = normDist.inverse(pValueColt);
-		} else {
-			pValueColt = 2 * tDistColt.cdf(-t);
-			if (pValueColt < 2.0E-323) {
-				pValueColt = 2.0E-323;
-			}
-			zScoreColt = -Probability.normalInverse(pValueColt);
-			//zScoreColt = -normDist.inverse(pValueColt);
+			t *= -1;
 		}
+		double p = 2 * tDistColt.cdf(-t);
+		if (p < 2.0E-323) {
+			p = 2.0E-323;
+		}
+		return p;
+	}
 
-		return zScoreColt;
+	public static double betaToZ(double beta, double se) {
+		return beta / se;
 	}
 
 }

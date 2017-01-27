@@ -46,19 +46,22 @@ public class MergeCredibleSets {
 //			c.determineRegionSignificanceThresholds(bedregions, assocfiles, datasetnames, genenames, outfile);
 
 
-			String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-//		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
-			String genenames = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
+			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+//		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
+			String genenames = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 			String geneAnnotation = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
-			String outfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets.txt";
-			String outeqtlfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-eqtls.txt";
-			String outoverlapfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-overlap.txt";
-			String outoverlapplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/annotationplots/mergedCredibleSets-";
-			String outplot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-plot-promoter" + promotordistance + ".pdf";
+			String outfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets.txt";
+			String outeqtlfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-eqtls.txt";
+			String outeqtlfileblueprint = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-eqtls-blueprint.txt";
+			String outoverlapfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-overlap.txt";
+			String outoverlapplot = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/annotationplots/mergedCredibleSets-overlapplot-";
+			String outoverlapfileatac = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-overlap-atac.txt";
+			String outoverlapplotatac = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/annotationplots/mergedCredibleSets-overlapplot-atac-";
+			String outplot = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-plot-promoter" + promotordistance + ".pdf";
 			String[] assocfiles = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz"
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz"
 			};
 			if (windows) {
 				bedregions = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\LocusDefinitions\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
@@ -90,6 +93,10 @@ public class MergeCredibleSets {
 //			c.makeCircularPlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 //			System.exit(-1);
 
+
+			/*
+			eQTL overlap
+		*/
 			String[] eqtlfiles = new String[]{
 					"/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05-upd.tab",
 					"/Data/eQTLs/BiosEQTLs/eQTLsFDR0.05-ProbeLevel.txt.gz"
@@ -106,6 +113,49 @@ public class MergeCredibleSets {
 			String tabixfilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 
+			eqtlfiles = new String[]{
+					"/Data/eQTLs/BluePrint/mono_gene_nor_combat_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/mono_K27AC_log2rpm_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/mono_K4ME1_log2rpm_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/mono_meth_M_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/mono_psi_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/neut_gene_nor_combat_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/neut_K27AC_log2rpm_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/neut_K4ME1_log2rpm_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/neut_meth_M_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/neut_psi_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/tcel_gene_nor_combat_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/tcel_K27AC_log2rpm_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/tcel_K4ME1_log2rpm_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/tcel_meth_M_peer_10_all_summary-fdr005.txt.gz",
+					"/Data/eQTLs/BluePrint/tcel_psi_peer_10_all_summary-fdr005.txt.gz"
+			};
+			eqtlfilenames = new String[]{
+					"Monocyte-eQTL",
+					"Monocyte-hQTL-K27AC",
+					"Monocyte-hQTL-K4ME1",
+					"Monocyte-mQTL",
+					"Monocyte-sQTL",
+
+					"Neutrophil-eQTL",
+					"Neutrophil-hQTL-K27AC",
+					"Neutrophil-hQTL-K4ME1",
+					"Neutrophil-mQTL",
+					"Neutrophil-sQTL",
+
+					"TCell-eQTL",
+					"TCell-hQTL-K27AC",
+					"TCell-hQTL-K4ME1",
+					"TCell-mQTL",
+					"TCell-sQTL"
+
+			};
+			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+
+
+			/*
+			Bed file overlap
+		*/
 			String[] bedfiles = new String[]{
 					"/Data/Enhancers/Roadmap/dnase-groups.txt",
 					"/Data/Enhancers/Roadmap/h3k4me3-groups.txt",
@@ -115,6 +165,7 @@ public class MergeCredibleSets {
 			String[] bedfilenames = new String[]{
 					"DNASE", "H3K4me3", "ChromHMM-Enhancers", "ChromHMM-Promotors"
 			};
+
 
 //			c.bedOverlapOld(bedregions,
 //					bedfiles,
@@ -127,6 +178,20 @@ public class MergeCredibleSets {
 					bedfilenames,
 					assocfiles, datasetnames, genenames,
 					outoverlapfile, outoverlapplot,
+					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+
+			bedfiles = new String[]{
+					"/Data/Enhancers/CD4TimelinePilot/list.txt"
+			};
+			bedfilenames = new String[]{
+					"Atac"
+			};
+
+			c.bedOverlap(bedregions,
+					bedfiles,
+					bedfilenames,
+					assocfiles, datasetnames, genenames,
+					outoverlapfileatac, outoverlapplotatac,
 					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 //
 		} catch (IOException e) {

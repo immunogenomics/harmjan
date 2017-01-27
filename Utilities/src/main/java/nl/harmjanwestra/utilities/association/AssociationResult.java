@@ -236,16 +236,11 @@ public class AssociationResult {
 		return subresults;
 	}
 
-
-	public double getT() {
-		return beta[0] / se[0];
-	}
-
-	public double getZ2() {
+	public double getZFromP() {
 		return ZScores.pToZ(pval);
 	}
 
 	public double getZ() {
-		return ZScores.betaToZ(beta[0], se[0], n);
+		return ZScores.betaToZ(beta[0], se[0]);
 	}
 }

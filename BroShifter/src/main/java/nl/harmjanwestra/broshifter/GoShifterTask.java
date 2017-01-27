@@ -46,7 +46,6 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 
 	public Pair<String, ArrayList<String>> call() throws IOException {
 
-
 		// load annotations
 		AnnotationLoader loader = new AnnotationLoader();
 		System.out.println("Thread " + threadNum + " | Testing: " + annotation1);
@@ -76,11 +75,9 @@ public class GoShifterTask implements Callable<Pair<String, ArrayList<String>>> 
 			regions.add(region);
 		}
 
-
 		System.out.println("Thread " + threadNum + " | " + allSNPs.size() + " SNPs in: " + options.snpfile);
 
 		// total nr of overlapping variants
-
 		ArrayList<String> outputLines = new ArrayList<>();
 
 		// iterate all regions
