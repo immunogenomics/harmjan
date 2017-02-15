@@ -26,6 +26,7 @@ public class AssociationPanel extends Panel {
 	private boolean[][] markDifferentShape;
 	private double threshold;
 	private double[] LDData;
+	private boolean roundUpYAxis = true;
 
 	public AssociationPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -87,8 +88,9 @@ public class AssociationPanel extends Panel {
 		System.out.println(nrPixelsX);
 
 		// draw sequenced regions
-		g2d.setColor(new Color(208, 83, 77));
-		Color highlight = new Color(208, 83, 77);
+		Color red = new Color(231, 79, 19);
+		g2d.setColor(red);
+		Color highlight = red;
 
 		// plot sequenced regions
 		Font defaultfont = theme.getMediumFont();
@@ -146,7 +148,7 @@ public class AssociationPanel extends Panel {
 			}
 		}
 
-	
+
 		Color[] colors = new Color[nrDatasets];
 		for (int i = 0; i < colors.length; i++) {
 			switch (i) {
@@ -157,7 +159,7 @@ public class AssociationPanel extends Panel {
 					colors[i] = new Color(174, 164, 140);
 					break;
 				case 2:
-					colors[i] = new Color(208, 83, 77);
+					colors[i] = red;
 					break;
 				case 3:
 					colors[i] = new Color(98, 182, 177);
@@ -177,8 +179,10 @@ public class AssociationPanel extends Panel {
 		System.out.println(unit + " unit");
 		System.out.println(remainder + " remainder");
 
-		maxPval += (unit - remainder); // round off using unit
-		System.out.println(maxPval + " maxp");
+		if (roundUpYAxis) {
+			maxPval += (unit - remainder); // round off using unit
+			System.out.println(maxPval + " maxp");
+		}
 
 		g2d.setFont(defaultfont);
 		FontMetrics metrics = g2d.getFontMetrics(g2d.getFont());
@@ -213,6 +217,7 @@ public class AssociationPanel extends Panel {
 		// determine unit
 		double steps = maxPval / 2;
 
+
 		// draw red line near 5E-8)
 		if (plotGWASSignificance) {
 
@@ -220,7 +225,7 @@ public class AssociationPanel extends Panel {
 			if (maxPval >= gwas) {
 				double yperc = gwas / maxPval;
 				int pixelY = (int) Math.ceil(yperc * nrPixelsY);
-				g2d.setColor(new Color(208, 83, 77));
+				g2d.setColor(red);
 				g2d.drawLine(x0 + marginX, plotStarty - pixelY, x0 + marginX + nrPixelsX, plotStarty - pixelY);
 
 
@@ -230,7 +235,7 @@ public class AssociationPanel extends Panel {
 
 				g2d.setColor(Color.white);
 				g2d.fillRect(x0 + marginX + 10 - 2, plotStarty - pixelY - 5, strwidth + 6, 10);
-				g2d.setColor(new Color(208, 83, 77));
+				g2d.setColor(red);
 				g2d.drawString("Significance", x0 + marginX + 12, plotStarty - pixelY + 3);
 			}
 			g2d.setFont(defaultfont);
@@ -295,7 +300,7 @@ public class AssociationPanel extends Panel {
 			for (int i = 0; i < 101; i++) {
 				double ld = i / 100d;
 				Color c2 = highlight;
-				Color c1 = new Color(98, 182, 177); // colors[0];
+				Color c1 = new Color(153, 153, 153, 125); // colors[0];
 				Color interpolate = g.interpolateColor(c2, c1, ld);
 				g2d.setColor(interpolate);
 				g2d.fillRect(10 + i, 10, 1, 10);
@@ -370,7 +375,7 @@ public class AssociationPanel extends Panel {
 		Color interpolate = null;
 		if (LDData != null) {
 			Color c2 = highlight;
-			Color c1 = new Color(98, 182, 177); // colors[0];
+			Color c1 = new Color(153, 153, 153, 125); // colors[0];
 			double LD = LDData[v];
 			if (Double.isNaN(LD) || LD < 0 && LD > 1) {
 				LD = 0;
@@ -403,5 +408,9 @@ public class AssociationPanel extends Panel {
 
 	public void setLDData(double[] LDData) {
 		this.LDData = LDData;
+	}
+
+	public void setRoundUpYAxis(boolean roundUpYAxis) {
+		this.roundUpYAxis = roundUpYAxis;
 	}
 }

@@ -284,11 +284,15 @@ public class Feature {
 	}
 
 	public boolean overlaps(ArrayList<Feature> regions) {
-		for(Feature f: regions){
-			if(this.overlaps(f)){
+		for (Feature f : regions) {
+			if (this.overlaps(f)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public Feature newFeatureFromCoordinates() {
+		return new Feature(this.chromosome, this.start, this.stop);
 	}
 }

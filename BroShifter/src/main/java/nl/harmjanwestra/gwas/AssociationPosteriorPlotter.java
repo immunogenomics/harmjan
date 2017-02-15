@@ -20,6 +20,7 @@ import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
+import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 
 import java.io.IOException;
@@ -89,6 +90,43 @@ public class AssociationPosteriorPlotter {
 		plotAssociationsAndPosteriors();
 	}
 
+
+	private ArrayList<HashMap<Feature, Double>> loadThresholds(String file, int datasets) throws IOException {
+		ArrayList<HashMap<Feature, Double>> regionSignificanceThresholds = new ArrayList<HashMap<Feature, Double>>();
+		String[] thresholdFiles = file.split(",");
+		if (thresholdFiles.length < datasets) {
+			thresholdFiles = new String[datasets];
+			for (int i = 0; i < thresholdFiles.length; i++) {
+				thresholdFiles[i] = file;
+			}
+		}
+		for (int s = 0; s < thresholdFiles.length; s++) {
+			System.out.println("Loading significance thresholds: " + thresholdFiles[s]);
+			TextFile tf = new TextFile(thresholdFiles[s], TextFile.R);
+			HashMap<Feature, Double> regionThresholdsHash = new HashMap<Feature, Double>();
+			String[] elems = tf.readLineElems(TextFile.tab);
+			while (elems != null) {
+				if (elems.length >= 3) {
+					String[] felems = elems[0].split("_");
+					String[] posElems = felems[1].split("-");
+					Chromosome chr = Chromosome.parseChr(felems[0]);
+					Integer start = Integer.parseInt(posElems[0]);
+					Integer stop = Integer.parseInt(posElems[1]);
+					Feature f = new Feature(chr, start, stop);
+					double d = Double.parseDouble(elems[2]);
+					regionThresholdsHash.put(f, d);
+					System.out.println(f.toString() + "\t" + d);
+				}
+				elems = tf.readLineElems(TextFile.tab);
+			}
+			tf.close();
+			regionSignificanceThresholds.add(regionThresholdsHash);
+			System.out.println(regionThresholdsHash.size() + " thresholds loaded.");
+
+		}
+		return regionSignificanceThresholds;
+	}
+
 	public void plotAssociationsAndPosteriors() throws IOException, DocumentException {
 
 		String associationFiles = options.getAssociationFiles();
@@ -99,41 +137,18 @@ public class AssociationPosteriorPlotter {
 		String sequencedRegionsFile = options.getSequencedRegionsFile();
 		boolean plotPosteriors = options.isPlotPosterior();
 		String thresholdFile = options.getSignificanceThresholdFile();
+		String maxpvalfile = options.getMaxPvalueFile();
 		String ldrpefix = options.getLDPrefix();
 		String ldlimit = options.getLDLimit();
 		double defaultsignificancethreshold = options.getDefaultSignificance();
 
-		ArrayList<HashMap<Feature, Double>> regionThresholds = null;
-		if (thresholdFile != null) {
-			regionThresholds = new ArrayList<HashMap<Feature, Double>>();
-			String[] thresholdFiles = thresholdFile.split(",");
-			for (int s = 0; s < thresholdFiles.length; s++) {
-				System.out.println("Loading significance thresholds: " + thresholdFiles[s]);
-				TextFile tf = new TextFile(thresholdFiles[s], TextFile.R);
-				HashMap<Feature, Double> regionThresholdsHash = new HashMap<Feature, Double>();
-				String[] elems = tf.readLineElems(TextFile.tab);
-				while (elems != null) {
-					if (elems.length >= 3) {
-						String[] felems = elems[0].split("_");
-						String[] posElems = felems[1].split("-");
-						Chromosome chr = Chromosome.parseChr(felems[0]);
-						Integer start = Integer.parseInt(posElems[0]);
-						Integer stop = Integer.parseInt(posElems[1]);
-						Feature f = new Feature(chr, start, stop);
-						double d = Double.parseDouble(elems[2]);
-						regionThresholdsHash.put(f, d);
-					}
-					elems = tf.readLineElems(TextFile.tab);
-				}
-				tf.close();
-				regionThresholds.add(regionThresholdsHash);
-				System.out.println(regionThresholdsHash.size() + " thresholds loaded.");
-			}
-
-		}
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedregionfile);
+		HashSet<Feature> uniqueRegions = new HashSet<>();
+		uniqueRegions.addAll(regions);
+		regions = new ArrayList<>();
+		regions.addAll(uniqueRegions);
 
 		ArrayList<Feature> sequencedRegionsList = null;
 		HashSet<Feature> sequencedRegions = null;
@@ -152,6 +167,17 @@ public class AssociationPosteriorPlotter {
 			annotation = new GTFAnnotation(annotationfile);
 		} else {
 			annotation = new EnsemblStructures(annotationfile);
+		}
+
+		ArrayList<HashMap<Feature, Double>> regionSignificanceThresholds = null;
+		ArrayList<HashMap<Feature, Double>> regionMaxPThresholds = null;
+		if (thresholdFile != null && Gpio.exists(thresholdFile)) {
+			regionSignificanceThresholds = loadThresholds(thresholdFile, assocNames.length);
+		}
+		if (maxpvalfile != null && Gpio.exists(maxpvalfile)) {
+			System.out.println("Loading max pvals: " + maxpvalfile);
+			regionMaxPThresholds = loadThresholds(maxpvalfile, assocNames.length);
+//			System.exit(-1);
 		}
 
 
@@ -197,8 +223,9 @@ public class AssociationPosteriorPlotter {
 			Double maxP = null;
 			for (int i = 0; i < assocFiles.length; i++) {
 				Double threshold = null;
-				if (regionThresholds != null) {
-					threshold = regionThresholds.get(i).get(new Feature(region.getChromosome(), region.getStart(), region.getStop()));
+
+				if (regionSignificanceThresholds != null) {
+					threshold = regionSignificanceThresholds.get(i).get(new Feature(region.getChromosome(), region.getStart(), region.getStop()));
 					System.out.println(threshold + " for region: " + region.toString());
 				} else {
 					threshold = defaultsignificancethreshold;
@@ -261,6 +288,7 @@ public class AssociationPosteriorPlotter {
 						System.err.println("issue with: " + r.toString());
 					}
 				}
+
 
 				System.out.println(maxVar + " is the max var.");
 				if (!pvals.isEmpty()) {
@@ -333,6 +361,8 @@ public class AssociationPosteriorPlotter {
 
 				associationPanel.setDataSingleDs(region, sequencedRegions, pvals, assocNames[i] + " Association P-values");
 				associationPanel.setMarkDifferentShape(mark);
+
+
 				associationPanel.setPlotGWASSignificance(true, threshold);
 				allPanels.add(associationPanel);
 				if (plotPosteriors) {
@@ -344,7 +374,22 @@ public class AssociationPosteriorPlotter {
 			}
 
 			if (regionhasvariants) {
-				for (AssociationPanel p : allPanels) {
+				for (int q = 0; q < allPanels.size(); q++) {
+					AssociationPanel p = allPanels.get(q);
+					if (regionMaxPThresholds != null) {
+						Double pval = regionMaxPThresholds.get(q).get(region.newFeatureFromCoordinates());
+						if (pval == null) {
+							System.out.println("Could not find locus: " + region.toString());
+						} else {
+							System.out.println("Locus p: " + region.toString() + "\t" + pval);
+						}
+
+						if (pval != null) {
+							maxP = -Math.log10(pval);
+							p.setRoundUpYAxis(false);
+						}
+					}
+
 					System.out.println("plotting: " + region.toString() + "\tmax pval: " + maxP);
 					if (options.getMaxp() != null) {
 						p.setMaxPVal(options.getMaxp());

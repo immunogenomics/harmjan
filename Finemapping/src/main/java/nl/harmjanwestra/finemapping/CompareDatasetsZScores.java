@@ -23,11 +23,11 @@ public class CompareDatasetsZScores {
 
 
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ZScoreComparisons/regionsToCompare.bed";
-		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		String outloc = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ZScoreComparisons/";
+		bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		String outloc = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ZScoreComparisons/";
 		String[] assocfiles = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+				"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+				"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
 		};
 
 		String[] assocfilenames = new String[]{
@@ -35,9 +35,10 @@ public class CompareDatasetsZScores {
 				"T1D",
 		};
 
-		String regionToGenesFile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/AllLoci-GenesPerLocus.txt";
+		String regionToGenesFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 
 		CompareDatasetsZScores z = new CompareDatasetsZScores();
+
 		try {
 			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
 		} catch (IOException e) {
@@ -69,17 +70,17 @@ public class CompareDatasetsZScores {
 		ArrayList<Feature> regions = reader.readAsList(bedregions);
 
 		AssociationFile f = new AssociationFile();
-		ArrayList<ArrayList<AssociationResult>> results = new ArrayList<>();
+		ArrayList<ArrayList<AssociationResult>> resultsPerDataset = new ArrayList<>();
 		for (int r = 0; r < associationFiles.length; r++) {
-			results.add(f.read(associationFiles[r]));
+			resultsPerDataset.add(f.read(associationFiles[r]));
 		}
 
 		System.out.println(regions.size() + " regionss");
-		System.out.println(results.size() + " datasets");
+		System.out.println(resultsPerDataset.size() + " datasets");
 
 
 		TextFile outall = new TextFile(outloc + "allcorrel.txt", TextFile.W);
-		outall.writeln("Ds1\tDs2\tregion\tgenes\tn\tcorrel\tspearman");
+		outall.writeln("Ds1-Ds2\tregion\tgenes\tn\tcorrel\tspearman\tLowestPInDs1\tLowestPInDs2\tSignificantInBoth");
 		TextFile out = new TextFile(outloc + "allAsssocMeta.txt", TextFile.W);
 		out.writeln("Region" +
 				"\tgenes" +
@@ -107,19 +108,37 @@ public class CompareDatasetsZScores {
 				"\tMetaP" +
 				"\tMetaZAbs" +
 				"\tMetaPAbs");
+
+		double pvalthreshold = 7.5E-7;
 		for (Feature region : regions) {
+
+
+			boolean significantInBoth = false;
+			double lowestPInA = 1;
+			double lowestPInB = 1;
+
 			System.out.println(region.toString());
-			for (int a = 0; a < results.size(); a++) {
-				ArrayList<AssociationResult> ares = results.get(a);
+			for (int a = 0; a < resultsPerDataset.size(); a++) {
+				ArrayList<AssociationResult> ares = resultsPerDataset.get(a);
 				ares = filter(ares, region);
+				for(AssociationResult r: ares){
+					if(r.getPval() < lowestPInA){
+						lowestPInA = r.getPval();
+					}
+				}
 				System.out.println(ares.size() + " in A dataset for region");
 				HashMap<String, AssociationResult> map1 = hash(ares);
-				for (int b = a + 1; b < results.size(); b++) {
+				for (int b = a + 1; b < resultsPerDataset.size(); b++) {
 
 					// find shared assocs
 					System.out.println(a + " vs " + b);
-					ArrayList<AssociationResult> bres = results.get(b);
+					ArrayList<AssociationResult> bres = resultsPerDataset.get(b);
 					bres = filter(bres, region);
+					for(AssociationResult r: bres){
+						if(r.getPval() < lowestPInB){
+							lowestPInB = r.getPval();
+						}
+					}
 					System.out.println(bres.size() + " in B dataset for region");
 					ArrayList<AssociationResult> shared = new ArrayList<>();
 					HashMap<String, Integer> sharedIndex = new HashMap<>();
@@ -216,14 +235,17 @@ public class CompareDatasetsZScores {
 					double corr = Correlation.correlate(z1, z2);
 					SpearmansCorrelation c = new SpearmansCorrelation();
 					double spear = c.correlation(z1, z2);
-					System.out.println(assocfilenames[a] + "-" + assocfilenames[b] + "\t" + region.toString() + "\t" + corr + "\t" + spear);
+					System.out.println(assocfilenames[a] + "-" + assocfilenames[b] + "\t" + region.toString() + "\t" + corr + "\t" + spear + "\t" + significantInBoth);
 
 					outall.writeln(assocfilenames[a] + "-" + assocfilenames[b]
 							+ "\t" + region.toString()
 							+ "\t" + regionToGene.get(region.toString())
 							+ "\t" + z1.length
 							+ "\t" + corr
-							+ "\t" + spear);
+							+ "\t" + spear
+							+ "\t" + lowestPInA
+							+ "\t" + lowestPInB
+							+ "\t" + significantInBoth);
 
 
 				}

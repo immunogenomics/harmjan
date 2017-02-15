@@ -24,13 +24,13 @@ public class CountCodingVariants {
 
 		try {
 			String annot = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz";
-			String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed";
-			String assocfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
+			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed";
+			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
 			c.run(annot, bedregions, assocfile);
 
 			System.out.println();
-			bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
-			assocfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
+			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
+			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
 			c.run(annot, bedregions, assocfile);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -82,23 +82,20 @@ public class CountCodingVariants {
 
 		double sigmaposteriorIndel = 0;
 		double sigmaposteriorCoding = 0;
+		double sigmaPosteriorOther = 0;
 
-		double sigmafractionIndel = 0;
-		double sigmafractionCoding = 0;
+		double fractionIndel = 0;
+		double fractionCoding = 0;
+		double fractionOther = 0;
 
-		int nrCodingTotal = 0;
-		int nrIndelsTotal = 0;
-		int nrVariantsTotal = 0;
 
 		for (int d = 0; d < regions.size(); d++) {
-			Feature region = regions.get(d);
 			int nrCoding = 0;
 			int nrTotal = 0;
-
-
 			int nrIndel = 0;
+			int nrOther = 0;
 
-
+			Feature region = regions.get(d);
 			ArrayList<Gene> genes = new ArrayList<>();
 			for (Gene g : allgenes) {
 				if (g.overlaps(region)) {
@@ -113,32 +110,33 @@ public class CountCodingVariants {
 				if (snp.isIndel()) {
 					sigmaposteriorCoding += r.getPosterior();
 					nrIndel++;
-					nrIndelsTotal++;
+
 				}
 
 				boolean coding = getIsCoding(snp, genes);
 				if (coding) {
 					sigmaposteriorIndel += r.getPosterior();
 					nrCoding++;
-					nrCodingTotal++;
+
+				}
+
+				if (!snp.isIndel() && !coding) {
+					sigmaPosteriorOther += r.getPosterior();
+					nrOther++;
 				}
 				nrTotal++;
-				nrVariantsTotal++;
 			}
-
-
-			sigmafractionCoding += (double) nrCoding / nrTotal;
-			sigmafractionIndel += (double) nrIndel / nrTotal;
-
+			fractionCoding += ((double) nrCoding / nrTotal);
+			fractionIndel += ((double) nrIndel / nrTotal);
+			fractionOther += ((double) nrOther / nrTotal);
 		}
 
 
-
-
 //		System.out.println("overall: " + nrCodingOverall + "\t" + nrTotal + "\t" + ((double) nrCodingOverall / nrTotal));
-		System.out.println("sumposterior: " + sigmaposteriorCoding + "\t" + sigmafractionCoding + "\t" + (sigmaposteriorCoding / sigmafractionCoding));
-		System.out.println("sumposterior indel: " + sigmaposteriorIndel + "\t" + sigmafractionIndel + "\t" + (sigmaposteriorIndel / sigmafractionIndel));
-		System.out.println("nrIndels: " + nrIndelsTotal + "\tnrCoding: " + nrCodingTotal + "\tnrTotal: " + nrVariantsTotal);
+		System.out.println("sumposterior: " + sigmaposteriorCoding + "\t" + fractionCoding + "\t" + (sigmaposteriorCoding / fractionCoding));
+		System.out.println("sumposterior indel: " + sigmaposteriorIndel + "\t" + fractionIndel + "\t" + (sigmaposteriorIndel / fractionIndel));
+		System.out.println("sumposterior other: " + sigmaPosteriorOther + "\t" + fractionOther + "\t" + (sigmaPosteriorOther / fractionOther));
+//		System.out.println("nrIndels: " + nrIndel + "\tnrCoding: " + nrCoding + "\tnrTotal: " + nrTotal);
 
 		//		System.out.println("credible sets: " + nrCodingCredibleSets + "\t" + nrTotalCredibleSets + "\t" + ((double) nrCodingCredibleSets / nrTotalCredibleSets));
 

@@ -58,6 +58,13 @@ public class AssociationPlotterOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("maxpvalues")
+				.hasArg()
+				.desc("File with max Pvalue per region")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("ldprefix")
 				.hasArg()
 				.desc("Tabix ld prefix")
@@ -101,6 +108,7 @@ public class AssociationPlotterOptions {
 	private String LDPrefix;
 	private String LDLimit;
 	private double defaultSignificance = 5E-8;
+	private String maxPvalueFile;
 
 	public Double getMaxp() {
 		return maxp;
@@ -179,6 +187,10 @@ public class AssociationPlotterOptions {
 				LDLimit = cmd.getOptionValue("ldlimit");
 			}
 
+			if (cmd.hasOption("maxpvalues")) {
+				maxPvalueFile = cmd.getOptionValue("maxpvalues");
+			}
+
 
 			if (cmd.hasOption("r")) {
 				bedregionfile = cmd.getOptionValue("r");
@@ -253,5 +265,9 @@ public class AssociationPlotterOptions {
 
 	public double getDefaultSignificance() {
 		return defaultSignificance;
+	}
+
+	public String getMaxPvalueFile() {
+		return maxPvalueFile;
 	}
 }

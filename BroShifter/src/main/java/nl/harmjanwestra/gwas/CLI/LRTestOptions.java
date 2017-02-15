@@ -136,6 +136,13 @@ public class LRTestOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.hasArg()
+				.longOpt("haporthreshold")
+				.desc("OR thresholds for haplotype plotting format: region\torlo\torhi")
+				.build();
+		OPTIONS.addOption(option);
+
 
 		option = Option.builder()
 				.longOpt("maxiter")
@@ -188,6 +195,8 @@ public class LRTestOptions {
 				.build();
 		OPTIONS.addOption(option);
 	}
+
+	private String haplotypeOrThresholdFile;
 
 	public Integer getStartIter() {
 		return startIter;
@@ -253,6 +262,9 @@ public class LRTestOptions {
 
 			if (cmd.hasOption("r")) {
 				bedfile = cmd.getOptionValue("r");
+			}
+			if(cmd.hasOption("haporthreshold")){
+				haplotypeOrThresholdFile = cmd.getOptionValue("haporthreshold");
 			}
 
 			if (cmd.hasOption("nomissing")) {
@@ -505,6 +517,10 @@ public class LRTestOptions {
 
 	public void setSplitMultiAllelic(boolean splitMultiAllelic) {
 		this.splitMultiAllelicIntoMultipleVariants = splitMultiAllelic;
+	}
+
+	public String getHaplotypeOrThresholdFile() {
+		return haplotypeOrThresholdFile;
 	}
 
 	public enum ANALYSIS {

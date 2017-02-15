@@ -45,14 +45,13 @@ public class MergeCredibleSets {
 			MergeCredibleSets c = new MergeCredibleSets();
 //			c.determineRegionSignificanceThresholds(bedregions, assocfiles, datasetnames, genenames, outfile);
 
-
 			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
 			String genenames = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 			String geneAnnotation = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
 			String outfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets.txt";
 			String outeqtlfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-eqtls.txt";
-			String outeqtlfileblueprint = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-eqtls-blueprint.txt";
+			String outeqtlfileblueprint = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-eqtls-blueprint";
 			String outoverlapfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-overlap.txt";
 			String outoverlapplot = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/annotationplots/mergedCredibleSets-overlapplot-";
 			String outoverlapfileatac = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/MergedCredibleSets/mergedCredibleSets-overlap-atac.txt";
@@ -88,7 +87,7 @@ public class MergeCredibleSets {
 			double maxPosteriorCredibleSet = 0.9;
 			boolean includeAllLoci = true;
 
-			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, threshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+//			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, threshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 
 //			c.makeCircularPlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 //			System.exit(-1);
@@ -111,38 +110,41 @@ public class MergeCredibleSets {
 
 			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 			String tabixfilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
-			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 
-			eqtlfiles = new String[]{
-					"/Data/eQTLs/BluePrint/mono_gene_nor_combat_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/mono_K27AC_log2rpm_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/mono_K4ME1_log2rpm_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/mono_meth_M_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/mono_psi_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/neut_gene_nor_combat_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/neut_K27AC_log2rpm_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/neut_K4ME1_log2rpm_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/neut_meth_M_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/neut_psi_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/tcel_gene_nor_combat_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/tcel_K27AC_log2rpm_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/tcel_K4ME1_log2rpm_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/tcel_meth_M_peer_10_all_summary-fdr005.txt.gz",
-					"/Data/eQTLs/BluePrint/tcel_psi_peer_10_all_summary-fdr005.txt.gz"
-			};
 			eqtlfilenames = new String[]{
 					"Monocyte-eQTL",
 					"Monocyte-hQTL-K27AC",
 					"Monocyte-hQTL-K4ME1",
 					"Monocyte-mQTL",
 					"Monocyte-sQTL",
+			};
 
+			eqtlfiles = new String[]{
+					"/Data/eQTLs/BluePrint/mono_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/mono_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/mono_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/mono_meth_M_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/mono_psi_peer_10_all_summary-fdr005.tab.gz",
+			};
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint+"-monocyte.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+			eqtlfilenames = new String[]{
 					"Neutrophil-eQTL",
 					"Neutrophil-hQTL-K27AC",
 					"Neutrophil-hQTL-K4ME1",
 					"Neutrophil-mQTL",
 					"Neutrophil-sQTL",
+			};
 
+			eqtlfiles = new String[]{
+					"/Data/eQTLs/BluePrint/neut_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/neut_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/neut_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/neut_meth_M_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/neut_psi_peer_10_all_summary-fdr005.tab.gz",
+			};
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint+"-neutrophils.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+			eqtlfilenames = new String[]{
 					"TCell-eQTL",
 					"TCell-hQTL-K27AC",
 					"TCell-hQTL-K4ME1",
@@ -150,7 +152,16 @@ public class MergeCredibleSets {
 					"TCell-sQTL"
 
 			};
-			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+			eqtlfiles = new String[]{
+					"/Data/eQTLs/BluePrint/tcel_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/tcel_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/tcel_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/tcel_meth_M_peer_10_all_summary-fdr005.tab.gz",
+					"/Data/eQTLs/BluePrint/tcel_psi_peer_10_all_summary-fdr005.tab.gz"
+			};
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint+"-tcell.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+
+
 
 
 			/*
@@ -173,12 +184,12 @@ public class MergeCredibleSets {
 //					assocfiles, datasetnames, genenames,
 //					outoverlapfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 
-			c.bedOverlap(bedregions,
-					bedfiles,
-					bedfilenames,
-					assocfiles, datasetnames, genenames,
-					outoverlapfile, outoverlapplot,
-					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			c.bedOverlap(bedregions,
+//					bedfiles,
+//					bedfilenames,
+//					assocfiles, datasetnames, genenames,
+//					outoverlapfile, outoverlapplot,
+//					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation, false);
 
 			bedfiles = new String[]{
 					"/Data/Enhancers/CD4TimelinePilot/list.txt"
@@ -192,7 +203,7 @@ public class MergeCredibleSets {
 					bedfilenames,
 					assocfiles, datasetnames, genenames,
 					outoverlapfileatac, outoverlapplotatac,
-					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation, true);
 //
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -212,7 +223,8 @@ public class MergeCredibleSets {
 							String outplot,
 							double maxPosteriorCredibleSet,
 							int maxNrVariantsInCredibleSet,
-							String geneAnnotation) throws IOException, DocumentException {
+							String geneAnnotation,
+							boolean produceplot) throws IOException, DocumentException {
 
 		// load regions
 		BedFileReader reader = new BedFileReader();
@@ -394,67 +406,69 @@ public class MergeCredibleSets {
 		//
 		System.out.println(ctr + " regions processed.. ");
 		int qctr = 0;
-		for (int regionId = 0; regionId < regions.size(); regionId++) {
-			Feature region = regions.get(regionId);
-			if (regionsWithCredibleSetsHash.contains(region)) {
-				int bp = region.getStop() - region.getStart();
-				int bpperbin = 10;
-				int nrBins = bp / bpperbin;
+		if (produceplot) {
+			for (int regionId = 0; regionId < regions.size(); regionId++) {
+				Feature region = regions.get(regionId);
+				if (regionsWithCredibleSetsHash.contains(region)) {
+					int bp = region.getStop() - region.getStart();
+					int bpperbin = 10;
+					int nrBins = bp / bpperbin;
 
-				System.out.println(nrBins);
-
-
-				double[][][] overlap = new double[bedfilenames.length][][]; // annotation, group, bp
-				for (int an = 0; an < bedfilenames.length; an++) {
-					int nrgroups = annotationdata[an].getUniqueGroups().size();
-					double[][] tmpoverlap = new double[nrgroups][nrBins];
-					overlap[an] = tmpoverlap;
-				}
+					System.out.println(nrBins);
 
 
-				int binno = 0;
-				for (int s = region.getStart(); s < region.getStop(); s += bpperbin) {
-					Feature feat = new Feature();
-					feat.setChromosome(region.getChromosome());
-					feat.setStart(s);
-					feat.setStop(s + bpperbin);
-
+					double[][][] overlap = new double[bedfilenames.length][][]; // annotation, group, bp
 					for (int an = 0; an < bedfilenames.length; an++) {
 						int nrgroups = annotationdata[an].getUniqueGroups().size();
-						for (int group = 0; group < nrgroups; group++) {
-							if (binno < nrBins) {
-								overlap[an][group][binno] = annotationdata[an].countOverlappingAnnotations(feat, group);
+						double[][] tmpoverlap = new double[nrgroups][nrBins];
+						overlap[an] = tmpoverlap;
+					}
+
+
+					int binno = 0;
+					for (int s = region.getStart(); s < region.getStop(); s += bpperbin) {
+						Feature feat = new Feature();
+						feat.setChromosome(region.getChromosome());
+						feat.setStart(s);
+						feat.setStop(s + bpperbin);
+
+						for (int an = 0; an < bedfilenames.length; an++) {
+							int nrgroups = annotationdata[an].getUniqueGroups().size();
+							for (int group = 0; group < nrgroups; group++) {
+								if (binno < nrBins) {
+									overlap[an][group][binno] = annotationdata[an].countOverlappingAnnotations(feat, group);
 //								System.out.println(overlap[an][group][binno]);
+								}
 							}
 						}
+						binno++;
 					}
-					binno++;
-				}
 //				System.exit(-1);
 
 //				// plot output
 //
 //
-				for (int ds = 0; ds < datasetnames.length; ds++) {
-					Grid grid = new Grid(1000, 100, 1, 1, 100, 100);
-					AnnotationTrackPanel p = new AnnotationTrackPanel(1, 1);
+					for (int ds = 0; ds < datasetnames.length; ds++) {
+						Grid grid = new Grid(1000, 100, 1, 1, 100, 100);
+						AnnotationTrackPanel p = new AnnotationTrackPanel(1, 1);
 
-					int[] highlight = new int[crediblesets[ds][regionId].length];
-					for (int i = 0; i < highlight.length; i++) {
-						highlight[i] = crediblesets[ds][regionId][i].getSnp().getStart();
+						int[] highlight = new int[crediblesets[ds][regionId].length];
+						for (int i = 0; i < highlight.length; i++) {
+							highlight[i] = crediblesets[ds][regionId][i].getSnp().getStart();
+						}
+						String[][] groupnames = null;
+						p.setData(overlap, highlight, region, groupnames);
+						p.setMarginX(10);
+						p.setMarginY(10);
+						grid.addPanel(p);
+						grid.draw(outplot + datasetnames[ds] + "-" + region.toString() + ".pdf");
 					}
-					String[][] groupnames = null;
-					p.setData(overlap, highlight, region, groupnames);
-					p.setMarginX(10);
-					p.setMarginY(10);
-					grid.addPanel(p);
-					grid.draw(outplot + datasetnames[ds] + "-" + region.toString() + ".pdf");
-				}
 
 //
 //				qctr++;
 //				System.out.println(ctr + " regions processed.. ");
 
+				}
 			}
 		}
 
@@ -907,7 +921,7 @@ public class MergeCredibleSets {
 
 			ArrayList<EQTL> allEQTLs = new ArrayList<>();
 			String filename = eqtlfilenames[d];
-			if (filename.endsWith("tab")) {
+			if (filename.endsWith("tab") || filename.endsWith("tab.gz")) {
 
 				TextFile tf = new TextFile(eqtlfilenames[d], TextFile.R);
 				// Chr3	11604119	rs1000010	ATG7	3.91E-9
@@ -927,7 +941,11 @@ public class MergeCredibleSets {
 					eqtl.setGenename(gene);
 					eqtl.setName(gene);
 					eqtl.setPval(pval);
-					allEQTLs.add(eqtl);
+
+					if (eqtloverlap(eqtl, eqtlregions)) {
+						allEQTLs.add(eqtl);
+					}
+
 					elems = tf.readLineElems(TextFile.tab);
 				}
 				tf.close();
@@ -954,13 +972,8 @@ public class MergeCredibleSets {
 					eqtl.setGenename(elems[16]);
 					eqtl.setName(elems[16]);
 					eqtl.setPval(pval);
-
-					for (int r = 0; r < eqtlregions.size(); r++) {
-
-						Feature eqtlregion = eqtlregions.get(r);
-						if (eqtl.getSnp().overlaps(eqtlregion)) {
-							allEQTLs.add(eqtl);
-						}
+					if (eqtloverlap(eqtl, eqtlregions)) {
+						allEQTLs.add(eqtl);
 					}
 
 					ctr++;
@@ -989,6 +1002,17 @@ public class MergeCredibleSets {
 		}
 
 		return output;
+
+	}
+
+	private boolean eqtloverlap(EQTL eqtl, ArrayList<Feature> eqtlregions) {
+		for (int r = 0; r < eqtlregions.size(); r++) {
+			Feature eqtlregion = eqtlregions.get(r);
+			if (eqtl.getSnp().overlaps(eqtlregion)) {
+				return true;
+			}
+		}
+		return false;
 
 	}
 

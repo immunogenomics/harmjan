@@ -12,6 +12,7 @@ import umcg.genetica.text.Strings;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * Created by Harm-Jan on 06/16/16.
@@ -39,11 +40,33 @@ public class DeterminePositionWithinExhaustiveResults {
 //			outputfile = "D:\\tmp\\2016-08-14-exhaustive\\output\\T1D-exhaustive-PositionOfTopConditionalEffects.txt";
 //			d.mergeCredibleSets(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
-			regionfile = "/Data/tmp/tnfaip3/tnfaip3.txt";
-			assocfileprefix = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr";
-			modelfileprefix = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr";
-			outputfile = "/Data/tmp/tnfaip3/exhaustivecomp.txt";
+//			regionfile = "/Data/tmp/tnfaip3/tnfaip3.txt";
+//			assocfileprefix = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr";
+//			modelfileprefix = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr";
+//			outputfile = "/Data/tmp/tnfaip3/exhaustivecomp.txt";
+//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+
+
+			// CD28
+//			regionfile = "/Data/Projects/2016-Finemapping/Exhaustive/cd28/cd28.bed";
+//			assocfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/RA-assoc0.3-COSMO-chr";
+//			modelfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/RA-assoc0.3-COSMO-chr";
+//			outputfile = "/Data/Projects/2016-Finemapping/Exhaustive/cd28/exhaustivecompRA.txt";
+//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//
+//			regionfile = "/Data/Projects/2016-Finemapping/Exhaustive/cd28/cd28.bed";
+//			assocfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/T1D-assoc0.3-COSMO-chr";
+//			modelfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/RA-assoc0.3-COSMO-chr";
+//			outputfile = "/Data/Projects/2016-Finemapping/Exhaustive/cd28/exhaustivecompT1D.txt";
+//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+
+
+			regionfile = "/Data/Projects/2016-Finemapping/Exhaustive/tnfaip3.bed";
+			assocfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/RA-assoc0.3-COSMO-chr";
+			modelfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/RA-assoc0.3-COSMO-chr";
+			outputfile = "/Data/Projects/2016-Finemapping/Exhaustive/tnfaip3/exhaustivecompRA.txt";
 			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+
 
 //			regionfile = "/Data/tmp/2016-06-20/TNFAIP3.bed";
 //			assocfileprefix = "/Data/tmp/2016-06-20/RA-assoc0.3-COSMO-TNFAIP3-chr";
@@ -91,10 +114,11 @@ public class DeterminePositionWithinExhaustiveResults {
 			System.out.println("Looking for variants: " + variants[0] + "\t" + variants[1]);
 			boolean foundit = false;
 
+			Pair<Double, String> lowestPair = null;
 
 			ArrayList<Pair<Double, String>> outputBuffer = null;
 			double highestPInBuffer = 0;
-			int numberOfTopFx = 100;
+			int numberOfTopFx = 2000;
 			ArrayList<Pair<Double, String>> workBuffer = new ArrayList<Pair<Double, String>>(numberOfTopFx);
 
 			boolean lineIsWhatWereLookingFor = false;
@@ -148,18 +172,25 @@ public class DeterminePositionWithinExhaustiveResults {
 						allPvals.add(p);
 					}
 
-					if (!Double.isNaN(p) && !Double.isInfinite(p) && p > highestPInBuffer) {
+					if (!Double.isNaN(p) && !Double.isInfinite(p)) {
 						Pair<Double, String> pair = new Pair<Double, String>(p, Strings.concat(elems, Strings.tab), Pair.SORTBY.LEFT);
+						if (lowestPair == null) {
+							lowestPair = pair;
+						} else {
+							if (p > lowestPair.getLeft()) {
+								lowestPair = pair;
+							}
+						}
 						workBuffer.add(pair);
 						if (workBuffer.size() == numberOfTopFx) {
 							if (outputBuffer == null) {
 								outputBuffer = workBuffer;
 								Collections.sort(outputBuffer);
-								System.out.println("Set outputbuffer: "+outputBuffer.size());
+								System.out.println("Set outputbuffer: " + outputBuffer.size());
 							} else {
 //								System.out.println("Update outputbuffer");
 								outputBuffer.addAll(workBuffer);
-								Collections.sort(outputBuffer);
+								Collections.sort(outputBuffer, new PairSorter());
 								ArrayList<Pair<Double, String>> tmp = new ArrayList<>(numberOfTopFx);
 								tmp.addAll(outputBuffer.subList(0, numberOfTopFx));
 								outputBuffer = tmp;
@@ -229,7 +260,7 @@ public class DeterminePositionWithinExhaustiveResults {
 					maxP;
 
 			System.out.println(region.toString() + "\nConditional effect: " + (nrLowerPvals) + " lower pvals out of " + allPvals.size());
-
+			System.out.println("lowest pair: " + lowestPair.getLeft() + "\t" + lowestPair.getRight());
 
 			double max = Collections.max(allPvals);
 			double min = Collections.min(allPvals);
@@ -296,4 +327,16 @@ public class DeterminePositionWithinExhaustiveResults {
 		return null;
 	}
 
+	private class PairSorter implements Comparator<Pair<Double, String>> {
+		@Override
+		public int compare(Pair<Double, String> o1, Pair<Double, String> o2) {
+			if (o1.getLeft() > o2.getLeft()) {
+				return 1;
+			} else if (o1.getLeft() < o2.getLeft()) {
+				return -1;
+			} else {
+				return 0;
+			}
+		}
+	}
 }

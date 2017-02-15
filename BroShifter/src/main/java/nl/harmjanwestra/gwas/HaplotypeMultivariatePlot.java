@@ -37,6 +37,7 @@ public class HaplotypeMultivariatePlot {
 			HaplotypeDataset dataset,
 			ArrayList<BitVector> testedHaps,
 			AssociationResult associationResult,
+			Pair<Double, Double> minmax,
 			String outputfile) throws IOException, DocumentException {
 		int margin = 100;
 
@@ -80,6 +81,11 @@ public class HaplotypeMultivariatePlot {
 		}
 		if (minOR > 1) {
 			minOR = 1;
+		}
+
+		if (minmax != null) {
+			minOR = minmax.getLeft();
+			maxOr = minmax.getRight();
 		}
 
 		maxNrHaplotypes = testedHaps.size() + 1;

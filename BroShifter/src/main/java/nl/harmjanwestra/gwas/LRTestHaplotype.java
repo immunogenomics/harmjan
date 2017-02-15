@@ -9,6 +9,7 @@ import nl.harmjanwestra.gwas.tasks.LRTestHaploTestTask;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
@@ -134,6 +135,35 @@ public class LRTestHaplotype extends LRTest {
 
 		ArrayList<Feature> regions = getRegions(options.getBedfile());
 
+		// load region thresholds
+		String hapthresholdfile = options.getHaplotypeOrThresholdFile();
+		HashMap<Feature, Pair<Double, Double>> regionthresholds = null;
+		if (hapthresholdfile != null) {
+			regionthresholds = new HashMap<Feature, Pair<Double, Double>>();
+			TextFile tf = new TextFile(hapthresholdfile, TextFile.R);
+
+			String[] elems = tf.readLineElems(TextFile.tab);
+			while (elems != null) {
+				if (elems.length >= 3) {
+					String[] felems = elems[0].split("_");
+					String[] posElems = felems[1].split("-");
+					Chromosome chr = Chromosome.parseChr(felems[0]);
+					Integer start = Integer.parseInt(posElems[0]);
+					Integer stop = Integer.parseInt(posElems[1]);
+					Feature f = new Feature(chr, start, stop);
+					double d1 = Double.parseDouble(elems[1]);
+					double d2 = Double.parseDouble(elems[2]);
+					regionthresholds.put(f, new Pair<Double, Double>(d1, d2));
+					System.out.println(f.toString() + "\t" + d1 + "\t" + d2);
+				}
+				elems = tf.readLineElems(TextFile.tab);
+			}
+			tf.close();
+
+			System.out.println(regionthresholds.size() + " thresholds loaded.");
+
+		}
+
 		for (int r = 0; r < regions.size(); r++) {
 			Feature region = regions.get(r);
 
@@ -237,7 +267,17 @@ public class LRTestHaplotype extends LRTest {
 
 				HaplotypeMultivariatePlot plot = new HaplotypeMultivariatePlot();
 				try {
-					plot.run(dspruned, data.getRight(), result, options.getOutputdir() + region.toString() + "-haptest-multivariate.pdf");
+
+					Pair<Double, Double> minmax = null;
+					if (regionthresholds != null) {
+						minmax = regionthresholds.get(region.newFeatureFromCoordinates());
+					}
+
+					plot.run(dspruned,
+							data.getRight(),
+							result,
+							minmax,
+							options.getOutputdir() + region.toString() + "-haptest-multivariate.pdf");
 				} catch (DocumentException e) {
 					e.printStackTrace();
 				}

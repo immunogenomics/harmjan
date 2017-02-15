@@ -24,7 +24,7 @@ public class Conditional {
 	public static void main(String[] args) {
 
 		String assocfile = "";
-		String allregionsfile = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+		String allregionsfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
 		String diseasespecificregionfile = "";
 		String out = "";
 
@@ -33,25 +33,25 @@ public class Conditional {
 		try {
 
 			String[] significantRegionFiles = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-significantloci-75e7.bed",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-significantloci-75e7.bed",
 			};
 			String[] assocFiles = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/RA-assoc0.3-COSMO-iter0-merged.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter0-merged.txt.gz",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/META-assoc0.3-COSMO-iter0-merged.txt.gz"
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/RA-assoc0.3-COSMO-iter0-merged.txt.gz",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter0-merged.txt.gz",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/META-assoc0.3-COSMO-iter0-merged.txt.gz"
 			};
 
 			String[] bonferroniOut = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/RA.txt",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/T1D.txt",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/META.txt"
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/RA.txt",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/T1D.txt",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/META.txt"
 			};
 			String[] diseaseRegions = new String[]{
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DLoci.bed",
-					"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt"
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DLoci.bed",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt"
 			};
 
 			double defaultthreshold = 7.5E-7;
@@ -64,7 +64,7 @@ public class Conditional {
 			for (int a = 0; a < assocFiles.length; a++) {
 				assocfile = assocFiles[a];
 				diseasespecificregionfile = diseaseRegions[a];
-				// b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
+				 b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
 			}
 
 			String[] diseases = new String[]{
@@ -74,7 +74,7 @@ public class Conditional {
 			};
 
 
-			String annot = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/genes.gtf.gz";
+			String annot = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/genes.gtf.gz";
 			GTFAnnotation annotation = new GTFAnnotation(annot);
 			TreeSet<Gene> genes = annotation.getGeneTree();
 			int maxiter = 4;
@@ -90,13 +90,13 @@ public class Conditional {
 				}
 				tf.close();
 
-				String output = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-bestAssocPerRegion.txt";
+				String output = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-bestAssocPerRegion.txt";
 				TextFile outtf = new TextFile(output, TextFile.W);
 				outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
 				for (int iter = 0; iter < maxiter; iter++) {
 					System.out.println(iter + "\t" + d);
-					String assoc = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
-					String regions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+					String assoc = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+					String regions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 					b.determineTopAssocPerRegion(iter, regions, defaultthreshold, assoc, thresholds, genes, outtf);
 				}
 				outtf.close();

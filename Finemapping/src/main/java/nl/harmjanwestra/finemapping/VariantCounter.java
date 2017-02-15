@@ -7,6 +7,7 @@ import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.text.TextFile;
+import umcg.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -167,9 +168,9 @@ public class VariantCounter {
 
 	public void countAccuracy() throws IOException {
 
-		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
-		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
-		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		String variantsOnIC = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
+		String seqpanelvcf = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/SequencingPanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
+		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 
 		String[] files = new String[]{
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
@@ -185,7 +186,7 @@ public class VariantCounter {
 				"HRC / HRC / SHAPEIT",
 				"HRC / HRC / EAGLE / MICHIGAN"
 		};
-		String samplelist = "";
+		String samplelist = null;
 
 //		files = new String[]{
 //				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
@@ -220,6 +221,22 @@ public class VariantCounter {
 		);
 
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
+		TextFile out = new TextFile("/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/SequencingPanel/usedVariants.txt", TextFile.W);
+		out.writeln("Chromosome\tPosition\tRsid\tRef\tAlt\tAF\tCallRate\tHWE-P");
+		for (VCFVariant var : seqpanel) {
+			out.writeln(var.getChr().toString()
+					+ "\t" + var.getPos()
+					+ "\t" + var.getId()
+					+ "\t" + var.getAlleles()[0]
+					+ "\t" + Strings.concat(var.getAlleles(), Strings.comma, 1, var.getAlleles().length)
+					+ "\t" + Strings.concat(var.getAlleleFrequencies(), Strings.semicolon)
+					+ "\t" + var.getCallrate()
+					+ "\t" + var.getHwep()
+			);
+		}
+		out.close();
+		System.exit(-1);
+
 		ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
 
