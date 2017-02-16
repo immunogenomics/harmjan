@@ -17,6 +17,7 @@ public class LRTestHaploTask implements Callable<Triple<BitVector[], Integer, Bo
 	private final ArrayList<VCFVariant> variants;
 	private final int i;
 
+
 	public LRTestHaploTask(int i, ArrayList<VCFVariant> variants, double genotypeProbThreshold) {
 		this.i = i;
 		this.variants = variants;

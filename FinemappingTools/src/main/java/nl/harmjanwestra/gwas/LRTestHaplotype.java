@@ -66,59 +66,194 @@ public class LRTestHaplotype extends LRTest {
 			System.exit(-1);
 		}
 
-
 //		univariate(variants);
-
 //		exhaustive(variants);
-
 //		collapse(variants);
-
 		multivariate(variants);
-//
 //		conditional(variants);
-
 		System.exit(-1);
 	}
 
-	private void conditional(ArrayList<VCFVariant> variants) {
-		HaplotypeDataset dspruned = getPrunedHaplotypes(variants);
-		DoubleMatrix2D intercept = dspruned.getIntercept();
-		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
-		double[] y = dspruned.getDiseaseStatus();
-		LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+	private void conditional(ArrayList<VCFVariant> allVariants) throws IOException {
 
-		ArrayList<BitVector> haps = dspruned.getAvailableHaplotypesList();
+		// add variants in order defined in snplimit file
+		TextFile tf = new TextFile(options.getSnpLimitFile(), TextFile.R);
+		ArrayList<String> variantOrder = new ArrayList<>();
+		String ln = tf.readLine();
+		while (ln != null) {
+			if (ln.trim().length() > 0) {
+				variantOrder.add(ln);
+			}
+			ln = tf.readLine();
+		}
+		tf.close();
 
-		// get snp that contributes to most haplotypes
-		int[] snpctr = new int[variants.size()];
-		for (int q = 0; q < haps.size(); q++) {
-			BitVector v = haps.get(q);
-			for (int z = 0; z < v.size(); z++) {
-				if (v.get(z)) {
-					snpctr[z]++;
+		// index variants
+		HashMap<String, Integer> variantToPos = new HashMap<String, Integer>();
+		for (int i = 0; i < allVariants.size(); i++) {
+			VCFVariant v = allVariants.get(i);
+			String id = v.toString(); // chr_pos_id
+			variantToPos.put(id, i);
+		}
+
+		// first find all haplotypes for all included variants
+		HaplotypeDataset allHaps = getPrunedHaplotypes(allVariants);
+		ArrayList<Integer> originalIdsIncluded = allHaps.getOriginalIndsIncluded();
+		boolean[] sampleSelect = new boolean[finalDiseaseStatus.length];
+		for (int i = 0; i < originalIdsIncluded.size(); i++) {
+			Integer index = originalIdsIncluded.get(i);
+			sampleSelect[index] = true;
+		}
+
+		// add variants iteratively
+		LogisticRegressionResult prevNullModelResult = null;
+		LogisticRegressionResult prevAltModelResult = null;
+		int prevNrDf = 0;
+		int prevNrSamples = 0;
+
+		String snpoutf = options.getOutputdir() + "-haptest-haps.txt";
+		TextFile outtf = new TextFile(snpoutf, TextFile.W);
+		String[] header = new String[]{
+				"i",
+				"variants",
+				"hapsInModel",
+				"refHap",
+				"diffDfNull",
+				"diffDevianceNull",
+				"pNull",
+				"diffDfAltConditional",
+				"diffDevianceConditional",
+				"pConditional"
+		};
+		outtf.writeln(Strings.concat(header, Strings.tab));
+
+		for (int i = 0; i < variantOrder.size(); i++) {
+			ArrayList<VCFVariant> testVariants = new ArrayList<>();
+			for (int n = 0; n < i + 1; n++) {
+				String toAdd = variantOrder.get(n);
+				Integer id = variantToPos.get(toAdd);
+				testVariants.add(allVariants.get(id));
+			}
+
+			if (i == 0) {
+				// initial test, test against null model
+
+				// get the null model
+				HaplotypeDataset dspruned = getPrunedHaplotypes(testVariants, sampleSelect);
+				DoubleMatrix2D intercept = dspruned.getIntercept();
+				DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
+				double[] y = dspruned.getDiseaseStatus();
+				LogisticRegressionResult nullModelResult = reg.univariate(y, xprime);
+
+				Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
+				DoubleMatrix2D haps = data.getLeft();
+				DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
+				DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
+				LogisticRegressionResult altModelResult = reg.univariate(y, x);
+
+				prevNrDf = haps.columns();
+				prevNrSamples = haps.rows();
+				prevAltModelResult = altModelResult;
+				prevNullModelResult = nullModelResult;
+
+
+				ArrayList<String> variantIds = new ArrayList<String>();
+				for (int q = 0; q < testVariants.size(); q++) {
+					variantIds.add(testVariants.get(q).toString());
 				}
+				int ref = dspruned.getReferenceHaplotypeId();
+				ArrayList<String> hapStr = new ArrayList<>();
+				for (int q = 0; q < dspruned.getNrHaplotypes(); q++) {
+					if (q != ref) {
+						hapStr.add(dspruned.getHaplotypeDesc(q));
+					}
+				}
+
+				int deltaDf = haps.columns();
+				double devianceAlt = altModelResult.getDeviance();
+				double devianceNull = nullModelResult.getDeviance();
+				double deltaDevianceNull = devianceAlt - devianceNull;
+				double pNull = ChiSquare.getP(deltaDf, deltaDevianceNull);
+
+				double deltaDeviance = 0;
+				double p = 1;
+				/*
+
+
+				 */
+				String output = i
+						+ "\t" + Strings.concat(variantIds, Strings.semicolon)
+						+ "\t" + Strings.concat(hapStr, Strings.semicolon)
+						+ "\t" + dspruned.getHaplotypeDesc(ref)
+						+ "\t" + haps.columns()
+						+ "\t" + deltaDevianceNull
+						+ "\t" + pNull
+						+ "\t" + deltaDeviance
+						+ "\t" + p;
+				outtf.writeln(output);
+			} else {
+				// conditional test, test against previous model
+				// get the null model
+				HaplotypeDataset dspruned = getPrunedHaplotypes(testVariants, sampleSelect);
+				DoubleMatrix2D intercept = dspruned.getIntercept();
+				DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
+				double[] y = dspruned.getDiseaseStatus();
+				LogisticRegressionResult nullModelResult = reg.univariate(y, xprime);
+
+				Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
+				DoubleMatrix2D haps = data.getLeft();
+				int df = haps.columns();
+				int nrsamples = haps.rows();
+
+
+				// check whether N is equal between results
+				int sampleDiff = Math.abs(nrsamples - prevNrSamples);
+				if (sampleDiff > 0) {
+					// there's something wrong
+					System.err.println("Error: conditional analysis sample size unequal:" + nrsamples + " - " + prevNrSamples);
+				} else {
+					DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
+					DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
+					LogisticRegressionResult altModelResult = reg.univariate(y, x);
+					int deltaDf = df - prevNrDf;
+					double devianceAlt = altModelResult.getDeviance();
+					double deviancePrevAlt = prevAltModelResult.getDeviance();
+
+					double deltaDeviance = devianceAlt - deviancePrevAlt;
+					double p = ChiSquare.getP(deltaDf, deltaDeviance);
+					prevAltModelResult = altModelResult;
+					prevNullModelResult = nullModelResult;
+
+					ArrayList<String> variantIds = new ArrayList<String>();
+					for (int q = 0; q < testVariants.size(); q++) {
+						variantIds.add(testVariants.get(q).toString());
+					}
+					int ref = dspruned.getReferenceHaplotypeId();
+					ArrayList<String> hapStr = new ArrayList<>();
+					for (int q = 0; q < dspruned.getNrHaplotypes(); q++) {
+						if (q != ref) {
+							hapStr.add(dspruned.getHaplotypeDesc(q));
+						}
+					}
+
+					double deltaDevianceNull = altModelResult.getDeviance() - nullModelResult.getDeviance();
+					double pNull = ChiSquare.getP(deltaDf, deltaDevianceNull);
+
+					String output = i
+							+ "\t" + Strings.concat(variantIds, Strings.semicolon)
+							+ "\t" + Strings.concat(hapStr, Strings.semicolon)
+							+ "\t" + dspruned.getHaplotypeDesc(ref)
+							+ "\t" + haps.columns()
+							+ "\t" + deltaDevianceNull
+							+ "\t" + pNull
+							+ "\t" + deltaDeviance
+							+ "\t" + p;
+					outtf.writeln(output);
+				}
+
 			}
 		}
-		int maxSNP = -1;
-		int startsnp = -1;
-		ArrayList<Pair<Integer, Integer>> snps = new ArrayList<>();
-		for (int v = 0; v < snpctr.length; v++) {
-			if (snpctr[v] > maxSNP) {
-				startsnp = v;
-				maxSNP = snpctr[v];
-			}
-			snps.add(new Pair<>(v, snpctr[v]));
-
-		}
-
-		System.out.println("Start ctr: " + maxSNP + "\tsnp: " + startsnp);
-		Collections.sort(snps, new PairSorter());
-
-		ArrayList<Integer> groupVars = new ArrayList<>();
-		for (int v = 0; v < snps.size(); v++) {
-			System.out.println(snps.get(v).getLeft() + "\t" + snps.get(v).getRight());
-			dspruned.createGroups(groupVars);
-		}
+		outtf.close();
 
 
 	}
@@ -129,6 +264,7 @@ public class LRTestHaplotype extends LRTest {
 		public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
 			return -o1.getRight().compareTo(o2.getRight());
 		}
+
 	}
 
 	private void multivariate(ArrayList<VCFVariant> allVariants) throws IOException {
@@ -290,7 +426,16 @@ public class LRTestHaplotype extends LRTest {
 	}
 
 	private HaplotypeDataset getPrunedHaplotypes(ArrayList<VCFVariant> variants) {
-		HaplotypeDataset ds = HaplotypeDataset.create(variants, finalDiseaseStatus, finalCovariates, options.getGenotypeProbThreshold(), exService);
+		return getPrunedHaplotypes(variants, null);
+	}
+
+	private HaplotypeDataset getPrunedHaplotypes(ArrayList<VCFVariant> variants, boolean[] includeTheseIndividuals) {
+		HaplotypeDataset ds = HaplotypeDataset.create(variants,
+				finalDiseaseStatus,
+				finalCovariates,
+				options.getGenotypeProbThreshold(),
+				includeTheseIndividuals,
+				exService);
 		int nrHapsPrev = ds.getAvailableHaplotypesList().size();
 
 		HaplotypeDataset dspruned = null;
@@ -306,10 +451,6 @@ public class LRTestHaplotype extends LRTest {
 		}
 
 		return dspruned;
-	}
-
-	private void pruneHaplotypes(ArrayList<VCFVariant> variants) {
-
 	}
 
 	private void collapse(ArrayList<VCFVariant> variants) throws IOException {
@@ -333,7 +474,7 @@ public class LRTestHaplotype extends LRTest {
 					selectedVars.add(variants.get(combo[q]));
 				}
 
-				HaplotypeDataset ds = HaplotypeDataset.create(selectedVars, finalDiseaseStatus, finalCovariates, options.getGenotypeProbThreshold(), exService);
+				HaplotypeDataset ds = HaplotypeDataset.create(selectedVars, finalDiseaseStatus, finalCovariates, options.getGenotypeProbThreshold(), null, exService);
 
 				int nrHapsPrev = ds.getAvailableHaplotypesList().size();
 				HaplotypeDataset dspruned = null;
@@ -531,7 +672,7 @@ public class LRTestHaplotype extends LRTest {
 	}
 
 	private void exhaustive(ArrayList<VCFVariant> variants) throws IOException {
-		System.out.println("Conditional tests");
+		System.out.println("Exhaustive conditional tests");
 
 		String outloc = options.getOutputdir() + "haptest-exhaustive.txt";
 		String outloc2 = options.getOutputdir() + "haptest-exhaustive2.txt";

@@ -34,6 +34,7 @@ public class HaplotypeDataset {
 	private final ArrayList<BitVector> availableHaplotypesList;
 	private final DiseaseStatus[][] finalDiseaseStatus;
 	private final DoubleMatrix2D finalCovariates;
+	private final ArrayList<Integer> originalIndsIncluded;
 	private double[] haplotypeFrequenciesCases;
 	private double[] haplotypeFrequenciesControls;
 	private BitVector referenceHaplotype;
@@ -48,16 +49,19 @@ public class HaplotypeDataset {
 							ArrayList<BitVector> availableHaplotypesList,
 							DiseaseStatus[][] finalDiseaseStatus,
 							DoubleMatrix2D finalCovariates,
+							ArrayList<Integer> originalIndIdsIncluded,
 							ArrayList<VCFVariant> variants) {
 		this.finalDiseaseStatus = finalDiseaseStatus;
 		this.finalCovariates = finalCovariates;
 		this.haplotypePairs = haplotypePairs;
 		this.availableHaplotypesList = availableHaplotypesList;
 		this.variants = variants;
+		this.originalIndsIncluded = originalIndIdsIncluded;
 		index();
 		calcHapFreq();
 		populateMatrix();
 	}
+
 
 	private void index() {
 		hapToInt = new HashMap<>();
@@ -119,28 +123,43 @@ public class HaplotypeDataset {
 										  DiseaseStatus[][] finalDiseaseStatus,
 										  DoubleMatrix2D finalCovariates,
 										  double genotypeprobthreshold,
+										  boolean[] includeTheseIndividuals,
 										  ExecutorService exService) {
 // get a list of available haplotypes
 		HashSet<BitVector> availableHaplotypeHash = new HashSet<BitVector>();
 		ArrayList<BitVector> availableHaplotypesList = new ArrayList<>();
 
 		CompletionService<Triple<BitVector[], Integer, Boolean>> jobHandler = new ExecutorCompletionService<Triple<BitVector[], Integer, Boolean>>(exService);
+
+		int submit = 0;
+		int[] iToIndex = new int[finalDiseaseStatus.length];
+		ArrayList<Integer> originalIndIdsIncluded = new ArrayList<>();
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
-			jobHandler.submit(new LRTestHaploTask(i, variants, genotypeprobthreshold));
+			if (includeTheseIndividuals == null || includeTheseIndividuals[i]) {
+				jobHandler.submit(new LRTestHaploTask(i, variants, genotypeprobthreshold));
+				iToIndex[i] = submit;
+				originalIndIdsIncluded.add(i);
+				submit++;
+			} else {
+				iToIndex[i] = -1;
+			}
 		}
 
 		int returned = 0;
-		BitVector[][] haplotypePairs = new BitVector[finalDiseaseStatus.length][];
-		ProgressBar pb = new ProgressBar(finalDiseaseStatus.length);
-		while (returned < finalDiseaseStatus.length) {
+		BitVector[][] haplotypePairs = new BitVector[submit][];
+		ProgressBar pb = new ProgressBar(submit);
+		while (returned < submit) {
 
 			try {
 				Triple<BitVector[], Integer, Boolean> fut = jobHandler.take().get();
 				BitVector[] haps = fut.getLeft();
 
-				if (!fut.getRight()) {
-					haplotypePairs[fut.getMiddle()] = haps;
+				int i = fut.getMiddle();
+				int index = iToIndex[i];
 
+				if (!fut.getRight()) {
+
+					haplotypePairs[index] = haps;
 
 					if (!availableHaplotypeHash.contains(haps[0])) {
 						availableHaplotypesList.add(haps[0]);
@@ -152,7 +171,7 @@ public class HaplotypeDataset {
 					}
 
 				} else {
-					haplotypePairs[fut.getMiddle()] = null;
+					haplotypePairs[index] = null;
 				}
 
 				pb.iterate();
@@ -162,10 +181,7 @@ public class HaplotypeDataset {
 					System.exit(-1);
 				}
 
-
 //				System.out.print("Individual: " + returned + "\t" + availableHaplotypeHash.size() + " available haplotypes so far.\r");
-
-
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
@@ -174,11 +190,40 @@ public class HaplotypeDataset {
 		}
 		pb.close();
 
-		return new HaplotypeDataset(haplotypePairs,
-				availableHaplotypesList,
-				finalDiseaseStatus,
-				finalCovariates,
-				variants);
+		if (submit < finalDiseaseStatus.length) {
+
+			// prune the disease status and covariates
+			DiseaseStatus[][] statuses = new DiseaseStatus[submit][finalDiseaseStatus[0].length];
+			DoubleMatrix2D covariates = new DenseDoubleMatrix2D(submit, finalCovariates.columns());
+			for (int i = 0; i < finalDiseaseStatus.length; i++) {
+				int index = iToIndex[i];
+				if (index != -1) {
+					for (int j = 0; j < finalDiseaseStatus[0].length; j++) {
+						statuses[index][j] = finalDiseaseStatus[i][j];
+					}
+
+					for (int j = 0; j < finalCovariates.columns(); j++) {
+						covariates.setQuick(index, j, finalCovariates.getQuick(i, j));
+					}
+				}
+			}
+
+			return new HaplotypeDataset(haplotypePairs,
+					availableHaplotypesList,
+					statuses,
+					covariates,
+					originalIndIdsIncluded,
+					variants);
+		} else {
+			return new HaplotypeDataset(haplotypePairs,
+					availableHaplotypesList,
+					finalDiseaseStatus,
+					finalCovariates,
+					originalIndIdsIncluded,
+					variants);
+		}
+
+
 	}
 
 
@@ -201,11 +246,13 @@ public class HaplotypeDataset {
 
 		HashSet<BitVector> allowedHaplotypes = new HashSet<>();
 		allowedHaplotypes.addAll(haplotypesAboveThreshold);
+		ArrayList<Integer> origIds = new ArrayList<Integer>();
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
 			BitVector[] haps = haplotypePairs[i];
 			if (haps != null) {
 				if (allowedHaplotypes.contains(haps[0]) && allowedHaplotypes.contains(haps[1])) {
 					keepTheseIndividuals.add(i);
+					origIds.add(originalIndsIncluded.get(i));
 				}
 			}
 		}
@@ -234,7 +281,7 @@ public class HaplotypeDataset {
 				ictr++;
 			}
 		}
-		return new HaplotypeDataset(remainingHaplotypes, haplotypesAboveThreshold, remainingdiseaseStatus, remainingCovariates, variants);
+		return new HaplotypeDataset(remainingHaplotypes, haplotypesAboveThreshold, remainingdiseaseStatus, remainingCovariates, origIds, variants);
 	}
 
 	public void calcHapFreq() {
@@ -398,6 +445,10 @@ public class HaplotypeDataset {
 		return hapToInt.get(referenceHaplotype);
 	}
 
+	public ArrayList<Integer> getOriginalIndsIncluded() {
+		return originalIndsIncluded;
+	}
+
 	public HaplotypeDataset selectHaplotypes(ArrayList<Integer> hapsToSelect) {
 
 //		get a list of haplotypes below the threshold
@@ -409,11 +460,14 @@ public class HaplotypeDataset {
 
 		HashSet<BitVector> allowedHaplotypes = new HashSet<>();
 		allowedHaplotypes.addAll(haplotypesAboveThreshold);
+		ArrayList<Integer> origIds = new ArrayList<>();
 		for (int i = 0; i < finalDiseaseStatus.length; i++) {
 			BitVector[] haps = haplotypePairs[i];
 			if (haps != null) {
 				if (allowedHaplotypes.contains(haps[0]) && allowedHaplotypes.contains(haps[1])) {
 					keepTheseIndividuals.add(i);
+					origIds.add(originalIndsIncluded.get(i));
+
 				}
 			}
 		}
@@ -442,7 +496,7 @@ public class HaplotypeDataset {
 				ictr++;
 			}
 		}
-		return new HaplotypeDataset(remainingHaplotypes, haplotypesAboveThreshold, remainingdiseaseStatus, remainingCovariates, variants);
+		return new HaplotypeDataset(remainingHaplotypes, haplotypesAboveThreshold, remainingdiseaseStatus, remainingCovariates, origIds, variants);
 	}
 
 	public HaplotypeGroup collapse(Integer haplotype, boolean[] varCombo, int ctr) throws IOException {
