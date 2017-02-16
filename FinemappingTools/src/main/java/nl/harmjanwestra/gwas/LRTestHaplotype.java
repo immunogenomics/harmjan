@@ -69,8 +69,8 @@ public class LRTestHaplotype extends LRTest {
 //		univariate(variants);
 //		exhaustive(variants);
 //		collapse(variants);
-		multivariate(variants);
-//		conditional(variants);
+//		multivariate(variants);
+		conditional(variants);
 		System.exit(-1);
 	}
 

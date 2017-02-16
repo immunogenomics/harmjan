@@ -30,16 +30,15 @@
         <module>GoSCializer</module>
         <module>GoShifter</module>
         <module>Harmonics</module>
-        <module>FamilyTree</module>
         <module>VCFUtils</module>
         <module>Pipeliner</module>
         <module>LiftOverTools</module>
-        <module>BroShifter</module>
+        <module>FinemappingPaper</module>
         <module>BroRunner</module>
         <module>TXTr</module>
         <module>chromhmmsplitter</module>
         <module>Coverage</module>
-        <module>Finemapping</module>
+        <module>FinemappingTools</module>
         <module>ProxyFinder</module>
     </modules>
     <properties>

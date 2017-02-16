@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>nl.harmjanwestra</groupId>
-    <artifactId>BroShifter</artifactId>
+    <artifactId>FinemappingTools</artifactId>
 
     <dependencies>
         <dependency>
