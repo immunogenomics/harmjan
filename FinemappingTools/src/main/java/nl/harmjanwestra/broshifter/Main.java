@@ -44,7 +44,8 @@ public class Main {
 				new QTLTest(new QTLTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
 				LRTestOptions optionsLR = new LRTestOptions(args);
-				if (optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.HAPLOTYPE)) {
+				if (optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.HAPLOTYPE)||
+						optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.CONDITIONALHAPLOTYPE)) {
 					new LRTestHaplotype(optionsLR);
 				} else {
 					new LRTest(optionsLR);

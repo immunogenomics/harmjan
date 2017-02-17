@@ -44,6 +44,7 @@ public class LRTestHaplotype extends LRTest {
 		exService = Executors.newFixedThreadPool(options.getNrThreads());
 		this.finalDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
 		this.finalCovariates = sampleAnnotation.getCovariates();
+		System.out.println("Haplotype test");
 		testHaplotype();
 
 		exService.shutdown();
@@ -70,19 +71,36 @@ public class LRTestHaplotype extends LRTest {
 //		exhaustive(variants);
 //		collapse(variants);
 //		multivariate(variants);
-		conditional(variants);
+		if (options.getAnalysisType() == LRTestOptions.ANALYSIS.CONDITIONALHAPLOTYPE) {
+			System.out.println("Running conditional analysis");
+			conditional(variants);
+		} else {
+			System.out.println("Running default multivariate analysis");
+			multivariate(variants);
+		}
+
 		System.exit(-1);
 	}
 
 	private void conditional(ArrayList<VCFVariant> allVariants) throws IOException {
 
+
 		// add variants in order defined in snplimit file
 		TextFile tf = new TextFile(options.getSnpLimitFile(), TextFile.R);
 		ArrayList<String> variantOrder = new ArrayList<>();
 		String ln = tf.readLine();
+		System.out.println();
+		System.out.println("Available variants");
+		for (VCFVariant variant : allVariants) {
+			System.out.println(variant.toString());
+		}
+		System.out.println();
+		System.out.println("Adding variants in order: ");
 		while (ln != null) {
 			if (ln.trim().length() > 0) {
+				System.out.println(variantOrder.size() + "\t" + ln);
 				variantOrder.add(ln);
+
 			}
 			ln = tf.readLine();
 		}
@@ -92,7 +110,7 @@ public class LRTestHaplotype extends LRTest {
 		HashMap<String, Integer> variantToPos = new HashMap<String, Integer>();
 		for (int i = 0; i < allVariants.size(); i++) {
 			VCFVariant v = allVariants.get(i);
-			String id = v.toString(); // chr_pos_id
+			String id = v.getChrObj().toString() + "_" + v.getPos() + "_" + v.getId();
 			variantToPos.put(id, i);
 		}
 
@@ -127,102 +145,43 @@ public class LRTestHaplotype extends LRTest {
 		};
 		outtf.writeln(Strings.concat(header, Strings.tab));
 
+
 		for (int i = 0; i < variantOrder.size(); i++) {
 			ArrayList<VCFVariant> testVariants = new ArrayList<>();
+			boolean runround = true;
 			for (int n = 0; n < i + 1; n++) {
 				String toAdd = variantOrder.get(n);
 				Integer id = variantToPos.get(toAdd);
-				testVariants.add(allVariants.get(id));
+				if (id == null) {
+					System.out.println("Could not find variant: round: " + i + "\tvariant: " + toAdd);
+					runround = false;
+				} else {
+					testVariants.add(allVariants.get(id));
+				}
 			}
 
-			if (i == 0) {
-				// initial test, test against null model
+			if (runround) {
+				if (i == 0) {
+					// initial test, test against null model
 
-				// get the null model
-				HaplotypeDataset dspruned = getPrunedHaplotypes(testVariants, sampleSelect);
-				DoubleMatrix2D intercept = dspruned.getIntercept();
-				DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
-				double[] y = dspruned.getDiseaseStatus();
-				LogisticRegressionResult nullModelResult = reg.univariate(y, xprime);
+					// get the null model
+					HaplotypeDataset dspruned = getPrunedHaplotypes(testVariants, sampleSelect);
+					DoubleMatrix2D intercept = dspruned.getIntercept();
+					DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
+					double[] y = dspruned.getDiseaseStatus();
+					LogisticRegressionResult nullModelResult = reg.univariate(y, xprime);
 
-				Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
-				DoubleMatrix2D haps = data.getLeft();
-				DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
-				DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
-				LogisticRegressionResult altModelResult = reg.univariate(y, x);
-
-				prevNrDf = haps.columns();
-				prevNrSamples = haps.rows();
-				prevAltModelResult = altModelResult;
-				prevNullModelResult = nullModelResult;
-
-
-				ArrayList<String> variantIds = new ArrayList<String>();
-				for (int q = 0; q < testVariants.size(); q++) {
-					variantIds.add(testVariants.get(q).toString());
-				}
-				int ref = dspruned.getReferenceHaplotypeId();
-				ArrayList<String> hapStr = new ArrayList<>();
-				for (int q = 0; q < dspruned.getNrHaplotypes(); q++) {
-					if (q != ref) {
-						hapStr.add(dspruned.getHaplotypeDesc(q));
-					}
-				}
-
-				int deltaDf = haps.columns();
-				double devianceAlt = altModelResult.getDeviance();
-				double devianceNull = nullModelResult.getDeviance();
-				double deltaDevianceNull = devianceAlt - devianceNull;
-				double pNull = ChiSquare.getP(deltaDf, deltaDevianceNull);
-
-				double deltaDeviance = 0;
-				double p = 1;
-				/*
-
-
-				 */
-				String output = i
-						+ "\t" + Strings.concat(variantIds, Strings.semicolon)
-						+ "\t" + Strings.concat(hapStr, Strings.semicolon)
-						+ "\t" + dspruned.getHaplotypeDesc(ref)
-						+ "\t" + haps.columns()
-						+ "\t" + deltaDevianceNull
-						+ "\t" + pNull
-						+ "\t" + deltaDeviance
-						+ "\t" + p;
-				outtf.writeln(output);
-			} else {
-				// conditional test, test against previous model
-				// get the null model
-				HaplotypeDataset dspruned = getPrunedHaplotypes(testVariants, sampleSelect);
-				DoubleMatrix2D intercept = dspruned.getIntercept();
-				DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
-				double[] y = dspruned.getDiseaseStatus();
-				LogisticRegressionResult nullModelResult = reg.univariate(y, xprime);
-
-				Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
-				DoubleMatrix2D haps = data.getLeft();
-				int df = haps.columns();
-				int nrsamples = haps.rows();
-
-
-				// check whether N is equal between results
-				int sampleDiff = Math.abs(nrsamples - prevNrSamples);
-				if (sampleDiff > 0) {
-					// there's something wrong
-					System.err.println("Error: conditional analysis sample size unequal:" + nrsamples + " - " + prevNrSamples);
-				} else {
+					Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
+					DoubleMatrix2D haps = data.getLeft();
 					DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
 					DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
 					LogisticRegressionResult altModelResult = reg.univariate(y, x);
-					int deltaDf = df - prevNrDf;
-					double devianceAlt = altModelResult.getDeviance();
-					double deviancePrevAlt = prevAltModelResult.getDeviance();
 
-					double deltaDeviance = devianceAlt - deviancePrevAlt;
-					double p = ChiSquare.getP(deltaDf, deltaDeviance);
+					prevNrDf = haps.columns();
+					prevNrSamples = haps.rows();
 					prevAltModelResult = altModelResult;
 					prevNullModelResult = nullModelResult;
+
 
 					ArrayList<String> variantIds = new ArrayList<String>();
 					for (int q = 0; q < testVariants.size(); q++) {
@@ -236,9 +195,18 @@ public class LRTestHaplotype extends LRTest {
 						}
 					}
 
-					double deltaDevianceNull = altModelResult.getDeviance() - nullModelResult.getDeviance();
+					int deltaDf = haps.columns();
+					double devianceAlt = altModelResult.getDeviance();
+					double devianceNull = nullModelResult.getDeviance();
+					double deltaDevianceNull = devianceNull - devianceAlt;
 					double pNull = ChiSquare.getP(deltaDf, deltaDevianceNull);
 
+					double deltaDeviance = 0;
+					double p = 1;
+				/*
+
+
+				 */
 					String output = i
 							+ "\t" + Strings.concat(variantIds, Strings.semicolon)
 							+ "\t" + Strings.concat(hapStr, Strings.semicolon)
@@ -249,9 +217,73 @@ public class LRTestHaplotype extends LRTest {
 							+ "\t" + deltaDeviance
 							+ "\t" + p;
 					outtf.writeln(output);
-				}
+				} else {
+					// conditional test, test against previous model
+					// get the null model
+					HaplotypeDataset dspruned = getPrunedHaplotypes(testVariants, sampleSelect);
+					DoubleMatrix2D intercept = dspruned.getIntercept();
+					DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
+					double[] y = dspruned.getDiseaseStatus();
+					LogisticRegressionResult nullModelResult = reg.univariate(y, xprime);
 
+					Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
+					DoubleMatrix2D haps = data.getLeft();
+					int df = haps.columns();
+					int nrsamples = haps.rows();
+
+
+					// check whether N is equal between results
+					int sampleDiff = Math.abs(nrsamples - prevNrSamples);
+					if (sampleDiff > 0) {
+						// there's something wrong
+						System.err.println("Error: conditional analysis sample size unequal:" + nrsamples + " - " + prevNrSamples);
+					} else {
+						DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
+						DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
+						LogisticRegressionResult altModelResult = reg.univariate(y, x);
+
+
+						int deltaDf = df - prevNrDf;
+						double devianceAlt = altModelResult.getDeviance();
+						double deviancePrevAlt = prevAltModelResult.getDeviance();
+
+						double deltaDeviance = deviancePrevAlt - devianceAlt;
+						double p = ChiSquare.getP(deltaDf, deltaDeviance);
+						prevAltModelResult = altModelResult;
+						prevNullModelResult = nullModelResult;
+						prevNrDf = haps.columns();
+
+						ArrayList<String> variantIds = new ArrayList<String>();
+						for (int q = 0; q < testVariants.size(); q++) {
+							variantIds.add(testVariants.get(q).toString());
+						}
+						int ref = dspruned.getReferenceHaplotypeId();
+						ArrayList<String> hapStr = new ArrayList<>();
+						for (int q = 0; q < dspruned.getNrHaplotypes(); q++) {
+							if (q != ref) {
+								hapStr.add(dspruned.getHaplotypeDesc(q));
+							}
+						}
+
+						double deltaDevianceNull = nullModelResult.getDeviance() - altModelResult.getDeviance();
+						double pNull = ChiSquare.getP(deltaDf, deltaDevianceNull);
+
+						String output = i
+								+ "\t" + Strings.concat(variantIds, Strings.semicolon)
+								+ "\t" + Strings.concat(hapStr, Strings.semicolon)
+								+ "\t" + dspruned.getHaplotypeDesc(ref)
+								+ "\t" + haps.columns()
+								+ "\t" + deltaDevianceNull
+								+ "\t" + pNull
+								+ "\t" + deltaDf
+								+ "\t" + deltaDeviance
+								+ "\t" + p;
+						outtf.writeln(output);
+					}
+
+				}
 			}
+
 		}
 		outtf.close();
 

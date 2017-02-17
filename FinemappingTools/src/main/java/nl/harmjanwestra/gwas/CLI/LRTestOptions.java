@@ -263,7 +263,7 @@ public class LRTestOptions {
 			if (cmd.hasOption("r")) {
 				bedfile = cmd.getOptionValue("r");
 			}
-			if(cmd.hasOption("haporthreshold")){
+			if (cmd.hasOption("haporthreshold")) {
 				haplotypeOrThresholdFile = cmd.getOptionValue("haporthreshold");
 			}
 
@@ -380,6 +380,8 @@ public class LRTestOptions {
 
 			if (cmd.hasOption("exhaustive")) {
 				analysisType = ANALYSIS.EXHAUSTIVE;
+			} else if (cmd.hasOption("haplotype") && cmd.hasOption("conditional")) {
+				analysisType = ANALYSIS.CONDITIONALHAPLOTYPE;
 			} else if (cmd.hasOption("conditional")) {
 				analysisType = ANALYSIS.CONDITIONAL;
 			} else if (cmd.hasOption("haplotype")) {
@@ -527,7 +529,7 @@ public class LRTestOptions {
 		CONDITIONAL,
 		EXHAUSTIVE,
 		HAPLOTYPE,
-		NORMAL
+		CONDITIONALHAPLOTYPE, NORMAL
 	}
 
 
