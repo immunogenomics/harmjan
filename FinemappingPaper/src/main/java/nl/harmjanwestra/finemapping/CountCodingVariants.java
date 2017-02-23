@@ -25,31 +25,45 @@ public class CountCodingVariants {
 		try {
 			String annot = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz";
 			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed";
+			String[] annotationfiles = new String[]{
+
+			};
 			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
-			c.run(annot, bedregions, assocfile);
+			c.run(annot, bedregions, annotationfiles, assocfile);
 
 			System.out.println();
 			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
 			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
-			c.run(annot, bedregions, assocfile);
+			c.run(annot, bedregions, annotationfiles, assocfile);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void run(String annot, String bedregions, String assocFile) throws IOException {
+	public void run(String annot, String bedregions, String[] annotationfiles, String assocFile) throws IOException {
 
-		Annotation annotation = null;
+		Annotation geneAnnotation = null;
 		if (annot.endsWith(".gtf.gz") || annot.endsWith(".gtf")) {
-			annotation = new GTFAnnotation(annot);
+			geneAnnotation = new GTFAnnotation(annot);
 		} else {
-			annotation = new EnsemblStructures(annot);
+			geneAnnotation = new EnsemblStructures(annot);
 		}
 
-		Collection<Gene> allgenes = annotation.getGenes();
+		//
+		Collection<Gene> allgenes = geneAnnotation.getGenes();
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedregions);
+
+		// read annotations in the regions
+		ArrayList<ArrayList<Feature>> functionalAnnotations = null;
+		if (annotationfiles != null) {
+			functionalAnnotations = new ArrayList<>();
+			for (int i = 0; i < annotationfiles.length; i++) {
+				functionalAnnotations.add(reader.readAsList(annotationfiles[i], regions));
+			}
+		}
+
 
 		// region variant1 pval1 posterior1 variant2 pval2 posterior2 variant3 pval3 posterior3
 		AssociationFile f = new AssociationFile();
@@ -78,69 +92,123 @@ public class CountCodingVariants {
 		}
 
 		// now we have the variants, see if they overlap
+		if (annotationfiles != null) {
 
+			for (int i = 0; i < functionalAnnotations.size(); i++) {
+				double sigmaposteriorIndel = 0;
+				double sigmaposteriorCoding = 0;
+				double sigmaPosteriorOther = 0;
 
-		double sigmaposteriorIndel = 0;
-		double sigmaposteriorCoding = 0;
-		double sigmaPosteriorOther = 0;
+				double fractionIndel = 0;
+				double fractionCoding = 0;
+				double fractionOther = 0;
 
-		double fractionIndel = 0;
-		double fractionCoding = 0;
-		double fractionOther = 0;
+				ArrayList<Feature> functionalAnnotation = functionalAnnotations.get(i);
 
+				for (int d = 0; d < regions.size(); d++) {
+					int nrCoding = 0;
+					int nrTotal = 0;
+					int nrIndel = 0;
+					int nrOther = 0;
 
-		for (int d = 0; d < regions.size(); d++) {
-			int nrCoding = 0;
-			int nrTotal = 0;
-			int nrIndel = 0;
-			int nrOther = 0;
+					Feature region = regions.get(d);
+					ArrayList<Gene> genes = new ArrayList<>();
+					for (Gene g : allgenes) {
+						if (g.overlaps(region)) {
+							genes.add(g);
+						}
+					}
 
-			Feature region = regions.get(d);
-			ArrayList<Gene> genes = new ArrayList<>();
-			for (Gene g : allgenes) {
-				if (g.overlaps(region)) {
-					genes.add(g);
+					for (AssociationResult r : data[d]) {
+						// check if variant overlaps coding region
+						SNPFeature snp = r.getSnp();
+						boolean overlaps = false;
+						if (snp.isIndel() && snp.overlaps(functionalAnnotation)) {
+							sigmaposteriorCoding += r.getPosterior();
+							overlaps = true;
+							nrIndel++;
+						}
+
+						boolean coding = getIsCoding(snp, genes);
+						if (coding && (overlaps || snp.overlaps(functionalAnnotation))) {
+							sigmaposteriorIndel += r.getPosterior();
+							overlaps = true;
+							nrCoding++;
+						}
+
+						if (!snp.isIndel() && !coding) {
+							if (overlaps || snp.overlaps(functionalAnnotation)) {
+								sigmaPosteriorOther += r.getPosterior();
+								nrOther++;
+							}
+						}
+						nrTotal++;
+					}
+					fractionCoding += ((double) nrCoding / nrTotal);
+					fractionIndel += ((double) nrIndel / nrTotal);
+					fractionOther += ((double) nrOther / nrTotal);
 				}
+
+				System.out.println("sumposterior: " + sigmaposteriorCoding + "\t" + fractionCoding + "\t" + (sigmaposteriorCoding / fractionCoding));
+				System.out.println("sumposterior indel: " + sigmaposteriorIndel + "\t" + fractionIndel + "\t" + (sigmaposteriorIndel / fractionIndel));
+				System.out.println("sumposterior other: " + sigmaPosteriorOther + "\t" + fractionOther + "\t" + (sigmaPosteriorOther / fractionOther));
+			}
+		} else {
+			double sigmaposteriorIndel = 0;
+			double sigmaposteriorCoding = 0;
+			double sigmaPosteriorOther = 0;
+
+			double fractionIndel = 0;
+			double fractionCoding = 0;
+			double fractionOther = 0;
+
+
+			for (int d = 0; d < regions.size(); d++) {
+				int nrCoding = 0;
+				int nrTotal = 0;
+				int nrIndel = 0;
+				int nrOther = 0;
+
+				Feature region = regions.get(d);
+				ArrayList<Gene> genes = new ArrayList<>();
+				for (Gene g : allgenes) {
+					if (g.overlaps(region)) {
+						genes.add(g);
+					}
+				}
+
+
+				for (AssociationResult r : data[d]) {
+					// check if variant overlaps coding region
+					SNPFeature snp = r.getSnp();
+					if (snp.isIndel()) {
+						sigmaposteriorCoding += r.getPosterior();
+						nrIndel++;
+
+					}
+
+					boolean coding = getIsCoding(snp, genes);
+					if (coding) {
+						sigmaposteriorIndel += r.getPosterior();
+						nrCoding++;
+
+					}
+
+					if (!snp.isIndel() && !coding) {
+						sigmaPosteriorOther += r.getPosterior();
+						nrOther++;
+					}
+					nrTotal++;
+				}
+				fractionCoding += ((double) nrCoding / nrTotal);
+				fractionIndel += ((double) nrIndel / nrTotal);
+				fractionOther += ((double) nrOther / nrTotal);
 			}
 
-
-			for (AssociationResult r : data[d]) {
-				// check if variant overlaps coding region
-				SNPFeature snp = r.getSnp();
-				if (snp.isIndel()) {
-					sigmaposteriorCoding += r.getPosterior();
-					nrIndel++;
-
-				}
-
-				boolean coding = getIsCoding(snp, genes);
-				if (coding) {
-					sigmaposteriorIndel += r.getPosterior();
-					nrCoding++;
-
-				}
-
-				if (!snp.isIndel() && !coding) {
-					sigmaPosteriorOther += r.getPosterior();
-					nrOther++;
-				}
-				nrTotal++;
-			}
-			fractionCoding += ((double) nrCoding / nrTotal);
-			fractionIndel += ((double) nrIndel / nrTotal);
-			fractionOther += ((double) nrOther / nrTotal);
+			System.out.println("sumposterior: " + sigmaposteriorCoding + "\t" + fractionCoding + "\t" + (sigmaposteriorCoding / fractionCoding));
+			System.out.println("sumposterior indel: " + sigmaposteriorIndel + "\t" + fractionIndel + "\t" + (sigmaposteriorIndel / fractionIndel));
+			System.out.println("sumposterior other: " + sigmaPosteriorOther + "\t" + fractionOther + "\t" + (sigmaPosteriorOther / fractionOther));
 		}
-
-
-//		System.out.println("overall: " + nrCodingOverall + "\t" + nrTotal + "\t" + ((double) nrCodingOverall / nrTotal));
-		System.out.println("sumposterior: " + sigmaposteriorCoding + "\t" + fractionCoding + "\t" + (sigmaposteriorCoding / fractionCoding));
-		System.out.println("sumposterior indel: " + sigmaposteriorIndel + "\t" + fractionIndel + "\t" + (sigmaposteriorIndel / fractionIndel));
-		System.out.println("sumposterior other: " + sigmaPosteriorOther + "\t" + fractionOther + "\t" + (sigmaPosteriorOther / fractionOther));
-//		System.out.println("nrIndels: " + nrIndel + "\tnrCoding: " + nrCoding + "\tnrTotal: " + nrTotal);
-
-		//		System.out.println("credible sets: " + nrCodingCredibleSets + "\t" + nrTotalCredibleSets + "\t" + ((double) nrCodingCredibleSets / nrTotalCredibleSets));
-
-
 	}
 
 	private boolean getIsCoding(SNPFeature snp, ArrayList<Gene> genes) {

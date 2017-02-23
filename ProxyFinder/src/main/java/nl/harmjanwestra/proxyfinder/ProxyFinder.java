@@ -237,10 +237,10 @@ public class ProxyFinder {
 				snp1.setChromosome(Chromosome.parseChr(elems[0]));
 
 				SNPFeature snp2 = new SNPFeature();
-				snp2.setStart(Integer.parseInt(elems[1]));
+				snp2.setStart(Integer.parseInt(elems[4]));
 				snp2.setStop(snp2.getStart());
-				snp2.setName(elems[2]);
-				snp2.setChromosome(Chromosome.parseChr(elems[0]));
+				snp2.setName(elems[5]);
+				snp2.setChromosome(Chromosome.parseChr(elems[3]));
 
 				pairs.add(new Pair<>(snp1, snp2));
 
