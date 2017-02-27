@@ -25,22 +25,22 @@ public class CountCodingVariants {
 		try {
 			String annot = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz";
 			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed";
-			String[] annotationfiles = new String[]{
+			String annotationfiles = "/Data/Enhancers/Roadmap/dnase-groups.txt";
+//			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
 
-			};
 			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
-			c.run(annot, bedregions, annotationfiles, assocfile);
+			c.run(annot, bedregions, annotationfiles, assocfile, false);
 
 			System.out.println();
 			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
 			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
-			c.run(annot, bedregions, annotationfiles, assocfile);
+			c.run(annot, bedregions, annotationfiles, assocfile, false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void run(String annot, String bedregions, String[] annotationfiles, String assocFile) throws IOException {
+	public void run(String annot, String bedregions, String annotationfiles, String assocFile, boolean splitpergroup) throws IOException {
 
 		Annotation geneAnnotation = null;
 		if (annot.endsWith(".gtf.gz") || annot.endsWith(".gtf")) {
@@ -55,13 +55,11 @@ public class CountCodingVariants {
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(bedregions);
 
-		// read annotations in the regions
-		ArrayList<ArrayList<Feature>> functionalAnnotations = null;
+
+		BedFileGroup annotation = null;
 		if (annotationfiles != null) {
-			functionalAnnotations = new ArrayList<>();
-			for (int i = 0; i < annotationfiles.length; i++) {
-				functionalAnnotations.add(reader.readAsList(annotationfiles[i], regions));
-			}
+			annotation = new BedFileGroup();
+			annotation.loadGroupsFromFile(annotationfiles, regions);
 		}
 
 
@@ -94,7 +92,7 @@ public class CountCodingVariants {
 		// now we have the variants, see if they overlap
 		if (annotationfiles != null) {
 
-			for (int i = 0; i < functionalAnnotations.size(); i++) {
+			for (int i = 0; i < annotation.size(); i++) {
 				double sigmaposteriorIndel = 0;
 				double sigmaposteriorCoding = 0;
 				double sigmaPosteriorOther = 0;
@@ -103,7 +101,12 @@ public class CountCodingVariants {
 				double fractionCoding = 0;
 				double fractionOther = 0;
 
-				ArrayList<Feature> functionalAnnotation = functionalAnnotations.get(i);
+				ArrayList<Feature> functionalAnnotation = null;
+				if (splitpergroup) {
+					functionalAnnotation = annotation.getJointFeaturesForGroup(i, null);
+				} else {
+					functionalAnnotation = annotation.getJointFeaturesForGroup(null, null);
+				}
 
 				for (int d = 0; d < regions.size(); d++) {
 					int nrCoding = 0;
@@ -139,19 +142,22 @@ public class CountCodingVariants {
 						if (!snp.isIndel() && !coding) {
 							if (overlaps || snp.overlaps(functionalAnnotation)) {
 								sigmaPosteriorOther += r.getPosterior();
+								overlaps = true;
 								nrOther++;
 							}
 						}
+//						if (overlaps) {
 						nrTotal++;
+//						}
 					}
 					fractionCoding += ((double) nrCoding / nrTotal);
 					fractionIndel += ((double) nrIndel / nrTotal);
 					fractionOther += ((double) nrOther / nrTotal);
 				}
 
-				System.out.println("sumposterior: " + sigmaposteriorCoding + "\t" + fractionCoding + "\t" + (sigmaposteriorCoding / fractionCoding));
-				System.out.println("sumposterior indel: " + sigmaposteriorIndel + "\t" + fractionIndel + "\t" + (sigmaposteriorIndel / fractionIndel));
-				System.out.println("sumposterior other: " + sigmaPosteriorOther + "\t" + fractionOther + "\t" + (sigmaPosteriorOther / fractionOther));
+				System.out.println(annotation.getGroupName(i) + "\tcoding\tsumposterior:\t" + sigmaposteriorCoding + "\tfraction:\t" + fractionCoding + "\tenrich:\t" + (sigmaposteriorCoding / fractionCoding));
+				System.out.println(annotation.getGroupName(i) + "\tindel\tsumposterior:\t" + sigmaposteriorIndel + "\tfraction:\t" + fractionIndel + "\tenrich:\t" + (sigmaposteriorIndel / fractionIndel));
+				System.out.println(annotation.getGroupName(i) + "\tother\tsumposterior:\t" + sigmaPosteriorOther + "\tfraction:\t" + fractionOther + "\tenrich:\t" + (sigmaPosteriorOther / fractionOther));
 			}
 		} else {
 			double sigmaposteriorIndel = 0;

@@ -284,6 +284,11 @@ public class Feature {
 	}
 
 	public boolean overlaps(ArrayList<Feature> regions) {
+		if (regions == null) {
+			System.out.println("QQC?");
+
+			return false;
+		}
 		for (Feature f : regions) {
 			if (this.overlaps(f)) {
 				return true;
