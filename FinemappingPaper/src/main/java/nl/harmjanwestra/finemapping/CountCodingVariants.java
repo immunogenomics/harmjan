@@ -26,15 +26,15 @@ public class CountCodingVariants {
 			String annot = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz";
 			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed";
 			String annotationfiles = "/Data/Enhancers/Roadmap/dnase-groups.txt";
-//			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
+			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
 
 			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
-			c.run(annot, bedregions, annotationfiles, assocfile, false);
+			c.run(annot, bedregions, annotationfiles, assocfile, true);
 
 			System.out.println();
 			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
 			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
-			c.run(annot, bedregions, annotationfiles, assocfile, false);
+			c.run(annot, bedregions, annotationfiles, assocfile, true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -127,14 +127,14 @@ public class CountCodingVariants {
 						SNPFeature snp = r.getSnp();
 						boolean overlaps = false;
 						if (snp.isIndel() && snp.overlaps(functionalAnnotation)) {
-							sigmaposteriorCoding += r.getPosterior();
+							sigmaposteriorIndel += r.getPosterior();
 							overlaps = true;
 							nrIndel++;
 						}
 
 						boolean coding = getIsCoding(snp, genes);
 						if (coding && (overlaps || snp.overlaps(functionalAnnotation))) {
-							sigmaposteriorIndel += r.getPosterior();
+							sigmaposteriorCoding += r.getPosterior();
 							overlaps = true;
 							nrCoding++;
 						}
