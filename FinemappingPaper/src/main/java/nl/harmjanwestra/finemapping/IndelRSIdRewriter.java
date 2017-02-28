@@ -14,7 +14,7 @@ import java.util.ArrayList;
 /**
  * Created by hwestra on 2/21/17.
  */
-public class TableVariantRewrite {
+public class IndelRSIdRewriter {
 
 	public static void main(String[] args) {
 
@@ -58,7 +58,7 @@ public class TableVariantRewrite {
 				new int[]{3, 16, 29}
 		};
 
-		TableVariantRewrite v = new TableVariantRewrite();
+		IndelRSIdRewriter v = new IndelRSIdRewriter();
 		for (int i = 0; i < tables.length; i++) {
 			String table = tables[i];
 			int[] column = columns[i];

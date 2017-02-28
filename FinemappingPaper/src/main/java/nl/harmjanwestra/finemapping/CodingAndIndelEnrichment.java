@@ -16,11 +16,11 @@ import java.util.Collection;
 /**
  * Created by hwestra on 11/14/16.
  */
-public class CountCodingVariants {
+public class CodingAndIndelEnrichment {
 
 
 	public static void main(String[] args) {
-		CountCodingVariants c = new CountCodingVariants();
+		CodingAndIndelEnrichment c = new CodingAndIndelEnrichment();
 
 		try {
 			String annot = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz";
