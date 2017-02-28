@@ -1,7 +1,7 @@
 package nl.harmjanwestra.finemapping.plots;
 
 import com.itextpdf.text.DocumentException;
-import nl.harmjanwestra.finemapping.VariantCounter;
+import nl.harmjanwestra.finemapping.genotypesandimputation.VariantCounter;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.graphics.Grid;
