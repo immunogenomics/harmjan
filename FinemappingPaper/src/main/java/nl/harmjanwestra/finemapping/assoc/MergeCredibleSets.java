@@ -95,7 +95,7 @@ public class MergeCredibleSets {
 			double maxPosteriorCredibleSet = 0.9;
 			boolean includeAllLoci = true;
 
-//			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, threshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, threshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
 ////			c.makeCircularPlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 ////			System.exit(-1);
@@ -204,18 +204,19 @@ public class MergeCredibleSets {
 					"Atac"
 			};
 
-			c.bedOverlap(bedregions,
-					bedfiles,
-					bedfilenames,
-					assocfiles, datasetnames, genenames,
-					outoverlapfileatac, outoverlapplotatac,
-					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation, false);
+//			c.bedOverlap(bedregions,
+//					bedfiles,
+//					bedfilenames,
+//					assocfiles, datasetnames, genenames,
+//					outoverlapfileatac, outoverlapplotatac,
+//					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation, false);
 //
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (DocumentException e) {
-			e.printStackTrace();
 		}
+//		catch (DocumentException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 
@@ -1119,8 +1120,8 @@ public class MergeCredibleSets {
 					"\tVariants" +
 					"\tAlleles" +
 					"\tINFO" +
-					"\tAltAFCases" +
 					"\tAltAFControls" +
+					"\tAltAFCases" +
 					"\tOR (alt)" +
 					"\tPval" +
 					"\tPosterior" +
@@ -1236,8 +1237,8 @@ public class MergeCredibleSets {
 										+ "\t" + r.getSnp().toString()
 										+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
 										+ "\t" + r.getSnp().getImputationQualityScore()
-										+ "\t" + (1 - r.getSnp().getAFCases())
 										+ "\t" + (1 - r.getSnp().getAFControls())
+										+ "\t" + (1 - r.getSnp().getAFCases())
 										+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
 										+ "\t" + r.getLog10Pval()
 										+ "\t" + r.getPosterior()
@@ -1286,8 +1287,8 @@ public class MergeCredibleSets {
 									ln += r.getSnp().toString()
 											+ "\t" + Strings.concat(r.getSnp().getAlleles(), Strings.comma)
 											+ "\t" + r.getSnp().getImputationQualityScore()
-											+ "\t" + (1 - r.getSnp().getAFCases())
 											+ "\t" + (1 - r.getSnp().getAFControls())
+											+ "\t" + (1 - r.getSnp().getAFCases())
 											+ "\t" + Strings.concat(r.getORs(), Strings.semicolon)
 											+ "\t" + r.getLog10Pval()
 											+ "\t" + r.getPosterior()

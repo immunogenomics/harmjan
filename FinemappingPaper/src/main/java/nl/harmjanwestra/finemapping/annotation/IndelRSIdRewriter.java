@@ -35,10 +35,10 @@ public class IndelRSIdRewriter {
 
 
 		int[] headers = new int[]{
-				3,
-				3,
-				3,
-				3,
+				1,
+				1,
+				1,
+				1,
 				2,
 				2,
 				2,
@@ -47,10 +47,10 @@ public class IndelRSIdRewriter {
 		};
 
 		int[][] columns = new int[][]{
-				new int[]{2},
-				new int[]{2},
-				new int[]{2},
-				new int[]{2},
+				new int[]{1,10},
+				new int[]{1,10},
+				new int[]{1,10},
+				new int[]{1,10},
 				new int[]{5, 18, 31},
 				new int[]{3, 10, 17},
 				new int[]{3, 14, 25},

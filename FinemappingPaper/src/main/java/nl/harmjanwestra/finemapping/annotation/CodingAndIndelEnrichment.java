@@ -29,12 +29,15 @@ public class CodingAndIndelEnrichment {
 			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
 
 			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
-			c.run(annot, bedregions, annotationfiles, assocfile, true);
+//			c.run(annot, bedregions, annotationfiles, assocfile, true);
+			c.run(annot, bedregions, null, assocfile, true);
+
 
 			System.out.println();
 			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
 			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
-			c.run(annot, bedregions, annotationfiles, assocfile, true);
+//			c.run(annot, bedregions, annotationfiles, assocfile, true);
+			c.run(annot, bedregions, null, assocfile, true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -188,14 +191,14 @@ public class CodingAndIndelEnrichment {
 					// check if variant overlaps coding region
 					SNPFeature snp = r.getSnp();
 					if (snp.isIndel()) {
-						sigmaposteriorCoding += r.getPosterior();
+						sigmaposteriorIndel += r.getPosterior();
 						nrIndel++;
 
 					}
 
 					boolean coding = getIsCoding(snp, genes);
 					if (coding) {
-						sigmaposteriorIndel += r.getPosterior();
+						sigmaposteriorCoding += r.getPosterior();
 						nrCoding++;
 
 					}
@@ -211,9 +214,9 @@ public class CodingAndIndelEnrichment {
 				fractionOther += ((double) nrOther / nrTotal);
 			}
 
-			System.out.println("sumposterior: " + sigmaposteriorCoding + "\t" + fractionCoding + "\t" + (sigmaposteriorCoding / fractionCoding));
-			System.out.println("sumposterior indel: " + sigmaposteriorIndel + "\t" + fractionIndel + "\t" + (sigmaposteriorIndel / fractionIndel));
-			System.out.println("sumposterior other: " + sigmaPosteriorOther + "\t" + fractionOther + "\t" + (sigmaPosteriorOther / fractionOther));
+			System.out.println("coding\tsumposterior:\t" + sigmaposteriorCoding + "\tfraction:\t" + fractionCoding + "\tenrich:\t" + (sigmaposteriorCoding / fractionCoding));
+			System.out.println("indel\tsumposterior:\t" + sigmaposteriorIndel + "\tfraction:\t" + fractionIndel + "\tenrich:\t" + (sigmaposteriorIndel / fractionIndel));
+			System.out.println("other\tsumposterior:\t" + sigmaPosteriorOther + "\tfraction:\t" + fractionOther + "\tenrich:\t" + (sigmaPosteriorOther / fractionOther));
 		}
 	}
 

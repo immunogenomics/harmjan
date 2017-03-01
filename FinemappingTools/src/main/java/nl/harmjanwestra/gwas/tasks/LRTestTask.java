@@ -74,6 +74,17 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		double[] y = xandy.getRight(); // get the phenotypes for all non-missing genotypes
 		DoubleMatrix2D x = xandy.getLeft();
 
+		if (x.rows() != y.length) {
+			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
+			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
+			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
+			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
+			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
+			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
+			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
+			System.exit(-1);
+		}
+
 		double mafControls = variant.getMAFControls();
 		double hwep = variant.getHwepControls();
 
@@ -136,6 +147,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				x = DoubleFactory2D.dense.appendColumns(x, dosages);
 			}
 		}
+
 		// now append covariates
 		DoubleMatrix2D finalCovariates = sampleAnnotation.getCovariates();
 		DiseaseStatus[][] finalDiseaseStatus = sampleAnnotation.getSampleDiseaseStatus();
@@ -155,12 +167,22 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			return new Pair<>(x, y);
 		} else {
 			// filter missing samples
-			Integer[] rowIndexesArr = missingGenotypeIds.toArray(new Integer[0]);
-			int[] rowIndexes = Primitives.toPrimitiveArr(rowIndexesArr);
+			int[] rowIndexes = new int[x.rows() - missingGenotypeIds.size()];
+			double[] y = new double[finalDiseaseStatus.length - missingGenotypeIds.size()];
+
+			int q = 0;
+			for (int i = 0; i < x.rows(); i++) {
+				if (!missingGenotypeIds.contains(i)) {
+					rowIndexes[q] = i;
+					q++;
+				}
+			}
 
 			x = dda.subMatrix(x, rowIndexes, 0, x.columns() - 1);
+			if (x.rows() != y.length) {
+				System.out.println("Something weird has happened");
+			}
 
-			double[] y = new double[finalDiseaseStatus.length - missingGenotypeIds.size()];
 			int ctr = 0;
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
 				if (!missingGenotypeIds.contains(i)) {
@@ -272,7 +294,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		snp.setMaf(maf);
 
 		Double imputationqualityscore = variant.getImputationQualityScore();
-		snp.setImputationQualityScore(imputationqualityscore);
+		if (imputationqualityscore != null) {
+			snp.setImputationQualityScore(imputationqualityscore);
+		}
 		snp.setAlleles(variant.getAlleles());
 		snp.setMinorAllele(variant.getMinorAllele());
 
