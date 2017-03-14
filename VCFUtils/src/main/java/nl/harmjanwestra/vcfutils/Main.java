@@ -422,6 +422,13 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("filterrsids")
+				.desc("Filter on RSids in stead of positions")
+				.build();
+		OPTIONS.addOption(option);
+
+
+		option = Option.builder()
 				.longOpt("similarity")
 				.desc("Calculate genetic similarity (between two datasets)")
 				.build();
@@ -449,6 +456,12 @@ public class Main {
 		option = Option.builder()
 				.longOpt("listsamples")
 				.desc("List samples in VCF")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.longOpt("vcftobed")
+				.desc("Convert list of variants to BED file")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -558,6 +571,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("vcftobed")
+				.desc("Calculate AF, AN and AC for each variant in input. Output as VCF, without sample data.")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("summarize3")
 				.desc("Calculate AF, AN and AC for each variant in input. Output as VCF, without sample data.")
 				.build();
@@ -633,6 +652,7 @@ public class Main {
 				System.exit(-1);
 			}
 
+
 			if (!cmd.hasOption("o")) {
 				System.out.println("Please provide output prefix");
 				run = false;
@@ -640,6 +660,11 @@ public class Main {
 				out = cmd.getOptionValue("o");
 			}
 
+			if (cmd.hasOption("vcftobed")) {
+				VCFListVariantsAsBed s = new VCFListVariantsAsBed();
+				s.run(input, out);
+				System.exit(-1);
+			}
 //			if (cmd.hasOption("proxy")) {
 //
 //				proxyfinder finder = new proxyfinder();
@@ -705,7 +730,7 @@ public class Main {
 					threads = Integer.parseInt(cmd.getOptionValue("threads"));
 				}
 
-				if(input == null || out == null){
+				if (input == null || out == null) {
 					System.out.println("Please provide input with -i and output with -o");
 					System.out.println("Alternatively, use --infoscore or --beaglescore to calculate imputation quals in stead of correlations");
 					System.exit(-1);
@@ -816,14 +841,20 @@ public class Main {
 					exclude = true;
 				}
 				String list = null;
-				if (cmd.hasOption("list")) {
-					list = cmd.getOptionValue("list");
+				if (cmd.hasOption("l")) {
+					list = cmd.getOptionValue("l");
 				} else {
-					System.out.println("Use --list with --filtervariants");
+					System.out.println("Use --l with --filtervariants");
 					System.exit(-1);
 				}
 				VCFVariantFilter filter = new VCFVariantFilter();
-				filter.run(input, out, list, exclude);
+				if (cmd.hasOption("filterrsids")) {
+					filter.filter(input, out, list, VCFVariantFilter.FILTER.rsids, exclude);
+				} else {
+					filter.filter(input, out, list, VCFVariantFilter.FILTER.positions, exclude);
+				}
+
+
 			} else if (cmd.hasOption("filtergenotype")) {
 
 
