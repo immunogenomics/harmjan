@@ -54,6 +54,7 @@ public class CompareSampleOrder {
 				String sa1 = l1.get(i);
 				String sa2 = l2.get(i);
 				if (!sa1.equals(sa2)) {
+					System.out.println(i + " expecting\t" + sa1 + "\tfound\t" + sa2);
 					unequal++;
 				}
 			}

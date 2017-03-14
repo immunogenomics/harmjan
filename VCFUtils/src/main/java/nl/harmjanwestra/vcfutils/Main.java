@@ -32,6 +32,11 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Compare sample order")
+				.longOpt("comparesampleorder")
+				.build();
+		OPTIONS.addOption(option);
 
 		option = Option.builder()
 				.desc("Replace sample names")
@@ -699,6 +704,15 @@ public class Main {
 //
 //			} else
 
+
+			if (cmd.hasOption("comparesampleorder")) {
+
+				String vcf1 = cmd.getOptionValue("i");
+				String vcf2 = cmd.getOptionValue("i2");
+				CompareSampleOrder s = new CompareSampleOrder();
+				s.run(vcf1, vcf2);
+				System.exit(-1);
+			}
 			if (cmd.hasOption("stripinfo")) {
 				if (cmd.hasOption("i")) {
 					StripInfo s = new StripInfo();

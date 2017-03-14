@@ -66,6 +66,13 @@ public class LRTestOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("cr")
+				.hasArg()
+				.desc("Callrate threshold (default: 0.95)")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("o")
 				.hasArg()
 				.desc("Output prefix")
@@ -228,6 +235,12 @@ public class LRTestOptions {
 	private ANALYSIS analysisType = ANALYSIS.NORMAL;
 	private String conditional;
 	private double HWEPThreshold = 1E-4;
+
+	public double getCallrateThreshold() {
+		return callrateThreshold;
+	}
+
+	private double callrateThreshold = 0.95;
 	private String vcf;
 	private String outputdir;
 	private String diseaseStatusFile;
@@ -305,6 +318,10 @@ public class LRTestOptions {
 
 			if (cmd.hasOption("hwep")) {
 				HWEPThreshold = Double.parseDouble(cmd.getOptionValue("hwep"));
+			}
+
+			if (cmd.hasOption("cr")) {
+				callrateThreshold = Double.parseDouble(cmd.getOptionValue("cr"));
 			}
 
 			if (cmd.hasOption("conditions")) {

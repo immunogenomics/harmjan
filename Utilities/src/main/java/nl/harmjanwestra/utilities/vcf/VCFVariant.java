@@ -63,10 +63,9 @@ public class VCFVariant {
 
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
 	private final HashMap<String, String> info = new HashMap<String, String>();
+	int constructor = 0;
 	private boolean[] samplesToInclude;
 	private ArrayList<VCFGenotypeFilter> filters;
-
-
 	private DoubleMatrix2D genotypeAlleles; // format [individuals][alleles] (save some memory by making only two individual-sized arrays)
 	private DoubleMatrix2D genotypeProbabilies;
 	private DoubleMatrix2D dosages; // this can hold the imputed dosages, or if they are not set, the dosages from the genotypes
@@ -89,20 +88,16 @@ public class VCFVariant {
 	private String filter = null;
 	private double MAF;
 	// private String separator = new String("/").intern();
-
+	private boolean isimputed = false;
 	private PHASE phase;
 	private boolean ignoregender;
 	private int totalCalledAlleles;
-
-
 	private int[] nrAllelesObservedCases;
 	private int[] nrAllelesObservedControls;
 	private double[] alleleFrequenciesCases;
 	private double[] alleleFrequenciesControls;
 	private double hwepCases;
 	private double hwepControls;
-	int constructor = 0;
-
 	private SampleAnnotation sampleAnnotation;
 	private double MAFControls;
 
@@ -171,6 +166,10 @@ public class VCFVariant {
 		this.sampleAnnotation = annotation;
 		recalculateMAFAndCallRate();
 
+	}
+
+	public boolean isImputed() {
+		return isimputed;
 	}
 
 	public DoubleMatrix2D getGenotypeProbabilies() {
@@ -308,6 +307,10 @@ public class VCFVariant {
 				}
 
 			}
+		}
+
+		if (gpCol != -1) {
+			isimputed = true;
 		}
 
 		if (p.equals(PARSE.ALL) || p.equals(PARSE.GENOTYPES)) {
