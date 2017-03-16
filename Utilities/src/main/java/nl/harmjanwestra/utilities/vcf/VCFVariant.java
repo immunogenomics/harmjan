@@ -391,7 +391,12 @@ public class VCFVariant {
 
 
 												} catch (NumberFormatException e) {
-													System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length);
+
+													System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length + "\tVariant: " + chr + ":" + pos + "\t" + id);
+													System.out.println(e.getMessage());
+													for (int q = 0; q < gtElems.length; q++) {
+														System.out.println(q + ": " + gtElems[q]);
+													}
 
 												}
 											}
@@ -423,9 +428,23 @@ public class VCFVariant {
 													genotypeProbabilies = new DenseDoubleMatrix2D(nrSamples, gpElems.length);
 												}
 
-												for (int g = 0; g < gpElems.length; g++) {
-													genotypeProbabilies.setQuick(includedSampleCtr, g, Double.parseDouble(gpElems[g]));
+												int g2 = 0;
+												try {
+													for (int g = 0; g < gpElems.length; g++) {
+														genotypeProbabilies.setQuick(includedSampleCtr, g, Double.parseDouble(gpElems[g]));
+														g2 = g;
+													}
+												} catch (java.lang.ArrayIndexOutOfBoundsException e2) {
+													e2.printStackTrace();
+													System.out.println("variant: " + chr + "\t" + pos + "\t" + id);
+													System.out.println("# alleles: " + alleles.length);
+													System.out.println("elemNr: " + g2);
+													System.out.println("nrElems: " + gpElems.length);
+													System.out.println("sample: " + includedSampleCtr);
+													System.out.println("matrix size: " + genotypeProbabilies.rows() + " x " + genotypeProbabilies.columns());
+													System.exit(-1);
 												}
+
 											} catch (NumberFormatException e) {
 
 											}

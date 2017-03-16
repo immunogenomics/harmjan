@@ -599,6 +599,13 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("testvcf")
+				.desc("Test VCF for parser errors.")
+				.build();
+		OPTIONS.addOption(option);
+
+
 	}
 
 	public static void main(String[] args) {
@@ -654,6 +661,12 @@ public class Main {
 			if (cmd.hasOption("listsamples") && run) {
 				VCFListSamples s = new VCFListSamples();
 				s.run(input);
+				System.exit(-1);
+			}
+
+			if (cmd.hasOption("testvcf")) {
+				VCFMerger m = new VCFMerger();
+				m.testMerge(input);
 				System.exit(-1);
 			}
 

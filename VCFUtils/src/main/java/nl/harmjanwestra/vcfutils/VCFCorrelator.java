@@ -500,6 +500,10 @@ public class VCFCorrelator {
 
 			VCFVariant variant = new VCFVariant(in);
 
+			if (!variant.isImputed()) {
+				return in;
+			}
+
 			int nrAlleles = variant.getAlleles().length;
 			double rsq = 0;
 			String[] elems = Strings.tab.split(in);

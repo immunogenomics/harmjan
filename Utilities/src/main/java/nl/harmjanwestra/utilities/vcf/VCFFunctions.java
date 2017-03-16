@@ -2240,9 +2240,16 @@ public class VCFFunctions {
 		output.append("\t");
 		output.append(Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length));
 		output.append("\t.\t.\t.\tGT");
+		if (var1.isImputed() && var2.isImputed()) {
+			output.append(":DS:GP");
+		}
 
-		DoubleMatrix2D genotypeAlleles1 = var1.getGenotypeAllelesAsMatrix2D();
+		DoubleMatrix2D genotypeAlleles1 = var1.getGenotypeAllelesAsMatrix2D(); // [samples][alleles]
+		DoubleMatrix2D dosages1 = var1.getDosagesAsMatrix2D(); // [samples][alleles]
+		DoubleMatrix2D probs1 = var1.getGenotypeProbabilies();
 		DoubleMatrix2D genotypeAlleles2 = var2.getGenotypeAllelesAsMatrix2D();
+		DoubleMatrix2D dosages2 = var2.getDosagesAsMatrix2D();
+		DoubleMatrix2D probs2 = var2.getGenotypeProbabilies();
 		if (separator == null) {
 			separator = "/";
 		}
@@ -2260,11 +2267,30 @@ public class VCFFunctions {
 			}
 
 			output.append("\t").append(allele1).append(separator).append(allele2);
+			if (var1.isImputed() && var2.isImputed()) {
+				output.append(":");
+				for (int a = 0; a < dosages1.columns(); a++) {
+					if (a == 0) {
+						output.append(dosages1.getQuick(i, a));
+					} else {
+						output.append(",").append(dosages1.getQuick(i, a));
+					}
+				}
+				output.append(":");
+				for (int a = 0; a < probs1.columns(); a++) {
+					if (a == 0) {
+						output.append(probs1.getQuick(i, a));
+					} else {
+						output.append(",").append(probs1.getQuick(i, a));
+					}
+				}
+
+			}
 		}
 
 		for (int i = 0; i < genotypeAlleles2.rows(); i++) {
-			String allele1 = "" + (int) genotypeAlleles2.getQuick(i, 0);
-			String allele2 = "" + (int) genotypeAlleles2.getQuick(i, 1);
+			String allele1 = "" + (byte) genotypeAlleles2.getQuick(i, 0);
+			String allele2 = "" + (byte) genotypeAlleles2.getQuick(i, 1);
 
 			if (genotypeAlleles2.getQuick(i, 0) == -1) {
 				allele1 = ".";
@@ -2274,6 +2300,26 @@ public class VCFFunctions {
 			}
 
 			output.append("\t").append(allele1).append(separator).append(allele2);
+
+			if (var1.isImputed() && var2.isImputed()) {
+				output.append(":");
+				for (int a = 0; a < dosages2.columns(); a++) {
+					if (a == 0) {
+						output.append(dosages2.getQuick(i, a));
+					} else {
+						output.append(",").append(dosages2.getQuick(i, a));
+					}
+				}
+				output.append(":");
+				for (int a = 0; a < probs2.columns(); a++) {
+					if (a == 0) {
+						output.append(probs2.getQuick(i, a));
+					} else {
+						output.append(",").append(probs2.getQuick(i, a));
+					}
+				}
+
+			}
 		}
 
 		return output.toString();

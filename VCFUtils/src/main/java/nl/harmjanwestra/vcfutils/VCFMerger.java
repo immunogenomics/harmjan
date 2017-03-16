@@ -251,13 +251,13 @@ public class VCFMerger {
 	This merges samples from two VCF files if there are variants that are overlapping. Non-overlapping variants are excluded.
 	 */
 	public void mergeAndIntersect(boolean linux,
-	                              int chrint,
-	                              String vcfsort,
-	                              String refVCF,
-	                              String testVCF,
-	                              String matchedPanelsOut,
-	                              boolean keepoverlapping,
-	                              String separator) throws IOException {
+								  int chrint,
+								  String vcfsort,
+								  String refVCF,
+								  String testVCF,
+								  String matchedPanelsOut,
+								  boolean keepoverlapping,
+								  String separator) throws IOException {
 		Chromosome chr = Chromosome.parseChr("" + chrint);
 
 		mergeAndIntersectVCFVariants(
@@ -280,13 +280,13 @@ public class VCFMerger {
 	This merges two VCF files if there are overlapping samples, for those variants that are overlapping
 	 */
 	private void mergeAndIntersectVCFVariants(String refVCF,
-	                                          String testVCF,
-	                                          String vcf1out,
-	                                          String vcf2out,
-	                                          String vcfmergedout,
-	                                          String separatorInMergedFile,
-	                                          String logoutfile,
-	                                          boolean keepNonOverlapping) throws IOException {
+											  String testVCF,
+											  String vcf1out,
+											  String vcf2out,
+											  String vcfmergedout,
+											  String separatorInMergedFile,
+											  String logoutfile,
+											  boolean keepNonOverlapping) throws IOException {
 
 		System.out.println("Merging: ");
 		System.out.println("ref: " + refVCF);
@@ -607,7 +607,7 @@ public class VCFMerger {
 	Utility function to mergecheese two variants with non-overlapping samples.
 	 */
 	private Pair<String, String> mergeVariants(VCFVariant refVariant, VCFVariant testVariant,
-	                                           String separatorInMergedFile) {
+											   String separatorInMergedFile) {
 
 		String[] refAlleles = refVariant.getAlleles();
 		String refMinorAllele = refVariant.getMinorAllele();
@@ -777,15 +777,12 @@ public class VCFMerger {
 		}
 
 		System.out.println(sharedSamples.size() + " samples shared between VCFs");
-
-
 		if (sharedSamples.size() == 0) {
-
 			HashMap<String, VCFVariant> variantMap = new HashMap<String, VCFVariant>();
 			TextFile tf = new TextFile(vcf1, TextFile.R);
 			String vcf1ln = tf.readLine();
 			while (vcf1ln != null) {
-				if (vcf1ln.startsWith("#")) {
+				if (!vcf1ln.startsWith("#")) {
 					VCFVariant var = new VCFVariant(vcf1ln);
 					variantMap.put(var.toString(), var);
 				}
@@ -821,74 +818,83 @@ public class VCFMerger {
 			TextFile tf2 = new TextFile(vcf2, TextFile.R);
 			String vcf2ln = tf2.readLine();
 			while (vcf2ln != null) {
-				VCFVariant var2 = new VCFVariant(vcf2ln);
-				VCFVariant var1 = variantMap.get(var2.toString());
-				StringBuilder builder = new StringBuilder(mergedSamples.size() * 3 + 250);
-				builder.append(var2.getChr());
-				builder.append("\t").append(var2.getPos());
-				builder.append("\t").append(var2.getId());
+				if (!vcf2ln.startsWith("#")) {
+					VCFVariant var2 = new VCFVariant(vcf2ln);
+					VCFVariant var1 = variantMap.get(var2.toString());
+					StringBuilder builder = new StringBuilder(mergedSamples.size() * 3 + 250);
+					builder.append(var2.getChr());
+					builder.append("\t").append(var2.getPos());
+					builder.append("\t").append(var2.getId());
 
 
-				if (var1 == null) {
-					// only present in ds2
-					builder.append("\t").append(var2.getAlleles()[0]);
-					builder.append("\t").append(Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length));
-					builder.append("\t").append(".");
-					builder.append("\t").append(".");
-					builder.append("\t").append(".");
-					builder.append("\t").append("GT");
+					if (var1 == null) {
+						// only present in ds2
+						builder.append("\t").append(var2.getAlleles()[0]);
+						builder.append("\t").append(Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length));
+						builder.append("\t").append(".");
+						builder.append("\t").append(".");
+						builder.append("\t").append(".");
+						builder.append("\t").append("GT");
 
-					for (int i = 0; i < samples1.size(); i++) {
-						builder.append("\t").append("./.");
-					}
-					DoubleMatrix2D alleles = var2.getGenotypeAllelesAsMatrix2D();
-					for (int i = 0; i < samples2.size(); i++) {
-
-						if (alleles.get(i, 0) == -1) {
+						for (int i = 0; i < samples1.size(); i++) {
 							builder.append("\t").append("./.");
-						} else {
-							builder.append("\t").append(alleles.getQuick(i, 0))
-									.append("/")
-									.append(alleles.getQuick(i, 1));
+						}
+						DoubleMatrix2D alleles = var2.getGenotypeAllelesAsMatrix2D();
+						for (int i = 0; i < samples2.size(); i++) {
+
+							if (alleles.get(i, 0) == -1) {
+								builder.append("\t").append("./.");
+							} else {
+								builder.append("\t").append(alleles.getQuick(i, 0))
+										.append("/")
+										.append(alleles.getQuick(i, 1));
+							}
+						}
+						outf.writeln(builder.toString());
+						vcf2specific++;
+					} else {
+						// shared variant
+						boolean imputed1 = var1.isImputed();
+						boolean imputed2 = var2.isImputed();
+
+						boolean write = ((imputed1 && imputed2) || (!imputed1 && !imputed2));
+
+
+						String logln = var1.getChr()
+								+ "\t" + var1.getPos()
+								+ "\t" + var1.getId()
+								+ "\t" + var1.getAlleles()[0]
+								+ "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length)
+								+ "\t" + var1.getMinorAllele()
+								+ "\t" + var1.getMAF();
+						logln += "\t" + var2.getId()
+								+ "\t" + var2.getAlleles()[0]
+								+ "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length)
+								+ "\t" + var2.getMinorAllele()
+								+ "\t" + var2.getMAF();
+
+						// mergecheese
+						if (write) {
+							Pair<String, String> outputpair;
+							if (imputed1 && imputed2) {
+								outputpair = mergeVariants(var1, var2, "|");
+							} else {
+								outputpair = mergeVariants(var1, var2, "/");
+							}
+
+							String mergeStr = outputpair.getLeft();
+							logln += mergeStr;
+							mergelog.writeln(logln);
+							if (outputpair.getRight() != null) {
+								outf.writeln(outputpair.getRight());
+								sharedWritten++;
+							}
+							shared++;
 						}
 					}
-					outf.writeln(builder.toString());
-					vcf2specific++;
-				} else {
-					// shared variant
-					boolean imputed1 = var1.isImputed();
-					boolean imputed2 = var2.isImputed();
-
-					boolean write = ((imputed1 && imputed2) || (!imputed1 && !imputed2));
-
-
-					String logln = var1.getChr()
-							+ "\t" + var1.getPos()
-							+ "\t" + var1.getId()
-							+ "\t" + var1.getAlleles()[0]
-							+ "\t" + Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length)
-							+ "\t" + var1.getMinorAllele()
-							+ "\t" + var1.getMAF();
-					logln += "\t" + var2.getId()
-							+ "\t" + var2.getAlleles()[0]
-							+ "\t" + Strings.concat(var2.getAlleles(), Strings.comma, 1, var2.getAlleles().length)
-							+ "\t" + var2.getMinorAllele()
-							+ "\t" + var2.getMAF();
-
-					// mergecheese
-					if (write) {
-						Pair<String, String> outputpair = mergeVariants(var1, var2, "/");
-						String mergeStr = outputpair.getLeft();
-						logln += mergeStr;
-						mergelog.writeln(logln);
-						if (outputpair.getRight() != null) {
-							outf.writeln(outputpair.getRight());
-							sharedWritten++;
-						}
-						shared++;
-					}
+					vars2.add(var2.toString());
 				}
-				vars2.add(var2.toString());
+
 				vcf2ln = tf2.readLine();
 			}
 			tf2.close();
@@ -949,9 +955,41 @@ public class VCFMerger {
 
 			System.out.println(vcf1specific + " variants specific to: " + vcf1);
 			outf.close();
+
+
 		} else {
 			System.out.println(sharedSamples.size() + " shared samples detected. This method only supports unique samples for now");
 		}
+
+	}
+
+	public void testMerge(String outf) throws IOException {
+		// test file
+		System.out.println();
+		System.out.println("Testing output: " + outf);
+		TextFile tft = new TextFile(outf, TextFile.R);
+		String tfln = tft.readLine();
+		int ln = 0;
+		int nrSamples = 0;
+		while (tfln != null) {
+			if (tfln.startsWith("#")) {
+				if (tfln.startsWith("#CHROM")) {
+					String[] elems = tfln.split("\t");
+					nrSamples = elems.length - 9;
+					System.out.println(nrSamples + " samples found in header");
+				}
+			} else {
+				String[] elems = tfln.split("\t");
+				int ct2 = elems.length - 9;
+				if (ct2 != nrSamples) {
+					System.out.println(ct2 + " samples found " + nrSamples + " samples expected... on ln: " + ln);
+				}
+				VCFVariant var = new VCFVariant(tfln);
+			}
+			ln++;
+			tfln = tft.readLine();
+		}
+		tft.close();
 
 	}
 
@@ -1508,7 +1546,7 @@ public class VCFMerger {
 
 
 	public void reintroducteNonImputedVariants(String imputedVCF, String unimputedVCF, String outfilename,
-	                                           boolean linux, String vcfsort) throws IOException {
+											   boolean linux, String vcfsort) throws IOException {
 
 
 		// get list of imputed variants
