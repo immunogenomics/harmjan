@@ -410,8 +410,17 @@ public class VCFVariant {
 												}
 
 												String[] dsElems = Strings.comma.split(sampleToken);
-												for (int q = 0; q < dsElems.length; q++) {
-													dosages.set(includedSampleCtr, q, Double.parseDouble(dsElems[q]));
+												try {
+													for (int q = 0; q < dsElems.length; q++) {
+														dosages.set(includedSampleCtr, q, Double.parseDouble(dsElems[q]));
+													}
+												} catch (IndexOutOfBoundsException e) {
+													System.out.println(e.getMessage());
+													System.out.println("More dosage values than expected:" + sampleToken + " nr elems: " + dsElems.length + "\tVariant: " + chr + ":" + pos + "\t" + id);
+													System.out.println("Expected: " + (alleles.length - 1));
+													System.out.println("Sample: " + includedSampleCtr);
+													System.out.println(Strings.concat(alleles, Strings.semicolon));
+													System.exit(-1);
 												}
 
 											} catch (NumberFormatException e) {

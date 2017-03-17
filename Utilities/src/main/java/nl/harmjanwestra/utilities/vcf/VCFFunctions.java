@@ -571,8 +571,8 @@ public class VCFFunctions {
 	}
 
 	public Pair<byte[][], String[]> loadVCFGenotypes(String vcf,
-													 HashMap<String, Integer> sampleMap,
-													 HashMap<Feature, Integer> variantMap) throws IOException {
+	                                                 HashMap<String, Integer> sampleMap,
+	                                                 HashMap<Feature, Integer> variantMap) throws IOException {
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -873,12 +873,12 @@ public class VCFFunctions {
 
 
 	public void filterLowFrequencyVariants(String sequencingVCF,
-										   String outputdir,
-										   String famfile, boolean filterGT,
-										   int minimalReadDepth,
-										   int minimalGenotypeQual,
-										   double callratethreshold,
-										   int minObservationsPerAllele) throws IOException {
+	                                       String outputdir,
+	                                       String famfile, boolean filterGT,
+	                                       int minimalReadDepth,
+	                                       int minimalGenotypeQual,
+	                                       double callratethreshold,
+	                                       int minObservationsPerAllele) throws IOException {
 
 
 		System.out.println("Filtering for low freq variants: " + sequencingVCF);
@@ -2228,99 +2228,176 @@ public class VCFFunctions {
 	}
 
 
-	public String mergeVariants(VCFVariant var1, VCFVariant var2, String separator) {
+	public String mergeVariants(VCFVariant var1, int nrsamples1, VCFVariant var2, int nrsamples2, String separator) {
 		StringBuilder output = new StringBuilder();
-		output.append(var1.getChr());
-		output.append("\t");
-		output.append(var1.getPos());
-		output.append("\t");
-		output.append(var1.getId());
-		output.append("\t");
-		output.append(var1.getAlleles()[0]);
-		output.append("\t");
-		output.append(Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length));
-		output.append("\t.\t.\t.\tGT");
-		if (var1.isImputed() && var2.isImputed()) {
-			output.append(":DS:GP");
-		}
-
-		DoubleMatrix2D genotypeAlleles1 = var1.getGenotypeAllelesAsMatrix2D(); // [samples][alleles]
-		DoubleMatrix2D dosages1 = var1.getDosagesAsMatrix2D(); // [samples][alleles]
-		DoubleMatrix2D probs1 = var1.getGenotypeProbabilies();
-		DoubleMatrix2D genotypeAlleles2 = var2.getGenotypeAllelesAsMatrix2D();
-		DoubleMatrix2D dosages2 = var2.getDosagesAsMatrix2D();
-		DoubleMatrix2D probs2 = var2.getGenotypeProbabilies();
-		if (separator == null) {
-			separator = "/";
-		}
-
-		for (int i = 0; i < genotypeAlleles1.rows(); i++) {
-
-			String allele1 = "" + (byte) genotypeAlleles1.get(i, 0);
-			String allele2 = "" + (byte) genotypeAlleles1.get(i, 1);
-
-			if (genotypeAlleles1.get(i, 0) == -1) {
-				allele1 = ".";
-			}
-			if (genotypeAlleles1.get(i, 1) == -1) {
-				allele2 = ".";
+		if (var1 == null || var2 == null) {
+			VCFVariant printvar = null;
+			if (var1 == null) {
+				printvar = var2;
+			} else {
+				printvar = var1;
 			}
 
-			output.append("\t").append(allele1).append(separator).append(allele2);
+			output.append(printvar.getChr());
+			output.append("\t");
+			output.append(printvar.getPos());
+			output.append("\t");
+			output.append(printvar.getId());
+			output.append("\t");
+			output.append(printvar.getAlleles()[0]);
+			output.append("\t");
+			output.append(Strings.concat(printvar.getAlleles(), Strings.comma, 1, printvar.getAlleles().length));
+			output.append("\t.\t.\t.\tGT");
+			if (printvar.isImputed() && printvar.isImputed()) {
+				output.append(":DS:GP");
+			}
+
+			if (var1 == null) {
+				for (int i = 0; i < nrsamples1; i++) {
+					output.append("\t").append(".").append(separator).append(".");
+				}
+			}
+
+			// actually print some stuff...
+			DoubleMatrix2D genotypeAlleles = printvar.getGenotypeAllelesAsMatrix2D(); // [samples][alleles]
+			DoubleMatrix2D dosages = printvar.getDosagesAsMatrix2D(); // [samples][alleles]
+			DoubleMatrix2D probs = printvar.getGenotypeProbabilies();
+
+			for (int i = 0; i < genotypeAlleles.rows(); i++) {
+
+				String allele1 = "" + (byte) genotypeAlleles.get(i, 0);
+				String allele2 = "" + (byte) genotypeAlleles.get(i, 1);
+
+				if (genotypeAlleles.get(i, 0) == -1) {
+					allele1 = ".";
+				}
+				if (genotypeAlleles.get(i, 1) == -1) {
+					allele2 = ".";
+				}
+
+				output.append("\t").append(allele1).append(separator).append(allele2);
+				if (printvar.isImputed()) {
+					output.append(":");
+					for (int a = 0; a < dosages.columns(); a++) {
+						if (a == 0) {
+							output.append(dosages.getQuick(i, a));
+						} else {
+							output.append(",").append(dosages.getQuick(i, a));
+						}
+					}
+					output.append(":");
+					for (int a = 0; a < probs.columns(); a++) {
+						if (a == 0) {
+							output.append(probs.getQuick(i, a));
+						} else {
+							output.append(",").append(probs.getQuick(i, a));
+						}
+					}
+				}
+			}
+
+			if (var2 == null) {
+				for (int i = 0; i < nrsamples2; i++) {
+					output.append("\t").append(".").append(separator).append(".");
+				}
+			}
+
+
+		} else {
+			// both variants present
+			output.append(var1.getChr());
+			output.append("\t");
+			output.append(var1.getPos());
+			output.append("\t");
+			output.append(var1.getId());
+			output.append("\t");
+			output.append(var1.getAlleles()[0]);
+			output.append("\t");
+			output.append(Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length));
+			output.append("\t.\t.\t.\tGT");
 			if (var1.isImputed() && var2.isImputed()) {
-				output.append(":");
-				for (int a = 0; a < dosages1.columns(); a++) {
-					if (a == 0) {
-						output.append(dosages1.getQuick(i, a));
-					} else {
-						output.append(",").append(dosages1.getQuick(i, a));
-					}
+				output.append(":DS:GP");
+			}
+
+			DoubleMatrix2D genotypeAlleles1 = var1.getGenotypeAllelesAsMatrix2D(); // [samples][alleles]
+			DoubleMatrix2D dosages1 = var1.getDosagesAsMatrix2D(); // [samples][alleles]
+			DoubleMatrix2D probs1 = var1.getGenotypeProbabilies();
+			DoubleMatrix2D genotypeAlleles2 = var2.getGenotypeAllelesAsMatrix2D();
+			DoubleMatrix2D dosages2 = var2.getDosagesAsMatrix2D();
+			DoubleMatrix2D probs2 = var2.getGenotypeProbabilies();
+			if (separator == null) {
+				separator = "/";
+			}
+
+			for (int i = 0; i < genotypeAlleles1.rows(); i++) {
+
+				String allele1 = "" + (byte) genotypeAlleles1.get(i, 0);
+				String allele2 = "" + (byte) genotypeAlleles1.get(i, 1);
+
+				if (genotypeAlleles1.get(i, 0) == -1) {
+					allele1 = ".";
 				}
-				output.append(":");
-				for (int a = 0; a < probs1.columns(); a++) {
-					if (a == 0) {
-						output.append(probs1.getQuick(i, a));
-					} else {
-						output.append(",").append(probs1.getQuick(i, a));
-					}
+				if (genotypeAlleles1.get(i, 1) == -1) {
+					allele2 = ".";
 				}
 
+				output.append("\t").append(allele1).append(separator).append(allele2);
+				if (var1.isImputed() && var2.isImputed()) {
+					output.append(":");
+					for (int a = 0; a < dosages1.columns(); a++) {
+						if (a == 0) {
+							output.append(dosages1.getQuick(i, a));
+						} else {
+							output.append(",").append(dosages1.getQuick(i, a));
+						}
+					}
+					output.append(":");
+					for (int a = 0; a < probs1.columns(); a++) {
+						if (a == 0) {
+							output.append(probs1.getQuick(i, a));
+						} else {
+							output.append(",").append(probs1.getQuick(i, a));
+						}
+					}
+
+				}
+			}
+
+			for (int i = 0; i < genotypeAlleles2.rows(); i++) {
+				String allele1 = "" + (byte) genotypeAlleles2.getQuick(i, 0);
+				String allele2 = "" + (byte) genotypeAlleles2.getQuick(i, 1);
+
+				if (genotypeAlleles2.getQuick(i, 0) == -1) {
+					allele1 = ".";
+				}
+				if (genotypeAlleles2.getQuick(i, 1) == -1) {
+					allele2 = ".";
+				}
+
+				output.append("\t").append(allele1).append(separator).append(allele2);
+
+				if (var1.isImputed() && var2.isImputed()) {
+					output.append(":");
+					for (int a = 0; a < dosages2.columns(); a++) {
+						if (a == 0) {
+							output.append(dosages2.getQuick(i, a));
+						} else {
+							output.append(",").append(dosages2.getQuick(i, a));
+						}
+					}
+					output.append(":");
+					for (int a = 0; a < probs2.columns(); a++) {
+						if (a == 0) {
+							output.append(probs2.getQuick(i, a));
+						} else {
+							output.append(",").append(probs2.getQuick(i, a));
+						}
+					}
+
+				}
 			}
 		}
 
-		for (int i = 0; i < genotypeAlleles2.rows(); i++) {
-			String allele1 = "" + (byte) genotypeAlleles2.getQuick(i, 0);
-			String allele2 = "" + (byte) genotypeAlleles2.getQuick(i, 1);
-
-			if (genotypeAlleles2.getQuick(i, 0) == -1) {
-				allele1 = ".";
-			}
-			if (genotypeAlleles2.getQuick(i, 1) == -1) {
-				allele2 = ".";
-			}
-
-			output.append("\t").append(allele1).append(separator).append(allele2);
-
-			if (var1.isImputed() && var2.isImputed()) {
-				output.append(":");
-				for (int a = 0; a < dosages2.columns(); a++) {
-					if (a == 0) {
-						output.append(dosages2.getQuick(i, a));
-					} else {
-						output.append(",").append(dosages2.getQuick(i, a));
-					}
-				}
-				output.append(":");
-				for (int a = 0; a < probs2.columns(); a++) {
-					if (a == 0) {
-						output.append(probs2.getQuick(i, a));
-					} else {
-						output.append(",").append(probs2.getQuick(i, a));
-					}
-				}
-
-			}
-		}
 
 		return output.toString();
 	}
