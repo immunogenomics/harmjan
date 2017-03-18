@@ -73,7 +73,7 @@ public class VCFCorrelator {
 				jobHandler.submit(task);
 				submitted++;
 				nrRead++;
-				if (submitted % 10000 == 0) {
+				if (submitted % 1000 == 0) {
 					int returned = 0;
 					while (returned < submitted) {
 						Future<String> future = null;
@@ -91,11 +91,12 @@ public class VCFCorrelator {
 						}
 					}
 					submitted = 0;
-					System.out.println(nrRead + " variants read");
+					System.out.print(nrRead + " variants read\r");
 				}
 			}
 			ln = tf.readLine();
 		}
+		System.out.println("Done reading");
 
 		int returned = 0;
 		while (returned < submitted) {

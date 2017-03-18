@@ -71,7 +71,7 @@ public class LRTest {
 			case CONDITIONAL:
 				System.out.println("Will perform conditional logistic regression");
 				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
-				exService = Executors.newFixedThreadPool(options.getNrThreads());
+				exService = Executors.newWorkStealingPool(options.getNrThreads());
 
 				testConditional();
 				exService.shutdown();
@@ -79,7 +79,7 @@ public class LRTest {
 			case EXHAUSTIVE:
 				System.out.println("Will perform exhaustive pairwise logistic regression");
 				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
-				exService = Executors.newFixedThreadPool(options.getNrThreads());
+				exService = Executors.newWorkStealingPool(options.getNrThreads());
 				testExhaustivePairwise();
 				exService.shutdown();
 				break;
@@ -90,7 +90,7 @@ public class LRTest {
 			case NORMAL:
 				System.out.println("Will perform normal logistic regression");
 				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
-				exService = Executors.newFixedThreadPool(options.getNrThreads());
+				exService = Executors.newWorkStealingPool(options.getNrThreads());
 				testNormal();
 				exService.shutdown();
 				break;

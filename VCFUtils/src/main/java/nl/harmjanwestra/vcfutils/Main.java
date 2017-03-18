@@ -746,7 +746,6 @@ public class Main {
 				boolean infoscore = false;
 				boolean beaglescore = false;
 				if (cmd.hasOption("infoscore")) {
-
 					infoscore = true;
 				}
 				if (cmd.hasOption("beaglescore")) {
