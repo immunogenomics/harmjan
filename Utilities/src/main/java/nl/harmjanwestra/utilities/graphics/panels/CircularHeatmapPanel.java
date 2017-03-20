@@ -349,6 +349,8 @@ public class CircularHeatmapPanel extends Panel {
 			}
 		}
 
+
+
 		// draw a small legend in the top left corner
 		for (int d = 0; d < data.length; d++) {
 			Color color = theme.getColor(d);

@@ -38,15 +38,15 @@ public class Conditional {
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-significantloci-75e7.bed",
 			};
 			String[] assocFiles = new String[]{
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/RA-assoc0.3-COSMO-iter0-merged.txt.gz",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/T1D-assoc0.3-COSMO-iter0-merged.txt.gz",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/META-assoc0.3-COSMO-iter0-merged.txt.gz"
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
 			};
 
 			String[] bonferroniOut = new String[]{
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/RA.txt",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/T1D.txt",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Old/ConditionalOnMeta/META.txt"
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/RA.txt",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/T1D.txt",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/META.txt"
 			};
 			String[] diseaseRegions = new String[]{
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed",
@@ -60,29 +60,25 @@ public class Conditional {
 			System.out.println();
 			System.out.println("---");
 			System.out.println();
-
-			for (int a = 0; a < assocFiles.length; a++) {
-				assocfile = assocFiles[a];
-				diseasespecificregionfile = diseaseRegions[a];
-				 b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
-			}
+			String annot = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/genes.gtf.gz";
+			GTFAnnotation annotation = new GTFAnnotation(annot);
+			TreeSet<Gene> genes = annotation.getGeneTree();
 
 			String[] diseases = new String[]{
 					"RA",
 					"T1D",
 					"META"
 			};
-
-
-			String annot = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/genes.gtf.gz";
-			GTFAnnotation annotation = new GTFAnnotation(annot);
-			TreeSet<Gene> genes = annotation.getGeneTree();
-			int maxiter = 4;
-			for (int d = 0; d < diseases.length; d++) {
+			for (int a = 0; a < assocFiles.length; a++) {
+				assocfile = assocFiles[a];
+				diseasespecificregionfile = diseaseRegions[a];
+				b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
+				String regions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+				String assoc = assocFiles[a];
 
 				HashMap<String, Double> thresholds = new HashMap<String, Double>();
 
-				TextFile tf = new TextFile(bonferroniOut[d], TextFile.R);
+				TextFile tf = new TextFile(bonferroniOut[a], TextFile.R);
 				String[] elems = tf.readLineElems(TextFile.tab);
 				while (elems != null) {
 					thresholds.put(elems[0], Double.parseDouble(elems[2]));
@@ -90,17 +86,40 @@ public class Conditional {
 				}
 				tf.close();
 
-				String output = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-bestAssocPerRegion.txt";
+				String output = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/" + diseases[a] + "-bestAssocPerRegion-firstrun.txt";
 				TextFile outtf = new TextFile(output, TextFile.W);
 				outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
-				for (int iter = 0; iter < maxiter; iter++) {
-					System.out.println(iter + "\t" + d);
-					String assoc = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/Conditional/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
-					String regions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-					b.determineTopAssocPerRegion(iter, regions, defaultthreshold, assoc, thresholds, genes, outtf);
-				}
+				b.determineTopAssocPerRegion(0, regions, defaultthreshold, assoc, thresholds, genes, outtf);
 				outtf.close();
+			}
 
+			boolean runconditional = false;
+			if (runconditional) {
+				int maxiter = 4;
+				for (int d = 0; d < diseases.length; d++) {
+
+					HashMap<String, Double> thresholds = new HashMap<String, Double>();
+
+					TextFile tf = new TextFile(bonferroniOut[d], TextFile.R);
+					String[] elems = tf.readLineElems(TextFile.tab);
+					while (elems != null) {
+						thresholds.put(elems[0], Double.parseDouble(elems[2]));
+						elems = tf.readLineElems(TextFile.tab);
+					}
+					tf.close();
+
+					String output = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/" + diseases[d] + "-bestAssocPerRegion.txt";
+					TextFile outtf = new TextFile(output, TextFile.W);
+					outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
+					for (int iter = 0; iter < maxiter; iter++) {
+						System.out.println(iter + "\t" + d);
+						String assoc = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+						String regions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+						b.determineTopAssocPerRegion(iter, regions, defaultthreshold, assoc, thresholds, genes, outtf);
+					}
+					outtf.close();
+
+				}
 			}
 
 
@@ -116,6 +135,7 @@ public class Conditional {
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> allRegions = reader.readAsList(regionfile);
 		AssociationFile assocF = new AssociationFile();
+		ArrayList<AssociationResult> allresults = assocF.read(assoc);
 		for (int r = 0; r < allRegions.size(); r++) {
 			Feature region = allRegions.get(r);
 
@@ -130,7 +150,8 @@ public class Conditional {
 				ctr++;
 			}
 
-			ArrayList<AssociationResult> results = assocF.read(assoc, region);
+
+			ArrayList<AssociationResult> results = filter(allresults, region);
 
 			// get top result
 			AssociationResult max = null;
@@ -177,12 +198,16 @@ public class Conditional {
 		BedFileReader reader = new BedFileReader();
 		AssociationFile assocfilereader = new AssociationFile();
 		int max = 0;
+
+		ArrayList<ArrayList<AssociationResult>> allresults = new ArrayList<>();
+		for (int i = 0; i < assocFiles.length; i++) {
+			allresults.add(assocfilereader.read(assocFiles[i]));
+		}
 		for (int q = 0; q < significantRegionFiles.length; q++) {
 			ArrayList<Feature> allRegions = reader.readAsList(significantRegionFiles[q]);
 			for (Feature region : allRegions) {
 				for (int i = 0; i < assocFiles.length; i++) {
-					String assocFile = assocFiles[i];
-					ArrayList<AssociationResult> results = assocfilereader.read(assocFile, region);
+					ArrayList<AssociationResult> results = filter(allresults.get(i), region);
 					if (results.size() > max) {
 						max = results.size();
 					}
@@ -209,13 +234,14 @@ public class Conditional {
 //			nrTotal += results.size();
 //		}
 
-
+		ArrayList<AssociationResult> allresults = assocfilereader.read(assocFile);
 		TextFile outf = new TextFile(out, TextFile.W);
 
 		for (int i = 0; i < allRegions.size(); i++) {
 			Feature region = allRegions.get(i);
 			boolean significantInIC = isSignificant(region, allICDiseaseRegions);
-			ArrayList<AssociationResult> results = assocfilereader.read(assocFile, region);
+
+			ArrayList<AssociationResult> results = filter(allresults, region);
 			double threshold = origThreshold;
 			if (significantInIC) {
 				threshold = significantThreshold;
@@ -228,6 +254,16 @@ public class Conditional {
 
 		outf.close();
 
+	}
+
+	private ArrayList<AssociationResult> filter(ArrayList<AssociationResult> allresults, Feature region) {
+		ArrayList<AssociationResult> output = new ArrayList<>();
+		for (AssociationResult r : allresults) {
+			if (r.getSnp().overlaps(region)) {
+				output.add(r);
+			}
+		}
+		return output;
 	}
 
 	private boolean isSignificant(Feature region, ArrayList<Feature> allICDiseaseRegions) {
