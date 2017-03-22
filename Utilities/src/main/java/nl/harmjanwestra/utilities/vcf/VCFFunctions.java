@@ -11,9 +11,9 @@ import nl.harmjanwestra.utilities.plink.PedAndMapFunctions;
 import nl.harmjanwestra.utilities.plink.PlinkFamFile;
 import nl.harmjanwestra.utilities.sets.StringSets;
 import nl.harmjanwestra.utilities.shell.ProcessRunner;
-import nl.harmjanwestra.utilities.vcf.filter.GenotypeQualityFilter;
-import nl.harmjanwestra.utilities.vcf.filter.ReadDepthFilter;
-import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
+import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.GenotypeQualityFilter;
+import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.ReadDepthFilter;
+import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
 import umcg.genetica.io.Gpio;
@@ -571,8 +571,8 @@ public class VCFFunctions {
 	}
 
 	public Pair<byte[][], String[]> loadVCFGenotypes(String vcf,
-	                                                 HashMap<String, Integer> sampleMap,
-	                                                 HashMap<Feature, Integer> variantMap) throws IOException {
+													 HashMap<String, Integer> sampleMap,
+													 HashMap<Feature, Integer> variantMap) throws IOException {
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -873,12 +873,12 @@ public class VCFFunctions {
 
 
 	public void filterLowFrequencyVariants(String sequencingVCF,
-	                                       String outputdir,
-	                                       String famfile, boolean filterGT,
-	                                       int minimalReadDepth,
-	                                       int minimalGenotypeQual,
-	                                       double callratethreshold,
-	                                       int minObservationsPerAllele) throws IOException {
+										   String outputdir,
+										   String famfile, boolean filterGT,
+										   int minimalReadDepth,
+										   int minimalGenotypeQual,
+										   double callratethreshold,
+										   int minObservationsPerAllele) throws IOException {
 
 
 		System.out.println("Filtering for low freq variants: " + sequencingVCF);
@@ -2238,6 +2238,7 @@ public class VCFFunctions {
 				printvar = var1;
 			}
 
+
 			output.append(printvar.getChr());
 			output.append("\t");
 			output.append(printvar.getPos());
@@ -2304,19 +2305,49 @@ public class VCFFunctions {
 
 
 		} else {
+
+			// both variants are present....
+			VCFVariant headervar = null;
+			if (!var1.isImputed() && !var2.isImputed()) {
+				headervar = var1;
+			} else if (var1.isImputed() && !var2.isImputed()) {
+				headervar = var1;
+			} else {
+				headervar = var2;
+			}
+
 			// both variants present
-			output.append(var1.getChr());
+			output.append(headervar.getChr());
 			output.append("\t");
-			output.append(var1.getPos());
+			output.append(headervar.getPos());
 			output.append("\t");
-			output.append(var1.getId());
+			output.append(headervar.getId());
 			output.append("\t");
-			output.append(var1.getAlleles()[0]);
+			output.append(headervar.getAlleles()[0]);
 			output.append("\t");
-			output.append(Strings.concat(var1.getAlleles(), Strings.comma, 1, var1.getAlleles().length));
+			output.append(Strings.concat(headervar.getAlleles(), Strings.comma, 1, headervar.getAlleles().length));
 			output.append("\t.\t.\t.\tGT");
-			if (var1.isImputed() && var2.isImputed()) {
+			if ((var1.isImputed() && !var2.isImputed()) || (!var1.isImputed() && var2.isImputed())) {
+				output.append(":DS");
+			} else if (var1.isImputed() && var2.isImputed()) {
 				output.append(":DS:GP");
+			}
+
+			// assume alleles were flipped prior...
+			// perform a double-check
+			String[] refAlleles = var1.getAlleles();
+			String refMinorAllele = var1.getMinorAllele();
+			String[] testVariantAlleles = var2.getAlleles();
+			String testVariantMinorAllele = var2.getMinorAllele();
+
+			int nridenticalalleles = countIdenticalAlleles(refAlleles, testVariantAlleles);
+
+			if (nridenticalalleles != refAlleles.length || nridenticalalleles != testVariantAlleles.length || !refAlleles[0].equals(testVariantAlleles[0])) {
+				System.out.println("Error: alleles between variant are not equal: " + var1.toString() + "\t"
+						+ var2.toString() + "\t"
+						+ Strings.concat(refAlleles, Strings.comma) + "\t" + Strings.concat(testVariantAlleles, Strings.comma));
+				return null;
+//				System.exit(-1);
 			}
 
 			DoubleMatrix2D genotypeAlleles1 = var1.getGenotypeAllelesAsMatrix2D(); // [samples][alleles]
@@ -2342,7 +2373,9 @@ public class VCFFunctions {
 				}
 
 				output.append("\t").append(allele1).append(separator).append(allele2);
-				if (var1.isImputed() && var2.isImputed()) {
+
+				// add a dosage field
+				if (var1.isImputed() || var2.isImputed()) {
 					output.append(":");
 					for (int a = 0; a < dosages1.columns(); a++) {
 						if (a == 0) {
@@ -2351,6 +2384,9 @@ public class VCFFunctions {
 							output.append(",").append(dosages1.getQuick(i, a));
 						}
 					}
+				}
+				// add probs if available..
+				if (var1.isImputed() && var2.isImputed()) {
 					output.append(":");
 					for (int a = 0; a < probs1.columns(); a++) {
 						if (a == 0) {
@@ -2359,7 +2395,6 @@ public class VCFFunctions {
 							output.append(",").append(probs1.getQuick(i, a));
 						}
 					}
-
 				}
 			}
 
@@ -2376,7 +2411,8 @@ public class VCFFunctions {
 
 				output.append("\t").append(allele1).append(separator).append(allele2);
 
-				if (var1.isImputed() && var2.isImputed()) {
+				// add a dosage field
+				if (var1.isImputed() || var2.isImputed()) {
 					output.append(":");
 					for (int a = 0; a < dosages2.columns(); a++) {
 						if (a == 0) {
@@ -2385,6 +2421,10 @@ public class VCFFunctions {
 							output.append(",").append(dosages2.getQuick(i, a));
 						}
 					}
+				}
+
+				// output probs if available
+				if (var1.isImputed() && var2.isImputed()) {
 					output.append(":");
 					for (int a = 0; a < probs2.columns(); a++) {
 						if (a == 0) {
@@ -2400,6 +2440,19 @@ public class VCFFunctions {
 
 
 		return output.toString();
+	}
+
+	public int countIdenticalAlleles(String[] refAlleles, String[] testVariantAlleles) {
+		int nridenticalalleles = 0;
+		for (int i = 0; i < refAlleles.length; i++) {
+			String allele1 = refAlleles[i];
+			for (int j = 0; j < testVariantAlleles.length; j++) {
+				if (testVariantAlleles[j].equals(allele1)) {
+					nridenticalalleles++;
+				}
+			}
+		}
+		return nridenticalalleles;
 	}
 
 	public void splitMultipleAllelicVariants(String vcfIn, String vcfOut) throws IOException {

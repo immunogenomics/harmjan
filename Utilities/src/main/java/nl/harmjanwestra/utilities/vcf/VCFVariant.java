@@ -10,7 +10,7 @@ import nl.harmjanwestra.utilities.enums.Gender;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.matrix.ShortMatrix2D;
-import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
+import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
 import umcg.genetica.io.trityper.util.BaseAnnot;
 import umcg.genetica.math.stats.HWE;
 import umcg.genetica.text.Strings;

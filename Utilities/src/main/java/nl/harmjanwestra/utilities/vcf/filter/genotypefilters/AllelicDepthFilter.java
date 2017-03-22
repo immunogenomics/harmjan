@@ -1,4 +1,4 @@
-package nl.harmjanwestra.utilities.vcf.filter;
+package nl.harmjanwestra.utilities.vcf.filter.genotypefilters;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;

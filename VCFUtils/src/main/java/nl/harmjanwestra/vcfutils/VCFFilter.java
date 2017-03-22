@@ -2,9 +2,9 @@ package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import nl.harmjanwestra.utilities.vcf.filter.AllelicDepthFilter;
-import nl.harmjanwestra.utilities.vcf.filter.GenotypeQualityFilter;
-import nl.harmjanwestra.utilities.vcf.filter.VCFGenotypeFilter;
+import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.AllelicDepthFilter;
+import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.GenotypeQualityFilter;
+import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 

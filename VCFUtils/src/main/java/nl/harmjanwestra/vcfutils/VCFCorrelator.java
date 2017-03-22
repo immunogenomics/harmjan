@@ -61,27 +61,42 @@ public class VCFCorrelator {
 			threads = cores;
 		}
 		ExecutorService threadPool = Executors.newFixedThreadPool(threads);
-		CompletionService<String> jobHandler = new ExecutorCompletionService<>(threadPool);
+		CompletionService<String[]> jobHandler = new ExecutorCompletionService<>(threadPool);
 
 		int nrRead = 0;
 
+		int buffersize = 25;
+		String[] buffer = new String[buffersize];
+		int lnctr = 0;
 		while (ln != null) {
 			if (ln.startsWith("#")) {
 				out.writeln(ln);
 			} else {
-				VCFVariantInfoUpdater task = new VCFVariantInfoUpdater(ln, infoscore, beaglescore);
-				jobHandler.submit(task);
-				submitted++;
+
+				buffer[lnctr] = ln;
+				lnctr++;
+				if (lnctr == buffersize) {
+					VCFVariantInfoUpdater task = new VCFVariantInfoUpdater(buffer, infoscore, beaglescore);
+					jobHandler.submit(task);
+					buffer = new String[buffersize];
+					lnctr = 0;
+					submitted++;
+				}
+
 				nrRead++;
-				if (submitted % 1000 == 0) {
+				if (submitted % threads == 0) {
 					int returned = 0;
 					while (returned < submitted) {
-						Future<String> future = null;
+						Future<String[]> future = null;
 						try {
 							future = jobHandler.take();
 							if (future != null) {
-								String outStr = future.get();
-								out.writeln(outStr);
+								String[] outStr = future.get();
+								for (int q = 0; q < outStr.length; q++) {
+									if (outStr[q] != null) {
+										out.writeln(outStr[q]);
+									}
+								}
 								returned++;
 							}
 						} catch (InterruptedException e) {
@@ -91,7 +106,7 @@ public class VCFCorrelator {
 						}
 					}
 					submitted = 0;
-					System.out.print(nrRead + " variants read\r");
+					System.out.print(nrRead + " variants processed\r");
 				}
 			}
 			ln = tf.readLine();
@@ -100,12 +115,16 @@ public class VCFCorrelator {
 
 		int returned = 0;
 		while (returned < submitted) {
-			Future<String> future = null;
+			Future<String[]> future = null;
 			try {
 				future = jobHandler.take();
 				if (future != null) {
-					String outStr = future.get();
-					out.writeln(outStr);
+					String[] outStr = future.get();
+					for (int q = 0; q < outStr.length; q++) {
+						if (outStr[q] != null) {
+							out.writeln(outStr[q]);
+						}
+					}
 					returned++;
 				}
 			} catch (InterruptedException e) {
@@ -484,55 +503,61 @@ public class VCFCorrelator {
 		return arr;
 	}
 
-	public class VCFVariantInfoUpdater implements Callable<String> {
+	public class VCFVariantInfoUpdater implements Callable<String[]> {
 
 		private final boolean beaglescore;
-		private String in = null;
+		private String[] in = null;
 		private boolean infoscore = false;
 
-		public VCFVariantInfoUpdater(String in, boolean infoscore, boolean beaglescore) {
+		public VCFVariantInfoUpdater(String[] in, boolean infoscore, boolean beaglescore) {
 			this.in = in;
 			this.infoscore = infoscore;
 			this.beaglescore = beaglescore;
 		}
 
 		@Override
-		public String call() throws Exception {
+		public String[] call() throws Exception {
 
-			VCFVariant variant = new VCFVariant(in);
+			String[] output = new String[in.length];
+			for (int v = 0; v < in.length; v++) {
+				String ln = in[v];
+				if (ln != null) {
+					VCFVariant variant = new VCFVariant(ln);
 
-			if (!variant.isImputed()) {
-				return in;
-			}
+					if (!variant.isImputed() || variant.getGenotypeProbabilies() == null) {
+						output[v] = ln;
+					} else {
+						int nrAlleles = variant.getAlleles().length;
+						double rsq = 0;
+						String[] elems = Strings.tab.split(ln);
+						if (nrAlleles == 2) {
+							if (infoscore) {
+								VCFImputationQualScoreImpute q = new VCFImputationQualScoreImpute();
+								q.computeAutosomal(variant);
+								rsq = q.getImpinfo();
+								elems[7] = "INFO=" + rsq;
+							} else if (beaglescore) {
+								VCFImputationQualScoreBeagle b = new VCFImputationQualScoreBeagle(variant, true);
+							} else {
+								double[] dosageArr = convertToProbsToDouble(variant);
+								double[] bestguess = convertGenotypesToDouble(variant);
+								double r = JSci.maths.ArrayMath.correlation(bestguess, dosageArr);
+								rsq = r * r;
+								elems[7] = "INFO=" + rsq;
+							}
+						} else {
+							VCFImputationQualScoreBeagle q = new VCFImputationQualScoreBeagle(variant, true);
+							rsq = q.doseR2();
+							double ar2 = q.allelicR2();
+							double dr2 = q.doseR2();
+							elems[7] = "AR2=" + ar2 + ";DR2=" + dr2;
+						}
 
-			int nrAlleles = variant.getAlleles().length;
-			double rsq = 0;
-			String[] elems = Strings.tab.split(in);
-			if (nrAlleles == 2) {
-				if (infoscore) {
-					VCFImputationQualScoreImpute q = new VCFImputationQualScoreImpute();
-					q.computeAutosomal(variant);
-					rsq = q.getImpinfo();
-					elems[7] = "INFO=" + rsq;
-				} else if (beaglescore) {
-					VCFImputationQualScoreBeagle b = new VCFImputationQualScoreBeagle(variant, true);
-				} else {
-					double[] dosageArr = convertToProbsToDouble(variant);
-					double[] bestguess = convertGenotypesToDouble(variant);
-					double r = JSci.maths.ArrayMath.correlation(bestguess, dosageArr);
-					rsq = r * r;
-					elems[7] = "INFO=" + rsq;
+						output[v] = Strings.concat(elems, Strings.tab);
+					}
 				}
-			} else {
-				VCFImputationQualScoreBeagle q = new VCFImputationQualScoreBeagle(variant, true);
-				rsq = q.doseR2();
-				double ar2 = q.allelicR2();
-				double dr2 = q.doseR2();
-				elems[7] = "AR2=" + ar2 + ";DR2=" + dr2;
 			}
-
-
-			return Strings.concat(elems, Strings.tab);
+			return output;
 		}
 
 		private double[] convertToProbsToDouble(VCFVariant vcfVariant) {
