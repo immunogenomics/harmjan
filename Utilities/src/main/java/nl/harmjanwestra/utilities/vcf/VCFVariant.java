@@ -1582,6 +1582,10 @@ public class VCFVariant {
 		}
 	}
 
+	public boolean hasImputationProbabilities() {
+		return genotypeProbabilies != null;
+	}
+
 	public enum PARSE {
 		HEADER,
 		GENOTYPES,

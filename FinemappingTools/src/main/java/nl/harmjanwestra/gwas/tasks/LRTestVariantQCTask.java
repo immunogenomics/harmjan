@@ -67,7 +67,7 @@ public class LRTestVariantQCTask implements Callable<Pair<VCFVariant, String>> {
 				ln = null;
 			} else {
 				variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation);
-				if (!variant.hasImputationDosages()) {
+				if (!variant.hasImputationProbabilities()) {
 					impqual = 1d;
 				} else if (variant.getAlleles().length > 2) {
 					VCFImputationQualScoreBeagle vbq = new VCFImputationQualScoreBeagle(variant, true);

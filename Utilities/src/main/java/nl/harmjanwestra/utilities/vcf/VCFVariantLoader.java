@@ -13,6 +13,16 @@ import java.util.concurrent.*;
  */
 public class VCFVariantLoader {
 
+	boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
+	SampleAnnotation sampleAnnotation;
+	ExecutorService exService;
+
+	public VCFVariantLoader(boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus, SampleAnnotation sampleAnnotation, ExecutorService exService) {
+		this.genotypeSamplesWithCovariatesAndDiseaseStatus = genotypeSamplesWithCovariatesAndDiseaseStatus;
+		this.sampleAnnotation = sampleAnnotation;
+		this.exService = exService;
+	}
+
 	public ArrayList<VCFVariant> run(String vcf, ArrayList<Feature> regions) throws IOException {
 		return run(vcf, regions, null);
 	}
@@ -27,7 +37,13 @@ public class VCFVariantLoader {
 			System.out.println(filters.toString());
 		}
 
-		ExecutorService exService = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
+		boolean sharedExService = false;
+		if (exService != null && !exService.isShutdown()) {
+			sharedExService = true;
+		} else {
+			exService = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
+		}
+
 		CompletionService<ArrayList<VCFVariant>> queuee = new ExecutorCompletionService<ArrayList<VCFVariant>>(exService);
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
@@ -70,7 +86,9 @@ public class VCFVariantLoader {
 		System.out.println();
 		System.out.println("Done. " + output.size() + " variants loaded.");
 
-		exService.shutdown();
+		if (!sharedExService) {
+			exService.shutdown();
+		}
 		return output;
 	}
 
@@ -121,7 +139,7 @@ public class VCFVariantLoader {
 					}
 
 					if (parseln) {
-						VCFVariant v = new VCFVariant(s);
+						VCFVariant v = new VCFVariant(s, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation);
 						if (filters != null) {
 							if (filters.passesFilters(v)) {
 								output.add(v);

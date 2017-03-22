@@ -23,7 +23,6 @@ import nl.harmjanwestra.utilities.plink.PlinkFamFile;
 import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -34,7 +33,6 @@ import umcg.genetica.util.Primitives;
 
 import java.io.Console;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -794,155 +792,8 @@ public class LRTest {
 	}
 
 	public ArrayList<VCFVariant> readVariants(String logfile, ArrayList<Feature> regions) throws IOException {
-
-		TextFile log = new TextFile(logfile, TextFile.W);
-		System.out.println("Log will be written here: " + log.getFileName());
-		log.writeln("Chr\tPos\tId\tMAF\tHWEP\tImpQual\tOverlap\tPassQC");
-
-		int maxQueueSize = options.getNrThreads() * 10;
-		CompletionService<Pair<VCFVariant, String>> jobHandler = new ExecutorCompletionService<Pair<VCFVariant, String>>(exService);
-
-		TextFile vcfIn = new TextFile(options.getVcf(), TextFile.R);
-		String vcfLn = vcfIn.readLine();
-		while (vcfLn != null && vcfLn.startsWith("#")) {
-			vcfLn = vcfIn.readLine();
-		}
-		int linessubmitted = 0;
-		System.out.println("Parsing: " + options.getVcf());
-
-		if (snpLimit != null) {
-			System.out.println("Limiting to " + snpLimit.size() + " variants.");
-		} else {
-			System.out.println("Not using snplimit.");
-		}
-
-		int totalsubmitted = 0;
-		ArrayList<VCFVariant> variants = new ArrayList<>();
-		int read = 0;
-		while (vcfLn != null) {
-			if (linessubmitted == maxQueueSize) {
-				// get some of the output
-				int returned = 0;
-				while (returned < linessubmitted) {
-					try {
-						Future<Pair<VCFVariant, String>> future = jobHandler.take();
-						if (future != null) {
-							Pair<VCFVariant, String> result = future.get();
-
-							if (log != null) {
-								String logStr = result.getRight();
-								log.writeln(logStr);
-							}
-							if (result.getLeft() != null) {
-								VCFVariant variant = result.getLeft();
-								int nrAlleles = variant.getNrAlleles();
-								if (options.splitMultiAllelicIntoMultipleVariants && nrAlleles > 2) {
-									for (int a = 1; a < nrAlleles; a++) {
-										variants.add(variant.variantFromAllele(a));
-									}
-								} else {
-									variants.add(variant);
-								}
-							}
-						}
-						returned++;
-
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					} catch (ExecutionException e) {
-						e.printStackTrace();
-					}
-
-				}
-				linessubmitted = 0;
-			}
-
-
-			boolean submit = false;
-			if (snpLimit != null) {
-				VCFVariant variantF = new VCFVariant(vcfLn, VCFVariant.PARSE.HEADER);
-				String snpStr = Chromosome.parseChr(variantF.getChr()) + "_" + variantF.getPos() + "_" + variantF.getId();
-				if (snpLimit.contains(snpStr)) {
-					submit = true;
-					System.out.println("Found one");
-				}
-			} else {
-				if (regions != null) {
-					Feature variantF = new VCFVariant(vcfLn, VCFVariant.PARSE.HEADER).asFeature();
-					for (Feature region : regions) {
-						if (variantF.overlaps(region)) {
-							submit = true;
-						}
-					}
-
-				} else {
-					submit = true;
-				}
-			}
-
-
-			if (submit) {
-				LRTestVariantQCTask task = new LRTestVariantQCTask(vcfLn,
-						bedRegions,
-						options,
-						genotypeSamplesWithCovariatesAndDiseaseStatus,
-						sampleAnnotation,
-						null);
-				jobHandler.submit(task);
-				linessubmitted++;
-				totalsubmitted++;
-			}
-			read++;
-			if (read % 1000 == 0) {
-				System.out.print(read + " lines read\t" + totalsubmitted + " submitted. " + variants.size() + " variants in memory " + ManagementFactory.getThreadMXBean().getThreadCount() + " threads\r");
-			}
-			vcfLn = vcfIn.readLine();
-		}
-		System.out.println();
-		System.out.println(totalsubmitted + " total lines read.");
-		vcfIn.close();
-
-		int returned = 0;
-		while (returned < linessubmitted) {
-			try {
-				Future<Pair<VCFVariant, String>> future = jobHandler.take();
-				if (future != null) {
-					Pair<VCFVariant, String> result = future.get();
-
-					if (log != null) {
-						String logStr = result.getRight();
-						log.writeln(logStr);
-					}
-					if (result.getLeft() != null) {
-						VCFVariant variant = result.getLeft();
-						int nrAlleles = variant.getNrAlleles();
-						if (options.splitMultiAllelicIntoMultipleVariants && nrAlleles > 2) {
-							System.out.println("Splitting alleles");
-
-							for (int a = 1; a < nrAlleles; a++) {
-								variants.add(variant.variantFromAllele(a));
-							}
-						} else {
-							variants.add(variant);
-						}
-					}
-				}
-				returned++;
-
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-		}
-		System.out.println(variants.size() + "  variants finally included.");
-
-		log.close();
-
-		// why not sort :)
-		Collections.sort(variants, new VCFVariantComparator());
-		return variants;
-
+		VariantLoader loader = new VariantLoader();
+		return loader.load(logfile, regions, options, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation, exService);
 	}
 
 	public void testExhaustivePairwise() throws IOException {

@@ -1,5 +1,7 @@
 package nl.harmjanwestra.utilities.vcf.filter.variantfilters;
 
+import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
+import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 /**
@@ -7,6 +9,12 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
  */
 public class VCFVariantImpQualFilter implements VCFVariantFilter {
 	private double threshold = 0.3;
+	private boolean recalculate = false;
+
+	public VCFVariantImpQualFilter(double threshold, boolean recalculate) {
+		this.threshold = threshold;
+		this.recalculate = recalculate;
+	}
 
 	public VCFVariantImpQualFilter(double threshold) {
 		this.threshold = threshold;
@@ -14,7 +22,21 @@ public class VCFVariantImpQualFilter implements VCFVariantFilter {
 
 	@Override
 	public boolean passesThreshold(VCFVariant variant) {
+
 		Double impqual = variant.getImputationQualityScore();
+		if (recalculate) {
+			if (!variant.hasImputationProbabilities()) {
+				impqual = 1d;
+			} else if (variant.getAlleles().length > 2) {
+				VCFImputationQualScoreBeagle vbq = new VCFImputationQualScoreBeagle(variant, true);
+				impqual = vbq.doseR2();
+			} else {
+				VCFImputationQualScoreImpute vsq = new VCFImputationQualScoreImpute();
+				vsq.computeAutosomal(variant);
+				impqual = vsq.getImpinfo();
+			}
+		}
+
 		if (impqual != null) {
 			return impqual > threshold;
 		} else {
