@@ -32,6 +32,7 @@ import java.util.concurrent.Callable;
 // callable for easy multithreading..
 public class LRTestTask implements Callable<Triple<String, AssociationResult, VCFVariant>> {
 
+	SampleAnnotation sampleAnnotation;
 	private VCFVariant variant;
 	private int iter;
 	private ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional;
@@ -40,18 +41,17 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	private DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 	private LogisticRegressionResult resultCovars;
 	private int nrCovars;
-	SampleAnnotation sampleAnnotation;
 
 	public LRTestTask(SampleAnnotation sampleAnnotation) {
 		this.sampleAnnotation = sampleAnnotation;
 	}
 
 	public LRTestTask(VCFVariant variant,
-					  int iter,
-					  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
-					  int alleleOffsetGenotypes,
-					  SampleAnnotation sampleAnnotation,
-					  LRTestOptions options) {
+	                  int iter,
+	                  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
+	                  int alleleOffsetGenotypes,
+	                  SampleAnnotation sampleAnnotation,
+	                  LRTestOptions options) {
 		this.variant = variant;
 		this.iter = iter;
 		this.conditional = conditional;
@@ -75,12 +75,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		DoubleMatrix2D x = xandy.getLeft();
 
 		if (x.rows() != y.length) {
-			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
-			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
-			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
-			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
-			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
-			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
 			System.err.println("Unequal length for X and Y:  x: " + x.rows() + "x" + x.columns() + "\ty: " + y.length + "\tcallrate " + variant.getCallrate());
 			System.exit(-1);
 		}
@@ -117,7 +111,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	public Pair<DoubleMatrix2D, double[]> prepareMatrices(VCFVariant variant,
-														  ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional) {
+	                                                      ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional) {
 
 		LRTestVariantQCTask lrq = new LRTestVariantQCTask();
 		Triple<int[], boolean[], Integer> qcdata = lrq.determineMissingGenotypes(
@@ -249,11 +243,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-										   double[] y,
-										   int firstColumnToRemove,
-										   int lastColumnToRemove,
-										   VCFVariant variant,
-										   double maf) {
+	                                       double[] y,
+	                                       int firstColumnToRemove,
+	                                       int lastColumnToRemove,
+	                                       VCFVariant variant,
+	                                       double maf) {
 
 
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
@@ -314,6 +308,12 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			if (resultCovars == null) {
 				DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
 				resultCovars = reg.univariate(y, xprime);
+
+				if(variant.getId().equals("rs114336707")){
+					System.out.println("Rerunning null model");
+					System.exit(-1);
+				}
+
 				if (resultCovars == null) {
 					System.err.println("ERROR: null-model regression did not converge. ");
 					System.err.println("Variant: " + snp.getChromosome().toString()
