@@ -81,13 +81,13 @@ public class MergeCredibleSets {
 			double maxPosteriorCredibleSet = 0.9;
 			boolean includeAllLoci = true;
 
-//			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, threshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, threshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
 			c.makeCircularPlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 ////			System.exit(-1);
 //
 			System.exit(-1);
-			
+
 //
 //			/*
 //			eQTL overlap
@@ -1400,7 +1400,6 @@ public class MergeCredibleSets {
 			}
 		}
 
-
 		HashSet<Feature> regionsWithCredibleSetsHash = new HashSet<Feature>();
 		regionsWithCredibleSetsHash.addAll(regionsWithCredibleSets);
 
@@ -1408,6 +1407,8 @@ public class MergeCredibleSets {
 
 		double[][][] dataForPlotting = new double[data.length][regionsWithCredibleSets.size()][];
 		double[][][] dataForPlotting2 = new double[data.length][regionsWithCredibleSets.size()][];
+		boolean[][] datasetHasCredibleSetInRegion = new boolean[data.length][regionsWithCredibleSets.size()];
+
 		SNPClass[][][] snpClasses = new SNPClass[regionsWithCredibleSets.size()][][]; // [regions][snps][annotations]
 		String[][] snpNames = new String[regionsWithCredibleSets.size()][];
 
@@ -1462,12 +1463,17 @@ public class MergeCredibleSets {
 						dataForPlotting2[i][regionCtr][q] = Double.NaN;
 					}
 
+					AssociationResult[] credibleset = crediblesets[i][regionId];
+
+					boolean abovethresh = false;
 					ArrayList<AssociationResult> dsResults = resultsPerDs.get(i);
 					for (int s = 0; s < dsResults.size(); s++) {
 						String variant = dsResults.get(s).getSnp().getName();
 						Integer variantId = variantToInt.get(variant);
 						double posterior = dsResults.get(s).getPosterior();
-
+						if (dsResults.get(s).getPval() < threshold) {
+							abovethresh = true;
+						}
 						if (variantId != null) {
 							if (variantId > dataForPlotting[i][regionCtr].length - 1) {
 								System.out.println();
@@ -1482,9 +1488,13 @@ public class MergeCredibleSets {
 									dataForPlotting2[i][regionCtr][variantId] = Double.NaN;
 								}
 							}
-
 						}
 					}
+
+					if (abovethresh && credibleset.length <= nrVariantsInCredibleSet) {
+						datasetHasCredibleSetInRegion[i][regionCtr] = true;
+					}
+
 				}
 
 				DecimalFormat decimalFormat = new DecimalFormat("#");
@@ -1503,22 +1513,23 @@ public class MergeCredibleSets {
 		}
 
 
-		Grid grid = new Grid(1000, 1000, 1, 1, 100, 0);
+		Grid grid = new Grid(600, 600, 1, 1, 100, 0);
 		CircularHeatmapPanel panel = new CircularHeatmapPanel(1, 1);
 		panel.setRange(new Range(0, 0, 1, 1));
 		panel.setData(datasetNames, groupnames.toArray(new String[0]), dataForPlotting);
-		panel.setAnnotations(snpClasses);
+		panel.setBinAnnotations(snpClasses);
+		panel.setGroupAnnotations(datasetHasCredibleSetInRegion);
 		panel.setGroups(groups);
 		grid.addPanel(panel);
 		grid.draw(outfile);
 
-		grid = new Grid(1000, 1000, 1, 1, 100, 0);
-		panel = new CircularHeatmapPanel(1, 1);
-		panel.setData(datasetNames, groupnames.toArray(new String[0]), dataForPlotting2);
-		panel.setAnnotations(snpClasses);
-		panel.setGroups(groups);
-		grid.addPanel(panel);
-		grid.draw(outfile + "-bin.pdf");
+//		grid = new Grid(1000, 1000, 1, 1, 0, 0);
+//		panel = new CircularHeatmapPanel(1, 1);
+//		panel.setData(datasetNames, groupnames.toArray(new String[0]), dataForPlotting2);
+//		panel.setBinAnnotations(snpClasses);
+//		panel.setGroups(groups);
+//		grid.addPanel(panel);
+//		grid.draw(outfile + "-bin.pdf");
 
 	}
 

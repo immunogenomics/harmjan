@@ -25,9 +25,10 @@ public class CircularHeatmapPanel extends Panel {
 	private String[] groupnames;
 
 	private String[][] binnames;
-	private SNPClass[][][] annotations; // [group][bin][annotations]
+	private SNPClass[][][] binAnnotations; // [group][bin][binAnnotations]
 	private ArrayList<Triple<Integer, Integer, String>> groups;
 	private Range range;
+	private boolean[][] groupAnnotations; // [dataset][group]
 
 
 	public CircularHeatmapPanel(int nrRows, int nrCols) {
@@ -57,8 +58,12 @@ public class CircularHeatmapPanel extends Panel {
 		this.binnames = binnames;
 	}
 
-	public void setAnnotations(SNPClass[][][] annotations) {
-		this.annotations = annotations;
+	public void setBinAnnotations(SNPClass[][][] binAnnotations) {
+		this.binAnnotations = binAnnotations;
+	}
+
+	public void setGroupAnnotations(boolean[][] annotations) {
+		this.groupAnnotations = annotations;
 	}
 
 	@Override
@@ -86,7 +91,7 @@ public class CircularHeatmapPanel extends Panel {
 		Graphics2D g2d = g.getG2d();
 
 
-		double widthPerDataset = maxWidth / nrRows;
+		double widthPerDataset = maxWidth / nrRows / 2;
 
 		double startX = marginX + x0;
 		double startY = marginY + y0;
@@ -218,17 +223,8 @@ public class CircularHeatmapPanel extends Panel {
 
 				double angle0 = angleOffSet - (degreesPerSegment * col0) - (group * degreesPerGroup);
 
-//				double degreesPerSubCol = degreesPerSegment / diff;
 				double deg = degreesPerSegment; // degreesPerSubCol * diff;
 				double angle1 = angle0 - deg;
-//
-//				double angle0 = degreesPerSegment * col0;
-//				angle0 -= (degreesPerGroup / 2);
-//				double deg = degreesPerSegment * diff;
-//				angle0 -= (degreesForRowNames) + (degreesForRowNames / 2) - (degreesPerSegment / 2);
-//				angle0 += (group * degreesPerGroup);
-//
-//				angle0 += 0.55;
 
 				int dsWidth2 = (int) Math.floor(maxWidth - (widthPerDataset * 0));
 				double remainder2 = (maxWidth - dsWidth2) / 2;
@@ -238,7 +234,6 @@ public class CircularHeatmapPanel extends Panel {
 				g2d.draw(arc2);
 
 				Arc2D arc = new Arc2D.Double(x0, y0, dsWidth, dsWidth, angle1, -deg, Arc2D.PIE);
-//				g2d.setColor(new Color(220, 220, 220));
 				g2d.draw(arc);
 
 			}
@@ -255,17 +250,12 @@ public class CircularHeatmapPanel extends Panel {
 
 		g2d.setColor(theme.getDarkGrey());
 		for (int d = 0; d < rownames.length; d++) {
-
 			int strlen = metrics.stringWidth(rownames[d]) / 2;
-
 			int midpointX = (int) Math.floor(startX + (maxWidth / 2)) - strlen;
-
 			int dsWidth1 = (int) Math.floor(maxWidth - (widthPerDataset * d));
 			int dsWidth2 = (int) Math.floor(maxWidth - (widthPerDataset * (d + 1)));
 			int remainder1 = (maxWidth - dsWidth1) / 2;
 			int remainder2 = (maxWidth - dsWidth2) / 2;
-
-
 			int midpointY1 = (int) Math.floor(startY + (remainder1));
 			int midpointY2 = (int) Math.floor(startY + (remainder2));
 			int actualMidPointY1 = (midpointY1 + midpointY2) / 2;
@@ -295,13 +285,11 @@ public class CircularHeatmapPanel extends Panel {
 			System.out.println(group + "\t" + groupnames[group] + "\t" + angle0);
 		}
 
-		// draw annotations, if any....
-		if (annotations != null) {
-
+		// draw binAnnotations, if any....
+		if (binAnnotations != null) {
 			double radius = (double) (maxWidth + 30) / 2;
-
-			// [group][bin][annotations]
-			for (int groupNum = 0; groupNum < annotations.length; groupNum++) {
+			// [group][bin][binAnnotations]
+			for (int groupNum = 0; groupNum < binAnnotations.length; groupNum++) {
 
 				// TODO: need to get rid of this
 				int groupId = 0;
@@ -311,23 +299,18 @@ public class CircularHeatmapPanel extends Panel {
 
 				double angle0 = angleOffSet - (degreesPerSegment * groupNum) - (groupId * degreesPerGroup);
 				angle0 = (degreesPerSegment * groupNum) + (groupId * degreesPerGroup) + 90 + (degreesForRowNames / 2);
-				double degreesPerSubCol = degreesPerSegment / annotations[groupNum].length;
-
+				double degreesPerSubCol = degreesPerSegment / binAnnotations[groupNum].length;
 
 				// iterate snps
-				for (int bin = 0; bin < annotations[groupNum].length; bin++) {
+				for (int bin = 0; bin < binAnnotations[groupNum].length; bin++) {
 					double angle1 = (angle0 + (degreesPerSubCol * bin)) + (degreesPerSubCol / 2);
 					System.out.println("colvsangle 0:\t" + groupNum + "\t" + groupId + "\t1: " + angle0 + "\t2: " + angle1 + "\t" + degreesPerSegment + "\t" + degreesPerGroup);
-					for (int a = 0; a < annotations[groupNum][bin].length; a++) {
-
-
-						if(bin == 3 && groupNum == 5){
-
+					for (int a = 0; a < binAnnotations[groupNum][bin].length; a++) {
+						if (bin == 3 && groupNum == 5) {
 							System.out.println("Found it");
 						}
 
-						SNPClass c = annotations[groupNum][bin][a];
-
+						SNPClass c = binAnnotations[groupNum][bin][a];
 						double radius2 = radius + (a * 15);
 						// use the outer edge
 						double originX = startX + (maxWidth / 2);
@@ -349,23 +332,54 @@ public class CircularHeatmapPanel extends Panel {
 			}
 		}
 
+		// draw group annotations (if any)
+		if (groupAnnotations != null) {
+			dsWidth = (int) Math.floor(maxWidth - 2 * (widthPerDataset * (data.length)));
+			double radius = dsWidth + (widthPerDataset / 2) - 15;
 
+			// [dataset][group]
+			for (int groupNum = 0; groupNum < groupAnnotations[0].length; groupNum++) {
+				// TODO: need to get rid of this
+				int groupId = 0;
+				if (colToGroup != null) {
+					groupId = colToGroup.get(groupNum);
+				}
+
+				double angle0 = (degreesPerSegment * groupNum) + (groupId * degreesPerGroup) + 90 + (degreesForRowNames / 2) + (degreesPerSegment / 2);
+				double degreesPerSubCol = degreesPerSegment / binAnnotations[groupNum].length;
+				for (int ds = 0; ds < groupAnnotations.length; ds++) {
+
+					double radius2 = radius - (ds * 15);
+					// use the outer edge
+					double originX = startX + (maxWidth / 2);
+					double originY = startX + (maxWidth / 2);
+
+					Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius2, originX, originY, angle0 - 180);
+
+					int circlesize = 8;
+					int halfcircle = 4;
+					g2d.setColor(new Color(200, 200, 200));
+					g2d.drawOval(xy0.getLeft() - halfcircle, xy0.getRight() - halfcircle, circlesize, circlesize);
+
+					if (groupAnnotations[ds][groupNum]) {
+						Color col = theme.getColor(0);
+						g2d.setColor(col);
+						g2d.fillOval(xy0.getLeft() - halfcircle, xy0.getRight() - halfcircle, circlesize, circlesize);
+					}
+				}
+			}
+		}
 
 		// draw a small legend in the top left corner
 		for (int d = 0; d < data.length; d++) {
 			Color color = theme.getColor(d);
 			int y = (int) Math.floor(startY + (d * 15));
-
 			for (int q = 0; q < alphabins.length; q++) {
-
-
-
 				int x = (int) Math.floor(startX + (q * 10));
 				Color color2 = new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) Math.floor(alphabins[q]));
 				g2d.setColor(color2);
 				g2d.fillRect(x, y, 10, 10);
 			}
-
 		}
 
 

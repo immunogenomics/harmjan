@@ -37,6 +37,11 @@ public class Conditional {
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed",
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-significantloci-75e7.bed",
 			};
+			significantRegionFiles = new String[]{
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/mergedcrediblesets/selectedLociWCrediblesets.bed",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/mergedcrediblesets/selectedLociWCrediblesets.bed",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/mergedcrediblesets/selectedLociWCrediblesets.bed"
+			};
 			String[] assocFiles = new String[]{
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
@@ -89,6 +94,7 @@ public class Conditional {
 				String output = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/" + diseases[a] + "-bestAssocPerRegion-firstrun.txt";
 				TextFile outtf = new TextFile(output, TextFile.W);
 				outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
+				regions = significantRegionFiles[0];
 				b.determineTopAssocPerRegion(0, regions, defaultthreshold, assoc, thresholds, genes, outtf);
 				outtf.close();
 			}
