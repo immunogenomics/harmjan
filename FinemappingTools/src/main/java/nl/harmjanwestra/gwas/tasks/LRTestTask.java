@@ -15,12 +15,10 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
-import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.ChiSquare;
 import umcg.genetica.text.Strings;
 import umcg.genetica.util.Primitives;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
@@ -204,7 +202,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //			}
 //		}
 
-		System.out.println(mat.columns() + " columns to start with...");
+//		System.out.println(mat.columns() + " columns to start with...");
 		// TODO: calculate variance inflation factor using OLS
 		OLSMultipleLinearRegression olsMultipleLinearRegression = new OLSMultipleLinearRegression();
 		// skip first column, because it is the intercept
@@ -213,54 +211,54 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		for (int i = 1; i < mat.columns(); i++) {
 			columns.add(i);
 		}
-		try {
-			int iter = 0;
-			int nrColinear = mat.columns();
+//		try {
+		int iter = 0;
+		int nrColinear = mat.columns();
 
-			while (nrColinear > 0) {
-				TextFile vifs = new TextFile("/Data/tmp/sh2b3fix/vif-" + variant.getId() + "-" + iter + ".txt", TextFile.W);
-				int[] colidx = new int[mat.columns() - 2];
-				nrColinear = 0;
+		while (nrColinear > 0) {
+//				TextFile vifs = new TextFile("/Data/tmp/sh2b3fix/vif-" + variant.getId() + "-" + iter + ".txt", TextFile.W);
+			int[] colidx = new int[mat.columns() - 2];
+			nrColinear = 0;
 
-				ArrayList<Integer> noncolinear = new ArrayList<Integer>();
-				ArrayList<Integer> colinear = new ArrayList<Integer>();
-				for (int i : columns) {
-					double[] y = mat.viewColumn(i).toArray();
-					int ctr = 0;
-					for (int j : columns) {
-						if (j != i) {
-							colidx[ctr] = j;
-							ctr++;
-						}
+			ArrayList<Integer> noncolinear = new ArrayList<Integer>();
+			ArrayList<Integer> colinear = new ArrayList<Integer>();
+			for (int i : columns) {
+				double[] y = mat.viewColumn(i).toArray();
+				int ctr = 0;
+				for (int j : columns) {
+					if (j != i) {
+						colidx[ctr] = j;
+						ctr++;
 					}
-					DoubleMatrix2D othercols = dda.subMatrix(mat, 0, mat.rows() - 1, colidx);
-					olsMultipleLinearRegression.newSampleData(y, othercols.toArray());
-					double rsq = olsMultipleLinearRegression.calculateAdjustedRSquared();
-					double vif = 1 / (1 - rsq);
-
-					if (Double.isInfinite(vif) || vif > 10) {
-						nrColinear++;
-						colinear.add(i);
-					} else {
-						noncolinear.add(i);
-					}
-					vifs.writeln(i + "\t" + rsq + "\t" + vif);
-					vifs.flush();
 				}
+				DoubleMatrix2D othercols = dda.subMatrix(mat, 0, mat.rows() - 1, colidx);
+				olsMultipleLinearRegression.newSampleData(y, othercols.toArray());
+				double rsq = olsMultipleLinearRegression.calculateAdjustedRSquared();
+				double vif = 1 / (1 - rsq);
 
-				// if there are colinear columns, remove one
-				if (nrColinear > 0) {
-					// add all other columns, except for last colinear one
-					ArrayList<Integer> currcolumns = noncolinear;
-					for (int q = 0; q < colinear.size() - 1; q++) {
-						currcolumns.add(colinear.get(q));
-					}
-					columns = currcolumns;
+				if (Double.isInfinite(vif) || vif > 10) {
+					nrColinear++;
+					colinear.add(i);
+				} else {
+					noncolinear.add(i);
 				}
-
-				vifs.close();
-				iter++;
+//					vifs.writeln(i + "\t" + rsq + "\t" + vif);
+//					vifs.flush();
 			}
+
+			// if there are colinear columns, remove one
+			if (nrColinear > 0) {
+				// add all other columns, except for last colinear one
+				ArrayList<Integer> currcolumns = noncolinear;
+				for (int q = 0; q < colinear.size() - 1; q++) {
+					currcolumns.add(colinear.get(q));
+				}
+				columns = currcolumns;
+			}
+
+//				vifs.close();
+			iter++;
+		}
 
 
 //			TextFile out = new TextFile("/Data/tmp/sh2b3fix/cor-" + variant.getId() + ".txt", TextFile.W);
@@ -277,9 +275,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //				out.writeln(ln);
 //			}
 //			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 
 //
 //		boolean[] includeCol = new boolean[mat.columns()];
@@ -421,7 +419,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				DoubleMatrix2D xprime = null;
 				try {
 					xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(remainingCovariates.toArray(new Integer[0])));
-					System.out.println(variant.getId() + "\t" + x.columns() + "\t" + xprime.columns());
+//					System.out.println(variant.getId() + "\t" + x.columns() + "\t" + xprime.columns());
 					resultCovars = reg.univariate(y, xprime);
 				} catch (IndexOutOfBoundsException q) {
 					System.out.println(variant.getId() + "\tcols:" + x.columns());
@@ -576,8 +574,8 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 			int ctr = 0;
 
-			DoubleMatrix2D covariates = sampleAnnotation.getCovariates();
-			DiseaseStatus[][] disease = sampleAnnotation.getSampleDiseaseStatus();
+//			DoubleMatrix2D covariates = sampleAnnotation.getCovariates();
+//			DiseaseStatus[][] disease = sampleAnnotation.getSampleDiseaseStatus();
 
 //			if (covariates.rows() == x.rows()) {
 //				try {
@@ -602,27 +600,27 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //					e.printStackTrace();
 //				}
 //			} else {
-			try {
-				TextFile tfout = new TextFile("/Data/tmp/sh2b3fix/" + variant.getId() + "-x.txt", TextFile.W);
-
-				String header = "sample\tpheno\tpheno2";
-				for (int c = 0; c < x.columns(); c++) {
-					header += "\tvar" + c;
-				}
-
-				tfout.writeln(header);
-
-				for (int r = 0; r < x.rows(); r++) {
-					String ln = "sample" + r + "\t" + disease[r][0].getNumber() + "\t" + y[r];
-					for (int c = 0; c < x.columns(); c++) {
-						ln += "\t" + x.getQuick(r, c);
-					}
-					tfout.writeln(ln);
-				}
-				tfout.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+//			try {
+//				TextFile tfout = new TextFile("/Data/tmp/sh2b3fix/" + variant.getId() + "-x.txt", TextFile.W);
+//
+//				String header = "sample\tpheno\tpheno2";
+//				for (int c = 0; c < x.columns(); c++) {
+//					header += "\tvar" + c;
+//				}
+//
+//				tfout.writeln(header);
+//
+//				for (int r = 0; r < x.rows(); r++) {
+//					String ln = "sample" + r + "\t" + disease[r][0].getNumber() + "\t" + y[r];
+//					for (int c = 0; c < x.columns(); c++) {
+//						ln += "\t" + x.getQuick(r, c);
+//					}
+//					tfout.writeln(ln);
+//				}
+//				tfout.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
 //			}
 
 
