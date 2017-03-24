@@ -13,7 +13,7 @@ import umcg.genetica.math.stats.ChiSquare;
 
 public class LogisticRegressionOptimized {
 
-	int max_iter = 100;
+	int max_iter = 1000;
 	double EPSILON = 1E-6;
 	DoubleMatrix2D xtwx;
 	private double[] g;

@@ -4,6 +4,8 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.enums.Gender;
 
+import java.util.ArrayList;
+
 /**
  * Created by hwestra on 9/7/16.
  */
@@ -11,6 +13,7 @@ public class SampleAnnotation {
 	private DiseaseStatus[][] sampleDiseaseStatus;
 	private Gender[] individualGender;
 	private String[] sampleName;
+	private ArrayList<String> covariateNames;
 
 	public DoubleMatrix2D getCovariates() {
 		return covariates;
@@ -51,5 +54,9 @@ public class SampleAnnotation {
 
 	public void setSampleName(String[] sampleName) {
 		this.sampleName = sampleName;
+	}
+
+	public void setCovariateNames(ArrayList<String> covariateNames) {
+		this.covariateNames = covariateNames;
 	}
 }

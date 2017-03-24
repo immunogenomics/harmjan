@@ -117,10 +117,26 @@ public class LRTest {
 				"-o", "/Data/tmp/tnfaip3/testoutnormal.txt"
 		};
 
-		LRTestOptions options = new LRTestOptions(args4);
+//		double p = ZScores.betaToP(-0.072988183, 0.052305814, 26136);
+//		System.out.println(p);
+//		System.exit(-1);
+
+		String[] args5 = new String[]{
+				"--gwas",
+				"-c", "/Data/tmp/sh2b3fix/covarmerged.txtmergedCovariates.txt",
+				"-d", "/Data/tmp/sh2b3fix/covarmerged.txtmergeddisease.txt",
+				"-f", "/Data/tmp/sh2b3fix/covarmerged.txtmergedfam.fam",
+				"-i", "/Data/tmp/sh2b3fix/test.vcf",
+				"-r", "/Data/tmp/sh2b3fix/region.bed",
+				"-t", "1",
+				"-q", "0.3",
+				"-o", "/Data/tmp/sh2b3fix/testout-origcode.txt"
+		};
+
+		LRTestOptions options = new LRTestOptions(args5);
 
 		try {
-			new LRTestHaplotype(options);
+			new LRTest(options);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -394,9 +410,25 @@ public class LRTest {
 
 			sampleAnnotation = new SampleAnnotation();
 //			sampleAnnotation.setIndividualGender(individualGender);
+			sampleAnnotation.setCovariateNames(covariates.getColObjects());
 			sampleAnnotation.setCovariates(finalCovariates);
 			sampleAnnotation.setSampleDiseaseStatus(finalDiseaseStatus);
 
+			// write sample annotation back to disk // debug
+			TextFile tf2 = new TextFile("/Data/tmp/sh2b3fix/loadedcovars.txt", TextFile.W);
+			String header = "sample\tpheno";
+			for (int i = 0; i < finalCovariates.columns(); i++) {
+				header += "\t" + covariates.getColObjects().get(i);
+			}
+			tf2.writeln(header);
+			for (int i = 0; i < finalCovariates.rows(); i++) {
+				String ln = samplesIntersect.get(i) + "\t" + finalDiseaseStatus[i][0].getNumber();
+				for (int c = 0; c < finalCovariates.columns(); c++) {
+					ln += "\t" + finalCovariates.getQuick(i, c);
+				}
+				tf2.writeln(ln);
+			}
+			tf2.close();
 			return true;
 		}
 	}
