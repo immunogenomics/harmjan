@@ -16,10 +16,13 @@ import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
+import umcg.genetica.io.text.TextFile;
 import umcg.genetica.math.stats.ChiSquare;
+import umcg.genetica.math.stats.Descriptives;
 import umcg.genetica.text.Strings;
 import umcg.genetica.util.Primitives;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
@@ -198,76 +201,99 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		// skip first column, because it is the intercept
 		ArrayList<Integer> columns = new ArrayList<>();
 
+
+		// check mean and variance
 		for (int i = 1; i < mat.columns(); i++) {
-			columns.add(i);
+			double[] col = mat.viewColumn(i).toArray();
+			if (Descriptives.variance(col) > 0) {
+				columns.add(i);
+			}
 		}
 //		try {
 		int iter = 0;
 		int nrColinear = mat.columns();
 
 
-//		try {
+		try {
+
+			boolean debug = false;
+
+			while (nrColinear > 0) {
+				TextFile vifs = null;
+				if (debug) {
+					vifs = new TextFile("/Data/tmp/metatest/vif-" + variant.getId() + "-" + iter + ".txt", TextFile.W);
+				}
+				nrColinear = 0;
+
+				ArrayList<Integer> noncolinear = new ArrayList<Integer>();
+				ArrayList<Integer> colinear = new ArrayList<Integer>();
+				for (int i : columns) {
+					int[] colidx = new int[columns.size() - 1];
+					double[] y = mat.viewColumn(i).toArray();
+					int ctr = 0;
+					for (int j : columns) {
+						if (j != i) {
+							colidx[ctr] = j;
+							ctr++;
+						}
+					}
+					DoubleMatrix2D othercols = dda.subMatrix(mat, 0, mat.rows() - 1, colidx);
+					olsMultipleLinearRegression.newSampleData(y, othercols.toArray());
+					double rsq = 1;
+					try {
+						rsq = olsMultipleLinearRegression.calculateAdjustedRSquared();
+					} catch (SingularMatrixException e) {
+						System.out.println(e.getMessage());
+						System.out.println();
+						System.out.println("Error testing variant: " + variant.getId());
+						System.out.println("Singular matrix detected when testing for multi-collinearity.");
+						System.out.println("Iter: " + iter + "\tcol:" + i);
+						System.out.println(columns.size() + " columns left out of " + mat.columns());
+
+						for (int c = 0; c < mat.columns(); c++) {
+							double[] col = mat.viewColumn(c).toArray();
+							System.out.println(c + "\t" + Descriptives.mean(col) + "\t" + Descriptives.variance(col));
+						}
+
+						TextFile tf = new TextFile(options.getOutputdir() + variant.getId() + "-data.txt", TextFile.W);
 
 
-		while (nrColinear > 0) {
-//				TextFile vifs = new TextFile("/Data/tmp/sh2b3fix/vif-" + variant.getId() + "-" + iter + ".txt", TextFile.W);
+						tf.close();
 
-			nrColinear = 0;
+						System.exit(-1);
+					}
 
-			ArrayList<Integer> noncolinear = new ArrayList<Integer>();
-			ArrayList<Integer> colinear = new ArrayList<Integer>();
-			for (int i : columns) {
-				int[] colidx = new int[columns.size() - 1];
-				double[] y = mat.viewColumn(i).toArray();
-				int ctr = 0;
-				for (int j : columns) {
-					if (j != i) {
-						colidx[ctr] = j;
-						ctr++;
+					if (rsq > 0.9) {
+						nrColinear++;
+						colinear.add(i);
+					} else {
+						noncolinear.add(i);
+					}
+//
+					if (debug) {
+						vifs.writeln(i + "\t" + rsq + "\t" + Descriptives.variance(y));
+						vifs.flush();
 					}
 				}
-				DoubleMatrix2D othercols = dda.subMatrix(mat, 0, mat.rows() - 1, colidx);
-				olsMultipleLinearRegression.newSampleData(y, othercols.toArray());
-				double rsq = 1;
-				try {
-					rsq = olsMultipleLinearRegression.calculateAdjustedRSquared();
-				} catch (SingularMatrixException e) {
-					System.out.println(e.getMessage());
-					System.out.println();
-					System.out.println("Error testing variant: " + variant.getId());
-					System.out.println("Singular matrix detected when testing for multi-collinearity.");
-					System.out.println("Iter: " + iter + "\tcol:" + i);
-					System.out.println(columns.size() + " columns left out of " + mat.columns());
-					System.exit(-1);
-				}
 
-				if (rsq > 0.9) {
-					nrColinear++;
-					colinear.add(i);
-				} else {
-					noncolinear.add(i);
+				// if there are colinear columns, remove one
+				if (nrColinear > 0) {
+					// add all other columns, except for last colinear one
+					ArrayList<Integer> currcolumns = noncolinear;
+					for (int q = 0; q < colinear.size() - 1; q++) {
+						currcolumns.add(colinear.get(q));
+					}
+					columns = currcolumns;
 				}
-
-//					vifs.writeln(i + "\t" + rsq + "\t" + vif);
-//					vifs.flush();
+				if(debug) {
+					vifs.close();
+				}
+				iter++;
 			}
 
-			// if there are colinear columns, remove one
-			if (nrColinear > 0) {
-				// add all other columns, except for last colinear one
-				ArrayList<Integer> currcolumns = noncolinear;
-				for (int q = 0; q < colinear.size() - 1; q++) {
-					currcolumns.add(colinear.get(q));
-				}
-				columns = currcolumns;
-			}
-//				vifs.close();
-			iter++;
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 
 
 		ArrayList<Integer> cols = new ArrayList<>();
