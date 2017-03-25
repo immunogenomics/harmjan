@@ -44,7 +44,7 @@
                     <archive>
                         <manifest>
                             <mainClass>nl.harmjanwestra.proxyfinder.Main</mainClass>
-                            <!--<mainClass>nl.harmjanwestra.gwas.LRTest</mainClass>-->
+                            <!--<mainClnl.harmjanwestra.finemappingtools.gwasgwas.LRTest</mainClass>-->
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>

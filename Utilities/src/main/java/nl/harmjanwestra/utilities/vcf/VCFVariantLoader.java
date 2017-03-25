@@ -15,12 +15,10 @@ public class VCFVariantLoader {
 
 	boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
 	SampleAnnotation sampleAnnotation;
-	ExecutorService exService;
 
 	public VCFVariantLoader(boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus, SampleAnnotation sampleAnnotation, ExecutorService exService) {
 		this.genotypeSamplesWithCovariatesAndDiseaseStatus = genotypeSamplesWithCovariatesAndDiseaseStatus;
 		this.sampleAnnotation = sampleAnnotation;
-		this.exService = exService;
 	}
 
 	public ArrayList<VCFVariant> run(String vcf, ArrayList<Feature> regions) throws IOException {
@@ -38,50 +36,74 @@ public class VCFVariantLoader {
 		}
 
 		boolean sharedExService = false;
-		if (exService != null && !exService.isShutdown()) {
-			sharedExService = true;
-		} else {
-			exService = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
-		}
-
+		ExecutorService exService = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
 		CompletionService<ArrayList<VCFVariant>> queuee = new ExecutorCompletionService<ArrayList<VCFVariant>>(exService);
 
-		TextFile tf = new TextFile(vcf, TextFile.R);
-		String ln = tf.readLine();
-		int buffersize = 25;
-		int maxLinesInQueue = buffersize * Runtime.getRuntime().availableProcessors();
 
+		KillSwitchEngage killswitch = new KillSwitchEngage();
+		Collector c = new Collector(queuee, killswitch);
+		Future<ArrayList<VCFVariant>> outputFuture = exService.submit(c);
+
+		String[] files = new String[1];
+		files[0] = vcf;
+		if (vcf.contains("CHR")) {
+			files = new String[22];
+			for (int i = 1; i < 23; i++) {
+				files[i - 1] = vcf.replaceAll("CHR", "" + i);
+			}
+		}
+
+		int buffersize = 50;
 		String[] buffer = new String[buffersize];
 		int ctr = 0;
-		ArrayList<VCFVariant> output = new ArrayList<>();
 		int submitted = 0;
+		int maxLinesInQueue = buffersize * Runtime.getRuntime().availableProcessors();
 
-		while (ln != null) {
-			buffer[ctr] = ln;
-			ctr++;
-			if (ctr == buffersize) {
-				queuee.submit(new Parser(buffer, regions, filters));
-				ctr = 0;
-				submitted++;
-				buffer = new String[buffersize];
-
-				System.out.print(submitted + " jobs submitted (" + (submitted * buffersize) + "lines)\t" + output.size() + " variants in buffer so far\r");
-				if (submitted * buffersize == maxLinesInQueue) {
-					cleanup(output, queuee, submitted);
-					submitted = 0;
+		for (String file : files) {
+			TextFile tf = new TextFile(file, TextFile.R);
+			String ln = tf.readLine();
+			while (ln != null) {
+				buffer[ctr] = ln;
+				ctr++;
+				if (ctr == buffersize) {
+					queuee.submit(new Parser(buffer, regions, filters));
+					ctr = 0;
+					submitted++;
+					buffer = new String[buffersize];
+					System.out.print(submitted + " jobs submitted (" + (submitted * buffersize) + "lines)\t" + killswitch.getNrVariantsReceived() + " variants in buffer so far\r");
+//				if (submitted * buffersize == maxLinesInQueue) {
+//					cleanup(output, queuee, submitted);
+//					submitted = 0;
+//				}
 				}
+				ln = tf.readLine();
 			}
-			ln = tf.readLine();
+			tf.close();
 		}
-		tf.close();
 
+		System.out.println("Done reading file. Waiting for output to return.");
 		if (ctr > 0) {
+			System.out.println("Submitting last batch");
 			queuee.submit(new Parser(buffer, regions, filters));
 			submitted++;
 		}
 
-		cleanup(output, queuee, submitted);
-		submitted = 0;
+
+		System.out.println("Switching the killswitch");
+		killswitch.setNrSubmitted(submitted);
+		killswitch.setFinishedLoading(true);
+
+//		cleanup(output, queuee, submitted);
+		System.out.println("Waiting for output");
+		ArrayList<VCFVariant> output = null;
+		try {
+			output = outputFuture.get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+
 
 		System.out.println();
 		System.out.println("Done. " + output.size() + " variants loaded.");
@@ -108,6 +130,87 @@ public class VCFVariantLoader {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public class KillSwitchEngage {
+		private int nrSubmitted = 0;
+		private boolean finishedLoading = false;
+
+		private int nrVariantsReceived = 0;
+
+		public synchronized void setNrSubmitted(int nr) {
+			this.nrSubmitted = nr;
+		}
+
+		public synchronized void setNrVariantsReceived(int n) {
+			this.nrVariantsReceived = n;
+		}
+
+		public synchronized int getNrVariantsReceived() {
+			return this.nrVariantsReceived;
+		}
+
+		public synchronized void setFinishedLoading(boolean b) {
+			this.finishedLoading = b;
+		}
+
+		public synchronized boolean getFinishedLoading() {
+			return finishedLoading;
+		}
+
+		public synchronized int getNrSubmitted() {
+			return nrSubmitted;
+		}
+	}
+
+	public class Collector implements Callable<ArrayList<VCFVariant>> {
+
+		private KillSwitchEngage killswitch;
+		private CompletionService<ArrayList<VCFVariant>> queuee;
+
+		public Collector(CompletionService<ArrayList<VCFVariant>> queuee, KillSwitchEngage g) {
+			this.killswitch = g;
+			this.queuee = queuee;
+		}
+
+		@Override
+		public ArrayList<VCFVariant> call() throws Exception {
+			int received = 0;
+			ArrayList<VCFVariant> buffer = new ArrayList<>();
+			while (!killswitch.getFinishedLoading()) {
+				try {
+					ArrayList<VCFVariant> future = queuee.take().get();
+					if (future != null) {
+						buffer.addAll(future);
+						killswitch.setNrVariantsReceived(buffer.size());
+						received++;
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+			}
+
+			// check whether there are any packages left in the queue that we should wait for
+			while (received != killswitch.getNrSubmitted()) {
+				try {
+					ArrayList<VCFVariant> future = queuee.take().get();
+					if (future != null) {
+						buffer.addAll(future);
+						received++;
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+			}
+
+			return buffer;
+		}
+
+
 	}
 
 	public class Parser implements Callable<ArrayList<VCFVariant>> {
