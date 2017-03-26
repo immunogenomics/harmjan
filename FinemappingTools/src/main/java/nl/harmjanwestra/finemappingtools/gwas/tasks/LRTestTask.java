@@ -281,7 +281,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						System.exit(-1);
 					}
 
-					if (rsq >= 0.99) {
+					if (rsq >= options.collinearitythreshold) {
 						nrColinear++;
 						colinear.add(i);
 					} else {

@@ -204,7 +204,8 @@ public class LRTestOptions {
 	}
 
 	private String haplotypeOrThresholdFile;
-	public boolean debug = true;
+	public boolean debug = false;
+	public double collinearitythreshold = 0.9;
 
 	public Integer getStartIter() {
 		return startIter;
