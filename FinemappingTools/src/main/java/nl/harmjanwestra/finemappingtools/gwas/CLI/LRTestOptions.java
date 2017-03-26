@@ -204,6 +204,7 @@ public class LRTestOptions {
 	}
 
 	private String haplotypeOrThresholdFile;
+	public boolean debug = true;
 
 	public Integer getStartIter() {
 		return startIter;

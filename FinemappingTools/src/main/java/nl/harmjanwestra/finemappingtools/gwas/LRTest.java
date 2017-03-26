@@ -138,7 +138,7 @@ public class LRTest {
 				"-c", "/Data/tmp/metatest/meta-merged-covar.txt",
 				"-d", "/Data/tmp/metatest/meta-merged-disease.txt",
 				"-f", "/Data/tmp/metatest/meta-merged.fam",
-				"-i", "/Data/tmp/metatest/test2.vcf",
+				"-i", "/Data/tmp/metatest/test3.vcf",
 				"-r", "/Data/tmp/sh2b3fix/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed",
 				"-t", "1",
 				"-q", "0.3",

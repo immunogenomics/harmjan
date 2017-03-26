@@ -201,12 +201,14 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		// skip first column, because it is the intercept
 		ArrayList<Integer> columns = new ArrayList<>();
 
-
+		boolean debug = true;
 		// check mean and variance
 		for (int i = 1; i < mat.columns(); i++) {
 			double[] col = mat.viewColumn(i).toArray();
 			if (Descriptives.variance(col) > 0) {
 				columns.add(i);
+			} else if (debug) {
+				System.out.println("Column has zero variance: " + i + "\t" + Descriptives.variance(col));
 			}
 		}
 //		try {
@@ -216,11 +218,14 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		try {
 
-			boolean debug = false;
+
+			if (options.debug) {
+				System.out.println("Finding colinear covariates from: " + columns.size() + " cols");
+			}
 
 			while (nrColinear > 0) {
 				TextFile vifs = null;
-				if (debug) {
+				if (options.debug) {
 					vifs = new TextFile("/Data/tmp/metatest/vif-" + variant.getId() + "-" + iter + ".txt", TextFile.W);
 				}
 				nrColinear = 0;
@@ -228,6 +233,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				ArrayList<Integer> noncolinear = new ArrayList<Integer>();
 				ArrayList<Integer> colinear = new ArrayList<Integer>();
 				for (int i : columns) {
+					double[] zscores = null;
+					if (options.debug) {
+						zscores = new double[columns.size()];
+					}
+
 					int[] colidx = new int[columns.size() - 1];
 					double[] y = mat.viewColumn(i).toArray();
 					int ctr = 0;
@@ -242,6 +252,14 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					double rsq = 1;
 					try {
 						rsq = olsMultipleLinearRegression.calculateAdjustedRSquared();
+						if (options.debug) {
+							double[] betas = olsMultipleLinearRegression.estimateRegressionParameters();
+							double[] ses = olsMultipleLinearRegression.estimateRegressionParametersStandardErrors();
+							for (int q = 0; q < betas.length; q++) {
+								zscores[q] = betas[q] / ses[q];
+							}
+						}
+
 					} catch (SingularMatrixException e) {
 						System.out.println(e.getMessage());
 						System.out.println();
@@ -263,15 +281,21 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						System.exit(-1);
 					}
 
-					if (rsq > 0.9) {
+					if (rsq >= 0.99) {
 						nrColinear++;
 						colinear.add(i);
 					} else {
 						noncolinear.add(i);
 					}
 //
-					if (debug) {
-						vifs.writeln(i + "\t" + rsq + "\t" + Descriptives.variance(y));
+					if (options.debug) {
+						String ln = i + "\t" + rsq + "\t" + Descriptives.variance(y);
+
+//						for (int q = 0; q < zscores.length; q++) {
+//							ln += "\t" + zscores[q];
+//						}
+
+						vifs.writeln(ln);
 						vifs.flush();
 					}
 				}
@@ -283,9 +307,12 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					for (int q = 0; q < colinear.size() - 1; q++) {
 						currcolumns.add(colinear.get(q));
 					}
+					if (options.debug) {
+						System.out.println("Removing column: " + colinear.get(colinear.size() - 1));
+					}
 					columns = currcolumns;
 				}
-				if(debug) {
+				if (options.debug) {
 					vifs.close();
 				}
 				iter++;
@@ -382,58 +409,46 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
 										   double[] y,
-										   int firstColumnToRemove,
-										   int lastColumnToRemove,
+										   int firstGenotypeColumn,
+										   int lastGenotypeColumn,
 										   VCFVariant variant,
 										   double maf) {
 
 
+		if (options.debug) {
+			System.out.println(x.columns() + " before pruning");
+		}
+
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 
+		if (options.debug) {
+			System.out.println(x.columns() + " after pruning...");
+		}
+
+		// figure out which columns are genotypes, and which ones are covariates
 		boolean[] notaliased = pruned.getRight(); // length of original X
 
-		// check if the alleles we put in are aliased
-		int firstAllele = firstColumnToRemove; // intercept + allleles we conditioned on (original X indexing)
-		int lastAllele = lastColumnToRemove;   // intercept + allleles we conditioned on + alleles for this variant (original X indexing)
-
-
-		ArrayList<Integer> remainingAlleles = new ArrayList<>();
-		int[] alleleIndex = new int[lastColumnToRemove - firstColumnToRemove];
-		for (int i = 0; i < alleleIndex.length; i++) {
-			alleleIndex[i] = -1;
-		}
-
-		ArrayList<Integer> remainingCovariates = new ArrayList<>();
-		remainingCovariates.add(0);
-		int nrRemaining = 0;
-//		int allelectr = 1; // assume the first allele is now column 1
-//		for (int i = firstAllele; i < lastAllele; i++) {
-//			if (notaliased[i]) {
-//				remainingAlleles.add(i);
-//				alleleIndex[] =
-//				allelectr++;
-//				nrRemaining++;
-//			}
-//		}
-		for (int i = lastAllele; i < x.columns(); i++) {
-			if (notaliased[i]) {
-				remainingCovariates.add(i);
-			}
-		}
-
-
-		int newXIndex = 0;
-		ArrayList<Integer> colIndexArr = new ArrayList<>(x.columns());
+		ArrayList<Integer> remainingGenotypeColumns = new ArrayList<>();
+		ArrayList<Integer> remainingCovariateColumns = new ArrayList<>();
+		int ctr = 0;
+		int[] alleleIndex = new int[lastGenotypeColumn - firstGenotypeColumn];
+		int allelectr = 0;
 		for (int i = 0; i < notaliased.length; i++) {
 			if (notaliased[i]) {
-				if (i >= firstAllele && i < lastAllele) {
-					alleleIndex[i - firstAllele] = newXIndex;
-					nrRemaining++;
+				if (i >= firstGenotypeColumn && i < lastGenotypeColumn) {
+					remainingGenotypeColumns.add(ctr);
+					alleleIndex[allelectr] = ctr;
+					allelectr++;
 				} else {
-					colIndexArr.add(newXIndex);
+					remainingCovariateColumns.add(ctr);
 				}
-				newXIndex++;
+				ctr++;
+			} else {
+				if (i >= firstGenotypeColumn && i < lastGenotypeColumn) {
+					alleleIndex[allelectr] = -1;
+					allelectr++;
+				}
 			}
 		}
 
@@ -452,7 +467,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		snp.setAlleles(variant.getAlleles());
 		snp.setMinorAllele(variant.getMinorAllele());
 
-		if (nrRemaining == 0) {
+		if (remainingGenotypeColumns.isEmpty()) {
 			result.setDevianceNull(0);
 			result.setDevianceGeno(0);
 			result.setDf(0);
@@ -466,14 +481,17 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			if (resultCovars == null) {
 				DoubleMatrix2D xprime = null;
 				try {
-					xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(remainingCovariates.toArray(new Integer[0])));
+					xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(remainingCovariateColumns.toArray(new Integer[0])));
 //					System.out.println(variant.getId() + "\t" + x.columns() + "\t" + xprime.columns());
+					if (options.debug) {
+						System.out.println("xprime size: " + xprime.rows() + "x" + xprime.columns());
+					}
 					resultCovars = reg.univariate(y, xprime);
 				} catch (IndexOutOfBoundsException q) {
 					System.out.println(variant.getId() + "\tcols:" + x.columns());
-					for (int i = 0; i < remainingCovariates.size(); i++) {
+					for (int i = 0; i < remainingCovariateColumns.size(); i++) {
 
-						System.out.println(i + "\t" + remainingCovariates.get(i));
+						System.out.println(i + "\t" + remainingCovariateColumns.get(i));
 
 					}
 					System.out.println();
@@ -501,13 +519,14 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 
 
-			if (nrRemaining > 1 && options.testMultiAllelicVariantsIndependently) {
+			if (remainingGenotypeColumns.size() > 1 && options.testMultiAllelicVariantsIndependently) {
 				// multi allelic variant...
+				int nrRemaining = remainingGenotypeColumns.size();
 
 				AssociationResult[] subresults = new AssociationResult[nrRemaining];
 				System.out.println(nrRemaining + " results remaining");
 				int nrAlleles = variant.getNrAlleles() - 1;
-				int allelectr = 0;
+				allelectr = 0;
 				for (int a = 0; a < nrAlleles; a++) {
 					// get index of allele
 					int idx = alleleIndex[a];
@@ -516,11 +535,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 						// make a new x-matrix using the original x-matrix
 						ArrayList<Integer> colIndexArrAllele = new ArrayList<>(x.columns());
-						newXIndex = 0;
+						int newXIndex = 0;
 						int suballeleindex = -1;
 						for (int i = 0; i < notaliased.length; i++) {
 							if (notaliased[i]) {
-								if (i >= firstAllele && i < lastAllele) {
+								if (i >= firstGenotypeColumn && i < lastGenotypeColumn) {
 									if (newXIndex == idx) {
 										colIndexArrAllele.add(newXIndex);
 										suballeleindex = newXIndex;
@@ -556,7 +575,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						double[] orhi = new double[1];
 						double[] orlo = new double[1];
 
-						int ctr = 0;
+						ctr = 0;
 
 						double beta = -resultX.getBeta()[suballeleindex];
 						double se = resultX.getStderrs()[suballeleindex];
@@ -593,6 +612,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			}
 
 
+			if (options.debug) {
+				System.out.println("x size: " + x.rows() + "x" + x.columns());
+			}
+
 			LogisticRegressionResult resultX = reg.univariate(y, x);
 			if (resultX == null) {
 				// try once more with some more iterations
@@ -612,6 +635,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				}
 			}
 
+			int nrRemaining = remainingGenotypeColumns.size();
 			double devx = resultX.getDeviance();
 			double devnull = resultCovars.getDeviance();
 			double[] betasmlelr = new double[nrRemaining];
@@ -620,7 +644,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			double[] orhi = new double[nrRemaining];
 			double[] orlo = new double[nrRemaining];
 
-			int ctr = 0;
+			ctr = 0;
 
 //			DoubleMatrix2D covariates = sampleAnnotation.getCovariates();
 //			DiseaseStatus[][] disease = sampleAnnotation.getSampleDiseaseStatus();
