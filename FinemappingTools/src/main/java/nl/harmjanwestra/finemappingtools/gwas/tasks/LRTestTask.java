@@ -24,6 +24,7 @@ import umcg.genetica.util.Primitives;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 
@@ -201,13 +202,13 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		// skip first column, because it is the intercept
 		ArrayList<Integer> columns = new ArrayList<>();
 
-		boolean debug = true;
+
 		// check mean and variance
 		for (int i = 1; i < mat.columns(); i++) {
 			double[] col = mat.viewColumn(i).toArray();
 			if (Descriptives.variance(col) > 0) {
 				columns.add(i);
-			} else if (debug) {
+			} else if (options.debug) {
 				System.out.println("Column has zero variance: " + i + "\t" + Descriptives.variance(col));
 			}
 		}
@@ -217,8 +218,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 
 		try {
-
-
 			if (options.debug) {
 				System.out.println("Finding colinear covariates from: " + columns.size() + " cols");
 			}
@@ -226,7 +225,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 			while (nrColinear > 0) {
 				TextFile vifs = null;
 				if (options.debug) {
-					vifs = new TextFile("/Data/tmp/metatest/vif-" + variant.getId() + "-" + iter + ".txt", TextFile.W);
+					vifs = new TextFile(options.getOutputdir() + "vif-" + variant.getId() + "-" + iter + ".txt", TextFile.W);
 				}
 				nrColinear = 0;
 
@@ -307,6 +306,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					for (int q = 0; q < colinear.size() - 1; q++) {
 						currcolumns.add(colinear.get(q));
 					}
+					Collections.sort(currcolumns);
 					if (options.debug) {
 						System.out.println("Removing column: " + colinear.get(colinear.size() - 1));
 					}
@@ -338,73 +338,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 		DoubleMatrix2D matOut = dda.subMatrix(mat, 0, mat.rows() - 1, colindexes);
 		return new Pair<>(matOut, includeCol);
-
-
-//		DoubleMatrix2D corrmat = new DenseDoubleMatrix2D(mat.columns(), mat.columns());
-//		for (int i = 0; i < mat.columns(); i++) {
-//			for (int j = i; j < mat.columns(); j++) {
-//				double c = Math.abs(Correlation.correlate(mat.viewColumn(i).toArray(), mat.viewColumn(j).toArray()));
-//				if (Double.isNaN(c)) {
-//					corrmat.setQuick(i, j, 0);
-//				} else {
-//					corrmat.setQuick(i, j, c);
-//				}
-//			}
-//		}
-
-//			TextFile out = new TextFile("/Data/tmp/sh2b3fix/cor-" + variant.getId() + ".txt", TextFile.W);
-//			String header = "-";
-//			for (int j = 0; j < corrmat.columns(); j++) {
-//				header += "\tvar" + j;
-//			}
-//			out.writeln(header);
-//			for (int i = 0; i < corrmat.rows(); i++) {
-//				String ln = "var" + i;
-//				for (int j = 0; j < corrmat.columns(); j++) {
-//					ln += "\t" + corrmat.getQuick(i, j);
-//				}
-//				out.writeln(ln);
-//			}
-//			out.close();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-
-//
-//		boolean[] includeCol = new boolean[mat.columns()];
-//		for (int c = 0; c < includeCol.length; c++) {
-//			includeCol[c] = true;
-//		}
-//
-//		for (int j = 1; j < mat.columns(); j++) {
-//			double[] col1 = mat.viewColumn(j).toArray();
-//			if (ArrayMath.variance(col1) == 0) {
-//				includeCol[j] = false;
-//			} else {
-//				for (int j2 = j + 1; j2 < mat.columns(); j2++) {
-//					if (includeCol[j2]) {
-//						double c = corrmat.getQuick(j, j2);
-//						double[] col2 = mat.viewColumn(j2).toArray();
-//						if (ArrayMath.variance(col2) == 0) {
-//							includeCol[j2] = false;
-//						} else if (c == 1d) {
-//							includeCol[j] = false;  // prefer to remove the earlier column
-//						}
-//					}
-//				}
-//			}
-//		}
-////
-//		ArrayList<Integer> remaining = new ArrayList<>();
-//		for (int c = 0; c < includeCol.length; c++) {
-//			if (includeCol[c]) {
-//				remaining.add(c);
-//			}
-//		}
-//		int[] colindexes = Primitives.toPrimitiveArr(remaining.toArray(new Integer[0]));
-//		// remove correlated variables
-//		DoubleMatrix2D matOut = dda.subMatrix(mat, 0, mat.rows() - 1, colindexes);
-//		return new Pair<>(matOut, includeCol);
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
@@ -449,6 +382,20 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					alleleIndex[allelectr] = -1;
 					allelectr++;
 				}
+			}
+		}
+
+		if (options.debug) {
+			System.out.println(remainingGenotypeColumns.size() + " remaining genotype cols: ");
+			for (int col : remainingGenotypeColumns) {
+				System.out.println(col);
+			}
+			for (int i = 0; i < alleleIndex.length; i++) {
+				System.out.println("Allele: " + i + "\tnew idx: " + alleleIndex[i]);
+			}
+			System.out.println(remainingCovariateColumns.size() + " remaining covariate cols");
+			for (int col : remainingCovariateColumns) {
+				System.out.println(col);
 			}
 		}
 
@@ -521,6 +468,10 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 			if (remainingGenotypeColumns.size() > 1 && options.testMultiAllelicVariantsIndependently) {
 				// multi allelic variant...
+				if (options.debug) {
+					System.out.println("Testing alleles independently");
+				}
+
 				int nrRemaining = remainingGenotypeColumns.size();
 
 				AssociationResult[] subresults = new AssociationResult[nrRemaining];
@@ -635,18 +586,54 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				}
 			}
 
-			int nrRemaining = remainingGenotypeColumns.size();
+
+			int nrAlleles = lastGenotypeColumn - firstGenotypeColumn;
 			double devx = resultX.getDeviance();
 			double devnull = resultCovars.getDeviance();
-			double[] betasmlelr = new double[nrRemaining];
-			double[] stderrsmlelr = new double[nrRemaining];
-			double[] or = new double[nrRemaining];
-			double[] orhi = new double[nrRemaining];
-			double[] orlo = new double[nrRemaining];
+			double[] betasmlelr = new double[nrAlleles];
+			double[] stderrsmlelr = new double[nrAlleles];
+			double[] or = new double[nrAlleles];
+			double[] orhi = new double[nrAlleles];
+			double[] orlo = new double[nrAlleles];
 
 			ctr = 0;
 
-//			DoubleMatrix2D covariates = sampleAnnotation.getCovariates();
+			for (int i = 0; i < alleleIndex.length; i++) {
+				int idx = alleleIndex[i];
+				if (idx != -1) {
+					double beta = -resultX.getBeta()[idx];
+					double se = resultX.getStderrs()[idx];
+					betasmlelr[i] = beta;
+					stderrsmlelr[i] = se;
+
+					double OR = Math.exp(beta);
+					double orLow = Math.exp(beta - 1.96 * se);
+					double orHigh = Math.exp(beta + 1.96 * se);
+					or[i] = OR;
+					orhi[i] = orHigh;
+					orlo[i] = orLow;
+					ctr++;
+				}
+			}
+
+			double deltaDeviance = devnull - devx;
+			int df = x.columns() - nrCovars;
+			if (options.debug) {
+				System.out.println("df: " + df);
+			}
+			double p = ChiSquare.getP(df, deltaDeviance);
+
+			result.setDevianceNull(devnull);
+			result.setDevianceGeno(devx);
+			result.setDf(df);
+			result.setDfalt(x.columns());
+			result.setDfnull(nrCovars);
+
+			result.setBeta(betasmlelr);
+			result.setSe(stderrsmlelr);
+			result.setPval(p);
+
+			//			DoubleMatrix2D covariates = sampleAnnotation.getCovariates();
 //			DiseaseStatus[][] disease = sampleAnnotation.getSampleDiseaseStatus();
 
 //			if (covariates.rows() == x.rows()) {
@@ -696,37 +683,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 //			}
 
 
-			for (int i = 0; i < alleleIndex.length; i++) {
-				int idx = alleleIndex[i];
-				if (idx != -1) {
-					double beta = -resultX.getBeta()[idx];
-					double se = resultX.getStderrs()[idx];
-					betasmlelr[ctr] = beta;
-					stderrsmlelr[ctr] = se;
-
-					double OR = Math.exp(beta);
-					double orLow = Math.exp(beta - 1.96 * se);
-					double orHigh = Math.exp(beta + 1.96 * se);
-					or[ctr] = OR;
-					orhi[ctr] = orHigh;
-					orlo[ctr] = orLow;
-					ctr++;
-				}
-			}
-
-			double deltaDeviance = devnull - devx;
-			int df = x.columns() - nrCovars;
-			double p = ChiSquare.getP(df, deltaDeviance);
-
-			result.setDevianceNull(devnull);
-			result.setDevianceGeno(devx);
-			result.setDf(df);
-			result.setDfalt(x.columns());
-			result.setDfnull(nrCovars);
-
-			result.setBeta(betasmlelr);
-			result.setSe(stderrsmlelr);
-			result.setPval(p);
 			return result;
 		}
 	}

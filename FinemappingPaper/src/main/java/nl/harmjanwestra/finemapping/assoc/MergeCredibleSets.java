@@ -23,7 +23,6 @@ import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
-import umcg.genetica.io.Gpio;
 import umcg.genetica.io.text.TextFile;
 import umcg.genetica.text.Strings;
 
@@ -52,9 +51,9 @@ public class MergeCredibleSets {
 			String genenames = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 			String geneAnnotation = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
 
-			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/mergedcrediblesets/";
+			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/mergedcrediblesets/";
 
-			Gpio.createDir(outdir + "annotationplots");
+
 			String outfile = outdir + "mergedCredibleSets.txt";
 			String outeqtlfile = outdir + "mergedCredibleSets-eqtls.txt";
 			String outeqtlfileblueprint = outdir + "mergedCredibleSets-eqtls-blueprint";
@@ -65,9 +64,9 @@ public class MergeCredibleSets {
 			String outplot = outdir + "mergedCredibleSets-plot-promoter" + promotordistance + ".pdf";
 
 			String[] assocfiles = new String[]{
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
 			};
 
 			String[] datasetnames = new String[]{

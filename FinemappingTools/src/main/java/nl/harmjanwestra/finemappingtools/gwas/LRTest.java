@@ -23,6 +23,7 @@ import nl.harmjanwestra.utilities.plink.PlinkFamFile;
 import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.*;
 import umcg.genetica.console.ProgressBar;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.containers.Triple;
@@ -126,26 +127,30 @@ public class LRTest {
 				"-c", "/Data/tmp/sh2b3fix/covarmerged.txtmergedCovariates.txt",
 				"-d", "/Data/tmp/sh2b3fix/covarmerged.txtmergeddisease.txt",
 				"-f", "/Data/tmp/sh2b3fix/covarmerged.txtmergedfam.fam",
-				"-i", "/Data/tmp/sh2b3fix/test.vcf",
+				"-i", "/Data/tmp/sh2b3fix/test4.vcf",
 				"-r", "/Data/tmp/sh2b3fix/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed",
 				"-t", "1",
 				"-q", "0.3",
 				"-o", "/Data/tmp/sh2b3fix/testout-origcode.txt"
 		};
 
-		args5 = new String[]{
-				"--gwas",
-				"-c", "/Data/tmp/metatest/meta-merged-covar.txt",
-				"-d", "/Data/tmp/metatest/meta-merged-disease.txt",
-				"-f", "/Data/tmp/metatest/meta-merged.fam",
-				"-i", "/Data/tmp/metatest/test3.vcf",
-				"-r", "/Data/tmp/sh2b3fix/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed",
-				"-t", "1",
-				"-q", "0.3",
-				"-o", "/Data/tmp/metatest/testout.txt"
-		};
+//		args5 = new String[]{
+//				"--gwas",
+//				"-c", "/Data/tmp/metatest/meta-merged-covar.txt",
+//				"-d", "/Data/tmp/metatest/meta-merged-disease.txt",
+//				"-f", "/Data/tmp/metatest/meta-merged.fam",
+//				"-i", "/Data/tmp/metatest/test3.vcf",
+//				"-r", "/Data/tmp/sh2b3fix/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed",
+//				"-t", "1",
+//				"-q", "0.3",
+//				"-o", "/Data/tmp/metatest/testout.txt"
+//		};
 
 		LRTestOptions options = new LRTestOptions(args5);
+		options.debug = true;
+		options.collinearitythreshold = 0.90;
+		options.splitMultiAllelicIntoMultipleVariants = true;
+
 
 		try {
 			new LRTest(options);
@@ -842,7 +847,36 @@ public class LRTest {
 
 	public ArrayList<VCFVariant> readVariants(String logfile, ArrayList<Feature> regions) throws IOException {
 		VariantLoader loader = new VariantLoader();
-		return loader.load(logfile, regions, options, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation, exService);
+
+		ArrayList<VCFVariant> allVariants = loader.load(logfile, regions, options, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation, exService);
+		if (options.splitMultiAllelicIntoMultipleVariants) {
+			if (options.debug) {
+				System.out.println("Splitting multiple allelic variants");
+			}
+			VCFVariantFilters filter = new VCFVariantFilters();
+			filter.addFilter(new VCFVariantCallRateFilter(options.getCallrateThreshold()));
+			filter.addFilter(new VCFVariantImpQualFilter(options.getImputationqualitythreshold(), true));
+			filter.addFilter(new VCFVariantMAFFilter(options.getMafthresholdD(), VCFVariantMAFFilter.MODE.CONTROLS));
+			filter.addFilter(new VCFVariantHWEPFilter(options.getHWEPThreshold(), VCFVariantHWEPFilter.MODE.CONTROLS));
+			ArrayList<VCFVariant> tmpVars = new ArrayList<>();
+			for (VCFVariant v : allVariants) {
+				if (v.isMultiallelic()) {
+					int nrAlleles = v.getNrAlleles();
+					for (int a = 1; a < nrAlleles; a++) {
+						VCFVariant v2 = v.variantFromAllele(a);
+						// recalculate imputation qual
+						if (filter.passesFilters(v2)) {
+							tmpVars.add(v2);
+						}
+					}
+				} else {
+					tmpVars.add(v);
+				}
+			}
+			allVariants = tmpVars;
+		}
+
+		return allVariants;
 	}
 
 	public void testExhaustivePairwise() throws IOException {
@@ -854,6 +888,7 @@ public class LRTest {
 
 
 		ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt", bedRegions);
+
 
 		if (allVariants.isEmpty()) {
 			System.out.println("Sorry. No work.");

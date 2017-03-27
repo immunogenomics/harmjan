@@ -32,32 +32,36 @@ public class Conditional {
 		Conditional b = new Conditional();
 		try {
 
+			String indir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats";
+			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/conditional";
+
 			String[] significantRegionFiles = new String[]{
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed",
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed",
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-significantloci-75e7.bed",
 			};
 			significantRegionFiles = new String[]{
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/mergedcrediblesets/selectedLociWCrediblesets.bed",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/mergedcrediblesets/selectedLociWCrediblesets.bed",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/mergedcrediblesets/selectedLociWCrediblesets.bed"
+					indir + "/normal/mergedcrediblesets/listOfRegionsWithCredibleSets.bed",
+					indir + "/normal/mergedcrediblesets/listOfRegionsWithCredibleSets.bed",
+					indir + "/normal/mergedcrediblesets/listOfRegionsWithCredibleSets.bed",
 			};
 			String[] assocFiles = new String[]{
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
+					indir + "/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					indir + "/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					indir + "/normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
 			};
 
 			String[] bonferroniOut = new String[]{
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/RA.txt",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/T1D.txt",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/META.txt"
+					outdir + "/RA.txt",
+					outdir + "/T1D.txt",
+					outdir + "/META.txt"
 			};
 			String[] diseaseRegions = new String[]{
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed",
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DLoci.bed",
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt"
 			};
+
 
 			double defaultthreshold = 7.5E-7;
 			double significantthreshold = b.determineTopNumberOfVariantsWithinSignificantRegions(significantRegionFiles, assocFiles);
@@ -78,7 +82,7 @@ public class Conditional {
 				assocfile = assocFiles[a];
 				diseasespecificregionfile = diseaseRegions[a];
 				b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
-				String regions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+				String regions = diseaseRegions[a];
 				String assoc = assocFiles[a];
 
 				HashMap<String, Double> thresholds = new HashMap<String, Double>();
@@ -91,7 +95,7 @@ public class Conditional {
 				}
 				tf.close();
 
-				String output = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/" + diseases[a] + "-bestAssocPerRegion-firstrun.txt";
+				String output = outdir + "/" + diseases[a] + "-bestAssocPerRegion-firstrun.txt";
 				TextFile outtf = new TextFile(output, TextFile.W);
 				outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
 				regions = significantRegionFiles[0];
