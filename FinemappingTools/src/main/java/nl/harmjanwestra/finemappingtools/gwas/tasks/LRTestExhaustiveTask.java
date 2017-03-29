@@ -126,48 +126,59 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 
 	private AssociationResultPairwise pruneAndTest(DoubleMatrix2D x,
 												   double[] y,
-												   int firstColumnToRemove,
-												   int lastColumnToRemove,
+												   int firstGenotypeColumn,
+												   int lastGenotypeColumn,
 												   LRTestTask testObj) throws IOException {
 		LRTestTask lrt = new LRTestTask(sampleAnnotation);
+		if (options.debug) {
+			System.out.println(x.columns() + " before pruning");
+		}
+
 		Pair<DoubleMatrix2D, boolean[]> pruned = lrt.removeCollinearVariables(x);
 		x = pruned.getLeft(); // x is now probably shorter than original X
 
-		boolean[] notaliased = pruned.getRight(); // length of original X
-
-		// check if the alleles we put in are aliased
-		int firstAllele = firstColumnToRemove; // intercept + allleles we conditioned on (original X indexing)
-		int lastAllele = lastColumnToRemove;   // intercept + allleles we conditioned on + alleles for this variant (original X indexing)
-
-		int nrRemaining = 0;
-		int[] alleleIndex = new int[lastColumnToRemove - firstColumnToRemove];
-		for (int i = 0; i < alleleIndex.length; i++) {
-			alleleIndex[i] = -1;
+		if (options.debug) {
+			System.out.println(x.columns() + " after pruning...");
 		}
 
-		int newXIndex = 0;
-		ArrayList<Integer> colIndexArr = new ArrayList<>(x.columns());
+		// figure out which columns are genotypes, and which ones are covariates
+		boolean[] notaliased = pruned.getRight(); // length of original X
+
+		ArrayList<Integer> remainingGenotypeColumns = new ArrayList<>();
+		ArrayList<Integer> remainingCovariateColumns = new ArrayList<>();
+		int ctr = 0;
+		int[] alleleIndex = new int[lastGenotypeColumn - firstGenotypeColumn];
+
+		boolean conditionalOk = true;
+
+		int allelectr = 0;
 		for (int i = 0; i < notaliased.length; i++) {
 			if (notaliased[i]) {
-				if (i >= firstAllele && i < lastAllele) {
-					alleleIndex[i - firstAllele] = newXIndex;
-					nrRemaining++;
+				if (i >= firstGenotypeColumn && i < lastGenotypeColumn) {
+					remainingGenotypeColumns.add(ctr);
+					alleleIndex[allelectr] = ctr;
+					allelectr++;
 				} else {
-					colIndexArr.add(newXIndex);
+					remainingCovariateColumns.add(ctr);
 				}
-				newXIndex++;
+
+				ctr++;
+			} else {
+				if (i >= firstGenotypeColumn && i < lastGenotypeColumn) {
+					alleleIndex[allelectr] = -1;
+					allelectr++;
+				}
 			}
 		}
 
 		AssociationResultPairwise result = new AssociationResultPairwise();
 
-		if (nrRemaining == 0) {
+		if (remainingGenotypeColumns.isEmpty()) {
 			return result;
 		} else {
-
 			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 			if (resultCovars == null) {
-				DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
+				DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(remainingCovariateColumns.toArray(new Integer[0])));
 				resultCovars = reg.univariate(y, xprime);
 				if (resultCovars == null) {
 					System.err.println("ERROR: null-model regression did not converge. ");
@@ -214,6 +225,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 //				System.err.println("ERROR: covariate regression did not converge. ");
 //				return null;
 //			}
+			int nrRemaining = remainingGenotypeColumns.size();
 			double devnull = resultCovars.getDeviance();
 			double[] betasmlelr = new double[nrRemaining];
 			double[] stderrsmlelr = new double[nrRemaining];
@@ -221,7 +233,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 			double[] orhi = new double[nrRemaining];
 			double[] orlo = new double[nrRemaining];
 
-			int ctr = 0;
+			ctr = 0;
 
 			for (int i = 0; i < alleleIndex.length; i++) {
 				int idx = alleleIndex[i];
