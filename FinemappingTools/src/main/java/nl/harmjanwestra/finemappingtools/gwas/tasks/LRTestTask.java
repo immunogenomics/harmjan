@@ -366,6 +366,28 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		ArrayList<Integer> remainingCovariateColumns = new ArrayList<>();
 		int ctr = 0;
 		int[] alleleIndex = new int[lastGenotypeColumn - firstGenotypeColumn];
+
+		boolean conditionalOk = true;
+
+		if (conditional != null && !conditional.isEmpty()) {
+			// count the number of conditional columns that is not aliased
+
+			int nrConditionalAlleleCols = 0;
+			for (int q = 0; q < conditional.size(); q++) {
+				VCFVariant v = conditional.get(q).getLeft();
+				nrConditionalAlleleCols += v.getAlleles().length - 1;
+			}
+
+			int lastConditionalCol = lastGenotypeColumn + nrConditionalAlleleCols; // 2 normal allles:1,2  3 conditional alleles: 2,3,4
+			int nrConditionalAlleleColsNotAliased = 0;
+			for (int q = lastGenotypeColumn; q < lastConditionalCol; q++) {
+				if (notaliased[q]) {
+					nrConditionalAlleleColsNotAliased++;
+				}
+			}
+			conditionalOk = (nrConditionalAlleleCols == nrConditionalAlleleColsNotAliased);
+		}
+
 		int allelectr = 0;
 		for (int i = 0; i < notaliased.length; i++) {
 			if (notaliased[i]) {
@@ -376,6 +398,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				} else {
 					remainingCovariateColumns.add(ctr);
 				}
+
 				ctr++;
 			} else {
 				if (i >= firstGenotypeColumn && i < lastGenotypeColumn) {
@@ -414,7 +437,8 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		snp.setAlleles(variant.getAlleles());
 		snp.setMinorAllele(variant.getMinorAllele());
 
-		if (remainingGenotypeColumns.isEmpty()) {
+
+		if (remainingGenotypeColumns.isEmpty() || !conditionalOk) {
 			result.setDevianceNull(0);
 			result.setDevianceGeno(0);
 			result.setDf(0);

@@ -569,7 +569,11 @@ public class LRTest {
 		returned = 0;
 		highestLog10p = 0;
 
-		if (options.getStartIter() != null || options.getStartIter() == 0) {
+		if (options.getConditional() != null) {
+			System.out.println("Running conditional, starting at iter: " + options.getStartIter());
+		}
+
+		if (options.getStartIter() == null || options.getStartIter() == 0) {
 			System.out.println("Iteration " + 0 + " starting. Model: y ~ SNP + covar.");
 			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + 0 + ".txt");
 			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + 0 + ".txt", TextFile.W);
@@ -802,6 +806,7 @@ public class LRTest {
 								bestVariantLastIter = var;
 							}
 						}
+
 
 //					bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion, variantToConditionOn);
 

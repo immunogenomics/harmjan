@@ -24,20 +24,22 @@ public class CodingAndIndelEnrichment {
 
 		try {
 			String annot = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz";
-			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-significantloci-75e7.bed";
-			String annotationfiles = "/Data/Enhancers/Roadmap/dnase-groups.txt";
-			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
 
-			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/T1D-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
+			System.out.println((double) 0 / 100);
+			System.exit(-1);
+			String annotationfiles = "/Data/Enhancers/Roadmap/dnase-groups.txt";
+			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMPromotorsEnhancers-groups.txt";
+			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-significantregions-75e7.bed";
+			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior-significantloci-75e7.txt.gz";
 //			c.run(annot, bedregions, annotationfiles, assocfile, true);
-			c.run(annot, bedregions, null, assocfile, true);
+			c.run(annot, bedregions, annotationfiles, assocfile, true);
 
 
 			System.out.println();
-			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
-			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior-significantDS75e7.txt.gz";
+			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-significantregions-75e7.bed";
+			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior-significantloci-75e7.txt.gz";
 //			c.run(annot, bedregions, annotationfiles, assocfile, true);
-			c.run(annot, bedregions, null, assocfile, true);
+			c.run(annot, bedregions, annotationfiles, assocfile, true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -153,9 +155,23 @@ public class CodingAndIndelEnrichment {
 						nrTotal++;
 //						}
 					}
-					fractionCoding += ((double) nrCoding / nrTotal);
-					fractionIndel += ((double) nrIndel / nrTotal);
-					fractionOther += ((double) nrOther / nrTotal);
+					if (nrTotal != 0) {
+						if (nrCoding > 0) {
+							fractionCoding += ((double) nrCoding / nrTotal);
+						} else {
+							System.out.println("Zero coding variants.. in region " + region.toString());
+						}
+						if (nrIndel > 0) {
+							fractionIndel += ((double) nrIndel / nrTotal);
+						} else {
+							System.out.println("Zero indel variants.. in region " + region.toString());
+						}
+						if (nrOther > 0) {
+							fractionOther += ((double) nrOther / nrTotal);
+						} else {
+							System.out.println("Zero other variants.. in region " + region.toString());
+						}
+					}
 				}
 
 				System.out.println(annotation.getGroupName(i) + "\tcoding\tsumposterior:\t" + sigmaposteriorCoding + "\tfraction:\t" + fractionCoding + "\tenrich:\t" + (sigmaposteriorCoding / fractionCoding));

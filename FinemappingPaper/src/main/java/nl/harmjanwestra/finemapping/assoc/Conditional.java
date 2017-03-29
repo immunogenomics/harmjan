@@ -41,9 +41,9 @@ public class Conditional {
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-significantloci-75e7.bed",
 			};
 			significantRegionFiles = new String[]{
-					indir + "/normal/mergedcrediblesets/listOfRegionsWithCredibleSets.bed",
-					indir + "/normal/mergedcrediblesets/listOfRegionsWithCredibleSets.bed",
-					indir + "/normal/mergedcrediblesets/listOfRegionsWithCredibleSets.bed",
+					indir + "/normal/mergedcrediblesets/regions.bed",
+					indir + "/normal/mergedcrediblesets/regions.bed",
+					indir + "/normal/mergedcrediblesets/regions.bed",
 			};
 			String[] assocFiles = new String[]{
 					indir + "/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
@@ -103,9 +103,9 @@ public class Conditional {
 				outtf.close();
 			}
 
-			boolean runconditional = false;
+			boolean runconditional = true;
 			if (runconditional) {
-				int maxiter = 4;
+				int maxiter = 3;
 				for (int d = 0; d < diseases.length; d++) {
 
 					HashMap<String, Double> thresholds = new HashMap<String, Double>();
@@ -118,12 +118,12 @@ public class Conditional {
 					}
 					tf.close();
 
-					String output = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/" + diseases[d] + "-bestAssocPerRegion.txt";
+					String output = outdir+"/" + diseases[d] + "-bestAssocPerRegion.txt";
 					TextFile outtf = new TextFile(output, TextFile.W);
 					outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
 					for (int iter = 0; iter < maxiter; iter++) {
 						System.out.println(iter + "\t" + d);
-						String assoc = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-16-SummaryStats/conditional/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+						String assoc = outdir+"/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
 						String regions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 						b.determineTopAssocPerRegion(iter, regions, defaultthreshold, assoc, thresholds, genes, outtf);
 					}

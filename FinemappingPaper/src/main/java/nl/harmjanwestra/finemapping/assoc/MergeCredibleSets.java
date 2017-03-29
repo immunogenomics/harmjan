@@ -75,17 +75,27 @@ public class MergeCredibleSets {
 					"Combined"
 			};
 
-			double threshold = 7.5E-7;
+			double significanceThreshold = 7.5E-7;
 			int nrVariantsInCredibleSet = 10;
 			double maxPosteriorCredibleSet = 0.9;
 			boolean includeAllLoci = true;
 
-			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, threshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+//			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
-			c.makeCircularPlot(bedregions, assocfiles, datasetnames, genenames, outplot, threshold, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
-////			System.exit(-1);
-//
+			boolean onlyincludevariantsbelowsignificancethreshold = false;
+			c.makeCircularPlot(bedregions,
+					assocfiles,
+					datasetnames,
+					genenames,
+					outplot,
+					significanceThreshold,
+					onlyincludevariantsbelowsignificancethreshold,
+					maxPosteriorCredibleSet,
+					nrVariantsInCredibleSet,
+					geneAnnotation);
 			System.exit(-1);
+
+//			System.exit(-1);
 
 //
 //			/*
@@ -94,10 +104,18 @@ public class MergeCredibleSets {
 
 			String[] eqtlfiles = new String[]{
 					"/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05-upd.tab",
+//					"/Data/eQTLs/Milani/CD4-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
+//					"/Data/eQTLs/Milani/CD4-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
+//					"/Data/eQTLs/Milani/CD8-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
+//					"/Data/eQTLs/Milani/CD8-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
 					"/Data/eQTLs/BiosEQTLs/eQTLsFDR0.05-ProbeLevel.txt.gz"
 			};
 			String[] eqtlfilenames = new String[]{
 					"Raj",
+//					"Milani-CD4",
+//					"Milani-CD4-trans",
+//					"Milani-CD8",
+//					"Milani-CD8-trans",
 					"Bios"
 			};
 //
@@ -108,7 +126,7 @@ public class MergeCredibleSets {
 			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 			String tabixfilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
-
+			System.exit(-1);
 			eqtlfilenames = new String[]{
 					"Monocyte-eQTL",
 					"Monocyte-hQTL-K27AC",
@@ -943,24 +961,72 @@ public class MergeCredibleSets {
 
 				// BIOS eQTL file format
 				TextFile tf = new TextFile(eqtlfilenames[d], TextFile.R);
-				tf.readLine();
+				String[] header = tf.readLineElems(TextFile.tab);
+
+				int snpcol = -1;
+				int pvalcol = -1;
+				int chrcol = -1;
+				int poscol = -1;
+				int genecol = -1;
+				int fdrcol = -1;
+
+				for (int q = 0; q < header.length; q++) {
+					String h = header[q];
+					if (h.equals("PValue")) {
+						pvalcol = q;
+					}
+					if (h.equals("SNPName")) {
+						snpcol = q;
+					}
+					if (h.equals("SNPChr")) {
+						chrcol = q;
+					}
+					if (h.equals("SNPChrPos")) {
+						poscol = q;
+					}
+					if (h.equals("HGNCName")) {
+						genecol = q;
+					}
+					if (h.equals("FDR") && fdrcol == -1) {
+						fdrcol = q;
+					}
+
+				}
+
+
+				/*
+				PValue  SNPName SNPChr  SNPChrPos       ProbeName       ProbeChr        ProbeCenterChrPos       CisTrans        SNPType AlleleAssessed  DatasetsNrSamples       OverallZScore   IncludedDatasetsCorrelationCoefficient  HGNCName        FDR
+
+PValue  SNPName SNPChr  SNPChrPos       ProbeName       ProbeChr        ProbeCenterChrPos       CisTrans        SNPType AlleleAssessed  OverallZScore   DatasetsWhereSNPProbePairIsAvailableAndPassesQC DatasetsZScores DatasetsNrSamples
+       IncludedDatasetsMeanProbeExpression     IncludedDatasetsProbeExpressionVariance HGNCName        IncludedDatasetsCorrelationCoefficient  Meta-Beta (SE)  Beta (SE)       FoldChange      FDR     FDR
+
+				 */
+
 				String[] elems = tf.readLineElems(TextFile.tab);
 				int ctr = 0;
 				while (elems != null) {
 
-					String snp = elems[1];
-					Double pval = Double.parseDouble(elems[0]);
-					Chromosome chr = Chromosome.parseChr(elems[2]);
-					Integer pos = Integer.parseInt(elems[3]);
+					String snp = elems[snpcol];
+					Double pval = Double.parseDouble(elems[pvalcol]);
+					Chromosome chr = Chromosome.parseChr(elems[chrcol]);
+					Integer pos = Integer.parseInt(elems[poscol]);
 					SNPFeature feature = new SNPFeature(chr, pos, pos);
 					feature.setName(snp);
 
 					EQTL eqtl = new EQTL();
 					eqtl.setSnp(feature);
-					eqtl.setGenename(elems[16]);
-					eqtl.setName(elems[16]);
+					eqtl.setGenename(elems[genecol]);
+					eqtl.setName(elems[genecol]);
 					eqtl.setPval(pval);
-					if (eqtloverlap(eqtl, eqtlregions)) {
+
+					boolean sig = true;
+					if (fdrcol != -1) {
+						Double fdr = Double.parseDouble(elems[fdrcol]);
+						if (fdr > 0.05) {
+							sig = false;
+						}
+					}
+					if (sig && eqtloverlap(eqtl, eqtlregions)) {
 						allEQTLs.add(eqtl);
 					}
 
@@ -1337,7 +1403,15 @@ public class MergeCredibleSets {
 
 
 	private void makeCircularPlot(String bedregions,
-								  String[] assocFiles, String[] datasetNames, String genenamefile, String outfile, double threshold, double maxPosteriorCredibleSet, int nrVariantsInCredibleSet, String annot) throws IOException, DocumentException {
+								  String[] assocFiles,
+								  String[] datasetNames,
+								  String genenamefile,
+								  String outfile,
+								  double significanceThreshold,
+								  boolean onlyIncludeVariantsBelowSignificanceThreshold,
+								  double maxPosteriorCredibleSet,
+								  int nrVariantsInCredibleSet,
+								  String annot) throws IOException, DocumentException {
 
 
 		AssociationFile assocFile = new AssociationFile();
@@ -1374,27 +1448,32 @@ public class MergeCredibleSets {
 				allResults.add(allDatasetData);
 			}
 
-			for (int d = 0; d < regions.size(); d++) {
+			for (int regionNr = 0; regionNr < regions.size(); regionNr++) {
 				boolean hasSet = false;
-				for (int i = 0; i < assocFiles.length; i++) {
-					ArrayList<AssociationResult> allDatasetData = filter(allResults.get(i), regions.get(d));
-					data[i][d] = allDatasetData.toArray(new AssociationResult[0]);
+				for (int diseaseNr = 0; diseaseNr < assocFiles.length; diseaseNr++) {
+					if (datasetNames[diseaseNr].equals("RA") && regions.get(regionNr).getChromosome().equals(Chromosome.THREE)
+							&& regions.get(regionNr).getStart() == 58154177) {
+						System.out.println("Got it");
+					}
+					ArrayList<AssociationResult> allDatasetData = filter(allResults.get(diseaseNr), regions.get(regionNr));
+					data[diseaseNr][regionNr] = allDatasetData.toArray(new AssociationResult[0]);
 					ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, maxPosteriorCredibleSet);
 
 					boolean abovethresh = false;
 					for (AssociationResult r : credibleSet) {
-						if (r.getPval() < threshold) {
+						if (r.getPval() < significanceThreshold) {
 							abovethresh = true;
 						}
 					}
 
-					crediblesets[i][d] = credibleSet.toArray(new AssociationResult[0]);
+
+					crediblesets[diseaseNr][regionNr] = credibleSet.toArray(new AssociationResult[0]);
 					if (credibleSet.size() <= nrVariantsInCredibleSet && abovethresh) {
 						hasSet = true;
 					}
 				}
 				if (hasSet) {
-					regionsWithCredibleSets.add(regions.get(d));
+					regionsWithCredibleSets.add(regions.get(regionNr));
 				}
 			}
 		}
@@ -1423,27 +1502,47 @@ public class MergeCredibleSets {
 				ArrayList<ArrayList<AssociationResult>> resultsPerDs = new ArrayList<>();
 				HashMap<String, Integer> variantToInt = new HashMap<String, Integer>();
 
-
 				ArrayList<String> variantsNamesInRegion = new ArrayList<String>();
 				ArrayList<SNPFeature> variantsInRegion = new ArrayList<SNPFeature>();
-				for (int i = 0; i < data.length; i++) {
-					ArrayList<AssociationResult> topResults = getTopVariants(data, i, regionId, len);
-					resultsPerDs.add(topResults);
+				for (int diseaseNr = 0; diseaseNr < data.length; diseaseNr++) {
+//					ArrayList<AssociationResult> topResults = getTopVariants(data, diseaseNr, regionId, len);
+//					resultsPerDs.add(topResults);
+					AssociationResult[] credibleset = crediblesets[diseaseNr][regionId];
+					ArrayList<AssociationResult> r = new ArrayList<>();
+					for (int i = 0; i < credibleset.length; i++) {
+						r.add(credibleset[i]);
+					}
+					resultsPerDs.add(r);
 
 					double sum = 0;
-					for (int s = 0; s < topResults.size(); s++) {
-						double posterior = topResults.get(s).getPosterior();
-						if (sum < maxPosteriorCredibleSet) {
-							String variant = topResults.get(s).getSnp().getName();
-							boolean isSignificant = (topResults.get(s).getPval() < threshold);
-							if (!variantToInt.containsKey(variant) && isSignificant) {
-								variantToInt.put(variant, variantToInt.size());
-								variantsInRegion.add(topResults.get(s).getSnp());
-								variantsNamesInRegion.add(variant);
+					if (credibleset.length <= len) {
+						for (int s = 0; (s < credibleset.length && s < len); s++) {
+							double posterior = credibleset[s].getPosterior();
+							if (sum < maxPosteriorCredibleSet) {
+								String variant = credibleset[s].getSnp().getName();
+								boolean isSignificant = (credibleset[s].getPval() < significanceThreshold);
+								if (!variantToInt.containsKey(variant) && (isSignificant || !onlyIncludeVariantsBelowSignificanceThreshold)) {
+									variantToInt.put(variant, variantToInt.size());
+									variantsInRegion.add(credibleset[s].getSnp());
+									variantsNamesInRegion.add(variant);
+								}
 							}
+							sum += posterior;
 						}
-						sum += posterior;
 					}
+//					for (int s = 0; s < topResults.size(); s++) {
+//						double posterior = topResults.get(s).getPosterior();
+//						if (sum < maxPosteriorCredibleSet) {
+//							String variant = topResults.get(s).getSnp().getName();
+//							boolean isSignificant = (topResults.get(s).getPval() < significanceThreshold);
+//							if (!variantToInt.containsKey(variant) && isSignificant) {
+//								variantToInt.put(variant, variantToInt.size());
+//								variantsInRegion.add(topResults.get(s).getSnp());
+//								variantsNamesInRegion.add(variant);
+//							}
+//						}
+//						sum += posterior;
+//					}
 				}
 
 				snpNames[regionCtr] = variantsNamesInRegion.toArray(new String[0]);
@@ -1452,46 +1551,56 @@ public class MergeCredibleSets {
 				snpClasses[regionCtr] = annotationPair.getLeft();
 				String[][][] genenames = annotationPair.getRight(); // [variant][coding/promoter][genename]
 
-				for (int i = 0; i < data.length; i++) {
-					dataForPlotting[i][regionCtr] = new double[variantToInt.size()];
-					dataForPlotting2[i][regionCtr] = new double[variantToInt.size()];
+				for (int datasetNr = 0; datasetNr < data.length; datasetNr++) {
+					dataForPlotting[datasetNr][regionCtr] = new double[variantToInt.size()];
+					dataForPlotting2[datasetNr][regionCtr] = new double[variantToInt.size()];
 
 					// fill with nans
 					for (int q = 0; q < variantToInt.size(); q++) {
-						dataForPlotting[i][regionCtr][q] = Double.NaN;
-						dataForPlotting2[i][regionCtr][q] = Double.NaN;
+						dataForPlotting[datasetNr][regionCtr][q] = Double.NaN;
+						dataForPlotting2[datasetNr][regionCtr][q] = Double.NaN;
 					}
 
-					AssociationResult[] credibleset = crediblesets[i][regionId];
+					AssociationResult[] credibleset = crediblesets[datasetNr][regionId];
 
 					boolean abovethresh = false;
-					ArrayList<AssociationResult> dsResults = resultsPerDs.get(i);
-					for (int s = 0; s < dsResults.size(); s++) {
-						String variant = dsResults.get(s).getSnp().getName();
+
+//					ArrayList<AssociationResult> dsResults = resultsPerDs.get(i);
+					AssociationResult[] allDsResults = data[datasetNr][regionId];
+					for (int s = 0; s < allDsResults.length; s++) {
+
+						AssociationResult r = allDsResults[s];
+//						String variant = dsResults.get(s).getSnp().getName();
+//						Integer variantId = variantToInt.get(variant);
+//						double posterior = dsResults.get(s).getPosterior();
+//						if (dsResults.get(s).getPval() < significanceThreshold) {
+//							abovethresh = true;
+//						}
+						String variant = r.getSnp().getName();
 						Integer variantId = variantToInt.get(variant);
-						double posterior = dsResults.get(s).getPosterior();
-						if (dsResults.get(s).getPval() < threshold) {
+						double posterior = r.getPosterior();
+						if (r.getPval() < significanceThreshold) {
 							abovethresh = true;
 						}
 						if (variantId != null) {
-							if (variantId > dataForPlotting[i][regionCtr].length - 1) {
+							if (variantId > dataForPlotting[datasetNr][regionCtr].length - 1) {
 								System.out.println();
 								System.out.println("WEIRDNESSSSSSSSSSSSSSSSS: " + variant);
 								System.out.println();
 							} else {
-								if (dsResults.get(s).getPval() < threshold) {
-									dataForPlotting[i][regionCtr][variantId] = posterior;
-									dataForPlotting2[i][regionCtr][variantId] = 1;
+								if (r.getPval() < significanceThreshold) {
+									dataForPlotting[datasetNr][regionCtr][variantId] = posterior;
+									dataForPlotting2[datasetNr][regionCtr][variantId] = 1;
 								} else {
-									dataForPlotting[i][regionCtr][variantId] = Double.NaN;
-									dataForPlotting2[i][regionCtr][variantId] = Double.NaN;
+									dataForPlotting[datasetNr][regionCtr][variantId] = Double.NaN;
+									dataForPlotting2[datasetNr][regionCtr][variantId] = Double.NaN;
 								}
 							}
 						}
 					}
 
 					if (abovethresh && credibleset.length <= nrVariantsInCredibleSet) {
-						datasetHasCredibleSetInRegion[i][regionCtr] = true;
+						datasetHasCredibleSetInRegion[datasetNr][regionCtr] = true;
 					}
 
 				}
