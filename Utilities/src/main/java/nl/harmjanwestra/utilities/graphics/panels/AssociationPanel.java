@@ -28,6 +28,10 @@ public class AssociationPanel extends Panel {
 	private double[] LDData;
 	private boolean roundUpYAxis = true;
 
+	public ArrayList<ArrayList<Pair<Integer, Double>>> getAllPValues() {
+		return allPValues;
+	}
+
 	public AssociationPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
 	}

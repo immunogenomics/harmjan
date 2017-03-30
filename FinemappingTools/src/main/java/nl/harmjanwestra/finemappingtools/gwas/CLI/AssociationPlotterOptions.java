@@ -100,18 +100,38 @@ public class AssociationPlotterOptions {
 				.desc("Plot posteriors")
 				.build();
 		OPTIONS.addOption(option);
-	}
 
-	private Double maxp;
-	private double credibleSetThreshold = 0.9;
-	private String significanceThresholdFile;
-	private String LDPrefix;
-	private String LDLimit;
-	private double defaultSignificance = 5E-8;
-	private String maxPvalueFile;
+		option = Option.builder("i2")
+				.hasArg()
+				.desc("File template for conditional files. The text String ITER will be replaced by an iteration number.")
+				.build();
+		OPTIONS.addOption(option);
 
-	public Double getMaxp() {
-		return maxp;
+		option = Option.builder().longOpt("thresholdconditional")
+				.hasArg()
+				.desc("Significance threshold for conditional results")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder().longOpt("thresholdsconditional")
+				.hasArg()
+				.desc("Significance thresholds for conditional results per region (supply file)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder().longOpt("nriters")
+				.hasArg()
+				.desc("Number of iterations to plot for conditional analysis")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder().longOpt("maxpvaluesconditional")
+				.hasArg()
+				.desc("Max p-values for each plot in the conditional analysis")
+				.build();
+		OPTIONS.addOption(option);
+
+
 	}
 
 	String associationFiles;
@@ -121,34 +141,19 @@ public class AssociationPlotterOptions {
 	String outputprefix;
 	String sequencedRegionsFile;
 	boolean plotPosterior;
-
-	public String getAssociationFiles() {
-		return associationFiles;
-	}
-
-	public String getAssociationFileNames() {
-		return associationFileNames;
-	}
-
-	public String getAnnotationfile() {
-		return annotationfile;
-	}
-
-	public String getBedregionfile() {
-		return bedregionfile;
-	}
-
-	public String getOutputprefix() {
-		return outputprefix;
-	}
-
-	public String getSequencedRegionsFile() {
-		return sequencedRegionsFile;
-	}
-
-	public boolean isPlotPosterior() {
-		return plotPosterior;
-	}
+	private double maxpconditional;
+	private Double maxp;
+	private double credibleSetThreshold = 0.9;
+	private String significanceThresholdFile;
+	private String significanceConditionalThresholdFile;
+	private String LDPrefix;
+	private String LDLimit;
+	private double defaultSignificance = 5E-8;
+	private String maxPvalueFile;
+	private String maxPvalueFileConditional;
+	private double defaultSignificanceConditional = 5E-8;
+	private int nrIters = 1;
+	private String conditionalFiles;
 
 	public AssociationPlotterOptions(String[] args) {
 
@@ -163,6 +168,10 @@ public class AssociationPlotterOptions {
 			} else {
 				System.out.println("Please provide input: -i");
 				run = false;
+			}
+
+			if (cmd.hasOption("i2")) {
+				conditionalFiles = cmd.getOptionValue("i2");
 			}
 
 			if (cmd.hasOption("n")) {
@@ -189,6 +198,10 @@ public class AssociationPlotterOptions {
 
 			if (cmd.hasOption("maxpvalues")) {
 				maxPvalueFile = cmd.getOptionValue("maxpvalues");
+			}
+
+			if (cmd.hasOption("maxpvaluesconditional")) {
+				maxPvalueFileConditional = cmd.getOptionValue("maxpvaluesconditional");
 			}
 
 
@@ -218,14 +231,27 @@ public class AssociationPlotterOptions {
 				defaultSignificance = Double.parseDouble(cmd.getOptionValue("threshold"));
 			}
 
+			if (cmd.hasOption("thresholdconditional")) {
+				defaultSignificanceConditional = Double.parseDouble(cmd.getOptionValue("thresholdconditional"));
+			}
+
 
 			if (cmd.hasOption("thresholds")) {
 				significanceThresholdFile = cmd.getOptionValue("thresholds");
 			}
 
+			if (cmd.hasOption("thresholdsconditional")) {
+				significanceConditionalThresholdFile = cmd.getOptionValue("thresholdsconditional");
+			}
+
 			if (cmd.hasOption("m")) {
 				maxp = Double.parseDouble(cmd.getOptionValue("m"));
 			}
+
+			if (cmd.hasOption("nriters")) {
+				nrIters = Integer.parseInt(cmd.getOptionValue("nriters"));
+			}
+
 
 			if (cmd.hasOption("p")) {
 				plotPosterior = true;
@@ -238,6 +264,38 @@ public class AssociationPlotterOptions {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public Double getMaxp() {
+		return maxp;
+	}
+
+	public String getAssociationFiles() {
+		return associationFiles;
+	}
+
+	public String getAssociationFileNames() {
+		return associationFileNames;
+	}
+
+	public String getAnnotationfile() {
+		return annotationfile;
+	}
+
+	public String getBedregionfile() {
+		return bedregionfile;
+	}
+
+	public String getOutputprefix() {
+		return outputprefix;
+	}
+
+	public String getSequencedRegionsFile() {
+		return sequencedRegionsFile;
+	}
+
+	public boolean isPlotPosterior() {
+		return plotPosterior;
 	}
 
 	public void printHelp() {
@@ -269,5 +327,25 @@ public class AssociationPlotterOptions {
 
 	public String getMaxPvalueFile() {
 		return maxPvalueFile;
+	}
+
+	public String getSignificanceConditionalThresholdFile() {
+		return significanceConditionalThresholdFile;
+	}
+
+	public String getMaxConditionalPvalueFile() {
+		return maxPvalueFileConditional;
+	}
+
+	public double getDefaultSignificanceConditional() {
+		return defaultSignificanceConditional;
+	}
+
+	public int getNrIters() {
+		return nrIters;
+	}
+
+	public String getConditionalFiles() {
+		return conditionalFiles;
 	}
 }
