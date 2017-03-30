@@ -63,6 +63,11 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		this.sampleAnnotation = sampleAnnotation;
 	}
 
+	public LRTestTask(SampleAnnotation sampleAnnotation, LRTestOptions options) {
+		this.sampleAnnotation = sampleAnnotation;
+		this.options = options;
+	}
+
 	@Override
 	public Triple<String, AssociationResult, VCFVariant> call() {
 		// recode the genotypes to the same ordering as the covariate table
@@ -224,7 +229,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 			while (nrColinear > 0) {
 				TextFile vifs = null;
-				if (options.debug) {
+				if (options.debug && variant != null) {
 					vifs = new TextFile(options.getOutputdir() + "vif-" + variant.getId() + "-" + iter + ".txt", TextFile.W);
 				}
 				nrColinear = 0;
@@ -260,24 +265,29 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						}
 
 					} catch (SingularMatrixException e) {
-						System.out.println(e.getMessage());
-						System.out.println();
-						System.out.println("Error testing variant: " + variant.getId());
-						System.out.println("Singular matrix detected when testing for multi-collinearity.");
-						System.out.println("Iter: " + iter + "\tcol:" + i);
-						System.out.println(columns.size() + " columns left out of " + mat.columns());
 
-						for (int c = 0; c < mat.columns(); c++) {
-							double[] col = mat.viewColumn(c).toArray();
-							System.out.println(c + "\t" + Descriptives.mean(col) + "\t" + Descriptives.variance(col));
+						if (options.debug) {
+							System.out.println(e.getMessage());
+							System.out.println();
+							System.out.println("Error testing variant: " + variant.getId());
+							System.out.println("Singular matrix detected when testing for multi-collinearity.");
+							System.out.println("Iter: " + iter + "\tcol:" + i);
+							System.out.println(columns.size() + " columns left out of " + mat.columns());
+
+							for (int c = 0; c < mat.columns(); c++) {
+								double[] col = mat.viewColumn(c).toArray();
+								System.out.println(c + "\t" + Descriptives.mean(col) + "\t" + Descriptives.variance(col));
+							}
+
+//						TextFile tf = new TextFile(options.getOutputdir() + variant.getId() + "-data.txt", TextFile.W);
+//
+//
+//						tf.close();
+
+							System.exit(-1);
+						} else {
+							return null;
 						}
-
-						TextFile tf = new TextFile(options.getOutputdir() + variant.getId() + "-data.txt", TextFile.W);
-
-
-						tf.close();
-
-						System.exit(-1);
 					}
 
 					if (rsq >= options.collinearitythreshold) {
@@ -287,7 +297,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 						noncolinear.add(i);
 					}
 //
-					if (options.debug) {
+					if (options.debug && variant != null) {
 						String ln = i + "\t" + rsq + "\t" + Descriptives.variance(y);
 
 //						for (int q = 0; q < zscores.length; q++) {
@@ -312,7 +322,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					}
 					columns = currcolumns;
 				}
-				if (options.debug) {
+				if (options.debug && variant != null) {
 					vifs.close();
 				}
 				iter++;
@@ -353,6 +363,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		}
 
 		Pair<DoubleMatrix2D, boolean[]> pruned = removeCollinearVariables(x);
+		if (pruned == null) {
+			return null;
+		}
 		x = pruned.getLeft(); // x is now probably shorter than original X
 
 		if (options.debug) {

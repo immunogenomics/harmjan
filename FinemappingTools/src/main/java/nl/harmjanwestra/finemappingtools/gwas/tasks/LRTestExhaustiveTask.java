@@ -91,6 +91,9 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 		SNPFeature snp = new SNPFeature(Chromosome.parseChr(variant1.getChr()), variant1.getPos(), variant1.getPos());
 
 		Double imputationqualityscore = variant1.getImputationQualityScore();
+		if (imputationqualityscore == null) {
+			imputationqualityscore = 0d;
+		}
 		snp.setName(variant1.getId());
 		output.setSnp(snp);
 		output.setN(x.rows());
@@ -102,6 +105,9 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 
 		SNPFeature snp2 = new SNPFeature(Chromosome.parseChr(variant2.getChr()), variant2.getPos(), variant2.getPos());
 		Double imputationqualityscore2 = variant2.getImputationQualityScore();
+		if (imputationqualityscore2 == null) {
+			imputationqualityscore2 = 0d;
+		}
 		snp2.setName(variant2.getId());
 		output.setSnp2(snp2);
 		snp2.setMaf(maf2);
@@ -129,12 +135,16 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 												   int firstGenotypeColumn,
 												   int lastGenotypeColumn,
 												   LRTestTask testObj) throws IOException {
-		LRTestTask lrt = new LRTestTask(sampleAnnotation);
+		LRTestTask lrt = new LRTestTask(sampleAnnotation, options);
 		if (options.debug) {
 			System.out.println(x.columns() + " before pruning");
 		}
 
 		Pair<DoubleMatrix2D, boolean[]> pruned = lrt.removeCollinearVariables(x);
+		if (pruned == null) {
+			System.err.println("Error pruning " + variants.get(0).getId() + " and " + variants.get(1).getId());
+			return null;
+		}
 		x = pruned.getLeft(); // x is now probably shorter than original X
 
 		if (options.debug) {

@@ -124,12 +124,13 @@ public class LRTest {
 
 		String[] args5 = new String[]{
 				"--gwas",
+				"--exhaustive",
 				"-c", "/Data/tmp/sh2b3fix/covarmerged.txtmergedCovariates.txt",
 				"-d", "/Data/tmp/sh2b3fix/covarmerged.txtmergeddisease.txt",
 				"-f", "/Data/tmp/sh2b3fix/covarmerged.txtmergedfam.fam",
-				"-i", "/Data/tmp/sh2b3fix/test4.vcf",
+				"-i", "/Data/tmp/sh2b3fix/testchr2.vcf",
 				"-r", "/Data/tmp/sh2b3fix/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed",
-				"-t", "1",
+				"-t", "4",
 				"-q", "0.3",
 				"-o", "/Data/tmp/sh2b3fix/testout-origcode.txt"
 		};
@@ -147,7 +148,7 @@ public class LRTest {
 //		};
 
 		LRTestOptions options = new LRTestOptions(args5);
-		options.debug = true;
+		options.debug = false;
 		options.collinearitythreshold = 0.90;
 		options.splitMultiAllelicIntoMultipleVariants = true;
 
@@ -945,7 +946,9 @@ public class LRTest {
 									genotypeSamplesWithCovariatesAndDiseaseStatus,
 									sampleAnnotation,
 									options);
-							lrtet.setResultNullmodel(nullmodelresult, nrNullColumns);
+							if (nullmodelresult != null) {
+								lrtet.setResultNullmodel(nullmodelresult, nrNullColumns);
+							}
 							jobHandler.submit(lrtet);
 							submitted++;
 
@@ -974,8 +977,10 @@ public class LRTest {
 						pb.iterate();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
+						System.exit(-1);
 					} catch (ExecutionException e) {
 						e.printStackTrace();
+						System.exit(-1);
 					}
 				}
 				pvalOut.close();
