@@ -265,7 +265,10 @@ public class AssociationPosteriorPlotter {
 					Double maxPDs = null;
 					String maxVar = null;
 					System.out.println("Reading: " + assocFiles[datasetNr]);
-					ArrayList<AssociationResult> associations = assocFile.read(assocFileToRead, region);
+					ArrayList<AssociationResult> associations = new ArrayList<>();
+					if (Gpio.exists(assocFileToRead)) {
+						associations = assocFile.read(assocFileToRead, region);
+					}
 					HashSet<AssociationResult> credibleSetSet = new HashSet<>();
 					boolean[] mark = null;
 					if (plotPosteriors && iter == 0) {
@@ -295,8 +298,6 @@ public class AssociationPosteriorPlotter {
 
 
 					ArrayList<String> variants = new ArrayList<String>();
-
-
 					for (int a = 0; a < associations.size(); a++) {
 						AssociationResult r = associations.get(a);
 						double p = r.getLog10Pval();
@@ -396,8 +397,6 @@ public class AssociationPosteriorPlotter {
 					}
 				}
 				allPanels.add(panelsForDs);
-
-
 			}
 
 			if (regionhasvariants) {
