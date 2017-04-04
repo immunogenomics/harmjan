@@ -200,7 +200,7 @@ public class AssociationPosteriorPlotter {
 		}
 
 		if (maxpvalconditonionalfile != null && Gpio.exists(maxpvalconditonionalfile)) {
-			regionMaxConditionalPThresholds = loadThresholds(maxpvalfile, assocNames.length);
+			regionMaxConditionalPThresholds = loadThresholds(maxpvalconditonionalfile, assocNames.length);
 		}
 
 		for (Feature region : regions) {
@@ -224,7 +224,7 @@ public class AssociationPosteriorPlotter {
 			}
 			if (assocConditionalFiles != null) {
 				System.out.println("Adding " + nriters + " extra rows for conditional output..");
-				gridrows += nriters;
+				gridrows += (nriters - 1);
 			}
 
 			Grid grid = new Grid(200, 100, gridrows, assocFiles.length, 100, 100);
@@ -405,7 +405,7 @@ public class AssociationPosteriorPlotter {
 				for (int iter = 0; iter < nriters; iter++) {
 					double maxP = 0;
 					for (int datasetNr = 0; datasetNr < allPanels.size(); datasetNr++) {
-						AssociationPanel p = allPanels.get(datasetNr).get(0);
+						AssociationPanel p = allPanels.get(datasetNr).get(iter);
 						ArrayList<ArrayList<Pair<Integer, Double>>> allPvalues = p.getAllPValues();
 						for (ArrayList<Pair<Integer, Double>> a : allPvalues) {
 							for (Pair<Integer, Double> v : a) {
@@ -415,6 +415,7 @@ public class AssociationPosteriorPlotter {
 							}
 						}
 					}
+					System.out.println("iter:\t" + iter + "\tmaxp: " + maxP);
 					for (int datasetNr = 0; datasetNr < allPanels.size(); datasetNr++) {
 						AssociationPanel p = allPanels.get(datasetNr).get(0);
 						p.setMaxPVal(maxP);
@@ -423,10 +424,13 @@ public class AssociationPosteriorPlotter {
 
 				for (int iter = 0; iter < nriters; iter++) {
 					for (int datasetNr = 0; datasetNr < allPanels.size(); datasetNr++) {
-						AssociationPanel p = allPanels.get(datasetNr).get(0);
+						AssociationPanel p = allPanels.get(datasetNr).get(iter);
 						ArrayList<HashMap<Feature, Double>> regionmaxthresholdsToUse = regionMaxPThresholds;
 						if (iter != 0) {
+							System.out.println("Using regional thresholds");
 							regionmaxthresholdsToUse = regionMaxConditionalPThresholds;
+							System.out.println("" + (regionmaxthresholdsToUse != null));
+//							System.exit(-1);
 						}
 
 						if (regionmaxthresholdsToUse != null) {
@@ -434,7 +438,7 @@ public class AssociationPosteriorPlotter {
 							if (pval == null) {
 								System.out.println("Could not find locus: " + region.toString());
 							} else {
-								System.out.println("Locus p: " + region.toString() + "\t" + pval);
+								System.out.println("Iter\t" + iter + "\tLocus p: " + region.toString() + "\t" + pval);
 							}
 
 							if (pval != null) {
@@ -454,6 +458,7 @@ public class AssociationPosteriorPlotter {
 				System.out.println("Region not plotted: " + region.toString() + " since it has no variants.");
 			}
 
+//			System.exit(-1);
 		}
 
 

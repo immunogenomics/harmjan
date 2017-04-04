@@ -136,11 +136,8 @@ public class AssociationPanel extends Panel {
 		}
 
 		// determine max Y
-
 		if (Double.isNaN(maxPval)) {
-
-//			System.out.println("Determining max P");
-//			System.exit(-1);
+			System.out.println("Determining max P");
 			maxPval = -Double.MAX_VALUE;
 			for (int d = 0; d < allPValues.size(); d++) {
 				ArrayList<Pair<Integer, Double>> pvals = allPValues.get(d);
@@ -219,9 +216,7 @@ public class AssociationPanel extends Panel {
 
 
 		// determine unit
-		double steps = maxPval / 2;
-
-
+		double steps = maxPval / 1;
 		// draw red line near 5E-8)
 		if (plotGWASSignificance) {
 
@@ -237,10 +232,11 @@ public class AssociationPanel extends Panel {
 				int strwidth = getStringWidth(g2d, "Significance");
 
 
-				g2d.setColor(Color.white);
-				g2d.fillRect(x0 + marginX + 10 - 2, plotStarty - pixelY - 5, strwidth + 6, 10);
-				g2d.setColor(red);
-				g2d.drawString("Significance", x0 + marginX + 12, plotStarty - pixelY + 3);
+//				g2d.setColor(Color.white);
+//				g2d.fillRect(x0 + marginX + 10 - 2, plotStarty - pixelY - 5, strwidth + 6, 10);
+//				g2d.setColor(red);
+//				g2d.drawString("" + threshold, x0 + marginX + nrPixelsX + 5, plotStarty - pixelY + 3);
+
 			}
 			g2d.setFont(defaultfont);
 		}
