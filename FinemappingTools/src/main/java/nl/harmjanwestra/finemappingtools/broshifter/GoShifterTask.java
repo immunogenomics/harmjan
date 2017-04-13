@@ -5,10 +5,10 @@ import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.features.Track;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.io.File;
 import java.io.IOException;

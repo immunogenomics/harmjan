@@ -7,7 +7,7 @@ import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 
 import java.awt.*;
 import java.io.IOException;

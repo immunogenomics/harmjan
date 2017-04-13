@@ -3,11 +3,10 @@ package nl.harmjanwestra.vcfutils;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.matrix.DoubleMatrixDataset;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.*;
@@ -82,7 +81,7 @@ public class PseudoControls {
 
 		// samples on rows
 		// covariates on columns
-		DoubleMatrixDataset<String, String> ds = new DoubleMatrixDataset<String, String>(originalCovariates);
+		nl.harmjanwestra.utilities.legacy.genetica.math.matrix.DoubleMatrixDataset<String, String> ds = new nl.harmjanwestra.utilities.legacy.genetica.math.matrix.DoubleMatrixDataset<String, String>(originalCovariates);
 
 		// get a list of pseudocontrols
 		ArrayList<String> famFileSamples = new ArrayList<String>();
@@ -132,7 +131,7 @@ public class PseudoControls {
 			rows.add(samplesToAdd.get(actual));
 		}
 
-		umcg.genetica.math.matrix2.DoubleMatrixDataset<String, String> dsout = new umcg.genetica.math.matrix2.DoubleMatrixDataset<String, String>();
+		DoubleMatrixDataset<String, String> dsout = new DoubleMatrixDataset<String, String>();
 		dsout.setMatrix(dataout);
 		try {
 			dsout.setRowObjects(rows);

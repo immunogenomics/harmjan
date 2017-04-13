@@ -5,9 +5,9 @@
  */
 package nl.harmjanwestra.visualizationtool;
 
-import umcg.genetica.graphics.ForestPlot;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.io.trityper.util.ChrAnnotation;
+import nl.harmjanwestra.utilities.legacy.genetica.graphics.ForestPlot;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.trityper.util.ChrAnnotation;
 
 /**
  *

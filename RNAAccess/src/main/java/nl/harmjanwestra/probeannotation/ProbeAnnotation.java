@@ -24,7 +24,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 /**
  *

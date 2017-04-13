@@ -1,8 +1,8 @@
 package nl.harmjanwestra.harmonics.posthoc;
 
-import umcg.genetica.containers.Gene;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Gene;
 import umcg.genetica.ensembl.Features;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;

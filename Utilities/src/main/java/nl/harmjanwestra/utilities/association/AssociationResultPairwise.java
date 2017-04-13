@@ -1,7 +1,7 @@
 package nl.harmjanwestra.utilities.association;
 
 import nl.harmjanwestra.utilities.features.SNPFeature;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 /**
  * Created by hwestra on 6/22/16.

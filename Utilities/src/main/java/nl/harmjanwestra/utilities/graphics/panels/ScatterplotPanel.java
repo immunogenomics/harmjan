@@ -2,9 +2,9 @@ package nl.harmjanwestra.utilities.graphics.panels;
 
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.Range;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.math.stats.Correlation;
-import umcg.genetica.math.stats.Regression;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
 
 import java.awt.*;
 import java.text.DecimalFormat;

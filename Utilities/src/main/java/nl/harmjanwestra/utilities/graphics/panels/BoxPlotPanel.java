@@ -4,10 +4,10 @@ import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
 import nl.harmjanwestra.utilities.graphics.themes.Theme;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.Descriptives;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Descriptives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.awt.*;
 import java.io.IOException;

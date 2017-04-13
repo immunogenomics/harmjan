@@ -1,7 +1,7 @@
 package nl.harmjanwestra.miscscripts;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import umcg.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 
 /**
  * Created by hwestra on 1/16/15.

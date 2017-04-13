@@ -7,18 +7,18 @@ package nl.harmjanwestra.visualizationtool;
 
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import umcg.genetica.containers.Exon;
-import umcg.genetica.containers.Gene;
-import umcg.genetica.containers.Transcript;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Exon;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Gene;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Transcript;
 import umcg.genetica.ensembl.Features;
 import umcg.genetica.gwas.Dependifier;
-import umcg.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import umcg.genetica.io.gwascatalog.GWASCatalog;
 import umcg.genetica.io.gwascatalog.GWASSNP;
 import umcg.genetica.io.gwascatalog.GWASTrait;
 import umcg.genetica.io.trityper.SNPLoader;
 import umcg.genetica.io.trityper.TriTyperGenotypeData;
-import umcg.genetica.io.trityper.util.ChrAnnotation;
+import nl.harmjanwestra.utilities.legacy.genetica.io.trityper.util.ChrAnnotation;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

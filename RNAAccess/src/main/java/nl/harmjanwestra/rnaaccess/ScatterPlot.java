@@ -17,8 +17,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import umcg.genetica.math.stats.Regression;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 /**
  *

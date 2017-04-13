@@ -9,7 +9,7 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.jet.stat.Gamma;
-import umcg.genetica.math.stats.ChiSquare;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ChiSquare;
 
 public class LogisticRegressionOptimized {
 

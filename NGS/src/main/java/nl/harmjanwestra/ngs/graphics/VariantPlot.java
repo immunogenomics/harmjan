@@ -12,9 +12,9 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.GenotypeQualityFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.ReadDepthFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.awt.*;
 import java.io.FileNotFoundException;

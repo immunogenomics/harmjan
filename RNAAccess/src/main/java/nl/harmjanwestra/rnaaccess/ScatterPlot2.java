@@ -20,7 +20,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 /**
  *

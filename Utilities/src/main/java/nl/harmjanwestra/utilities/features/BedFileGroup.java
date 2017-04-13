@@ -1,8 +1,8 @@
 package nl.harmjanwestra.utilities.features;
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;

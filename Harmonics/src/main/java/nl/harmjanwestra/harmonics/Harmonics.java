@@ -26,10 +26,10 @@ import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
 import nl.harmjanwestra.utilities.graphics.panels.HistogramPanel;
 import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import umontreal.iro.lecuyer.probdist.NegativeBinomialDist;
 
 import java.io.File;

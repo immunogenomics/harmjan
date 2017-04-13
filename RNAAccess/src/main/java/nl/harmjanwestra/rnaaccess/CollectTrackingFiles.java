@@ -7,7 +7,7 @@ package nl.harmjanwestra.rnaaccess;
 
 import java.io.File;
 import java.io.IOException;
-import umcg.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 
 /**
  *

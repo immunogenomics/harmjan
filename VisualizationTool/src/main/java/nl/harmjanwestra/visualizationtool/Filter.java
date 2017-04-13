@@ -7,8 +7,8 @@ package nl.harmjanwestra.visualizationtool;
 
 import java.io.IOException;
 import java.util.HashSet;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 /**
  *

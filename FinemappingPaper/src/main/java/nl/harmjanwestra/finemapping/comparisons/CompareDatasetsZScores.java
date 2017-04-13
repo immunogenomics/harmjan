@@ -5,10 +5,10 @@ import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.Correlation;
-import umcg.genetica.math.stats.ZScores;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ZScores;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;

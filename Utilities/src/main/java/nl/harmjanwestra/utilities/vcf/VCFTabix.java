@@ -2,9 +2,9 @@ package nl.harmjanwestra.utilities.vcf;
 
 import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.utilities.features.Feature;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +36,8 @@ public class VCFTabix {
 		boolean[] samplesToInclude = null;
 		VCFGenotypeData d = new VCFGenotypeData(tabixfile);
 		ArrayList<String> tabixSamples = d.getSamples();
+		d.close();
+
 		samplesToInclude = new boolean[tabixSamples.size()];
 
 		TextFile tf = new TextFile(tabixsamplelimit, TextFile.R);
@@ -65,6 +67,7 @@ public class VCFTabix {
 		}
 
 		TabixReader.Iterator window = treader.query(region.getChromosome().getNumber() + ":" + start + "-" + stop);
+
 		return window;
 	}
 

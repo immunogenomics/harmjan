@@ -2,7 +2,7 @@ package nl.harmjanwestra.rnaaccess;
 
 import java.io.File;
 import java.io.IOException;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 /*
  * To change this license header, choose License Headers in Project Properties.

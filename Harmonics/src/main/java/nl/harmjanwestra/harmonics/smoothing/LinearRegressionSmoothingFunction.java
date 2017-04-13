@@ -1,6 +1,6 @@
 package nl.harmjanwestra.harmonics.smoothing;
 
-import umcg.genetica.math.stats.Regression;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
 
 /**
  * Created by hwestra on 6/25/15.

@@ -2,7 +2,7 @@ package nl.harmjanwestra.finemapping.genotypesandimputation;
 
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;

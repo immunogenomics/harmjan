@@ -3,7 +3,7 @@ package nl.harmjanwestra.utilities.association;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;

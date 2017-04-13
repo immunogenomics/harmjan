@@ -3,8 +3,8 @@ package nl.harmjanwestra.finemapping.assoc;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;

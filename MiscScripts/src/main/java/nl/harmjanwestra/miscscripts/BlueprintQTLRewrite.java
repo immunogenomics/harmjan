@@ -1,9 +1,9 @@
 package nl.harmjanwestra.miscscripts;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import umcg.genetica.console.FileReadProgressBar;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.console.FileReadProgressBar;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 

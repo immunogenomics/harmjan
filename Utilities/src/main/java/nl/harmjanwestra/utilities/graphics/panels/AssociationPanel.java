@@ -4,7 +4,7 @@ import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
-import umcg.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 
 import java.awt.*;
 import java.text.DecimalFormat;

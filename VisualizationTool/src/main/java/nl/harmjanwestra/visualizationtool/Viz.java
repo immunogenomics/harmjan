@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 /**
  *

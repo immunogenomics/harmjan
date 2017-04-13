@@ -14,12 +14,12 @@ import nl.harmjanwestra.utilities.shell.ProcessRunner;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.GenotypeQualityFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.ReadDepthFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.HWE;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.HWE;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.File;
 import java.io.IOException;

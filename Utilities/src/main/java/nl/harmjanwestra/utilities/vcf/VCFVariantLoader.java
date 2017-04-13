@@ -2,7 +2,7 @@ package nl.harmjanwestra.utilities.vcf;
 
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantFilters;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +15,10 @@ public class VCFVariantLoader {
 
 	boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
 	SampleAnnotation sampleAnnotation;
+
+	public VCFVariantLoader(){
+
+	}
 
 	public VCFVariantLoader(boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus, SampleAnnotation sampleAnnotation, ExecutorService exService) {
 		this.genotypeSamplesWithCovariatesAndDiseaseStatus = genotypeSamplesWithCovariatesAndDiseaseStatus;

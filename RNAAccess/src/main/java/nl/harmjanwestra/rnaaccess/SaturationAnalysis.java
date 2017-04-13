@@ -12,14 +12,14 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.graphics.ViolinBoxPlot;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.matrix2.DoubleMatrixDataset;
-import umcg.genetica.math.stats.Descriptives;
-import umcg.genetica.math.stats.Regression;
-import umcg.genetica.math.stats.WilcoxonMannWhitney;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.graphics.ViolinBoxPlot;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.matrix2.DoubleMatrixDataset;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Descriptives;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.WilcoxonMannWhitney;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 /**
  *

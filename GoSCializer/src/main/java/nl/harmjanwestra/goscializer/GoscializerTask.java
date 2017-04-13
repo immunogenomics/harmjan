@@ -13,10 +13,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import umcg.genetica.containers.SortableSNP;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.SortableSNP;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 /**
  *

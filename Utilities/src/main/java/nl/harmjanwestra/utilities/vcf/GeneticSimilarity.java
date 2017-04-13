@@ -3,9 +3,9 @@ package nl.harmjanwestra.utilities.vcf;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
-import umcg.genetica.console.ProgressBar;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.console.ProgressBar;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
 
 import java.util.concurrent.*;
 
@@ -15,7 +15,6 @@ import java.util.concurrent.*;
  * Adapted to diploid calculations
  */
 public class GeneticSimilarity {
-
 
 	// provide a list of variants (within dataset comparison)
 	// assume variants are pruned.
@@ -38,14 +37,11 @@ public class GeneticSimilarity {
 		double[] callrates = data.getLeft().getLeft();
 		double[] alleleFreqs = data.getLeft().getRight();
 
-
 		long nrSubmitted = 0;
 		CompletionService<Pair<Integer, Triple<double[], double[], double[]>>> jobHandler = new ExecutorCompletionService<>(service);
 		ProgressBar pb2 = new ProgressBar(nrInds1, "Calculating distances");
 		long returned = 0;
 		for (int i = 0; i < nrInds1; i++) {
-
-
 			DetermineGeneticSimilarityTask t = new DetermineGeneticSimilarityTask(
 					i,
 					genotypes1,

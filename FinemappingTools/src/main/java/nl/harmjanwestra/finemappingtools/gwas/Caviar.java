@@ -3,9 +3,9 @@ package nl.harmjanwestra.finemappingtools.gwas;
 import nl.harmjanwestra.finemappingtools.gwas.CLI.CaviarOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.ZScores;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ZScores;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;

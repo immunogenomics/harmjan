@@ -3,7 +3,7 @@ package nl.harmjanwestra.finemapping.genotypesandimputation;
 import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.individuals.Individual;
 import nl.harmjanwestra.utilities.plink.PlinkFamFile;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;

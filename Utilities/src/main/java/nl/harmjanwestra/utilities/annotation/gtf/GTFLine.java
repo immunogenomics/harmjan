@@ -7,7 +7,7 @@ package nl.harmjanwestra.utilities.annotation.gtf;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.Strand;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;

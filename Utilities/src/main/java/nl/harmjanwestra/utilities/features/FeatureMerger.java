@@ -1,6 +1,6 @@
 package nl.harmjanwestra.utilities.features;
 
-import umcg.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;

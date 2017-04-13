@@ -1,12 +1,12 @@
 package nl.harmjanwestra;
 
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import umcg.genetica.io.trityper.ProbeAnnotation;
-import umcg.genetica.math.matrix.DoubleMatrixDataset;
-import umcg.genetica.math.stats.Correlation;
-import umcg.genetica.math.stats.ZScores;
-import umcg.genetica.text.Strings;
-import umcg.genetica.util.RankArray;
+import nl.harmjanwestra.utilities.legacy.genetica.math.matrix.DoubleMatrixDataset;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ZScores;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.util.RankArray;
 
 import java.io.IOException;
 import java.util.ArrayList;

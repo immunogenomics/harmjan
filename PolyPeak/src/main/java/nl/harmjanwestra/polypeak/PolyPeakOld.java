@@ -14,7 +14,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import umcg.genetica.util.RunTimer;
+import nl.harmjanwestra.utilities.legacy.genetica.util.RunTimer;
 
 /**
  *

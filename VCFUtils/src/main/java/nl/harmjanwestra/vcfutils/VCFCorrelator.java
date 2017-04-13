@@ -6,10 +6,10 @@ import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.Regression;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.File;
 import java.io.IOException;

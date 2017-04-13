@@ -8,7 +8,7 @@ package nl.harmjanwestra.rnaaccess;
 
 import java.io.IOException;
 import java.util.Arrays;
-import umcg.genetica.math.matrix2.DoubleMatrixDataset;
+import nl.harmjanwestra.utilities.legacy.genetica.math.matrix2.DoubleMatrixDataset;
 
 /**
  *

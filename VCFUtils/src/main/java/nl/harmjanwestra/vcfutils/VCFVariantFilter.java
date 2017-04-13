@@ -2,7 +2,7 @@ package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.HashSet;

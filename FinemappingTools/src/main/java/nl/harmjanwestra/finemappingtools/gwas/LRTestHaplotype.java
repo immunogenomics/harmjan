@@ -19,10 +19,10 @@ import nl.harmjanwestra.utilities.sets.Bits;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
 import org.apache.commons.math3.util.CombinatoricsUtils;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.ChiSquare;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ChiSquare;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.*;

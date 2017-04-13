@@ -6,8 +6,8 @@ import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;

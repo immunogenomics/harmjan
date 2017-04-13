@@ -1,7 +1,7 @@
 package nl.harmjanwestra.miscscripts;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -9,7 +9,7 @@ import nl.harmjanwestra.utilities.bamfile.MinimalRead;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.enums.Strand;
-import umcg.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 
 import java.util.*;
 

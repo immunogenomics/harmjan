@@ -5,10 +5,6 @@
  */
 package nl.harmjanwestra.visualizationtool;
 
-import java.io.IOException;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
-
 /**
  *
  * @author hwestra

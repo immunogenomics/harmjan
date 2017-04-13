@@ -7,8 +7,8 @@ import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreBeagle;
 import nl.harmjanwestra.utilities.vcf.VCFImputationQualScoreImpute;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
 
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -7,7 +7,7 @@ import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.GFFFile;
 import nl.harmjanwestra.utilities.graphics.themes.ComplementaryColor;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.awt.*;
 import java.awt.geom.Arc2D;

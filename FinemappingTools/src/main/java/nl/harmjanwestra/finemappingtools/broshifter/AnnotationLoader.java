@@ -4,7 +4,7 @@ package nl.harmjanwestra.finemappingtools.broshifter;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.peakfiles.XLSFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;

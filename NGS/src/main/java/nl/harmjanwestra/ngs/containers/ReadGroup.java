@@ -7,7 +7,7 @@ package nl.harmjanwestra.ngs.containers;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import java.io.IOException;
-import umcg.genetica.graphics.ViolinBoxPlot;
+import nl.harmjanwestra.utilities.legacy.genetica.graphics.ViolinBoxPlot;
 
 /**
  *

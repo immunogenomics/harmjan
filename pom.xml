@@ -40,6 +40,7 @@
         <module>Coverage</module>
         <module>FinemappingTools</module>
         <module>ProxyFinder</module>
+        <module>IBSScan</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

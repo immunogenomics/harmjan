@@ -3,7 +3,7 @@ package nl.harmjanwestra.finemappingtools.gwas.tasks;
 import cern.colt.matrix.tbit.BitVector;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
 
 import java.util.ArrayList;
 import java.util.concurrent.Callable;

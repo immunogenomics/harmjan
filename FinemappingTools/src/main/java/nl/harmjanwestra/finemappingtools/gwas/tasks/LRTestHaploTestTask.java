@@ -13,11 +13,11 @@ import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
-import umcg.genetica.math.stats.ChiSquare;
-import umcg.genetica.math.stats.Correlation;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ChiSquare;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.util.ArrayList;
 import java.util.HashSet;

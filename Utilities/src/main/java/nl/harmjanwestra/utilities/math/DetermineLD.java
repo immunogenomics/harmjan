@@ -9,7 +9,7 @@
 package nl.harmjanwestra.utilities.math;
 
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 
 /**
  * @author Lude Franke

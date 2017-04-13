@@ -1,7 +1,7 @@
 package nl.harmjanwestra.utilities.vcf;
 
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;

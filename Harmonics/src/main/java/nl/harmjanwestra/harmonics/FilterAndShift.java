@@ -7,7 +7,7 @@ import nl.harmjanwestra.utilities.bamfile.filters.MappingQualityUnavailableFilte
 import nl.harmjanwestra.utilities.bamfile.filters.NotMappingToAutosomeFilter;
 import nl.harmjanwestra.utilities.bamfile.filters.UnmappedReadFilter;
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import umcg.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 
 import java.io.File;
 import java.io.IOException;

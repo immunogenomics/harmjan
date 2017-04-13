@@ -9,11 +9,12 @@ import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.enums.Gender;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ChiSquare;
 import nl.harmjanwestra.utilities.matrix.ShortMatrix2D;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
-import umcg.genetica.io.trityper.util.BaseAnnot;
-import umcg.genetica.math.stats.HWE;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.io.trityper.util.BaseAnnot;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.HWE;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1308,10 +1309,10 @@ public class VCFVariant {
 			}
 
 			int df = (nrCombinations - nrAlleles);
-			hwep = umcg.genetica.math.stats.ChiSquare.getP(df, chisq);
+			hwep = ChiSquare.getP(df, chisq);
 			if (freqsCases != null) {
-				hwepCases = umcg.genetica.math.stats.ChiSquare.getP(df, chisqCases);
-				hwepControls = umcg.genetica.math.stats.ChiSquare.getP(df, chisqControls);
+				hwepCases = ChiSquare.getP(df, chisqCases);
+				hwepControls = ChiSquare.getP(df, chisqControls);
 			}
 		}
 

@@ -5,7 +5,7 @@ import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.FeatureMerger;
 import nl.harmjanwestra.utilities.features.Gene;
 import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.*;

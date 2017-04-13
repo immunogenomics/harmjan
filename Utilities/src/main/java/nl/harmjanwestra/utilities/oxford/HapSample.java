@@ -1,8 +1,8 @@
 package nl.harmjanwestra.utilities.oxford;
 
 import nl.harmjanwestra.utilities.vcf.VCFFunctions;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 

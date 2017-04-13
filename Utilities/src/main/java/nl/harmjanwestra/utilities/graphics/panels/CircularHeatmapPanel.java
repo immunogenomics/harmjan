@@ -4,9 +4,9 @@ import nl.harmjanwestra.utilities.enums.SNPClass;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
-import umcg.genetica.math.Goniometry;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.math.Goniometry;
 
 import java.awt.*;
 import java.awt.geom.Arc2D;

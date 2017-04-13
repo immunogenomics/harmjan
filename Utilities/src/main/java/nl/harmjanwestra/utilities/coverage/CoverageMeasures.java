@@ -6,7 +6,7 @@ import htsjdk.samtools.filter.AggregateFilter;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import umcg.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 
 import java.io.File;
 import java.util.ArrayList;

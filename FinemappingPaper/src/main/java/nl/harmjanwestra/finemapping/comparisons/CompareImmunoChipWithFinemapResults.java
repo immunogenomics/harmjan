@@ -8,10 +8,9 @@ import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,9 +32,9 @@ public class CompareImmunoChipWithFinemapResults {
 			String samplefilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 
 
-			String indir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/";
-			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/2017-02-27-ComparisonsWithICAnalysis/";
-			Gpio.createDir(outdir);
+			String indir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/";
+			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/2017-04-04-ComparisonsWithICAnalysis/";
+//			Gpio.createDir(outdir);
 
 //			/// RA
 //			icTabFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
@@ -46,8 +45,8 @@ public class CompareImmunoChipWithFinemapResults {
 
 			icTabFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
 			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = indir + "RA-significantloci-75e7.bed";
-			outfile = outdir + "2016-06-19-RA-LocusComparisonWithOkada-SignificantLoci.txt";
+			locusFile = indir + "RA-assoc0.3-COSMO-significantregions-75e7.bed";
+			outfile = outdir + "RA-vsOkada-LocusComparisonWithOkada-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, samplefilter, outfile);
 
 //			// T1D
@@ -59,21 +58,21 @@ public class CompareImmunoChipWithFinemapResults {
 
 			icTabFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
 			fmAssocFile = indir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = indir + "T1D-significantloci-75e7.bed";
-			outfile = outdir + "2016-06-19-T1D-LocusComparisonWithOnengutCC-SignificantLoci.txt";
+			locusFile = indir + "T1D-assoc0.3-COSMO-significantregions-75e7.bed";
+			outfile = outdir + "T1D-vsOnenGut-LocusComparisonWithOnengutCC-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, samplefilter, outfile);
 
 			// ComparisonsToMeta
-			icTabFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz";
+			icTabFile = indir + "META-assoc0.3-COSMO-merged-posterior.txt.gz";
 			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = indir + "META-significantloci-75e7.bed";
-			outfile = outdir + "2016-06-19-RA-LocusComparisonWithMeta-SignificantLoci.txt";
+			locusFile = indir + "META-assoc0.3-COSMO-significantregions-75e7.bed";
+			outfile = outdir + "RA-vsMETA-LocusComparisonWithMeta-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, samplefilter, outfile);
 
-			icTabFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-assoc0.3-COSMO-merged-posterior.txt.gz";
+			icTabFile = indir + "META-assoc0.3-COSMO-merged-posterior.txt.gz";
 			fmAssocFile = indir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-			locusFile = indir + "META-significantloci-75e7.bed";
-			outfile = outdir + "2016-06-19-T1D-LocusComparisonWithMeta-SignificantLoci.txt";
+			locusFile = indir + "META-assoc0.3-COSMO-significantregions-75e7.bed";
+			outfile = outdir + "T1D-vsMETA--LocusComparisonWithMeta-SignificantLoci.txt";
 			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, samplefilter, outfile);
 
 		} catch (IOException e) {
@@ -105,7 +104,6 @@ public class CompareImmunoChipWithFinemapResults {
 				"TopVariantGWAS",
 				"Alleles", "Minor", "OR", "Beta", "Pval",
 				"Distance",
-				"LD(dprime)",
 				"LD(rsquared)"
 		};
 
@@ -151,7 +149,6 @@ public class CompareImmunoChipWithFinemapResults {
 								+ "\t" + bestICResult.getSnp().toString()
 								+ "\t" + summaryStr(bestICResult, false)
 								+ "\t" + (bestFMResult.getSnp().getStart() - bestICResult.getSnp().getStart())
-								+ "\t" + ld.getLeft()
 								+ "\t" + ld.getRight()
 				);
 

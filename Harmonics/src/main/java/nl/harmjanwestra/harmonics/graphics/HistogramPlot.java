@@ -4,7 +4,7 @@ import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.harmonics.smoothing.AverageSmoothingFunction;
 import nl.harmjanwestra.harmonics.smoothing.Smoother;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.awt.*;
 import java.io.FileNotFoundException;

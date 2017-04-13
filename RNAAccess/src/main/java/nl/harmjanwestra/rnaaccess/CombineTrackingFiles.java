@@ -20,18 +20,17 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import umcg.genetica.graphics.ViolinBoxPlot;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.matrix2.DoubleMatrixDataset;
-import umcg.genetica.math.matrix2.MatrixHandling;
-import umcg.genetica.math.stats.Descriptives;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.graphics.ViolinBoxPlot;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.matrix2.DoubleMatrixDataset;
+import nl.harmjanwestra.utilities.legacy.genetica.math.matrix2.MatrixHandling;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Descriptives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 /**
  *

@@ -2,7 +2,7 @@ package nl.harmjanwestra.finemappingtools.broshifter.CLI;
 
 
 import org.apache.commons.cli.*;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 
 /**

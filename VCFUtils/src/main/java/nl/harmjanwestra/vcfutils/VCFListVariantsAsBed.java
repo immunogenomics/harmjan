@@ -1,6 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 

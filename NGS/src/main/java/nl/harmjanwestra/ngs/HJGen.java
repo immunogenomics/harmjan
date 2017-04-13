@@ -3,7 +3,7 @@ package nl.harmjanwestra.ngs;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
 import nl.harmjanwestra.utilities.plink.PedAndMapFunctions;
 import nl.harmjanwestra.utilities.vcf.VCFFunctions;
-import umcg.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 
 import java.io.IOException;
 

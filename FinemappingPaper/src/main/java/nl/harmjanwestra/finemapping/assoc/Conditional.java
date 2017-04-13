@@ -7,8 +7,8 @@ import nl.harmjanwestra.utilities.enums.Strand;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.Gene;
 import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,6 +51,7 @@ public class Conditional {
 					indir + "/normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
 			};
 
+
 			String[] bonferroniOut = new String[]{
 					outdir + "/RA.txt",
 					outdir + "/T1D.txt",
@@ -78,6 +79,8 @@ public class Conditional {
 					"T1D",
 					"META"
 			};
+
+
 			for (int a = 0; a < assocFiles.length; a++) {
 				assocfile = assocFiles[a];
 				diseasespecificregionfile = diseaseRegions[a];
@@ -105,7 +108,11 @@ public class Conditional {
 
 			boolean runconditional = true;
 			if (runconditional) {
-				int maxiter = 3;
+				int maxiter = 4;
+
+				//tyk2
+				outdir = "/Data/tmp/rerun/tyk2/";
+
 				for (int d = 0; d < diseases.length; d++) {
 
 					HashMap<String, Double> thresholds = new HashMap<String, Double>();
@@ -118,12 +125,17 @@ public class Conditional {
 					}
 					tf.close();
 
-					String output = outdir+"/" + diseases[d] + "-bestAssocPerRegion.txt";
+					String output = outdir + "/" + diseases[d] + "-bestAssocPerRegion.txt";
 					TextFile outtf = new TextFile(output, TextFile.W);
 					outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
 					for (int iter = 0; iter < maxiter; iter++) {
 						System.out.println(iter + "\t" + d);
-						String assoc = outdir+"/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+						String assoc = outdir + "/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+
+						//tyk2
+						assoc = "/Data/tmp/rerun/" + diseases[d] + "out/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+
+
 						String regions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 						b.determineTopAssocPerRegion(iter, regions, defaultthreshold, assoc, thresholds, genes, outtf);
 					}

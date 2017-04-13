@@ -3,9 +3,9 @@ package nl.harmjanwestra.miscscripts;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.matrix2.DoubleMatrixDataset;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.matrix2.DoubleMatrixDataset;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;

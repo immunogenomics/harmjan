@@ -9,12 +9,12 @@ import nl.harmjanwestra.polypeak.containers.Sequence;
 import nl.harmjanwestra.polypeak.containers.SequenceLibrary;
 import nl.harmjanwestra.polypeak.containers.Window;
 import nl.harmjanwestra.utilities.bamfile.BamFileReader;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.stats.Correlation;
-import umcg.genetica.math.stats.Descriptives;
-import umcg.genetica.util.Primitives;
-import umcg.genetica.util.RankArray;
-import umcg.genetica.util.RunTimer;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Descriptives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.RankArray;
+import nl.harmjanwestra.utilities.legacy.genetica.util.RunTimer;
 
 import java.io.IOException;
 import java.text.DecimalFormat;

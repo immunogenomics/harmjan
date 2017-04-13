@@ -7,7 +7,7 @@ import nl.harmjanwestra.utilities.features.Gene;
 import nl.harmjanwestra.utilities.features.Transcript;
 import nl.harmjanwestra.utilities.graphics.DefaultGraphics;
 import nl.harmjanwestra.utilities.graphics.themes.DefaultTheme;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.awt.*;
 import java.io.FileNotFoundException;

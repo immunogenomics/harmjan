@@ -1,7 +1,7 @@
 package nl.harmjanwestra.utilities.vcf;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import umcg.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 

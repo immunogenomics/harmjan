@@ -20,7 +20,7 @@
 package nl.harmjanwestra.utilities.vcf;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;

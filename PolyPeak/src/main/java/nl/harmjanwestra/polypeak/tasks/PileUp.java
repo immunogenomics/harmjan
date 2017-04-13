@@ -6,8 +6,8 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.filter.*;
 import nl.harmjanwestra.polypeak.containers.Window;
-import umcg.genetica.math.stats.Descriptives;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Descriptives;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.util.ArrayList;
 import java.util.List;

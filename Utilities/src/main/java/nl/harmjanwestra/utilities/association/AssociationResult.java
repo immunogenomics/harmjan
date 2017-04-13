@@ -2,8 +2,8 @@ package nl.harmjanwestra.utilities.association;
 
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
-import umcg.genetica.math.stats.ZScores;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ZScores;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 
 /**

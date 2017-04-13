@@ -12,12 +12,12 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.vcf.VCFVariantLoader;
 import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantFilters;
 import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantImpQualFilter;
-import umcg.genetica.console.ProgressBar;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.console.ProgressBar;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.io.IOException;
 import java.util.*;

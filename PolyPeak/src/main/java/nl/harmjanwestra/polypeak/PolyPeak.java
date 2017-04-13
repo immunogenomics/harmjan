@@ -8,8 +8,8 @@ import nl.harmjanwestra.polypeak.tasks.ModelBuildingTask;
 import nl.harmjanwestra.polypeak.tasks.PileUp;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Track;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.util.RunTimer;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.util.RunTimer;
 
 import java.io.File;
 import java.io.IOException;

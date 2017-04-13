@@ -21,10 +21,10 @@ import nl.harmjanwestra.utilities.graphics.panels.CircularHeatmapPanel;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.containers.Triple;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -80,19 +80,19 @@ public class MergeCredibleSets {
 			double maxPosteriorCredibleSet = 0.9;
 			boolean includeAllLoci = true;
 
-//			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
 			boolean onlyincludevariantsbelowsignificancethreshold = false;
-			c.makeCircularPlot(bedregions,
-					assocfiles,
-					datasetnames,
-					genenames,
-					outplot,
-					significanceThreshold,
-					onlyincludevariantsbelowsignificancethreshold,
-					maxPosteriorCredibleSet,
-					nrVariantsInCredibleSet,
-					geneAnnotation);
+//			c.makeCircularPlot(bedregions,
+//					assocfiles,
+//					datasetnames,
+//					genenames,
+//					outplot,
+//					significanceThreshold,
+//					onlyincludevariantsbelowsignificancethreshold,
+//					maxPosteriorCredibleSet,
+//					nrVariantsInCredibleSet,
+//					geneAnnotation);
 			System.exit(-1);
 
 //			System.exit(-1);

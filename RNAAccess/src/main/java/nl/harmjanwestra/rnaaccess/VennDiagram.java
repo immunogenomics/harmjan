@@ -12,8 +12,8 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.math.Goniometry;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.math.Goniometry;
 
 /**
  *

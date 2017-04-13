@@ -14,11 +14,11 @@ import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
 
 import nl.harmjanwestra.utilities.peakfiles.XLSFile;
 import nl.harmjanwestra.utilities.peakfiles.ZinbaPeaksFile;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.text.Strings;
-import umcg.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.io.IOException;
 import java.util.*;

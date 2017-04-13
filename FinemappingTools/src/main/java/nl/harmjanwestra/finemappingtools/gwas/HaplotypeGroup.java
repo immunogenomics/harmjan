@@ -6,7 +6,7 @@ import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.util.ArrayList;
 

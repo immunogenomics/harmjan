@@ -8,11 +8,11 @@ import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.BoxPlotPanel;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.Gpio;
-import umcg.genetica.io.text.TextFile;
-import umcg.genetica.math.matrix.DoubleMatrixDataset;
-import umcg.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.matrix.DoubleMatrixDataset;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -62,7 +62,7 @@ public class FeatureCounts {
 	}
 
 	public double[][] correlate(String matrix, boolean includeZeros, boolean nonparametric, boolean correlateRows) throws IOException {
-		umcg.genetica.math.matrix.DoubleMatrixDataset<String, String> ds = new umcg.genetica.math.matrix.DoubleMatrixDataset<String, String>(matrix);
+		DoubleMatrixDataset<String, String> ds = new DoubleMatrixDataset<String, String>(matrix);
 
 		if (!correlateRows) {
 			ds.transposeDataset();
@@ -265,7 +265,7 @@ public class FeatureCounts {
 			tf.close();
 		}
 
-		umcg.genetica.math.matrix.DoubleMatrixDataset<String, String> ddm = new umcg.genetica.math.matrix.DoubleMatrixDataset<String, String>();
+		DoubleMatrixDataset<String, String> ddm = new DoubleMatrixDataset<String, String>();
 		List<String> sampleList = Arrays.asList(sampleNames);
 		System.out.println("saving to: " + outdir + "raw.txt");
 		try {
@@ -305,7 +305,7 @@ public class FeatureCounts {
 
 
 		Pair<double[][], ArrayList<String>> output = cov.convertToTPM(dataMatrix, peakNames, fraglen);
-		ddm = new umcg.genetica.math.matrix.DoubleMatrixDataset<String, String>();
+		ddm = new DoubleMatrixDataset<String, String>();
 
 		System.out.println("saving to: " + outdir + "tpm.txt");
 		try {

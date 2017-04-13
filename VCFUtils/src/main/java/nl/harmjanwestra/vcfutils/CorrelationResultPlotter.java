@@ -6,7 +6,7 @@ import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.Panel;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
 import nl.harmjanwestra.utilities.graphics.panels.SpacerPanel;
-import umcg.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;

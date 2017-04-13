@@ -7,7 +7,7 @@ package nl.harmjanwestra.utilities.math;
 
 import cern.jet.stat.Gamma;
 import nl.harmjanwestra.utilities.association.AssociationResult;
-import umcg.genetica.math.stats.ChiSquare;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ChiSquare;
 
 public class LogisticRegression {
 

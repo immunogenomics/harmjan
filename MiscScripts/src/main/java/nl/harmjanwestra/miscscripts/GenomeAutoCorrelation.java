@@ -4,9 +4,9 @@ import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.io.trityper.util.BaseAnnot;
-import umcg.genetica.math.stats.Correlation;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.trityper.util.BaseAnnot;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
 
 import java.io.File;
 import java.io.IOException;
