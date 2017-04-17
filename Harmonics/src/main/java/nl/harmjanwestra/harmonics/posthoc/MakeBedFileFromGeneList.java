@@ -1,8 +1,7 @@
 package nl.harmjanwestra.harmonics.posthoc;
 
-import nl.harmjanwestra.utilities.legacy.genetica.containers.Gene;
-import umcg.genetica.ensembl.Features;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import umcg.genetica.ensembl.Features;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ public class MakeBedFileFromGeneList {
 	public void run(String ensemblAnnotation, String genelist, String bedout) throws IOException {
 		Features feat = new Features();
 		feat.loadAnnotation(ensemblAnnotation);
-		HashMap<String, Gene> genHash = feat.getGeneHash();
+		HashMap<String, umcg.genetica.containers.Gene> genHash = feat.getGeneHash();
 
 		HashSet<String> genes = new HashSet<String>();
 		TextFile tf = new TextFile(genelist, TextFile.R);
@@ -55,7 +54,7 @@ public class MakeBedFileFromGeneList {
 		for (int i = 0; i < allGenes.size(); i++) {
 			String gene = allGenes.get(i);
 
-			Gene g = genHash.get(gene);
+			umcg.genetica.containers.Gene g = genHash.get(gene);
 			int start = g.getStart();
 			int stop = g.getEnd();
 			int strand = g.getStrand();

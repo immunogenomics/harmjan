@@ -1,12 +1,13 @@
 package nl.harmjanwestra.vcfutils;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.matrix2.DoubleMatrixDataset;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 import java.io.IOException;
 import java.util.*;

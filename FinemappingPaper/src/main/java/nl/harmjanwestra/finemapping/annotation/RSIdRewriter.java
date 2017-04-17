@@ -14,7 +14,7 @@ import java.util.ArrayList;
 /**
  * Created by hwestra on 2/21/17.
  */
-public class IndelRSIdRewriter {
+public class RSIdRewriter {
 
 	public static void main(String[] args) {
 
@@ -58,7 +58,7 @@ public class IndelRSIdRewriter {
 //				new int[]{3, 16, 29}
 //		};
 
-//		IndelRSIdRewriter v = new IndelRSIdRewriter();
+//		RSIdRewriter v = new RSIdRewriter();
 //		for (int i = 0; i < tables.length; i++) {
 //			String table = tables[i];
 //			int[] column = columns[i];
@@ -94,7 +94,14 @@ public class IndelRSIdRewriter {
 				"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/META-assoc0.3-COSMO-merged.txt.gz",
 		};
 
-		IndelRSIdRewriter v = new IndelRSIdRewriter();
+		tables = new String[]{"/Data/tmp/rerun/METAout/META-assoc0.3-COSMO-gwas-0-merged.txt.gz",
+				"/Data/tmp/rerun/RAout/RA-assoc0.3-COSMO-gwas-0-merged.txt.gz",
+				"/Data/tmp/rerun/T1Dout/T1D-assoc0.3-COSMO-gwas-0-merged.txt.gz"};
+		tablesOut = new String[]{"/Data/tmp/rerun/METAout/META-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz",
+				"/Data/tmp/rerun/RAout/RA-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz",
+				"/Data/tmp/rerun/T1Dout/T1D-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz"};
+
+		RSIdRewriter v = new RSIdRewriter();
 		for (int i = 0; i < tables.length; i++) {
 
 			try {

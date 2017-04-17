@@ -108,7 +108,7 @@ public class Conditional {
 
 			boolean runconditional = true;
 			if (runconditional) {
-				int maxiter = 4;
+				int maxiter = 5;
 
 				//tyk2
 				outdir = "/Data/tmp/rerun/tyk2/";

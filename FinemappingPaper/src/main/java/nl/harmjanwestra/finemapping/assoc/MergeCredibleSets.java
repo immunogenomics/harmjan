@@ -93,7 +93,6 @@ public class MergeCredibleSets {
 //					maxPosteriorCredibleSet,
 //					nrVariantsInCredibleSet,
 //					geneAnnotation);
-			System.exit(-1);
 
 //			System.exit(-1);
 
@@ -126,7 +125,7 @@ public class MergeCredibleSets {
 			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 			String tabixfilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
-			System.exit(-1);
+//			System.exit(-1);
 			eqtlfilenames = new String[]{
 					"Monocyte-eQTL",
 					"Monocyte-hQTL-K27AC",
