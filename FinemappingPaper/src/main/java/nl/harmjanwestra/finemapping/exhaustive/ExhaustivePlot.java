@@ -11,11 +11,12 @@ import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.HeatmapPanel;
 import nl.harmjanwestra.utilities.graphics.panels.LDPanel;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
-import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,23 +35,30 @@ public class ExhaustivePlot {
 		try {
 			System.out.println("works");
 			BedFileReader reader = new BedFileReader();
-			ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/regions.txt");
+			ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
 //			String[] diseases = new String[]{"RA", "T1D"};
-			String[] diseases = new String[]{"RA"};
+			String[] diseases = new String[]{"RA", "T1D", "META"};
+//			diseases = new String[]{"RA"};
+			int nrToPlot = 25;
 			for (String d : diseases) {
 				for (Feature region : regions) {
+//					if (region.getChromosome().equals(Chromosome.TEN)) {
 					ExhaustivePlot p = new ExhaustivePlot();
-					String output = "/Data/Projects/2016-Finemapping/Exhaustive/plots/" + d + "-" + region.toString();
+					String output = "/Data/Projects/2016-Finemapping/Exhaustive/output/" + d + "-tyk2-" + region.toString();
 
-					String assocfile = "/Data/Projects/2016-Finemapping/Exhaustive/" + d + "-assoc0.3-COSMO-chr" + region.getChromosome().getNumber() + "-pairwise.txt.gz";
+					String assocfile = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + d + "-assoc0.3-COSMO-tyk2-chr" + region.getChromosome().getNumber() + "-pairwise-rewrite.txt.gz";
 					String tabixfile = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 					String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 
-					String snpcombos = "/Data/Projects/2016-Finemapping/Exhaustive/" + d + "/combos.txt";
-					if (region.getChromosome().equals(Chromosome.SIX)) {
-						p.findCombination(region, assocfile, snpcombos);
-						p.plotTopNSNPs(region, assocfile, output, 25, tabixfile, tabixsamplelimit);
+					String snpcombos = "/Data/Projects/2016-Finemapping/Exhaustive/snpcombos.txt";
+//					if (region.getChromosome().equals(Chromosome.SIX)) {
+
+					if (Gpio.exists(assocfile)) {
+						p.findCombination(region, assocfile, snpcombos, tabixfile, tabixsamplelimit);
+//							p.plotTopNSNPs(region, assocfile, output, nrToPlot, tabixfile, tabixsamplelimit);
 					}
+//					}
+//					}
 
 
 				}
@@ -65,8 +73,10 @@ public class ExhaustivePlot {
 
 	}
 
-	private void findCombination(Feature region, String assocfile, String snpcombos) throws IOException, DocumentException {
+	private void findCombination(Feature region, String assocfile, String snpcombos, String tabixPrefix, String tabixsamplelimit) throws IOException, DocumentException {
 
+		System.out.println("Trying to find snp combos in region: " + region.toString());
+		System.out.println("Assoc: " + assocfile);
 
 		TextFile tfc = new TextFile(snpcombos, TextFile.R);
 
@@ -81,6 +91,7 @@ public class ExhaustivePlot {
 				Feature region1 = Feature.parseFeature(elems[0]);
 				SNPFeature feature1 = SNPFeature.parseSNPFeature(elems[1]);
 				SNPFeature feature2 = SNPFeature.parseSNPFeature(elems[2]);
+//				System.out.println(region1.toString() + "\t" + feature1.toString());
 //			System.out.println(region1.toString() + "\tLooking for snp: " + feature1.toString() + " and " + feature2.toString());
 				if (region1.overlaps(region)) {
 					snpf1 = feature1;
@@ -91,8 +102,9 @@ public class ExhaustivePlot {
 		}
 		tfc.close();
 
+
 		if (snpf1 == null || snpf2 == null) {
-			// System.out.println("");
+			System.out.println("Could not read snp pair...");
 		} else {
 			System.out.println(region.toString() + "\tLooking for snp: " + snpf1.toString() + " and " + snpf2.toString());
 
@@ -186,14 +198,63 @@ public class ExhaustivePlot {
 			} else {
 				int nrsmaller = 0;
 				System.out.println("P-value pair selected: " + select.getP());
+				AssocPair top = null;
+				double maxp = 0;
 				for (AssocPair v : assocVals) {
+					if (v.getP() > maxp) {
+						maxp = v.getP();
+						top = v;
+					}
 					if (v.getP() > select.getP()) {
 						nrsmaller++;
-						System.out.println(v.getSnp1().toString() + "\t" + v.getSnp2().toString() + "\t" + v.getP());
 					}
 				}
 
-				System.out.println(region.toString() + "\t" + nrsmaller + " values out of " + assocVals.size());
+				System.out.println("Top pair: " + top.getSnp1().toString() + "\t" + top.getSnp2().toString() + "\t" + top.getP());
+				// calculate LD with selected pair...?
+				// get the LD for these variants
+
+				SNPFeature[] snplist = new SNPFeature[4];
+				snplist[0] = select.getSnp1();
+				snplist[1] = select.getSnp2();
+				snplist[2] = top.getSnp1();
+				snplist[3] = top.getSnp2();
+
+
+				String tabixfile = tabixPrefix.replaceAll("CHR", "" + region.getChromosome().getNumber());
+				VCFTabix tabix = new VCFTabix(tabixfile);
+				boolean[] includeSamples = null;
+				if (tabixsamplelimit != null) {
+					includeSamples = tabix.getSampleFilter(tabixsamplelimit);
+				}
+
+				TabixReader.Iterator window = tabix.query(region);
+				String next = window.next();
+
+				VCFVariant[] vars = new VCFVariant[4];
+				while (next != null) {
+					VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.HEADER);
+
+					for (int v = 0; v < snplist.length; v++) {
+						if (variant.asFeature().overlaps(snplist[v])) {
+							vars[v] = new VCFVariant(next, VCFVariant.PARSE.ALL, includeSamples);
+						}
+					}
+					next = window.next();
+				}
+				tabix.close();
+
+				// calculate LD
+				DetermineLD ld = new DetermineLD();
+
+				for (int v = 0; v < 2; v++) {
+					for (int v2 = 2; v2 < snplist.length; v2++) {
+						Pair<Double, Double> ldvals = ld.getLD(vars[v], vars[v2]);
+						System.out.println(snplist[v] + " - " + snplist[v2] + "\tr2: " + ldvals.getRight() + "\tdprime: " + ldvals.getLeft());
+					}
+				}
+
+				System.out.println(region.toString() + "\t" + nrsmaller + " more significant values out of " + assocVals.size());
 			}
 			System.out.println();
 			System.out.println();
@@ -281,7 +342,7 @@ public class ExhaustivePlot {
 	}
 
 
-	public static void plotTopNSNPs(Feature region, String assocfile, String output, int topN, String tabixPrefix, String tabixsamplelimit) throws IOException, DocumentException {
+	public void plotTopNSNPs(Feature region, String assocfile, String output, int topN, String tabixPrefix, String tabixsamplelimit) throws IOException, DocumentException {
 
 		String[] variants = new String[]{"", ""};
 
@@ -378,6 +439,13 @@ public class ExhaustivePlot {
 		Collections.sort(allSNPFeatures, new FeatureComparator(true));
 
 		double[][] vals = new double[allSNPFeatures.size()][allSNPFeatures.size()];
+		// fill with NaNs
+		for (int i = 0; i < vals.length; i++) {
+			for (int j = i; j < vals.length; j++) {
+				vals[i][j] = Double.NaN;
+				vals[j][i] = Double.NaN;
+			}
+		}
 
 		HashMap<SNPFeature, Integer> topSNPIndex = new HashMap<SNPFeature, Integer>();
 		HashMap<Integer, Integer> topSNPPosIndex = new HashMap<>();
@@ -389,13 +457,14 @@ public class ExhaustivePlot {
 		}
 		// iterate through all assoc PVals to get pairs corresponding to snp set
 		double maxPval = 0;
+		double thresh = -Math.log10(7.5e-7);
 		double minPval = Double.MAX_VALUE;
 		for (AssocPair p : assocVals) {
 			if (topSNPs.contains(p.getSnp1()) && topSNPs.contains(p.getSnp2())) {
 				Integer id1 = topSNPIndex.get(p.getSnp1());
 				Integer id2 = topSNPIndex.get(p.getSnp2());
 
-				if (p.getP() > -Math.log10(7.5e-7)) {
+				if (p.getP() > thresh) {
 					vals[id1][id2] = p.getP();
 					vals[id2][id1] = p.getP();
 					if (p.getP() > maxPval) {
@@ -404,6 +473,9 @@ public class ExhaustivePlot {
 					if (p.getP() < minPval) {
 						minPval = p.getP();
 					}
+				} else {
+					vals[id1][id2] = Double.NaN;
+					vals[id2][id1] = Double.NaN;
 				}
 			}
 		}
@@ -437,26 +509,52 @@ public class ExhaustivePlot {
 				ldmatrix[j][i] = ldmatrix[i][j];
 			}
 		}
-		System.out.println("meh2");
 
 		if (vals.length != 0) {
 
+			// merge LD matrix into pval matrix
+			for (int i = 0; i < vals.length; i++) {
+				for (int j = i; j < vals.length; j++) {
+					if (i != j) {
+						vals[i][j] = Double.NaN;
+						vals[i][j] = ldmatrix[i][j];
+					}
+				}
+			}
+
+
+			System.out.println("Max P: " + maxPval);
+			double remainder = maxPval % 1;
+			maxPval += (1 - remainder);
+			System.out.println("Max P: " + maxPval);
+			System.out.println("Min P: " + minPval);
+			remainder = minPval % 1;
+			minPval -= remainder;
+			System.out.println("Min P: " + minPval);
+
 			Range pvalRange = new Range(0, minPval, 1, maxPval);
-			pvalRange.roundY();
+			Range ldRange = new Range(0, 0, 1, 1);
+
 			Grid grid = new Grid(600, 600, 1, 1, 100, 100);
 			HeatmapPanel panel = new HeatmapPanel(1, 1);
 			panel.setData(vals, rowlabels, rowlabels);
-			panel.setPlotMode(HeatmapPanel.MODE.LOWER);
+			panel.setPlotMode(HeatmapPanel.MODE.TWODS);
 			grid.addPanel(panel);
-			panel.setRange(pvalRange);
+			panel.setRangeLower(pvalRange);
+			panel.setRangeUpper(ldRange);
 			grid.draw(output + "-pvals.pdf");
 
-			grid = new Grid(600, 600, 1, 1, 100, 100);
-			panel = new HeatmapPanel(1, 1);
-			panel.setData(ldmatrix, rowlabels, rowlabels);
-			panel.setPlotMode(HeatmapPanel.MODE.UPPER);
-			grid.addPanel(panel);
-			grid.draw(output + "-ld.pdf");
+//			grid = new Grid(600, 600, 1, 1, 100, 100);
+//			panel = new HeatmapPanel(1, 1);
+//			panel.setData(ldmatrix, rowlabels, rowlabels);
+//			panel.setPlotMode(HeatmapPanel.MODE.UPPER);
+//			grid.addPanel(panel);
+//			grid.draw(output + "-ld.pdf");
+//			TextFile tf = new TextFile(output + "mat.txt", TextFile.W);
+//			for (int i = 0; i < vals.length; i++) {
+//				tf.writeln(Strings.concat(vals[i], Strings.tab));
+//			}
+//			tf.close();
 		} else {
 			System.out.println("Nothing to plot?");
 		}

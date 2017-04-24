@@ -1,8 +1,10 @@
 package nl.harmjanwestra.finemapping.annotation;
 
 import htsjdk.tribble.readers.TabixReader;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
@@ -18,8 +20,42 @@ public class RSIdRewriter {
 
 	public static void main(String[] args) {
 
-		String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
-		String samplefilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
+		try {
+			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
+			String samplefilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
+
+			int[] cols = new int[]{3, 7};
+			int[] rsidcols = new int[]{2, 6};
+			int[] chrs = new int[]{2, 10, 11, 19};
+
+			BedFileReader reader = new BedFileReader();
+			ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
+
+			String[] ds = new String[]{"RA", "T1D", "META"};
+			for (int c = 0; c < chrs.length; c++) {
+				ArrayList<Feature> regionschr = new ArrayList<>();
+				for (Feature f : regions) {
+					if (f.getChromosome().equals(Chromosome.parseChr("" + chrs[c]))) {
+						regionschr.add(f);
+					}
+				}
+				System.out.println(regionschr.size() + " regions in chr " + chrs[c]);
+				for (int d = 0; d < ds.length; d++) {
+
+					String file = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-tyk2-chr" + chrs[c] + "-pairwise.txt.gz";
+					String fileout = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-tyk2-chr" + chrs[c] + "-pairwise-rewrite.txt.gz";
+
+					RSIdRewriter v = new RSIdRewriter();
+					if (Gpio.exists(file)) {
+						v.run(file, fileout, tabixprefix, samplefilter, 1, cols, rsidcols, regionschr);
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.exit(-1);
+
 
 //		String[] tables = new String[]{
 //				"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/tables/UpdateRSIds/SupplementaryTable7-2016-06-19-RA-LocusComparisonWithOkada-SignificantLoci.txt",
@@ -94,23 +130,23 @@ public class RSIdRewriter {
 				"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/META-assoc0.3-COSMO-merged.txt.gz",
 		};
 
-		tables = new String[]{"/Data/tmp/rerun/METAout/META-assoc0.3-COSMO-gwas-0-merged.txt.gz",
-				"/Data/tmp/rerun/RAout/RA-assoc0.3-COSMO-gwas-0-merged.txt.gz",
-				"/Data/tmp/rerun/T1Dout/T1D-assoc0.3-COSMO-gwas-0-merged.txt.gz"};
-		tablesOut = new String[]{"/Data/tmp/rerun/METAout/META-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz",
-				"/Data/tmp/rerun/RAout/RA-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz",
-				"/Data/tmp/rerun/T1Dout/T1D-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz"};
-
-		RSIdRewriter v = new RSIdRewriter();
-		for (int i = 0; i < tables.length; i++) {
-
-			try {
-				v.runOnAssocFiles(tables[i], tablesOut[i], tabixprefix, samplefilter);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-		}
+//		tables = new String[]{"/Data/tmp/rerun/METAout/META-assoc0.3-COSMO-gwas-0-merged.txt.gz",
+//				"/Data/tmp/rerun/RAout/RA-assoc0.3-COSMO-gwas-0-merged.txt.gz",
+//				"/Data/tmp/rerun/T1Dout/T1D-assoc0.3-COSMO-gwas-0-merged.txt.gz"};
+//		tablesOut = new String[]{"/Data/tmp/rerun/METAout/META-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz",
+//				"/Data/tmp/rerun/RAout/RA-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz",
+//				"/Data/tmp/rerun/T1Dout/T1D-assoc0.3-COSMO-gwas-0-merged-rewrite.txt.gz"};
+//
+//		RSIdRewriter v = new RSIdRewriter();
+//		for (int i = 0; i < tables.length; i++) {
+//
+//			try {
+//				v.runOnAssocFiles(tables[i], tablesOut[i], tabixprefix, samplefilter);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//
+//		}
 
 	}
 
@@ -169,10 +205,14 @@ public class RSIdRewriter {
 
 	}
 
-	public void run(String infile, String outfile, String tabixprefix, String samplefilter, int nrheaderlines, int[] columns) throws IOException {
+	public void run(String infile, String outfile, String tabixprefix, String samplefilter, int nrheaderlines, int[] columns, int[] rsidcols, ArrayList<Feature> regions) throws IOException {
 
 
 		System.out.println("Processing " + infile);
+		System.out.println(regions.size() + " regions will be loaded...");
+
+		ArrayList<VCFVariant> variants = getSNPs(tabixprefix, samplefilter, regions);
+		System.out.println(variants.size() + " variants in region..");
 		TextFile tf = new TextFile(infile, TextFile.R);
 		TextFile tfout = new TextFile(outfile, TextFile.W);
 		int ctr = 0;
@@ -185,8 +225,13 @@ public class RSIdRewriter {
 
 		String[] elems = tf.readLineElems(TextFile.tab);
 
+		int lnctr = 0;
+		int found = 0;
+		int notfound = 0;
 		while (elems != null) {
-			for (int i : columns) {
+			for (int c = 0; c < columns.length; c++) {
+				int i = columns[c];
+				int rsidcol = rsidcols[c];
 				if (i > elems.length) {
 					System.err.println("Warning: column " + i + " is out of bounds at line " + lnnr + " for " + infile);
 				} else {
@@ -199,14 +244,20 @@ public class RSIdRewriter {
 
 						// get variants in reference
 						Feature snp = new Feature(chrobj, pos, pos);
-						ArrayList<VCFVariant> select = getSNP(snp, tabixprefix, samplefilter, pos);
+						ArrayList<VCFVariant> select = getSNP(snp, variants);
 
 						if (select.isEmpty()) {
 							// ??
-							System.out.println("Could not find variant at position " + posStr);
+							//System.out.println("Could not find variant at position " + posStr);
+							notfound++;
 						} else if (select.size() == 1) {
-							System.out.println("ln:\t" + lnnr + "\tcol:\t" + i + "\tSingle variant: " + posStr + "\t\t-->\t\t" + select.get(0).getId());
-							elems[i] = chrobj.toString() + "_" + pos + "_" + select.get(0).getId();
+							String id = select.get(0).getId();
+//							System.out.println("ln:\t" + lnnr + "\tcol:\t" + i + "\tSingle variant: " + posStr + "\t\t-->\t\t" + select.get(0).getId());
+							elems[i] = chrobj.toString() + "_" + pos + "_" + id;
+							if (rsidcols != null) {
+								elems[rsidcol] = id;
+							}
+							found++;
 						} else {
 							// iterate variants
 //						System.out.println("Multiple variants: " + posStr);
@@ -222,11 +273,47 @@ public class RSIdRewriter {
 			tfout.writeln(ln);
 			elems = tf.readLineElems(TextFile.tab);
 			lnnr++;
+			if (lnnr % 1000 == 0) {
+				System.out.println(lnnr + " lines parsed.. found: " + found + "\tnot found:" + notfound);
+			}
 		}
+		System.out.println();
 		tf.close();
 		tfout.close();
 		System.out.println("---");
 		System.out.println();
+	}
+
+	private ArrayList<VCFVariant> getSNP(Feature snp, ArrayList<VCFVariant> variants) {
+		ArrayList<VCFVariant> output = new ArrayList<>();
+		for (VCFVariant v : variants) {
+			if (v.getPos() == snp.getStart()) {
+				output.add(v);
+			}
+		}
+		return output;
+	}
+
+	private ArrayList<VCFVariant> getSNPs(String tabixprefix, String samplefilter, ArrayList<Feature> regions) throws IOException {
+		ArrayList<VCFVariant> output = new ArrayList<>();
+		for (Feature f : regions) {
+			String tabixfile = tabixprefix.replace("CHR", "" + f.getChromosome().getNumber());
+//		System.out.println(tabixfile);
+			VCFTabix reader = new VCFTabix(tabixfile);
+			boolean[] snpSampleFilter = reader.getSampleFilter(samplefilter);
+			TabixReader.Iterator inputSNPiter = reader.query(f);
+			String snpStr = null;
+			snpStr = inputSNPiter.next();
+			while (snpStr != null) {
+				VCFVariant variant = new VCFVariant(snpStr, VCFVariant.PARSE.HEADER, snpSampleFilter);
+				output.add(variant);
+				snpStr = inputSNPiter.next();
+			}
+
+			reader.query(f);
+			reader.close();
+		}
+		return output;
 	}
 
 	private ArrayList<VCFVariant> getSNP(Feature snp, String tabixprefix, String samplefilter, Integer pos) throws IOException {

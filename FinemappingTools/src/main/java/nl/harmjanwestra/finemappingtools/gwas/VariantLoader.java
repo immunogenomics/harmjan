@@ -29,6 +29,12 @@ public class VariantLoader {
 
 		VCFVariantLoader loader = new VCFVariantLoader(genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation, exService);
 		VCFVariantFilters filter = new VCFVariantFilters();
+
+		// there is a file that limits the snps to include
+		if (options.getSnpLimitFile() != null) {
+			filter.addFilter(new VCFVariantSetFilter(options.getSnpLimitFile()));
+		}
+
 		filter.addFilter(new VCFVariantCallRateFilter(options.getCallrateThreshold()));
 		filter.addFilter(new VCFVariantImpQualFilter(options.getImputationqualitythreshold(), true));
 		filter.addFilter(new VCFVariantMAFFilter(options.getMafthresholdD(), VCFVariantMAFFilter.MODE.CONTROLS));

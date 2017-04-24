@@ -321,7 +321,7 @@ public class HaplotypeMultivariatePlot {
 
 		g2d.setColor(colorL);
 		g2d.drawLine(xa, y2, xb, y2);
-		int halfblock = blockSize / 2;
+		int halfblock = (int) Math.floor((double) blockSize / 2d);
 		g2d.fillOval(xc - halfblock, y2 - halfblock, blockSize, blockSize);
 
 
