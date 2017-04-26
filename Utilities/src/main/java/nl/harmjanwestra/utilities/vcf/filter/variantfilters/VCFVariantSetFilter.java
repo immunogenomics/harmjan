@@ -1,10 +1,12 @@
 package nl.harmjanwestra.utilities.vcf.filter.variantfilters;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
@@ -36,6 +38,14 @@ public class VCFVariantSetFilter implements VCFVariantFilter {
 			elems = tf.readLineElems(TextFile.tab);
 		}
 		tf.close();
+	}
+
+	public VCFVariantSetFilter(ArrayList<SNPFeature> snps) {
+		toFilter = new HashSet<>();
+		for (SNPFeature s : snps) {
+			String str = s.getChromosome().toString() + "_" + s.getStart();
+			toFilter.add(str);
+		}
 	}
 
 	@Override

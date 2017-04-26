@@ -6,18 +6,23 @@ import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
-import nl.harmjanwestra.utilities.math.DetermineLD;
-import nl.harmjanwestra.utilities.vcf.VCFTabix;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.legacy.genetica.console.ProgressBar;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.math.DetermineLD;
+import nl.harmjanwestra.utilities.vcf.VCFTabix;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
+import nl.harmjanwestra.utilities.vcf.VCFVariantLoader;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantFilters;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantSetFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.*;
 
 /**
@@ -88,12 +93,11 @@ public class ProxyFinder {
 		}
 
 		System.out.println(snps.size() + " snps in " + options.snpfile);
-		if(options.nrthreads == 1){
+		if (options.nrthreads == 1) {
 			System.out.println("Using: " + options.nrthreads + " thread");
 		} else {
 			System.out.println("Using: " + options.nrthreads + " threads");
 		}
-
 
 
 		ExecutorService threadPool = Executors.newFixedThreadPool(options.nrthreads);
@@ -257,41 +261,79 @@ public class ProxyFinder {
 			// check whether the reference VCFs are here..
 			System.out.println(pairs.size() + " variant pairs loaded.");
 			boolean allfilespresent = true;
-			for (Pair<SNPFeature, SNPFeature> p : pairs) {
+			if (options.tabixrefprefix != null) {
+				for (Pair<SNPFeature, SNPFeature> p : pairs) {
 
-				SNPFeature snp1 = p.getLeft();
-				SNPFeature snp2 = p.getRight();
+					SNPFeature snp1 = p.getLeft();
+					SNPFeature snp2 = p.getRight();
 
 
-				String tabixfile1 = options.tabixrefprefix.replaceAll("CHR", "" + snp1.getChromosome().getNumber());
-				String tabixfile2 = options.tabixrefprefix.replaceAll("CHR", "" + snp2.getChromosome().getNumber());
-				if (!Gpio.exists(tabixfile1)) {
-					System.out.println("Could not find required path: " + tabixfile1);
-					allfilespresent = false;
+					String tabixfile1 = options.tabixrefprefix.replaceAll("CHR", "" + snp1.getChromosome().getNumber());
+					String tabixfile2 = options.tabixrefprefix.replaceAll("CHR", "" + snp2.getChromosome().getNumber());
+					if (!Gpio.exists(tabixfile1)) {
+						System.out.println("Could not find required path: " + tabixfile1);
+						allfilespresent = false;
+					}
+					if (!Gpio.exists(tabixfile2)) {
+						System.out.println("Could not find required path: " + tabixfile2);
+						allfilespresent = false;
+					}
 				}
-				if (!Gpio.exists(tabixfile2)) {
-					System.out.println("Could not find required path: " + tabixfile2);
-					allfilespresent = false;
+
+				if (!allfilespresent) {
+					System.out.println("Some VCF files are missing");
+					System.exit(-1);
 				}
-
-
-			}
-
-			if (!allfilespresent) {
-				System.out.println("Some VCF files are missing");
-				System.exit(-1);
+			} else {
+				if (options.vcf == null || !Gpio.exists(options.vcf)) {
+					System.out.println("Could not find input vcf: " + options.vcf);
+					System.exit(-1);
+				}
 			}
 		}
 
 		TextFile out = new TextFile(options.output, TextFile.W);
+		out.writeln("Variant1\tVariant2\tPearsonRSquare\tDprime\tR-square");
 		int nr = 0;
+		ArrayList<VCFVariant> allVariants = null;
+		if (options.tabixrefprefix == null && options.vcf != null) {
+			int nrthreads = Runtime.getRuntime().availableProcessors();
+
+
+			if (options.nrthreads < nrthreads && options.nrthreads > 0) {
+				nrthreads = options.nrthreads;
+			}
+
+			VCFVariantLoader loader = new VCFVariantLoader();
+
+			VCFVariantFilters filter = new VCFVariantFilters();
+			ArrayList<SNPFeature> snps = new ArrayList<>();
+			for (Pair<SNPFeature, SNPFeature> p : pairs) {
+				snps.add(p.getLeft());
+				snps.add(p.getRight());
+			}
+			filter.addFilter(new VCFVariantSetFilter(snps));
+			allVariants = loader.run(options.vcf, filter, nrthreads);
+			Collections.sort(allVariants, new VCFVariantComparator());
+
+		}
 		for (Pair<SNPFeature, SNPFeature> p : pairs) {
 
 			SNPFeature snpfeature1 = p.getLeft();
 			SNPFeature snpfeature2 = p.getRight();
 
-			VCFVariant variant1 = getSNP(snpfeature1);
-			VCFVariant variant2 = getSNP(snpfeature2);
+			VCFVariant variant1 = null;
+			getSNP(snpfeature1);
+			VCFVariant variant2 = null;
+			getSNP(snpfeature2);
+
+			if (options.tabixrefprefix != null) {
+				variant1 = getSNP(snpfeature1);
+				variant2 = getSNP(snpfeature2);
+			} else {
+				variant1 = getSNP(allVariants, snpfeature1);
+				variant2 = getSNP(allVariants, snpfeature1);
+			}
 
 			if (variant1 != null && variant2 != null) {
 				double[] genotypes1 = convertToDouble(variant1);
@@ -302,6 +344,7 @@ public class ProxyFinder {
 				double rsq = (corr * corr);
 				DetermineLD ldcalc = new DetermineLD();
 				Pair<Double, Double> ldvals = ldcalc.getLD(variant1, variant2);
+
 				out.writeln(variant1.toString() + "\t" + variant2.toString() + "\t" + rsq + "\t" + ldvals.getRight() + "\t" + ldvals.getLeft());
 
 				if (rsq > options.threshold) {
@@ -312,6 +355,17 @@ public class ProxyFinder {
 		out.close();
 
 		System.out.println(nr + " of " + pairs.size() + " have rsq>" + options.threshold);
+	}
+
+	private VCFVariant getSNP(ArrayList<VCFVariant> allVariants, SNPFeature snpfeature1) {
+		for (VCFVariant v : allVariants) {
+			if (v.asSNPFeature().getChromosome().equals(snpfeature1.getChromosome())) {
+				if (v.getPos() == snpfeature1.getStart()) {
+					return v;
+				}
+			}
+		}
+		return null;
 	}
 
 	private Pair<double[], double[]> stripmissing(double[] a, double[] b) {

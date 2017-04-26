@@ -69,6 +69,13 @@ public class ProxyFinderOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("vcf")
+				.hasArg()
+				.desc("Use non-indexed VCF as input")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("locusld")
 				.desc("Perform Pairwise LD calculation within a region (provide region with --regions)")
 				.build();
@@ -108,6 +115,7 @@ public class ProxyFinderOptions {
 	public String regionfile;
 	public boolean locusld;
 	public double mafthreshold;
+	public String vcf;
 
 	public ProxyFinderOptions(String[] args) {
 
@@ -118,7 +126,10 @@ public class ProxyFinderOptions {
 
 			if (cmd.hasOption("tabix")) {
 				tabixrefprefix = cmd.getOptionValue("tabix");
+			} else if (cmd.hasOption("vcf")) {
+				vcf = cmd.getOptionValue("vcf");
 			} else {
+
 				System.out.println("Provide reference");
 				run = false;
 			}

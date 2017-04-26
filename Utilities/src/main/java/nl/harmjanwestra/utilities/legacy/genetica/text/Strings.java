@@ -7,6 +7,7 @@ package nl.harmjanwestra.utilities.legacy.genetica.text;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -32,6 +33,84 @@ public class Strings {
 
 		return concat(s, t, null, null);
 	}
+
+	// this variant of Pattern.split uses primitive arrays instead of an array list
+	// should be slower (since iterating the same string twice
+	// but may prevent some unwanted out of memory messages when parsing lots of long strings
+	// also, use the string cache when possible.
+	public static String[] split(CharSequence input, int limit, Pattern p) {
+		int index = 0;
+		boolean matchLimited = limit > 0;
+
+		Matcher m = p.matcher(input);
+
+		// count number of matches
+		int nrMatch = 0;
+		while (m.find()) {
+			if (!matchLimited || nrMatch < limit - 1) {
+				if (index == 0 && index == m.start() && m.start() == m.end()) {
+					// no empty leading substring included for zero-width match
+					// at the beginning of the input char sequence.
+					continue;
+				}
+//				String match = input.subSequence(index, m.start()).toString();
+//				matchList.add(match);
+				nrMatch++;
+				index = m.end();
+			} else if (nrMatch == limit - 1) { // last one
+//				String match = input.subSequence(index,
+//						input.length()).toString();
+//				matchList.add(match);
+				nrMatch++;
+				index = m.end();
+			}
+		}
+
+		String[] output = new String[nrMatch + 1];
+		nrMatch = 0;
+		index = 0;
+		m.reset();
+
+		// Add segments before each match found
+		while (m.find()) {
+			if (!matchLimited || nrMatch < limit - 1) {
+				if (index == 0 && index == m.start() && m.start() == m.end()) {
+					// no empty leading substring included for zero-width match
+					// at the beginning of the input char sequence.
+					continue;
+				}
+				String match = new String(input.subSequence(index, m.start()).toString()).intern();
+				output[nrMatch] = match;
+				nrMatch++;
+				index = m.end();
+			} else if (nrMatch == limit - 1) { // last one
+				String match = new String(input.subSequence(index, input.length()).toString()).intern();
+				output[nrMatch] = match;
+				nrMatch++;
+				index = m.end();
+			}
+		}
+
+		// If no match was found, return this
+		if (index == 0)
+			return new String[]{input.toString()};
+
+		// Add remaining segment
+		if (!matchLimited || nrMatch < limit)
+			output[nrMatch] = new String(input.subSequence(index, input.length()).toString()).intern();
+
+		// Construct result
+		int resultSize = output.length;
+		if (limit == 0)
+			while (resultSize > 0 && output[resultSize - 1].equals(""))
+				resultSize--;
+		String[] result = new String[resultSize];
+		for (int i = 0; i < output.length && i < resultSize; i++) {
+			result[i] = output[i];
+		}
+		return result;
+	}
+
 
 	public static String concat(String[] s, Pattern t, String replaceNull) {
 		return concat(s, t, null, replaceNull);

@@ -4,6 +4,7 @@ import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.Gene;
 import nl.harmjanwestra.utilities.features.Transcript;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.TreeSet;
@@ -16,6 +17,7 @@ public class Annotation {
 	protected Collection<Gene> genes;
 	protected HashMap<String, Gene> strToGene;
 	protected String annotationLocation;
+	private ArrayList<Gene> genesAsArrayList;
 
 
 	public HashMap<String, Gene> getStrToGene() {
@@ -45,4 +47,7 @@ public class Annotation {
 		return transcriptTree;
 	}
 
+	public ArrayList<Gene> getGenesAsArrayList() {
+		return new ArrayList<Gene>(genes);
+	}
 }

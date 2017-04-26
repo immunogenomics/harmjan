@@ -14,6 +14,7 @@ public class AnnotationTrackPanel extends Panel {
 	private double[][][] data; // [dataset][group][bp]
 	private Feature region;
 	private int[] highlight;
+	private String[][] groupnames;
 
 	public AnnotationTrackPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -22,11 +23,11 @@ public class AnnotationTrackPanel extends Panel {
 	public void setData(double[][][] data, // [dataset][group][bp]
 						int[] highlight, // [bp]
 						Feature region,
-
 						String[][] groupnames) {
 		this.data = data;
 		this.highlight = highlight;
 		this.region = region;
+		this.groupnames = groupnames; // [dataset][group]
 	}
 
 	@Override
@@ -80,10 +81,10 @@ public class AnnotationTrackPanel extends Panel {
 				}
 
 
-				int y0 = marginY + (groupctr * trackheight) + (groupctr * trackmargin);
+				int y0 = this.y0 + marginY + (groupctr * trackheight) + (groupctr * trackmargin);
 				g2d.setColor(defaultLightGrey);
 				for (int bin = 0; bin < data[dataset][group].length; bin++) {
-					int x1 = (int) Math.floor(marginX + (bin * pixelPerBin));
+					int x1 = x0 + (int) Math.floor(marginX + (bin * pixelPerBin));
 					double v = data[dataset][group][bin];
 					if (v > 0) {
 						v /= max;
@@ -95,7 +96,12 @@ public class AnnotationTrackPanel extends Panel {
 
 				// draw group line
 				g2d.setColor(defaultColor);
-				g2d.drawLine(marginX, y0, marginX + nrPixelsX, y0);
+				g2d.drawLine(x0 + marginX, y0, x0 + marginX + nrPixelsX, y0);
+
+				// print group name
+				if (groupnames != null) {
+					g2d.drawString(groupnames[dataset][group], x0 + marginX + nrPixelsX + 10, y0);
+				}
 				groupctr++;
 			}
 		}
@@ -105,9 +111,9 @@ public class AnnotationTrackPanel extends Panel {
 			g2d.setColor(highlightColor);
 			for (int bp : highlight) {
 				double perc = r.getRelativePositionX(bp);
-				int y0 = marginY;
-				int y1 = marginY + (groupctr * trackheight) + (groupctr * trackmargin);
-				int x1 = marginX + (int) Math.floor((perc * nrPixelsX));
+				int y0 = this.y0 + marginY - trackheight;
+				int y1 = this.y0 + marginY + (groupctr * trackheight) + (groupctr * trackmargin) - trackheight;
+				int x1 = this.x0 + marginX + (int) Math.floor((perc * nrPixelsX));
 				g2d.drawLine(x1, y0, x1, y1);
 
 			}

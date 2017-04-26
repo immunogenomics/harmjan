@@ -46,19 +46,17 @@ public class AnnotationOverlapPlot {
 		args = new String[11];
 		args[0] = "--plotoverlap";
 		args[1] = "--gtf";
-		args[2] = "/Data//Ref/Annotation/UCSC/genes.gtf";
+		args[2] = "/Data/Ref/Annotation/UCSC/genes.gtf.gz";
 		args[3] = "-a";
-		args[4] = "/Data/Enhancers/TrynkaEpigenetics/hg19/dnasefiles.txt";
-//		args[4] = "/Data/Enhancers/ChromHMM/allChromHMM-desc.txt";
-
+		args[4] = "/Data/Enhancers/Roadmap/dnase-groups.txt";
 		args[5] = "-i";
-		args[6] = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+		args[6] = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
 //
 		args[7] = "-r";
-		args[8] = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
+		args[8] = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/overlapplots/regions.bed";
 
 		args[9] = "-o";
-		args[10] = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/plotsOverlap/DNASE-RA-";
+		args[10] = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/overlapplots/RA-DNAse-";
 
 
 		BroShifterOptions options = new BroShifterOptions(args);

@@ -17,7 +17,9 @@ import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.graphics.Grid;
 import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.AnnotationTrackPanel;
+import nl.harmjanwestra.utilities.graphics.panels.AssociationPanel;
 import nl.harmjanwestra.utilities.graphics.panels.CircularHeatmapPanel;
+import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -47,6 +49,7 @@ public class MergeCredibleSets {
 //			c.determineRegionSignificanceThresholds(bedregions, assocfiles, datasetnames, genenames, outfile);
 
 			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+//			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/overlapplots/regions.bed";
 //		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
 			String genenames = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 			String geneAnnotation = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
@@ -82,50 +85,50 @@ public class MergeCredibleSets {
 
 			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
-			boolean onlyincludevariantsbelowsignificancethreshold = false;
-//			c.makeCircularPlot(bedregions,
-//					assocfiles,
-//					datasetnames,
-//					genenames,
-//					outplot,
-//					significanceThreshold,
-//					onlyincludevariantsbelowsignificancethreshold,
-//					maxPosteriorCredibleSet,
-//					nrVariantsInCredibleSet,
-//					geneAnnotation);
-
-//			System.exit(-1);
-
+//			boolean onlyincludevariantsbelowsignificancethreshold = false;
+////			c.makeCircularPlot(bedregions,
+////					assocfiles,
+////					datasetnames,
+////					genenames,
+////					outplot,
+////					significanceThreshold,
+////					onlyincludevariantsbelowsignificancethreshold,
+////					maxPosteriorCredibleSet,
+////					nrVariantsInCredibleSet,
+////					geneAnnotation);
 //
-//			/*
-//			eQTL overlap
-//		*/
+////			System.exit(-1);
+//
+////
+////			/*
+////			eQTL overlap
+////		*/
 
 			String[] eqtlfiles = new String[]{
 					"/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05-upd.tab",
-//					"/Data/eQTLs/Milani/CD4-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
-//					"/Data/eQTLs/Milani/CD4-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
-//					"/Data/eQTLs/Milani/CD8-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
-//					"/Data/eQTLs/Milani/CD8-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
+					"/Data/eQTLs/Milani/CD4-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
+					"/Data/eQTLs/Milani/CD4-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
+					"/Data/eQTLs/Milani/CD8-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
+					"/Data/eQTLs/Milani/CD8-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
 					"/Data/eQTLs/BiosEQTLs/eQTLsFDR0.05-ProbeLevel.txt.gz"
 			};
 			String[] eqtlfilenames = new String[]{
 					"Raj",
-//					"Milani-CD4",
-//					"Milani-CD4-trans",
-//					"Milani-CD8",
-//					"Milani-CD8-trans",
+					"Milani-CD4",
+					"Milani-CD4-trans",
+					"Milani-CD8",
+					"Milani-CD8-trans",
 					"Bios"
 			};
-//
-//			String dbsnpvcf = "/Data/Ref/dbSNP/human_9606_b147_GRCh37p13/00-All.vcf.gz";
-//			c.rewriteEQTLFile("/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05.tsv", dbsnpvcf,
-//					"/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05-upd.tab");
-//
+////
+////			String dbsnpvcf = "/Data/Ref/dbSNP/human_9606_b147_GRCh37p13/00-All.vcf.gz";
+////			c.rewriteEQTLFile("/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05.tsv", dbsnpvcf,
+////					"/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05-upd.tab");
+////
 			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 			String tabixfilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
-//			System.exit(-1);
+////			System.exit(-1);
 			eqtlfilenames = new String[]{
 					"Monocyte-eQTL",
 					"Monocyte-hQTL-K27AC",
@@ -178,6 +181,8 @@ public class MergeCredibleSets {
 //			/*
 //			Bed file overlap
 //		*/
+//
+//
 			String[] bedfiles = new String[]{
 					"/Data/Enhancers/Roadmap/dnase-groups.txt",
 					"/Data/Enhancers/Roadmap/h3k4me3-groups.txt",
@@ -412,6 +417,14 @@ public class MergeCredibleSets {
 		System.out.println(ctr + " regions processed.. ");
 		int qctr = 0;
 		if (produceplot) {
+
+			Annotation annotation = null;
+			if (geneAnnotation.endsWith(".gtf.gz") || geneAnnotation.endsWith(".gtf")) {
+				annotation = new GTFAnnotation(geneAnnotation);
+			} else {
+				annotation = new EnsemblStructures(geneAnnotation);
+			}
+
 			for (int regionId = 0; regionId < regions.size(); regionId++) {
 				Feature region = regions.get(regionId);
 				if (regionsWithCredibleSetsHash.contains(region)) {
@@ -427,6 +440,15 @@ public class MergeCredibleSets {
 						int nrgroups = annotationdata[an].getUniqueGroups().size();
 						double[][] tmpoverlap = new double[nrgroups][nrBins];
 						overlap[an] = tmpoverlap;
+					}
+
+					String[][] groupnames = new String[bedfilenames.length][];
+					for (int an = 0; an < bedfilenames.length; an++) {
+						int nrgroups = annotationdata[an].getUniqueGroups().size();
+						groupnames[an] = new String[nrgroups];
+						for (int group = 0; group < nrgroups; group++) {
+							groupnames[an][group] = annotationdata[an].getUniqueGroups().get(group) + "-" + bedfilenames[an];
+						}
 					}
 
 
@@ -454,18 +476,55 @@ public class MergeCredibleSets {
 //
 //
 					for (int ds = 0; ds < datasetnames.length; ds++) {
-						Grid grid = new Grid(1000, 100, 1, 1, 100, 100);
+						Grid grid = new Grid(1000, 100, 3, 1, 100, 100);
 						AnnotationTrackPanel p = new AnnotationTrackPanel(1, 1);
+						AssociationPanel assocP = new AssociationPanel(1, 1);
+
+
+						GenePanel gp = new GenePanel(1, 1);
+						ArrayList<Gene> genes = new ArrayList<Gene>();
+						for (Gene g : annotation.getGenes()) {
+							if (g.overlaps(region)) {
+								genes.add(g);
+							}
+						}
+						gp.setData(region, genes);
+						grid.addPanel(gp);
+
+						ArrayList<AssociationResult> results = associationResults.get(ds);
+						ArrayList<Pair<Integer, Double>> pvalues = new ArrayList<>();
+
+						for (int i = 0; i < results.size(); i++) {
+							AssociationResult r = results.get(i);
+							if (r.getSnp().overlaps(region)) {
+								pvalues.add(new Pair<Integer, Double>(r.getSnp().getStart(), r.getLog10Pval()));
+							}
+						}
+
+						boolean[] mark = new boolean[pvalues.size()];
+						for (int i = 0; i < mark.length; i++) {
+							int pos = pvalues.get(i).getLeft();
+							for (int j = 0; j < crediblesets[ds][regionId].length; j++) {
+								if (pos == crediblesets[ds][regionId][j].getSnp().getStart()) {
+									mark[j] = true;
+								}
+							}
+						}
+
+						assocP.setDataSingleDs(region, null, pvalues, datasetnames[ds]);
+						assocP.setMarkDifferentShape(mark);
+						grid.addPanel(assocP);
 
 						int[] highlight = new int[crediblesets[ds][regionId].length];
 						for (int i = 0; i < highlight.length; i++) {
 							highlight[i] = crediblesets[ds][regionId][i].getSnp().getStart();
 						}
-						String[][] groupnames = null;
+
 						p.setData(overlap, highlight, region, groupnames);
-						p.setMarginX(10);
-						p.setMarginY(10);
+//						p.setMarginX(10);
+//						p.setMarginY(10);
 						grid.addPanel(p);
+
 						grid.draw(outplot + datasetnames[ds] + "-" + region.toString() + ".pdf");
 					}
 
@@ -681,13 +740,18 @@ public class MergeCredibleSets {
 
 		int len = maxNrVariantsInCredibleSet;
 		TextFile out = new TextFile(outfile, TextFile.W);
+		TextFile out2 = new TextFile(outfile + "-pvalsonly.txt", TextFile.W);
 		String header2 = "\t\t";
 
 		String header1 = "region\tgene";
+		String header3 = "region\tgene";
 		for (int i = 0; i < data.length; i++) {
 			header2 += datasetNames[i]
 					+ "\t\t\t\t\t";
 			header1 += "\tNrVariantsInCredibleSet" +
+					"\tVariants" +
+					"\tPosterior";
+			header3 += "\tNrVariantsInCredibleSet" +
 					"\tVariants" +
 					"\tPosterior";
 			for (int e = 0; e < eqtlfilenames.length; e++) {
@@ -696,11 +760,13 @@ public class MergeCredibleSets {
 						+ "\tP(eQTL)-" + eqtlfilenames[e]
 						+ "\tDistance-" + eqtlfilenames[e]
 						+ "\tLD-" + eqtlfilenames[e];
+				header3 += "\tP(eQTL)-" + eqtlfilenames[e];
 				header2 += "\t\t\t\t";
 			}
 		}
 		out.writeln(header2);
 		out.writeln(header1);
+		out2.writeln(header3);
 
 		// load all top eQTLs per gene for all regions (+- 1mb)
 		EQTL[][][] eqtls = loadEQTLs(eqtlfiles, regions); // [eqtldataset][region][eqtl]
@@ -719,9 +785,10 @@ public class MergeCredibleSets {
 				VCFTabix tabix = new VCFTabix(tabixFile);
 				boolean[] filter = tabix.getSampleFilter(tabixFilter);
 				Feature eqtlregion = new Feature(region);
-				eqtlregion.setStart(eqtlregion.getStart() - 1000000);
-				eqtlregion.setStop(eqtlregion.getStop() + 1000000);
+				eqtlregion.setStart(eqtlregion.getStart() - 10000);
+				eqtlregion.setStop(eqtlregion.getStop() + 10000);
 				ArrayList<VCFVariant> all1kgvariants = tabix.getAllVariants(region, filter);
+				System.out.println(all1kgvariants.size() + " variants in LD reference for region: " + region.toString());
 
 				ArrayList<ArrayList<AssociationResult>> resultsPerDs = new ArrayList<>();
 
@@ -733,6 +800,7 @@ public class MergeCredibleSets {
 				double[] regionsums = new double[data.length];
 				for (int snpId = 0; snpId < len; snpId++) {
 					String ln = "";
+					String ln2 = "";
 					boolean allSNPsPrinted = true;
 					for (int datasetId = 0; datasetId < data.length; datasetId++) {
 						if (regionsums[datasetId] < maxPosteriorCredibleSet) {
@@ -743,9 +811,13 @@ public class MergeCredibleSets {
 					if (!allSNPsPrinted) {
 						if (snpId == 0) {
 							ln = region.toString() + "\t" + locusToGene.get(region.toString());
+							ln2 = region.toString() + "\t" + locusToGene.get(region.toString());
 							for (int datasetId = 0; datasetId < data.length; datasetId++) {
 								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
 								ln += "\t" + crediblesets[datasetId][regionId].length
+										+ "\t" + r.getSnp().toString()
+										+ "\t" + r.getPosterior();
+								ln2 += "\t" + crediblesets[datasetId][regionId].length
 										+ "\t" + r.getSnp().toString()
 										+ "\t" + r.getPosterior();
 
@@ -757,10 +829,14 @@ public class MergeCredibleSets {
 										regionId);
 
 								ln += lnblock;
+								String[] lnblockelems = lnblock.split("\t");
+								String p = lnblockelems[4];
+								ln2 += "\t" + p;
 								regionsums[datasetId] += r.getPosterior();
 							}
 						} else {
 							ln = "\t";
+							ln2 = "\t";
 							for (int datasetId = 0; datasetId < data.length; datasetId++) {
 								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
 
@@ -775,13 +851,23 @@ public class MergeCredibleSets {
 									ln += "\t"
 											+ "\t" + r.getSnp().toString()
 											+ "\t" + r.getPosterior();
+									ln2 += "\t"
+											+ "\t" + r.getSnp().toString()
+											+ "\t" + r.getPosterior();
 									ln += lnblock;
+									String[] lnblockelems = lnblock.split("\t");
+									String p = lnblockelems[4];
+									ln2 += "\t" + p;
 								} else {
 									ln += "\t"
 											+ "\t"
 											+ "\t";
+									ln2 += "\t"
+											+ "\t"
+											+ "\t";
 									for (int e = 0; e < eqtlfilenames.length; e++) {
 										ln += "\t\t\t\t\t";
+										ln2 += "\t";
 									}
 								}
 
@@ -791,6 +877,7 @@ public class MergeCredibleSets {
 
 						}
 						out.writeln(ln);
+						out2.writeln(ln2);
 					}
 
 				}
@@ -801,6 +888,7 @@ public class MergeCredibleSets {
 		}
 
 		out.close();
+		out2.close();
 	}
 
 	private String eqtllineblock(ArrayList<VCFVariant> all1kgvariants,

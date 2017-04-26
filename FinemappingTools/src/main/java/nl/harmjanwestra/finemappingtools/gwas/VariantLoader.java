@@ -39,8 +39,9 @@ public class VariantLoader {
 		filter.addFilter(new VCFVariantImpQualFilter(options.getImputationqualitythreshold(), true));
 		filter.addFilter(new VCFVariantMAFFilter(options.getMafthresholdD(), VCFVariantMAFFilter.MODE.CONTROLS));
 		filter.addFilter(new VCFVariantHWEPFilter(options.getHWEPThreshold(), VCFVariantHWEPFilter.MODE.CONTROLS));
+		filter.addFilter(new VCFVariantRegionFilter(regions));
 
-		ArrayList<VCFVariant> variants = loader.run(options.getVcf(), regions, filter);
+		ArrayList<VCFVariant> variants = loader.run(options.getVcf(), filter);
 		Collections.sort(variants, new VCFVariantComparator());
 
 

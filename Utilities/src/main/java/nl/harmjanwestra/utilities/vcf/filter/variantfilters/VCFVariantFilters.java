@@ -13,10 +13,22 @@ public class VCFVariantFilters {
 
 	public VCFVariantFilters() {
 		filters = new ArrayList<VCFVariantFilter>();
+		checkRegionFilter();
 	}
 
 	public void addFilter(VCFVariantFilter filter) {
 		filters.add(filter);
+		checkRegionFilter();
+	}
+
+	private void checkRegionFilter() {
+		if (hasRegionOrSetFilter == null) {
+			for (VCFVariantFilter f : filters) {
+				if (f instanceof VCFVariantSetFilter || f instanceof VCFVariantRegionFilter) {
+					hasRegionOrSetFilter = true;
+				}
+			}
+		}
 	}
 
 	public boolean passesFilters(VCFVariant v) {
@@ -38,6 +50,24 @@ public class VCFVariantFilters {
 
 	public int size() {
 		return filters.size();
+	}
+
+	public boolean passesRegionOrVariantFilter(VCFVariant v) {
+		boolean passesfilter = true;
+		for (VCFVariantFilter f : filters) {
+			if (f instanceof VCFVariantSetFilter) {
+				passesfilter = f.passesThreshold(v);
+			}
+		}
+		return passesfilter;
+
+	}
+
+	public Boolean hasRegionOrSetFilter = null;
+
+	public boolean hasRegionOrVariantSetFilter() {
+
+		return hasRegionOrSetFilter;
 	}
 }
 

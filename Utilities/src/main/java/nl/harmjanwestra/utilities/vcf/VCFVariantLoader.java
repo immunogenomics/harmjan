@@ -1,11 +1,11 @@
 package nl.harmjanwestra.utilities.vcf;
 
-import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantFilters;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantFilters;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.*;
 
 /**
@@ -16,7 +16,7 @@ public class VCFVariantLoader {
 	boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
 	SampleAnnotation sampleAnnotation;
 
-	public VCFVariantLoader(){
+	public VCFVariantLoader() {
 
 	}
 
@@ -25,28 +25,35 @@ public class VCFVariantLoader {
 		this.sampleAnnotation = sampleAnnotation;
 	}
 
-	public ArrayList<VCFVariant> run(String vcf, ArrayList<Feature> regions) throws IOException {
-		return run(vcf, regions, null);
+	public ArrayList<VCFVariant> run(String vcf) throws IOException {
+		return run(vcf, null);
 	}
 
-	public ArrayList<VCFVariant> run(String vcf, ArrayList<Feature> regions, VCFVariantFilters filters) throws IOException {
-		System.out.println("VCF Loader.\n-------------------------\nBooting up threadpool for " + Runtime.getRuntime().availableProcessors() + " CPUs");
-		System.out.println("Loading: " + vcf);
-		if (regions != null) {
-			System.out.println("Filtering for: " + regions.size() + " regions");
+	public ArrayList<VCFVariant> run(String vcf, VCFVariantFilters filters) throws IOException {
+		return run(vcf, filters, -1);
+	}
+
+	public ArrayList<VCFVariant> run(String vcf, VCFVariantFilters filters, int nrThreads) throws IOException {
+		boolean sharedExService = false;
+		int threadsToUse = Runtime.getRuntime().availableProcessors();
+		if (nrThreads > 0) {
+			threadsToUse = nrThreads;
 		}
+		ExecutorService exService = Executors.newWorkStealingPool(threadsToUse);
+		System.out.println("VCF Loader.\n-------------------------\nBooting up threadpool for " + threadsToUse + " CPUs");
+		System.out.println("Loading: " + vcf);
+
 		if (filters != null) {
 			System.out.println(filters.toString());
 		}
 
-		boolean sharedExService = false;
-		ExecutorService exService = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
-		CompletionService<ArrayList<VCFVariant>> queuee = new ExecutorCompletionService<ArrayList<VCFVariant>>(exService);
+
+		CompletionService<LinkedList<VCFVariant>> queuee = new ExecutorCompletionService<LinkedList<VCFVariant>>(exService);
 
 
 		KillSwitchEngage killswitch = new KillSwitchEngage();
 		Collector c = new Collector(queuee, killswitch);
-		Future<ArrayList<VCFVariant>> outputFuture = exService.submit(c);
+		Future<LinkedList<VCFVariant>> outputFuture = exService.submit(c);
 
 		String[] files = new String[1];
 		files[0] = vcf;
@@ -61,7 +68,7 @@ public class VCFVariantLoader {
 		String[] buffer = new String[buffersize];
 		int ctr = 0;
 		int submitted = 0;
-		int maxLinesInQueue = buffersize * Runtime.getRuntime().availableProcessors();
+		int maxUnparsedBuffersInMemory = 10 * Runtime.getRuntime().availableProcessors();
 
 		for (String file : files) {
 			TextFile tf = new TextFile(file, TextFile.R);
@@ -69,12 +76,19 @@ public class VCFVariantLoader {
 			while (ln != null) {
 				buffer[ctr] = ln;
 				ctr++;
+				while (killswitch.getNrReceived() - submitted > maxUnparsedBuffersInMemory) {
+					try {
+						this.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
 				if (ctr == buffersize) {
-					queuee.submit(new Parser(buffer, regions, filters));
+					queuee.submit(new Parser(buffer, filters));
 					ctr = 0;
 					submitted++;
 					buffer = new String[buffersize];
-					System.out.print(submitted + " jobs submitted (" + (submitted * buffersize) + "lines)\t" + killswitch.getNrVariantsReceived() + " variants in buffer so far\r");
+					System.out.print(submitted + " jobs submitted (" + (submitted * buffersize) + "lines)\t" + killswitch.getNrParsedVariants() + " variants in buffer so far\r");
 //				if (submitted * buffersize == maxLinesInQueue) {
 //					cleanup(output, queuee, submitted);
 //					submitted = 0;
@@ -88,7 +102,7 @@ public class VCFVariantLoader {
 		System.out.println("Done reading file. Waiting for output to return.");
 		if (ctr > 0) {
 			System.out.println("Submitting last batch");
-			queuee.submit(new Parser(buffer, regions, filters));
+			queuee.submit(new Parser(buffer, filters));
 			submitted++;
 		}
 
@@ -99,7 +113,7 @@ public class VCFVariantLoader {
 
 //		cleanup(output, queuee, submitted);
 		System.out.println("Waiting for output");
-		ArrayList<VCFVariant> output = null;
+		LinkedList<VCFVariant> output = null;
 		try {
 			output = outputFuture.get();
 		} catch (InterruptedException e) {
@@ -115,7 +129,8 @@ public class VCFVariantLoader {
 		if (!sharedExService) {
 			exService.shutdown();
 		}
-		return output;
+		ArrayList<VCFVariant> v = new ArrayList<>(output);
+		return v;
 	}
 
 	private void cleanup(ArrayList<VCFVariant> buffer, CompletionService<ArrayList<VCFVariant>> queuee, int toReceive) {
@@ -139,19 +154,19 @@ public class VCFVariantLoader {
 	public class KillSwitchEngage {
 		private int nrSubmitted = 0;
 		private boolean finishedLoading = false;
-
-		private int nrVariantsReceived = 0;
+		private int nrReceived;
+		private int nrParsedVariants;
 
 		public synchronized void setNrSubmitted(int nr) {
 			this.nrSubmitted = nr;
 		}
 
-		public synchronized void setNrVariantsReceived(int n) {
-			this.nrVariantsReceived = n;
+		public synchronized void setNrReceived(int n) {
+			this.nrReceived = n;
 		}
 
-		public synchronized int getNrVariantsReceived() {
-			return this.nrVariantsReceived;
+		public synchronized int getNrReceived() {
+			return this.nrReceived;
 		}
 
 		public synchronized void setFinishedLoading(boolean b) {
@@ -165,29 +180,43 @@ public class VCFVariantLoader {
 		public synchronized int getNrSubmitted() {
 			return nrSubmitted;
 		}
+
+
+		public synchronized int getNrParsedVariants() {
+			return nrParsedVariants;
+		}
+
+		public synchronized void setNrParsedVariants(int nrParsedVariants) {
+			this.nrParsedVariants = nrParsedVariants;
+		}
+
 	}
 
-	public class Collector implements Callable<ArrayList<VCFVariant>> {
+	public class Collector implements Callable<LinkedList<VCFVariant>> {
 
 		private KillSwitchEngage killswitch;
-		private CompletionService<ArrayList<VCFVariant>> queuee;
+		private CompletionService<LinkedList<VCFVariant>> queuee;
 
-		public Collector(CompletionService<ArrayList<VCFVariant>> queuee, KillSwitchEngage g) {
+
+		public Collector(CompletionService<LinkedList<VCFVariant>> queuee, KillSwitchEngage g) {
 			this.killswitch = g;
 			this.queuee = queuee;
 		}
 
 		@Override
-		public ArrayList<VCFVariant> call() throws Exception {
+		public LinkedList<VCFVariant> call() throws Exception {
 			int received = 0;
-			ArrayList<VCFVariant> buffer = new ArrayList<>();
+			LinkedList<VCFVariant> buffer = new LinkedList<>();
+
+			// loop until we've finished reading the VCF file
 			while (!killswitch.getFinishedLoading()) {
 				try {
-					ArrayList<VCFVariant> future = queuee.take().get();
+					LinkedList<VCFVariant> future = queuee.take().get();
 					if (future != null) {
 						buffer.addAll(future);
-						killswitch.setNrVariantsReceived(buffer.size());
+						killswitch.setNrParsedVariants(buffer.size());
 						received++;
+						killswitch.setNrReceived(received);
 					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
@@ -199,7 +228,7 @@ public class VCFVariantLoader {
 			// check whether there are any packages left in the queue that we should wait for
 			while (received != killswitch.getNrSubmitted()) {
 				try {
-					ArrayList<VCFVariant> future = queuee.take().get();
+					LinkedList<VCFVariant> future = queuee.take().get();
 					if (future != null) {
 						buffer.addAll(future);
 						received++;
@@ -217,32 +246,32 @@ public class VCFVariantLoader {
 
 	}
 
-	public class Parser implements Callable<ArrayList<VCFVariant>> {
+	public class Parser implements Callable<LinkedList<VCFVariant>> {
 
 		String[] buffer;
-		ArrayList<Feature> regions;
 		VCFVariantFilters filters;
 
-		public Parser(String[] buffer, ArrayList<Feature> regions, VCFVariantFilters filters) {
+		public Parser(String[] buffer, VCFVariantFilters filters) {
 			this.buffer = buffer;
 			this.filters = filters;
-			this.regions = regions;
+
 		}
 
 		@Override
-		public ArrayList<VCFVariant> call() throws Exception {
-			ArrayList<VCFVariant> output = new ArrayList<>();
+		public LinkedList<VCFVariant> call() throws Exception {
+			LinkedList<VCFVariant> output = new LinkedList<>();
 
 			for (String s : buffer) {
 				if (s != null && !s.startsWith("#")) {
-					String substr = s.substring(0, 200);
+
 
 					boolean parseln = false;
-					if (regions == null) {
+					if (!filters.hasRegionOrVariantSetFilter()) {
 						parseln = true;
 					} else {
+						String substr = s.substring(0, 200);
 						VCFVariant v = new VCFVariant(substr, VCFVariant.PARSE.HEADER);
-						parseln = v.asFeature().overlaps(regions);
+						parseln = filters.passesRegionOrVariantFilter(v);
 					}
 
 					if (parseln) {
@@ -250,11 +279,13 @@ public class VCFVariantLoader {
 						if (filters != null) {
 							if (filters.passesFilters(v)) {
 								output.add(v);
+							} else {
+								v.clean();
+								v = null;
 							}
 						} else {
 							output.add(v);
 						}
-
 					}
 				}
 			}

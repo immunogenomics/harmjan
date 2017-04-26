@@ -63,7 +63,7 @@ public class VCFVariant {
 	private static final int nrHeaderElems = 9;
 
 	private static final Pattern nullGenotype = Pattern.compile("\\./\\.");
-	private final HashMap<String, String> info = new HashMap<String, String>();
+	private HashMap<String, String> info = new HashMap<String, String>();
 	int constructor = 0;
 	private boolean[] samplesToInclude;
 	private ArrayList<VCFGenotypeFilter> filters;
@@ -221,7 +221,7 @@ public class VCFVariant {
 
 		if (ln != null) {
 			int strlen = ln.length();
-			int substrlen = 1500; // this should capture most annotation //
+			int substrlen = 1000; // this should capture most annotation //
 			if (strlen < substrlen) {
 				substrlen = strlen;
 			}
@@ -317,7 +317,9 @@ public class VCFVariant {
 		if (p.equals(PARSE.ALL) || p.equals(PARSE.GENOTYPES)) {
 			if (ln != null) {
 
-				String[] tokenArr = Strings.tab.split(ln);
+//				String[] tokenArr = Strings.split(ln, 0, Strings.tab);
+				String[] tokenArr = Strings.tab.split(ln, 0);
+				ln = null;
 
 				if (tokenArr.length > 9) { // allow VCFs without any actual genotypes
 					// parse actual genotypes.
@@ -1585,6 +1587,32 @@ public class VCFVariant {
 
 	public boolean hasImputationProbabilities() {
 		return genotypeProbabilies != null;
+	}
+
+	public void clean() {
+		info = null;
+		samplesToInclude = null;
+		filters = null;
+		genotypeAlleles = null; // format [individuals][alleles] (save some memory by making only two individual-sized arrays)
+		genotypeProbabilies = null;
+		dosages = null; // this can hold the imputed dosages, or if they are not set, the dosages from the genotypes
+		allelicDepth = null;
+		nrAllelesObserved = null;
+		genotypeQuals = null;
+		approximateDepth = null;
+		alleleFrequencies = null;
+		minorAllele = null;
+		alleles = null;
+		chr = null;
+		id = null;
+		filter = null;
+		// private String separator = new String("/").intern();
+		phase = null;
+		nrAllelesObservedCases = null;
+		nrAllelesObservedControls = null;
+		alleleFrequenciesCases = null;
+		alleleFrequenciesControls = null;
+		sampleAnnotation = null;
 	}
 
 	public enum PARSE {

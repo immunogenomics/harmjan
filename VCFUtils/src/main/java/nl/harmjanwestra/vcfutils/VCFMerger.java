@@ -856,12 +856,12 @@ public class VCFMerger {
 		if (sharedSamples.size() == 0) {
 			HashMap<String, VCFVariant> variantMap = new HashMap<String, VCFVariant>();
 
-			ArrayList<VCFVariant> variants1 = loader.run(vcf1, null, filters);
+			ArrayList<VCFVariant> variants1 = loader.run(vcf1, filters);
 			for (VCFVariant v : variants1) {
 				variantMap.put(v.toString(), v);
 			}
 
-			ArrayList<VCFVariant> variants2 = loader.run(vcf2, null, filters);
+			ArrayList<VCFVariant> variants2 = loader.run(vcf2, filters);
 
 			System.out.println(variantMap.size() + " variants loaded from: " + vcf1);
 

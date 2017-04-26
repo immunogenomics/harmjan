@@ -148,6 +148,10 @@ public class AssociationPosteriorPlotter {
 		double defaultsignificancethresholdconditional = options.getDefaultSignificanceConditional();
 
 		int nriters = options.getNrIters();
+
+
+		String functionalAnnotation = null;
+
 		String conditionalFiles = options.getConditionalFiles();
 
 
@@ -202,6 +206,8 @@ public class AssociationPosteriorPlotter {
 		if (maxpvalconditonionalfile != null && Gpio.exists(maxpvalconditonionalfile)) {
 			regionMaxConditionalPThresholds = loadThresholds(maxpvalconditonionalfile, assocNames.length);
 		}
+
+
 
 		for (Feature region : regions) {
 			boolean regionhasvariants = false;
