@@ -323,9 +323,7 @@ public class ProxyFinder {
 			SNPFeature snpfeature2 = p.getRight();
 
 			VCFVariant variant1 = null;
-			getSNP(snpfeature1);
 			VCFVariant variant2 = null;
-			getSNP(snpfeature2);
 
 			if (options.tabixrefprefix != null) {
 				variant1 = getSNP(snpfeature1);

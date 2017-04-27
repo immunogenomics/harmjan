@@ -39,8 +39,17 @@ public class VCFVariantLoader {
 		if (nrThreads > 0) {
 			threadsToUse = nrThreads;
 		}
-		ExecutorService exService = Executors.newWorkStealingPool(threadsToUse);
-		System.out.println("VCF Loader.\n-------------------------\nBooting up threadpool for " + threadsToUse + " CPUs");
+		if (threadsToUse < 2) {
+			threadsToUse = 2;
+		}
+
+
+		//ExecutorService exService = Executors.newWorkStealingPool(threadsToUse);
+		int workQueueSize = nrThreads * 2;
+		LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(workQueueSize);
+		ExecutorService exService = new ThreadPoolExecutor(threadsToUse, threadsToUse, 0L, TimeUnit.MILLISECONDS, queue);
+		System.out.println("VCF Loader.\n-------------------------\n" +
+				"Booting up threadpool for " + threadsToUse + " CPUs");
 		System.out.println("Loading: " + vcf);
 
 		if (filters != null) {
@@ -52,8 +61,8 @@ public class VCFVariantLoader {
 
 
 		KillSwitchEngage killswitch = new KillSwitchEngage();
-		Collector c = new Collector(queuee, killswitch);
-		Future<LinkedList<VCFVariant>> outputFuture = exService.submit(c);
+		Collector collector = new Collector(queuee, killswitch);
+		Future<LinkedList<VCFVariant>> outputFuture = exService.submit(collector);
 
 		String[] files = new String[1];
 		files[0] = vcf;
@@ -64,11 +73,11 @@ public class VCFVariantLoader {
 			}
 		}
 
-		int buffersize = 50;
+		int buffersize = 250;
 		String[] buffer = new String[buffersize];
 		int ctr = 0;
 		int submitted = 0;
-		int maxUnparsedBuffersInMemory = 10 * Runtime.getRuntime().availableProcessors();
+
 
 		for (String file : files) {
 			TextFile tf = new TextFile(file, TextFile.R);
@@ -76,14 +85,18 @@ public class VCFVariantLoader {
 			while (ln != null) {
 				buffer[ctr] = ln;
 				ctr++;
-				while (killswitch.getNrReceived() - submitted > maxUnparsedBuffersInMemory) {
+
+				while (queue.size() >= workQueueSize) {
 					try {
-						this.wait();
+						System.out.println(queue.size() + " still in buffer out of " + workQueueSize);
+						Thread.sleep(1);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+
 				}
 				if (ctr == buffersize) {
+
 					queuee.submit(new Parser(buffer, filters));
 					ctr = 0;
 					submitted++;
@@ -212,6 +225,7 @@ public class VCFVariantLoader {
 			while (!killswitch.getFinishedLoading()) {
 				try {
 					LinkedList<VCFVariant> future = queuee.take().get();
+
 					if (future != null) {
 						buffer.addAll(future);
 						killswitch.setNrParsedVariants(buffer.size());
@@ -261,7 +275,8 @@ public class VCFVariantLoader {
 		public LinkedList<VCFVariant> call() throws Exception {
 			LinkedList<VCFVariant> output = new LinkedList<>();
 
-			for (String s : buffer) {
+			for (int i = 0; i < buffer.length; i++) {
+				String s = buffer[i];
 				if (s != null && !s.startsWith("#")) {
 
 
@@ -288,7 +303,10 @@ public class VCFVariantLoader {
 						}
 					}
 				}
+				s = null;
+				buffer[i] = null;
 			}
+			buffer = null;
 			return output;
 		}
 	}
