@@ -229,8 +229,18 @@ public class ProxyFinder {
 		ArrayList<Pair<SNPFeature, SNPFeature>> pairs = new ArrayList<>();
 		TextFile tf = new TextFile(options.snpfile, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
+		ArrayList<SNPFeature> toCombine = null;
 		while (elems != null) {
-			if (elems.length == 2) {
+			if (elems.length == 1) {
+				if (toCombine == null) {
+					toCombine = new ArrayList<>();
+				}
+				if (elems[0].trim().length() > 0) {
+					SNPFeature f = SNPFeature.parseSNPFeature(elems[0]);
+					toCombine.add(f);
+					System.out.println(f.toString());
+				}
+			} else if (elems.length == 2) {
 				// format
 				pairs.add(new Pair(SNPFeature.parseSNPFeature(elems[0]), SNPFeature.parseSNPFeature(elems[1])));
 			} else if (elems.length == 6) {
@@ -253,6 +263,19 @@ public class ProxyFinder {
 		}
 		tf.close();
 
+		if (toCombine != null) {
+			System.out.println(toCombine.size() + " snps to combine.");
+			for (int i = 0; i < toCombine.size(); i++) {
+				for (int j = i + 1; j < toCombine.size(); j++) {
+					Pair<SNPFeature, SNPFeature> p = new Pair(toCombine.get(i), toCombine.get(j));
+					pairs.add(p);
+					System.out.println(p.toString());
+				}
+			}
+
+		}
+
+		System.out.println(pairs.size() + " pairs loaded.");
 		// check if all VCF files are there
 		if (pairs.isEmpty()) {
 			System.err.println("Error: no snp pairs in " + options.snpfile);
@@ -315,8 +338,8 @@ public class ProxyFinder {
 			filter.addFilter(new VCFVariantSetFilter(snps));
 			allVariants = loader.run(options.vcf, filter, nrthreads);
 			Collections.sort(allVariants, new VCFVariantComparator());
-
 		}
+
 		for (Pair<SNPFeature, SNPFeature> p : pairs) {
 
 			SNPFeature snpfeature1 = p.getLeft();
@@ -330,7 +353,7 @@ public class ProxyFinder {
 				variant2 = getSNP(snpfeature2);
 			} else {
 				variant1 = getSNP(allVariants, snpfeature1);
-				variant2 = getSNP(allVariants, snpfeature1);
+				variant2 = getSNP(allVariants, snpfeature2);
 			}
 
 			if (variant1 != null && variant2 != null) {
@@ -347,6 +370,13 @@ public class ProxyFinder {
 
 				if (rsq > options.threshold) {
 					nr++;
+				}
+			} else {
+				if (variant1 == null) {
+					System.out.println(snpfeature1.toString() + " not found in reference");
+				}
+				if (variant2 == null) {
+					System.out.println(snpfeature2.toString() + " not found in reference");
 				}
 			}
 		}
@@ -401,8 +431,8 @@ public class ProxyFinder {
 
 
 		Feature snpF = new Feature(snp);
-		snp.setStart(snpF.getStart() - 1);
-		snp.setStop(snpF.getStop() + 1);
+		snpF.setStart(snpF.getStart() - 1);
+		snpF.setStop(snpF.getStop() + 1);
 
 		TabixReader.Iterator inputSNPiter = reader.query(snpF);
 		String snpStr = inputSNPiter.next();
@@ -410,7 +440,7 @@ public class ProxyFinder {
 
 		while (snpStr != null) {
 			VCFVariant variant = new VCFVariant(snpStr, VCFVariant.PARSE.ALL, snpSampleFilter);
-			if (variant.asFeature().overlaps(snp)) {
+			if (variant.asFeature().overlaps(snp) && variant.asFeature().getStart() == snp.getStart()) {
 
 				if (!options.matchrsid) {
 					testSNPObj1 = variant;

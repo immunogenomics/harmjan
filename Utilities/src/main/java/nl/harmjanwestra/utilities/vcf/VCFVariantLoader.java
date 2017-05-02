@@ -45,11 +45,14 @@ public class VCFVariantLoader {
 
 
 		//ExecutorService exService = Executors.newWorkStealingPool(threadsToUse);
-		int workQueueSize = nrThreads * 2;
+		int buffersize = 100;
+		int maxLinesInMemory = 250 * threadsToUse;
+		int workQueueSize = maxLinesInMemory / buffersize;
 		LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(workQueueSize);
 		ExecutorService exService = new ThreadPoolExecutor(threadsToUse, threadsToUse, 0L, TimeUnit.MILLISECONDS, queue);
 		System.out.println("VCF Loader.\n-------------------------\n" +
 				"Booting up threadpool for " + threadsToUse + " CPUs");
+		System.out.println("Work queue size: " + workQueueSize + " jobs of " + buffersize + " lines");
 		System.out.println("Loading: " + vcf);
 
 		if (filters != null) {
@@ -73,7 +76,7 @@ public class VCFVariantLoader {
 			}
 		}
 
-		int buffersize = 250;
+
 		String[] buffer = new String[buffersize];
 		int ctr = 0;
 		int submitted = 0;
@@ -85,23 +88,21 @@ public class VCFVariantLoader {
 			while (ln != null) {
 				buffer[ctr] = ln;
 				ctr++;
-
-				while (queue.size() >= workQueueSize) {
-					try {
-						System.out.println(queue.size() + " still in buffer out of " + workQueueSize);
-						Thread.sleep(1);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-
-				}
 				if (ctr == buffersize) {
+					while (queue.size() >= workQueueSize) {
+						try {
+//						System.out.println(queue.size() + " still in buffer out of " + workQueueSize);
+							Thread.sleep(1);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 
+					}
 					queuee.submit(new Parser(buffer, filters));
 					ctr = 0;
 					submitted++;
 					buffer = new String[buffersize];
-					System.out.print(submitted + " jobs submitted (" + (submitted * buffersize) + "lines)\t" + killswitch.getNrParsedVariants() + " variants in buffer so far\r");
+					System.out.print(submitted + " jobs submitted (" + (submitted * buffersize) + "lines)\t" + killswitch.getNrParsedVariants() + " variants in buffer so far, " + queue.size() + " jobs pending.\r");
 //				if (submitted * buffersize == maxLinesInQueue) {
 //					cleanup(output, queuee, submitted);
 //					submitted = 0;
@@ -111,9 +112,18 @@ public class VCFVariantLoader {
 			}
 			tf.close();
 		}
-
+		System.out.println();
 		System.out.println("Done reading file. Waiting for output to return.");
 		if (ctr > 0) {
+			while (queue.size() >= workQueueSize) {
+				try {
+//						System.out.println(queue.size() + " still in buffer out of " + workQueueSize);
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+			}
 			System.out.println("Submitting last batch");
 			queuee.submit(new Parser(buffer, filters));
 			submitted++;

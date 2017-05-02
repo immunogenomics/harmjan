@@ -27,6 +27,7 @@ public class RSIdRewriter {
 			int[] cols = new int[]{3, 7};
 			int[] rsidcols = new int[]{2, 6};
 			int[] chrs = new int[]{2, 10, 11, 19};
+			chrs = new int[]{10};
 
 			BedFileReader reader = new BedFileReader();
 			ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
@@ -42,8 +43,8 @@ public class RSIdRewriter {
 				System.out.println(regionschr.size() + " regions in chr " + chrs[c]);
 				for (int d = 0; d < ds.length; d++) {
 
-					String file = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-tyk2-chr" + chrs[c] + "-pairwise.txt.gz";
-					String fileout = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-tyk2-chr" + chrs[c] + "-pairwise-rewrite.txt.gz";
+					String file = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-chr" + chrs[c] + "-pairwise.txt.gz";
+					String fileout = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-chr" + chrs[c] + "-pairwise-rewrite.txt.gz";
 
 					RSIdRewriter v = new RSIdRewriter();
 					if (Gpio.exists(file)) {

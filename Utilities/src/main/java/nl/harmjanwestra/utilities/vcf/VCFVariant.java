@@ -226,7 +226,8 @@ public class VCFVariant {
 				substrlen = strlen;
 			}
 			String lnheader = ln.substring(0, substrlen);
-			String[] tokenArr = Strings.tab.split(lnheader);
+			//String[] tokenArr = Strings.tab.split(lnheader);
+			String[] tokenArr = Strings.split(lnheader, 0, Strings.tab);
 
 			for (int t = 0; t < 9; t++) {
 				if (t < tokenArr.length) {
@@ -318,7 +319,8 @@ public class VCFVariant {
 			if (ln != null) {
 
 //				String[] tokenArr = Strings.split(ln, 0, Strings.tab);
-				String[] tokenArr = Strings.tab.split(ln, 0);
+//				String[] tokenArr = Strings.tab.split(ln, 0);
+				String[] tokenArr = Strings.split(ln, 0, Strings.tab);
 				ln = null;
 
 				if (tokenArr.length > 9) { // allow VCFs without any actual genotypes

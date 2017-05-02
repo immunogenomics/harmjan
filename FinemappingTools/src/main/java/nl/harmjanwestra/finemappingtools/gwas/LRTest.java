@@ -678,6 +678,7 @@ public class LRTest {
 
 			int iteration = startiter;
 			for (iteration = startiter; iteration < nrMaxIter; iteration++) {
+
 				System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iteration + ".txt");
 				TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iteration + ".txt", TextFile.W);
 
@@ -691,6 +692,7 @@ public class LRTest {
 				for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
 					boolean submitregion = true;
 					System.out.println("Running region: " + remainingRegions.get(regionId).toString());
+
 					// get variants in region
 					ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
 
@@ -739,12 +741,13 @@ public class LRTest {
 
 					// get conditional variants for this region
 					if (submitregion) {
+
 						ArrayList<VCFVariant> conditionalVariantsForRegion = conditionalVariants.get(regionId);
 						if (conditionalVariantsForRegion == null) {
 							conditionalVariantsForRegion = new ArrayList<>();
 						}
 						conditionalVariantsForRegion.add(bestVariantLastIter);
-
+						System.out.println("Iteration " + iteration + " starting for region:" + remainingRegions.get(regionId).toString() + ". Model: y ~ SNP + " + conditionalVariantsForRegion.size() + " + covar.");
 						// now put the data in the correct data structure.. recode and whatever
 						ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional = new ArrayList<>();
 

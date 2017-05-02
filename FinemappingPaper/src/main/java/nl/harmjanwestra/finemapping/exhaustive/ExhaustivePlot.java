@@ -42,22 +42,24 @@ public class ExhaustivePlot {
 			int nrToPlot = 25;
 			for (String d : diseases) {
 				for (Feature region : regions) {
-//					if (region.getChromosome().equals(Chromosome.TEN)) {
-					ExhaustivePlot p = new ExhaustivePlot();
-					String output = "/Data/Projects/2016-Finemapping/Exhaustive/output/" + d + "-tyk2-" + region.toString();
+					if (region.getChromosome().equals(Chromosome.TEN)) {
+						ExhaustivePlot p = new ExhaustivePlot();
+//						String output = "/Data/Projects/2016-Finemapping/Exhaustive/output/" + d + "-tyk2-" + region.toString();
+						String output = "/Data/Projects/2016-Finemapping/Exhaustive/output/" + d + "-" + region.toString();
+//						String assocfile = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + d + "-assoc0.3-COSMO-tyk2-chr" + region.getChromosome().getNumber() + "-pairwise-rewrite.txt.gz";
+						String assocfile = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + d + "-assoc0.3-COSMO-chr" + region.getChromosome().getNumber() + "-pairwise-rewrite.txt.gz";
 
-					String assocfile = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + d + "-assoc0.3-COSMO-tyk2-chr" + region.getChromosome().getNumber() + "-pairwise-rewrite.txt.gz";
-					String tabixfile = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
-					String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
+						String tabixfile = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
+						String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 
-					String snpcombos = "/Data/Projects/2016-Finemapping/Exhaustive/snpcombos.txt";
+						String snpcombos = "/Data/Projects/2016-Finemapping/Exhaustive/snpcombos.txt";
 //					if (region.getChromosome().equals(Chromosome.SIX)) {
 
-					if (Gpio.exists(assocfile)) {
-						p.findCombination(region, assocfile, snpcombos, tabixfile, tabixsamplelimit);
+						if (Gpio.exists(assocfile)) {
+							p.findCombination(region, assocfile, snpcombos, tabixfile, tabixsamplelimit);
 //							p.plotTopNSNPs(region, assocfile, output, nrToPlot, tabixfile, tabixsamplelimit);
+						}
 					}
-//					}
 //					}
 
 

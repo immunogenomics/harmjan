@@ -111,7 +111,7 @@ public class Conditional {
 				int maxiter = 5;
 
 				//tyk2
-				outdir = "/Data/tmp/rerun/tyk2/";
+//				outdir = "/Data/tmp/rerun/tyk2/";
 
 				for (int d = 0; d < diseases.length; d++) {
 
@@ -133,7 +133,7 @@ public class Conditional {
 						String assoc = outdir + "/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
 
 						//tyk2
-						assoc = "/Data/tmp/rerun/" + diseases[d] + "out/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+//						assoc = "/Data/tmp/rerun/" + diseases[d] + "out/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
 
 
 						String regions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";

@@ -135,7 +135,7 @@ public class VCFVariantStats {
 
 					ln = tf.readLine();
 					lnnum++;
-					if (lnnum % 10000 == 0) {
+					if (lnnum % 10 == 0) {
 						while (returned != submitted) {
 							try {
 								Future<String> f = jobHandler.take();
