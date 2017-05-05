@@ -74,6 +74,7 @@ public class MainOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+
 		option = Option.builder()
 				.desc("Find LD partners of variants given a VCF path")
 				.longOpt("proxy")
@@ -151,7 +152,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOTPOSTERIORS,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, UPDATERS, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, UPDATERS, STATS, NA
 	}
 
 }

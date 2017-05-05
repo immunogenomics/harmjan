@@ -100,7 +100,8 @@ public class VCFVariant {
 	private double hwepCases;
 	private double hwepControls;
 	private SampleAnnotation sampleAnnotation;
-	private double MAFControls;
+	private double callrateControls;
+	private double callrateCases;
 
 	public VCFVariant(String ln) {
 		constructor = 1;
@@ -938,6 +939,19 @@ public class VCFVariant {
 			}
 		}
 
+		int nrCases = 0;
+		int nrControls = 0;
+
+		if (sampleDiseaseStatus != null) {
+			for (int i = 0; i < genotypeAlleles.rows(); i++) {
+				DiseaseStatus d = sampleDiseaseStatus[i][0];
+				if (d != null && d.equals(DiseaseStatus.CASE)) {
+					nrCases++;
+				} else if (d != null && d.equals(DiseaseStatus.CONTROL)) {
+					nrControls++;
+				}
+			}
+		}
 
 		for (int i = 0; i < genotypeAlleles.rows(); i++) {
 			Gender gender = null;
@@ -1024,7 +1038,7 @@ public class VCFVariant {
 		if (nrCalled == 0) {
 			callrate = 0;
 			MAF = 0;
-			MAFControls = 0;
+//			MAFControls = 0;
 			minorAllele = null;
 			totalCalledAlleles = 0;
 
@@ -1042,6 +1056,9 @@ public class VCFVariant {
 			monomorphic = true;
 		} else {
 			callrate = (double) nrCalled / nrIndividuals;
+			callrateCases = (double) nrCalledCases / nrCases;
+			callrateControls = (double) nrCalledControls / nrControls;
+
 			int totalAllelesObs = nrCalled * 2;
 			int nrAllelesThatHaveAlleleFrequency = 0;
 			double minAlleleFreq = 2;
@@ -1615,6 +1632,14 @@ public class VCFVariant {
 		alleleFrequenciesCases = null;
 		alleleFrequenciesControls = null;
 		sampleAnnotation = null;
+	}
+
+	public double getCallrateControls() {
+		return callrateControls;
+	}
+
+	public double getCallrateCases() {
+		return callrateCases;
 	}
 
 	public enum PARSE {

@@ -21,36 +21,77 @@ public class RSIdRewriter {
 	public static void main(String[] args) {
 
 		try {
-			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
-			String samplefilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
+			// pairwise files
+			if (1 == 0) {
+				String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
+				String samplefilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 
-			int[] cols = new int[]{3, 7};
-			int[] rsidcols = new int[]{2, 6};
-			int[] chrs = new int[]{2, 10, 11, 19};
-			chrs = new int[]{10};
+				int[] combinedIdCols = new int[]{3, 7};
+				int[] rsidcols = new int[]{2, 6};
+				int[] chrs = new int[]{2, 10, 11, 19};
+				chrs = new int[]{10};
 
-			BedFileReader reader = new BedFileReader();
-			ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
+				BedFileReader reader = new BedFileReader();
+				ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
 
-			String[] ds = new String[]{"RA", "T1D", "META"};
-			for (int c = 0; c < chrs.length; c++) {
-				ArrayList<Feature> regionschr = new ArrayList<>();
-				for (Feature f : regions) {
-					if (f.getChromosome().equals(Chromosome.parseChr("" + chrs[c]))) {
-						regionschr.add(f);
+				String[] ds = new String[]{"RA", "T1D", "META"};
+				for (int c = 0; c < chrs.length; c++) {
+					ArrayList<Feature> regionschr = new ArrayList<>();
+					for (Feature f : regions) {
+						if (f.getChromosome().equals(Chromosome.parseChr("" + chrs[c]))) {
+							regionschr.add(f);
+						}
+					}
+					System.out.println(regionschr.size() + " regions in chr " + chrs[c]);
+					for (int d = 0; d < ds.length; d++) {
+
+						String file = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-chr" + chrs[c] + "-pairwise.txt.gz";
+						String fileout = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-chr" + chrs[c] + "-pairwise-rewrite.txt.gz";
+
+						RSIdRewriter v = new RSIdRewriter();
+						if (Gpio.exists(file)) {
+							v.run(file, fileout, tabixprefix, samplefilter, 1, combinedIdCols, rsidcols, regionschr);
+						}
 					}
 				}
-				System.out.println(regionschr.size() + " regions in chr " + chrs[c]);
+			}
+
+			// normal assoc fikes
+			{
+				String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
+				String samplefilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
+
+				int[] combinedIdCols = new int[]{3};
+				int[] rsidcols = new int[]{2};
+				int[] chrs = new int[]{2, 10, 11, 19};
+				chrs = new int[]{10};
+				int nrIter = 5;
+
+
+				BedFileReader reader = new BedFileReader();
+				ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
+
+				String[] ds = new String[]{"RA", "T1D", "META"};
+
+
+				System.out.println(regions.size() + " regions to parse.");
+
 				for (int d = 0; d < ds.length; d++) {
+					for (int iter = 0; iter < nrIter; iter++) {
 
-					String file = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-chr" + chrs[c] + "-pairwise.txt.gz";
-					String fileout = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + ds[d] + "-assoc0.3-COSMO-chr" + chrs[c] + "-pairwise-rewrite.txt.gz";
+						// META-assoc0.3-COSMO-gwas-0-merged.txt.gz
+						String file = "/Data/Projects/2016-Finemapping/genotypes/2017-04-10-rerun/" + ds[d] + "out/" + ds[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+						String fileout = "/Data/Projects/2016-Finemapping/genotypes/2017-04-10-rerun/" + ds[d] + "out/" + ds[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged-rewrite.txt.gz";
 
-					RSIdRewriter v = new RSIdRewriter();
-					if (Gpio.exists(file)) {
-						v.run(file, fileout, tabixprefix, samplefilter, 1, cols, rsidcols, regionschr);
+						RSIdRewriter v = new RSIdRewriter();
+						if (Gpio.exists(file)) {
+							v.run(file, fileout, tabixprefix, samplefilter, 1, combinedIdCols, rsidcols, regions);
+						} else {
+							System.out.println("Could not find " + file);
+						}
 					}
 				}
+
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

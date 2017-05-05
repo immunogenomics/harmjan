@@ -20,7 +20,7 @@ public class VCFVariantLoader {
 
 	}
 
-	public VCFVariantLoader(boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus, SampleAnnotation sampleAnnotation, ExecutorService exService) {
+	public VCFVariantLoader(boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus, SampleAnnotation sampleAnnotation) {
 		this.genotypeSamplesWithCovariatesAndDiseaseStatus = genotypeSamplesWithCovariatesAndDiseaseStatus;
 		this.sampleAnnotation = sampleAnnotation;
 	}

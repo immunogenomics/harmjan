@@ -53,14 +53,14 @@ public class ExhaustivePlot {
 						String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 
 						String snpcombos = "/Data/Projects/2016-Finemapping/Exhaustive/snpcombos.txt";
-//					if (region.getChromosome().equals(Chromosome.SIX)) {
+						if (region.getChromosome().equals(Chromosome.TEN)) {
 
-						if (Gpio.exists(assocfile)) {
-							p.findCombination(region, assocfile, snpcombos, tabixfile, tabixsamplelimit);
+							if (Gpio.exists(assocfile)) {
+								p.findCombination(region, assocfile, snpcombos, tabixfile, tabixsamplelimit);
 //							p.plotTopNSNPs(region, assocfile, output, nrToPlot, tabixfile, tabixsamplelimit);
+							}
 						}
 					}
-//					}
 
 
 				}

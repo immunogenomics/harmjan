@@ -111,6 +111,11 @@ public class LRTestOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Get some stats for the variants tested in GWAS")
+				.longOpt("stats")
+				.build();
+		OPTIONS.addOption(option);
 
 		option = Option.builder("q")
 				.hasArg()
@@ -405,6 +410,8 @@ public class LRTestOptions {
 				analysisType = ANALYSIS.CONDITIONAL;
 			} else if (cmd.hasOption("haplotype")) {
 				analysisType = ANALYSIS.HAPLOTYPE;
+			} else if (cmd.hasOption("stats")) {
+				analysisType = ANALYSIS.STATS;
 			}
 
 			if (cmd.hasOption("maxiter")) {
@@ -548,7 +555,8 @@ public class LRTestOptions {
 		CONDITIONAL,
 		EXHAUSTIVE,
 		HAPLOTYPE,
-		CONDITIONALHAPLOTYPE, NORMAL
+		CONDITIONALHAPLOTYPE, NORMAL, STATS;
+
 	}
 
 

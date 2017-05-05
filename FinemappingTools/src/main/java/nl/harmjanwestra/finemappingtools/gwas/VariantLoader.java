@@ -27,7 +27,7 @@ public class VariantLoader {
 
 	) throws IOException {
 
-		VCFVariantLoader loader = new VCFVariantLoader(genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation, exService);
+		VCFVariantLoader loader = new VCFVariantLoader(genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation);
 		VCFVariantFilters filter = new VCFVariantFilters();
 
 		// there is a file that limits the snps to include
@@ -41,7 +41,7 @@ public class VariantLoader {
 		filter.addFilter(new VCFVariantHWEPFilter(options.getHWEPThreshold(), VCFVariantHWEPFilter.MODE.CONTROLS));
 		filter.addFilter(new VCFVariantRegionFilter(regions));
 
-		ArrayList<VCFVariant> variants = loader.run(options.getVcf(), filter);
+		ArrayList<VCFVariant> variants = loader.run(options.getVcf(), filter, options.getNrThreads());
 		Collections.sort(variants, new VCFVariantComparator());
 
 
