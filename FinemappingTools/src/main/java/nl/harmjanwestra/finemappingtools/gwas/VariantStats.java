@@ -34,12 +34,12 @@ public class VariantStats extends LRTest {
 		out.writeln(header);
 		for (VCFVariant variant : variants) {
 			String ln = variant.getChr() + "\t" + variant.getPos() + "\t" + variant.getId() + "\t" + variant.toString();
-			ln += "\t" + variant.getCallrateCases() + "\t" + variant.getCallrateControls();
+			ln += "\t" + variant.getCallrateCases() + "\t" + variant.getCallrateControls() + "\t" + variant.getDiffMissingnessP();
+//			ln += "\t" + variant.getNumberCasesCalled() + "\t" + variant.getControlsCalled();
 			ln += "\t" + variant.getAlleleFrequenciesCases()[0] + "\t" + variant.getAlleleFrequenciesControls()[0];
 			ln += "\t" + variant.getHwepCases() + "\t" + variant.getHwepControls();
-
+			out.writeln(ln);
 		}
-
 		out.close();
 
 	}

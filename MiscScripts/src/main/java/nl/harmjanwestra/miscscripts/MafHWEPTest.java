@@ -1,9 +1,23 @@
 package nl.harmjanwestra.miscscripts;
 
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.FisherExactTest;
+
 /**
  * Created by Harm-Jan on 06/01/16.
  */
 public class MafHWEPTest {
+
+	public static void main(String[] args) {
+
+		FisherExactTest fet = new FisherExactTest();
+		// 9274	10830	60	281
+		System.out.println(fet.getFisherPValue(60, 9274, 281, 10830));
+		System.out.println(fet.getFisherLeftTail());
+		System.out.println(fet.getFisherRightTail());
+		System.out.println(fet.getFisherPValue(2, 10, 9274, 10830));
+		System.out.println(fet.calculateFisherTwoTail());
+
+	}
 
 //	public static void main(String[] args) {
 //		String vcf = "D:\\tmp\\2016-06-01\\RA-controls-chr19.vcf.gz";

@@ -10,6 +10,7 @@ import nl.harmjanwestra.utilities.enums.Gender;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ChiSquare;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.FisherExactTest;
 import nl.harmjanwestra.utilities.matrix.ShortMatrix2D;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
 import nl.harmjanwestra.utilities.legacy.genetica.io.trityper.util.BaseAnnot;
@@ -102,6 +103,7 @@ public class VCFVariant {
 	private SampleAnnotation sampleAnnotation;
 	private double callrateControls;
 	private double callrateCases;
+	private double diffMissingnessP;
 
 	public VCFVariant(String ln) {
 		constructor = 1;
@@ -1059,6 +1061,9 @@ public class VCFVariant {
 			callrateCases = (double) nrCalledCases / nrCases;
 			callrateControls = (double) nrCalledControls / nrControls;
 
+			FisherExactTest fet = new FisherExactTest();
+			diffMissingnessP = fet.getFisherPValue(nrCases - nrCalledCases, nrCalledCases, nrControls - nrCalledControls, nrCalledControls);
+
 			int totalAllelesObs = nrCalled * 2;
 			int nrAllelesThatHaveAlleleFrequency = 0;
 			double minAlleleFreq = 2;
@@ -1640,6 +1645,10 @@ public class VCFVariant {
 
 	public double getCallrateCases() {
 		return callrateCases;
+	}
+
+	public double getDiffMissingnessP() {
+		return diffMissingnessP;
 	}
 
 	public enum PARSE {
