@@ -16,6 +16,7 @@ public class SNPFeature extends Feature {
 	private double cr;
 	private double[] AFCases;
 	private double[] AFControls;
+	private double missingnessP;
 
 
 	public double getMaf() {
@@ -162,5 +163,13 @@ public class SNPFeature extends Feature {
 			}
 		}
 		return false;
+	}
+
+	public void setMissingnessP(double missingnessP) {
+		this.missingnessP = missingnessP;
+	}
+
+	public double getMissingnessP() {
+		return missingnessP;
 	}
 }

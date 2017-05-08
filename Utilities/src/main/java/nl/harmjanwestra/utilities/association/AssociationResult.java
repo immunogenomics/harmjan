@@ -139,6 +139,8 @@ public class AssociationResult {
 				+ "\t" + snp.getMinorAllele()
 				+ "\t" + snp.getImputationQualityScore()
 				+ "\t" + n
+				+ "\t" + snp.getCr()
+				+ "\t" + snp.getMissingnessP()
 				+ "\t" + snp.getMaf()
 				+ "\t" + Strings.concat(snp.getAFCasesArray(), Strings.comma)
 				+ "\t" + Strings.concat(snp.getAFControlsArray(), Strings.comma)

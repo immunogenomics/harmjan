@@ -31,14 +31,14 @@ public class CodingAndIndelEnrichment {
 			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMPromotorsEnhancers-groups.txt";
 			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-significantregions-75e7.bed";
 			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior-significantloci-75e7.txt.gz";
-//			c.run(annot, bedregions, annotationfiles, assocfile, true);
+//			c.compare(annot, bedregions, annotationfiles, assocfile, true);
 			c.run(annot, bedregions, annotationfiles, assocfile, true);
 
 
 			System.out.println();
 			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-significantregions-75e7.bed";
 			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior-significantloci-75e7.txt.gz";
-//			c.run(annot, bedregions, annotationfiles, assocfile, true);
+//			c.compare(annot, bedregions, annotationfiles, assocfile, true);
 			c.run(annot, bedregions, annotationfiles, assocfile, true);
 		} catch (IOException e) {
 			e.printStackTrace();

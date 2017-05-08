@@ -44,7 +44,7 @@ public class DeterminePositionWithinExhaustiveResults {
 //			assocfileprefix = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr";
 //			modelfileprefix = "/Data/tmp/tnfaip3/RA-assoc0.3-COSMO-chr";
 //			outputfile = "/Data/tmp/tnfaip3/exhaustivecomp.txt";
-//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//			d.compare(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
 
 			// CD28
@@ -52,13 +52,13 @@ public class DeterminePositionWithinExhaustiveResults {
 //			assocfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/RA-assoc0.3-COSMO-chr";
 //			modelfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/RA-assoc0.3-COSMO-chr";
 //			outputfile = "/Data/Projects/2016-Finemapping/Exhaustive/cd28/exhaustivecompRA.txt";
-//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//			d.compare(regionfile, assocfileprefix, modelfileprefix, outputfile);
 //
 //			regionfile = "/Data/Projects/2016-Finemapping/Exhaustive/cd28/cd28.bed";
 //			assocfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/T1D-assoc0.3-COSMO-chr";
 //			modelfileprefix = "/Data/Projects/2016-Finemapping/Exhaustive/RA-assoc0.3-COSMO-chr";
 //			outputfile = "/Data/Projects/2016-Finemapping/Exhaustive/cd28/exhaustivecompT1D.txt";
-//			d.run(regionfile, assocfileprefix, modelfileprefix, outputfile);
+//			d.compare(regionfile, assocfileprefix, modelfileprefix, outputfile);
 
 
 			regionfile = "/Data/Projects/2016-Finemapping/Exhaustive/tnfaip3.bed";

@@ -17,7 +17,7 @@ public class SampleMatcher {
 		String c = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/SequencingPanel/uniquelySequencedSamplesRASamplesReplaced.txt";
 		SampleMatcher m = new SampleMatcher();
 		try {
-//			m.run(a, b, c);
+//			m.compare(a, b, c);
 
 			String d = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoChipSampleLists/sampleListT1D-imputed.txt";
 			String e = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoChipSampleLists/sampleListRA-imputed.txt";

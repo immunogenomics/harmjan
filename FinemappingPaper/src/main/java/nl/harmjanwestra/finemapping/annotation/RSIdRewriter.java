@@ -142,7 +142,7 @@ public class RSIdRewriter {
 //			int[] column = columns[i];
 //
 //			try {
-//				v.run(table, table + "-rewrite.txt", tabixprefix, samplefilter, headers[i], column);
+//				v.compare(table, table + "-rewrite.txt", tabixprefix, samplefilter, headers[i], column);
 //			} catch (IOException e) {
 //				e.printStackTrace();
 //			}

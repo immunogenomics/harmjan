@@ -144,6 +144,8 @@ public class AssociationFile {
 		int minorAlleleCol = -1;
 		int combinedIdCol = -1;
 		int ncol = -1;
+		int crcol = -1;
+		int missingnesspcol = -1;
 		int mafcol = -1;
 		int afcasescol = -1;
 		int afcontrolscol = -1;
@@ -188,6 +190,10 @@ public class AssociationFile {
 						minorAlleleCol = i;
 					} else if (e.equals("N")) {
 						ncol = i;
+					} else if (e.equals("CallRate")) {
+						crcol = i;
+					} else if (e.equals("DifferentialMissingnessP")) {
+						missingnesspcol = i;
 					} else if (e.equals("MAF")) {
 						mafcol = i;
 					} else if (e.equals("AFCases")) {
@@ -238,6 +244,8 @@ public class AssociationFile {
 					String id = null;
 					int n = 0;
 					double maf = 0d;
+					double cr = 1d;
+					double missingnessp = 1;
 					double hwep = 0d;
 					double deviancenull = 0d;
 					double deviancegeno = 0d;
@@ -291,6 +299,22 @@ public class AssociationFile {
 					if (mafcol != -1) {
 						try {
 							maf = Double.parseDouble(elems[mafcol]);
+						} catch (NumberFormatException e) {
+
+						}
+					}
+
+					if (crcol != -1) {
+						try {
+							cr = Double.parseDouble(elems[crcol]);
+						} catch (NumberFormatException e) {
+
+						}
+					}
+
+					if (missingnesspcol != -1) {
+						try {
+							missingnessp = Double.parseDouble(elems[missingnesspcol]);
 						} catch (NumberFormatException e) {
 
 						}
@@ -413,9 +437,12 @@ public class AssociationFile {
 					snp.setAlleles(alleles);
 					snp.setMinorAllele(minorAllele);
 
+
 					if (region == null || region.overlaps(snp)) {
 						AssociationResult result = new AssociationResult();
 						result.setSnp(snp);
+						snp.setMissingnessP(missingnessp);
+						snp.setCr(cr);
 						result.setN(n);
 						snp.setMaf(maf);
 						snp.setAFCases(afcases);
@@ -458,6 +485,8 @@ public class AssociationFile {
 				"\tMinorAllele" +
 				"\tImputationQualScore" +
 				"\tN" +
+				"\tCallRate" +
+				"\tDifferentialMissingnessP" +
 				"\tMAF" +
 				"\tAFCases" +
 				"\tAFControls" +
