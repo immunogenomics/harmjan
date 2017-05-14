@@ -85,17 +85,18 @@ public class MergeCredibleSets {
 
 			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
-//			boolean onlyincludevariantsbelowsignificancethreshold = false;
-////			c.makeCircularPlot(bedregions,
-////					assocfiles,
-////					datasetnames,
-////					genenames,
-////					outplot,
-////					significanceThreshold,
-////					onlyincludevariantsbelowsignificancethreshold,
-////					maxPosteriorCredibleSet,
-////					nrVariantsInCredibleSet,
-////					geneAnnotation);
+			boolean onlyincludevariantsbelowsignificancethreshold = false;
+			c.makeCircularPlot(bedregions,
+					assocfiles,
+					datasetnames,
+					genenames,
+					outplot,
+					significanceThreshold,
+					onlyincludevariantsbelowsignificancethreshold,
+					maxPosteriorCredibleSet,
+					nrVariantsInCredibleSet,
+					geneAnnotation);
+			System.exit(-1);
 //
 ////			System.exit(-1);
 //

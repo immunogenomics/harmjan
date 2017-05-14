@@ -369,6 +369,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Tabix region filter")
+				.longOpt("tabixfilter")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Number of batches")
 				.argName("int")
 				.longOpt("nrbatches")
@@ -1051,6 +1057,10 @@ public class Main {
 				VCFFunctions f = new VCFFunctions();
 
 				f.determineVCFSummaryStatistics(input, out);
+
+			} else if (cmd.hasOption("tabixfilter")) {
+				TabixRegionFilter f = new TabixRegionFilter();
+				f.run(input, cmd.getOptionValue("b"), out);
 
 			} else if (cmd.hasOption("summarize3")) {
 				VCFVariantStats stats = new VCFVariantStats();

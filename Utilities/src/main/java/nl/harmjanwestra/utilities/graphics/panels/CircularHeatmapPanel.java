@@ -279,7 +279,7 @@ public class CircularHeatmapPanel extends Panel {
 			double originX = startX + (maxWidth / 2);
 			double originY = startX + (maxWidth / 2);
 
-			double radius = (double) (maxWidth + 30) / 2;
+			double radius = (double) (maxWidth + 120) / 2;
 			Pair<Integer, Integer> xy0 = Goniometry.calcPosOnCircle(radius, originX, originY, angle0);
 			drawRotate(g2d, xy0.getLeft(), xy0.getRight(), angle0, groupnames[group]);
 			System.out.println(group + "\t" + groupnames[group] + "\t" + angle0);

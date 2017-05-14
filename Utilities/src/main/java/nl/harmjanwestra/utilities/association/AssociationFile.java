@@ -122,14 +122,30 @@ public class AssociationFile {
 	}
 
 	public ArrayList<AssociationResult> read(String file) throws IOException {
-		return read(file, null);
+		Feature region = null;
+		return read(file, region);
 	}
 
 
 	public ArrayList<AssociationResult> read(String file, Feature region) throws IOException {
+
 		if (file.endsWith("tab") || file.endsWith("tab.gz")) {
 			return readTabFile(file, region);
 		}
+
+		if (region == null) {
+			ArrayList<Feature> f = null;
+			return read(file, f);
+		}
+		ArrayList<Feature> regions = new ArrayList<>();
+		regions.add(region);
+		return read(file, regions);
+
+
+	}
+
+	public ArrayList<AssociationResult> read(String file, ArrayList<Feature> regions) throws IOException {
+
 		System.out.println("Reading assoc path: " + file);
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
@@ -438,7 +454,7 @@ public class AssociationFile {
 					snp.setMinorAllele(minorAllele);
 
 
-					if (region == null || region.overlaps(snp)) {
+					if (regions == null || snp.overlaps(regions)) {
 						AssociationResult result = new AssociationResult();
 						result.setSnp(snp);
 						snp.setMissingnessP(missingnessp);
@@ -467,7 +483,7 @@ public class AssociationFile {
 			ln = tf.readLine();
 		}
 		tf.close();
-		System.out.println(results.size() + " associations loaded from path: " + file);
+
 		return results;
 	}
 

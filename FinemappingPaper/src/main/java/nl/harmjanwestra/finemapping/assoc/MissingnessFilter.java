@@ -25,6 +25,7 @@ public class MissingnessFilter {
 		double threshold = 7.5e-7;
 		double bayesthreshold = 0.9;
 		String tabixprefix = "D:\\Data\\Ref\\beagle1kg\\1kg.phase3.v5a.chrCHR.vcf.gz";
+		tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 		String samplefilter = null;
 		int nrheaderlines = 1;
 		int[] columns = new int[]{3};
@@ -33,22 +34,27 @@ public class MissingnessFilter {
 //		int[] rsidcols = new int[]{2};
 
 		String regionfile = "D:\\Cloud\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-09-06-SummaryStats\\NormalHWEP1e4\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
-
+		regionfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
 		BedFileReader reader = new BedFileReader();
 
 
-		String dir1 = "D:\\ wrongrsids\\";
-		String dir2 = "D:\\Cloud\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\normal\\";
-		String dir3 = "D:\\Cloud\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\variantstats\\";
+		String indir = "D:\\ wrongrsids\\";
+		String outdir = "D:\\Cloud\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\normal\\";
+		String variantstatdir = "D:\\Cloud\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\variantstats\\";
+		indir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/wosharedcontrols/wrongrsids/";
+		outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/wosharedcontrols/";
+		variantstatdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/variantstats/";
 
 		try {
 			ArrayList<Feature> regions = reader.readAsList(regionfile);
-			String assocfile = dir1 + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-			String assocfileout = dir1 + "T1D-assoc0.3-COSMO-merged-missingpfiltered.txt.gz";
-			String assocfileoutpost = dir1 + "T1D-assoc0.3-COSMO-merged-posterior-missingpfiltered.txt.gz";
-			String assocfileoutpostrsidfix = dir2 + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-			String missingfile = dir3 + "T1Dstats.txt";
-			String out = dir3 + "T1DstatsComparison.txt";
+			String assocfile = indir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
+			assocfile = indir + "T1D-assoc0.3-COSMO-merged.txt.gz";
+			String assocfileout = indir + "T1D-assoc0.3-COSMO-merged-missingpfiltered.txt.gz";
+			String assocfileoutpost = indir + "T1D-assoc0.3-COSMO-merged-posterior-missingpfiltered.txt.gz";
+			String assocfileoutpostrsidfix = outdir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
+			String missingfile = variantstatdir + "T1Dstats.txt";
+			missingfile = variantstatdir + "T1Dwosharedcontrols-stats.txt";
+			String out = variantstatdir + "T1DstatsComparison.txt";
 			m.filter(missingfile, assocfile, assocfileout, threshold);
 			m.determinePosteriors(assocfileout, regionfile, assocfileoutpost, bayesthreshold);
 
@@ -57,23 +63,24 @@ public class MissingnessFilter {
 
 //			m.compare(missingfile, assocfile, out);
 
-			assocfile = dir1 + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			assocfileout = dir1 + "RA-assoc0.3-COSMO-merged-missingpfiltered.txt.gz";
-			assocfileoutpost = dir1 + "RA-assoc0.3-COSMO-merged-posterior-missingpfiltered.txt.gz";
-			assocfileoutpostrsidfix = dir2 + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-			missingfile = dir3 + "RAstats.txt";
-			out = dir3 + "RAstatsComparison.txt";
+			assocfile = indir + "RA-assoc0.3-COSMO-merged.txt.gz";
+			assocfileout = indir + "RA-assoc0.3-COSMO-merged-missingpfiltered.txt.gz";
+			assocfileoutpost = indir + "RA-assoc0.3-COSMO-merged-posterior-missingpfiltered.txt.gz";
+			assocfileoutpostrsidfix = outdir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			missingfile = variantstatdir + "RAstats.txt";
+			missingfile = variantstatdir + "RAwosharedcontrols-stats.txt";
+			out = variantstatdir + "RAstatsComparison.txt";
 			m.filter(missingfile, assocfile, assocfileout, threshold);
 			m.determinePosteriors(assocfileout, regionfile, assocfileoutpost, bayesthreshold);
 			rw.run(assocfileoutpost, assocfileoutpostrsidfix, tabixprefix, samplefilter, nrheaderlines, columns, rsidcols, regions);
 //			m.compare(missingfile, assocfile, out);
 
-			assocfile = dir1 + "META-assoc0.3-COSMO-merged-posterior.txt.gz";
-			assocfileout = dir1 + "META-assoc0.3-COSMO-merged-missingpfiltered.txt.gz";
-			assocfileoutpost = dir1 + "META-assoc0.3-COSMO-merged-posterior-missingpfiltered.txt.gz";
-			assocfileoutpostrsidfix = dir2 + "META-assoc0.3-COSMO-merged-posterior.txt.gz";
-			missingfile = dir3 + "METAstats.txt";
-			out = dir3 + "METAstatsComparison.txt";
+			assocfile = indir + "META-assoc0.3-COSMO-merged-posterior.txt.gz";
+			assocfileout = indir + "META-assoc0.3-COSMO-merged-missingpfiltered.txt.gz";
+			assocfileoutpost = indir + "META-assoc0.3-COSMO-merged-posterior-missingpfiltered.txt.gz";
+			assocfileoutpostrsidfix = outdir + "META-assoc0.3-COSMO-merged-posterior.txt.gz";
+			missingfile = variantstatdir + "METAstats.txt";
+			out = variantstatdir + "METAstatsComparison.txt";
 			m.filter(missingfile, assocfile, assocfileout, threshold);
 			m.determinePosteriors(assocfileout, regionfile, assocfileoutpost, bayesthreshold);
 			rw.run(assocfileoutpost, assocfileoutpostrsidfix, tabixprefix, samplefilter, nrheaderlines, columns, rsidcols, regions);
