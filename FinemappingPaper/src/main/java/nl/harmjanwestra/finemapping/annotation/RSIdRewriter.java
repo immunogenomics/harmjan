@@ -29,7 +29,7 @@ public class RSIdRewriter {
 				int[] combinedIdCols = new int[]{3, 7};
 				int[] rsidcols = new int[]{2, 6};
 				int[] chrs = new int[]{2, 10, 11, 19};
-				chrs = new int[]{10};
+				chrs = new int[]{6};
 
 				BedFileReader reader = new BedFileReader();
 				ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
@@ -54,9 +54,10 @@ public class RSIdRewriter {
 						}
 					}
 				}
+				System.exit(-1);
 			}
 
-			// normal assoc fikes
+			// normal assoc files
 			{
 				String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 				String samplefilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
@@ -69,7 +70,8 @@ public class RSIdRewriter {
 
 
 				BedFileReader reader = new BedFileReader();
-				ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
+//				ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
+				ArrayList<Feature> regions = reader.readAsList("/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/conditional/Original/2017-03-28-RegionsConditional.txt");
 
 				String[] ds = new String[]{"RA", "T1D", "META"};
 
@@ -80,8 +82,11 @@ public class RSIdRewriter {
 					for (int iter = 0; iter < nrIter; iter++) {
 
 						// META-assoc0.3-COSMO-gwas-0-merged.txt.gz
-						String file = "/Data/Projects/2016-Finemapping/genotypes/2017-04-10-rerun/" + ds[d] + "out/" + ds[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
-						String fileout = "/Data/Projects/2016-Finemapping/genotypes/2017-04-10-rerun/" + ds[d] + "out/" + ds[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged-rewrite.txt.gz";
+//						String file = "/Data/Projects/2016-Finemapping/genotypes/2017-04-10-rerun/" + ds[d] + "out/" + ds[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+//						String fileout = "/Data/Projects/2016-Finemapping/genotypes/2017-04-10-rerun/" + ds[d] + "out/" + ds[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged-rewrite.txt.gz";
+
+						String file = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/conditional/Original/" + ds[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+						String fileout = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/conditional/" + ds[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
 
 						RSIdRewriter v = new RSIdRewriter();
 						if (Gpio.exists(file)) {

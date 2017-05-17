@@ -33,7 +33,7 @@ public class CompareImmunoChipWithFinemapResults {
 
 
 			String indir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/";
-			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/2017-04-04-ComparisonsWithICAnalysis/";
+			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/2017-05-16-ComparisonsWithICAnalysis/";
 //			Gpio.createDir(outdir);
 
 //			/// RA

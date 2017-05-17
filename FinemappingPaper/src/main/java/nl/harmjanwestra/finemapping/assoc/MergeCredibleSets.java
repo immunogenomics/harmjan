@@ -55,8 +55,6 @@ public class MergeCredibleSets {
 			String geneAnnotation = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
 
 			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/mergedcrediblesets/";
-
-
 			String outfile = outdir + "mergedCredibleSets.txt";
 			String outeqtlfile = outdir + "mergedCredibleSets-eqtls.txt";
 			String outeqtlfileblueprint = outdir + "mergedCredibleSets-eqtls-blueprint";
@@ -86,17 +84,17 @@ public class MergeCredibleSets {
 			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
 			boolean onlyincludevariantsbelowsignificancethreshold = false;
-			c.makeCircularPlot(bedregions,
-					assocfiles,
-					datasetnames,
-					genenames,
-					outplot,
-					significanceThreshold,
-					onlyincludevariantsbelowsignificancethreshold,
-					maxPosteriorCredibleSet,
-					nrVariantsInCredibleSet,
-					geneAnnotation);
-			System.exit(-1);
+//			c.makeCircularPlot(bedregions,
+//					assocfiles,
+//					datasetnames,
+//					genenames,
+//					outplot,
+//					significanceThreshold,
+//					onlyincludevariantsbelowsignificancethreshold,
+//					maxPosteriorCredibleSet,
+//					nrVariantsInCredibleSet,
+//					geneAnnotation);
+//			System.exit(-1);
 //
 ////			System.exit(-1);
 //
@@ -107,18 +105,18 @@ public class MergeCredibleSets {
 
 			String[] eqtlfiles = new String[]{
 					"/Data/eQTLs/ImmVar/Raj/tableS12_meta_cd4T_cis_fdr05-upd.tab",
-					"/Data/eQTLs/Milani/CD4-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
-					"/Data/eQTLs/Milani/CD4-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
-					"/Data/eQTLs/Milani/CD8-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
-					"/Data/eQTLs/Milani/CD8-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
+//					"/Data/eQTLs/Milani/CD4-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
+//					"/Data/eQTLs/Milani/CD4-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
+//					"/Data/eQTLs/Milani/CD8-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
+//					"/Data/eQTLs/Milani/CD8-trans-eQTLs-ProbeLevelFDR0.5.txt.gz",
 					"/Data/eQTLs/BiosEQTLs/eQTLsFDR0.05-ProbeLevel.txt.gz"
 			};
 			String[] eqtlfilenames = new String[]{
 					"Raj",
-					"Milani-CD4",
-					"Milani-CD4-trans",
-					"Milani-CD8",
-					"Milani-CD8-trans",
+//					"Milani-CD4",
+//					"Milani-CD4-trans",
+//					"Milani-CD8",
+//					"Milani-CD8-trans",
 					"Bios"
 			};
 ////
@@ -145,7 +143,7 @@ public class MergeCredibleSets {
 					"/Data/eQTLs/BluePrint/mono_meth_M_peer_10_all_summary-fdr005.tab.gz",
 					"/Data/eQTLs/BluePrint/mono_psi_peer_10_all_summary-fdr005.tab.gz",
 			};
-			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-monocyte.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-monocyte.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 			eqtlfilenames = new String[]{
 					"Neutrophil-eQTL",
 					"Neutrophil-hQTL-K27AC",
@@ -161,7 +159,7 @@ public class MergeCredibleSets {
 					"/Data/eQTLs/BluePrint/neut_meth_M_peer_10_all_summary-fdr005.tab.gz",
 					"/Data/eQTLs/BluePrint/neut_psi_peer_10_all_summary-fdr005.tab.gz",
 			};
-			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-neutrophils.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-neutrophils.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 			eqtlfilenames = new String[]{
 					"TCell-eQTL",
 					"TCell-hQTL-K27AC",
@@ -177,7 +175,7 @@ public class MergeCredibleSets {
 					"/Data/eQTLs/BluePrint/tcel_meth_M_peer_10_all_summary-fdr005.tab.gz",
 					"/Data/eQTLs/BluePrint/tcel_psi_peer_10_all_summary-fdr005.tab.gz"
 			};
-			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-tcell.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-tcell.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 //
 //			/*
 //			Bed file overlap

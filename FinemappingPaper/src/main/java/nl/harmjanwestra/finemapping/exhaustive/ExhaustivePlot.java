@@ -38,11 +38,12 @@ public class ExhaustivePlot {
 			ArrayList<Feature> regions = reader.readAsList("/Data/Projects/2016-Finemapping/Exhaustive/data/2017-03-28-RegionsExhaustive.txt");
 //			String[] diseases = new String[]{"RA", "T1D"};
 			String[] diseases = new String[]{"RA", "T1D", "META"};
+//			String[] diseases = new String[]{"T1D"};
 //			diseases = new String[]{"RA"};
 			int nrToPlot = 25;
 			for (String d : diseases) {
 				for (Feature region : regions) {
-					if (region.getChromosome().equals(Chromosome.TEN)) {
+					if (region.getChromosome().equals(Chromosome.SIX)) {
 						ExhaustivePlot p = new ExhaustivePlot();
 //						String output = "/Data/Projects/2016-Finemapping/Exhaustive/output/" + d + "-tyk2-" + region.toString();
 						String output = "/Data/Projects/2016-Finemapping/Exhaustive/output/" + d + "-" + region.toString();
@@ -53,11 +54,13 @@ public class ExhaustivePlot {
 						String tabixsamplelimit = "/Data/Ref/1kg-europeanpopulations.txt.gz";
 
 						String snpcombos = "/Data/Projects/2016-Finemapping/Exhaustive/snpcombos.txt";
-						if (region.getChromosome().equals(Chromosome.TEN)) {
+						if (region.getChromosome().equals(Chromosome.SIX)) {
 
 							if (Gpio.exists(assocfile)) {
 								p.findCombination(region, assocfile, snpcombos, tabixfile, tabixsamplelimit);
-//							p.plotTopNSNPs(region, assocfile, output, nrToPlot, tabixfile, tabixsamplelimit);
+								double thresh = -Math.log10(7.5e-7);
+//								double thresh = -Math.log10(0.99);
+//								p.plotTopNSNPs(region, assocfile, output, nrToPlot, tabixfile, tabixsamplelimit, thresh);
 							}
 						}
 					}
@@ -72,6 +75,9 @@ public class ExhaustivePlot {
 		} catch (DocumentException e) {
 			e.printStackTrace();
 		}
+//		catch (DocumentException e) {
+//			e.printStackTrace();
+//		}
 
 	}
 
@@ -344,7 +350,7 @@ public class ExhaustivePlot {
 	}
 
 
-	public void plotTopNSNPs(Feature region, String assocfile, String output, int topN, String tabixPrefix, String tabixsamplelimit) throws IOException, DocumentException {
+	public void plotTopNSNPs(Feature region, String assocfile, String output, int topN, String tabixPrefix, String tabixsamplelimit, double thresh) throws IOException, DocumentException {
 
 		String[] variants = new String[]{"", ""};
 
@@ -459,7 +465,7 @@ public class ExhaustivePlot {
 		}
 		// iterate through all assoc PVals to get pairs corresponding to snp set
 		double maxPval = 0;
-		double thresh = -Math.log10(7.5e-7);
+
 		double minPval = Double.MAX_VALUE;
 		for (AssocPair p : assocVals) {
 			if (topSNPs.contains(p.getSnp1()) && topSNPs.contains(p.getSnp2())) {
