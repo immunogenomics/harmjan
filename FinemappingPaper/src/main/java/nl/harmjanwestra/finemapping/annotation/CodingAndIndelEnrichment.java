@@ -32,21 +32,22 @@ public class CodingAndIndelEnrichment {
 		try {
 			String annot = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz";
 
+			int nrCellTypesRequired = 0;
 			String exacAnnotation = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/exac/exac.vcf.gz";
 			String annotationfiles = "/Data/Enhancers/Roadmap/dnase-groups.txt";
-			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMPromotorsEnhancers-groups.txt";
-//			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
+//			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMPromotorsEnhancers-groups.txt";
+			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
 			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-significantregions-75e7.bed";
 			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
 //			c.compare(annot, bedregions, annotationfiles, assocfile, true);
-			c.run(annot, bedregions, annotationfiles, assocfile, exacAnnotation, 2, true);
+			c.run(annot, bedregions, annotationfiles, assocfile, exacAnnotation, nrCellTypesRequired, true);
 
 
 			System.out.println();
 			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-significantregions-75e7.bed";
 			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
 //			c.compare(annot, bedregions, annotationfiles, assocfile, true);
-			c.run(annot, bedregions, annotationfiles, assocfile, exacAnnotation, 2, true);
+			c.run(annot, bedregions, annotationfiles, assocfile, exacAnnotation, nrCellTypesRequired, true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -120,6 +121,9 @@ public class CodingAndIndelEnrichment {
 
 				double sigmaposteriorTotalIndel = 0;
 				double sigmaposteriorTotalOther = 0;
+				int nrTotalIndel = 0;
+				int nrTotalNonCoding = 0;
+				int nrTotalCoding = 0;
 
 				double fractionIndel = 0;
 				double fractionCoding = 0;
@@ -183,10 +187,13 @@ public class CodingAndIndelEnrichment {
 						if (coding) {
 							sigmaposteriorCoding += r.getPosterior();
 							nrCoding++;
+							nrTotalCoding++;
 						} else if (snp.isIndel()) {
 							sigmaposteriorTotalIndel += r.getPosterior();
+							nrTotalIndel++;
 						} else {
 							sigmaposteriorTotalOther += r.getPosterior();
+							nrTotalNonCoding++;
 						}
 
 						if (!snp.isIndel() && !coding) {
@@ -223,7 +230,9 @@ public class CodingAndIndelEnrichment {
 				System.out.println(annotation.getGroupName(i) + "\tindel\tsumposterior:\t" + sigmaposteriorIndel + "\tfraction:\t" + fractionIndel + "\tenrich:\t" + (sigmaposteriorIndel / fractionIndel));
 				System.out.println(annotation.getGroupName(i) + "\tother\tsumposterior:\t" + sigmaPosteriorOther + "\tfraction:\t" + fractionOther + "\tenrich:\t" + (sigmaPosteriorOther / fractionOther));
 				System.out.println(annotation.getGroupName(i) + "\ttotalPosteriorMassIndel:\t" + sigmaposteriorTotalIndel + "\ttotalPosteriorMassNonCodingNonIndel:\t" + sigmaposteriorTotalOther);
-
+				int nrTotalVariants = nrTotalCoding + nrTotalIndel + nrTotalNonCoding;
+				System.out.println("NrTotalCoding: " + nrTotalCoding + "\tNrTotalNonCoding: " + nrTotalNonCoding + "\tNrTotalIndel: " + nrTotalIndel);
+				System.out.println(nrTotalVariants + " total variants....");
 			}
 		}
 //		else {

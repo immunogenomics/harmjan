@@ -113,6 +113,12 @@ public class AssociationPlotterOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder().longOpt("thresholdposterior")
+				.hasArg()
+				.desc("Plotting threshold for posteriors.")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder().longOpt("thresholdsconditional")
 				.hasArg()
 				.desc("Significance thresholds for conditional results per region (supply file)")
@@ -144,6 +150,7 @@ public class AssociationPlotterOptions {
 	private double maxpconditional;
 	private Double maxp;
 	private double credibleSetThreshold = 0.9;
+	private double thresholdposterior = 0.99;
 	private String significanceThresholdFile;
 	private String significanceConditionalThresholdFile;
 	private String LDPrefix;
@@ -252,6 +259,10 @@ public class AssociationPlotterOptions {
 				nrIters = Integer.parseInt(cmd.getOptionValue("nriters"));
 			}
 
+			if (cmd.hasOption("thresholdposterior")) {
+				thresholdposterior = Double.parseDouble(cmd.getOptionValue("thresholdposterior"));
+			}
+
 
 			if (cmd.hasOption("p")) {
 				plotPosterior = true;
@@ -347,5 +358,9 @@ public class AssociationPlotterOptions {
 
 	public String getConditionalFiles() {
 		return conditionalFiles;
+	}
+
+	public double getPosteriorThreshold() {
+		return thresholdposterior;
 	}
 }

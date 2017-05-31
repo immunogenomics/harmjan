@@ -208,7 +208,6 @@ public class AssociationPosteriorPlotter {
 		}
 
 
-
 		for (Feature region : regions) {
 			boolean regionhasvariants = false;
 
@@ -293,7 +292,8 @@ public class AssociationPosteriorPlotter {
 						}
 						posteriorPanel.setDataSingleDs(region, sequencedRegions, posteriors, "Posteriors");
 						posteriorPanel.setMarkDifferentShape(mark);
-						posteriorPanel.setMaxPVal(0.99d);
+
+						posteriorPanel.setMaxPVal(options.getPosteriorThreshold());
 						grid.addPanel(posteriorPanel, 1, datasetNr);
 					}
 

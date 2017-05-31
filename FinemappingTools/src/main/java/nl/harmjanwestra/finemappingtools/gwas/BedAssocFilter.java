@@ -41,7 +41,7 @@ public class BedAssocFilter {
 		TextFile out = new TextFile(options.outfile, TextFile.W);
 
 		AssociationFile assocFile = new AssociationFile();
-		ArrayList<AssociationResult> allResults = assocFile.read(options.assocFile, null);
+		ArrayList<AssociationResult> allResults = assocFile.read(options.assocFile);
 
 
 		ArrayList<Feature> regionsAfterFilter = new ArrayList<>();

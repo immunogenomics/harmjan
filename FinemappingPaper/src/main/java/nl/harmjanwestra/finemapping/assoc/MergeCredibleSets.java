@@ -46,6 +46,8 @@ public class MergeCredibleSets {
 
 		try {
 			MergeCredibleSets c = new MergeCredibleSets();
+
+
 //			c.determineRegionSignificanceThresholds(bedregions, assocfiles, datasetnames, genenames, outfile);
 
 			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
@@ -58,11 +60,13 @@ public class MergeCredibleSets {
 			String outfile = outdir + "mergedCredibleSets.txt";
 			String outeqtlfile = outdir + "mergedCredibleSets-eqtls.txt";
 			String outeqtlfileblueprint = outdir + "mergedCredibleSets-eqtls-blueprint";
+			String outpqtlfile = outdir + "mergedCredibleSets-pqtls-sun";
 			String outoverlapfile = outdir + "mergedCredibleSets-overlap.txt";
 			String outoverlapplot = outdir + "annotationplots/mergedCredibleSets-overlapplot-";
 			String outoverlapfileatac = outdir + "mergedCredibleSets-overlap-atac.txt";
 			String outoverlapplotatac = outdir + "annotationplots/mergedCredibleSets-overlapplot-atac-";
 			String outplot = outdir + "mergedCredibleSets-plot-promoter" + promotordistance + ".pdf";
+			String outgtex = outdir + "mergedCredibleSets-eqtls-gtex.txt";
 
 			String[] assocfiles = new String[]{
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
@@ -76,12 +80,13 @@ public class MergeCredibleSets {
 					"Combined"
 			};
 
+
 			double significanceThreshold = 7.5E-7;
 			int nrVariantsInCredibleSet = 10;
 			double maxPosteriorCredibleSet = 0.9;
 			boolean includeAllLoci = true;
 
-			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+//			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
 			boolean onlyincludevariantsbelowsignificancethreshold = false;
 //			c.makeCircularPlot(bedregions,
@@ -126,7 +131,7 @@ public class MergeCredibleSets {
 ////
 			String tabixprefix = "/Data/Ref/beagle_1kg/1kg.phase3.v5a.chrCHR.vcf.gz";
 			String tabixfilter = "/Data/Ref/1kg-europeanpopulations.txt.gz";
-			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfile, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 ////			System.exit(-1);
 			eqtlfilenames = new String[]{
 					"Monocyte-eQTL",
@@ -176,6 +181,32 @@ public class MergeCredibleSets {
 					"/Data/eQTLs/BluePrint/tcel_psi_peer_10_all_summary-fdr005.tab.gz"
 			};
 //			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-tcell.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+
+			// pQTL
+			c.rewritepQTLFiles();
+			eqtlfilenames = new String[]{
+					"Sun-pQTL",
+					"Sun-pQTL-Conditional",
+			};
+			eqtlfiles = new String[]{
+
+					"/Data/eQTLs/Sun-pQTL/table1.tab.gz",
+					"/Data/eQTLs/Sun-pQTL/table2.tab.gz"
+			};
+//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outpqtlfile + "-tcell.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+
+
+			// GTEX
+
+//			c.rewriteGTEX();
+			eqtlfilenames = new String[]{
+					"GTEX",
+			};
+			eqtlfiles = new String[]{
+					"/Data/eQTLs/GTEx/v6peQTLsTab.txt"
+			};
+			boolean eQTLFileIsList = true;
+			c.eQTLOverlapGTEX(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outgtex, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 //
 //			/*
 //			Bed file overlap
@@ -193,12 +224,12 @@ public class MergeCredibleSets {
 			};
 //
 //
-			c.bedOverlap(bedregions,
-					bedfiles,
-					bedfilenames,
-					assocfiles, datasetnames, genenames,
-					outoverlapfile, outoverlapplot,
-					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation, false);
+//			c.bedOverlap(bedregions,
+//					bedfiles,
+//					bedfilenames,
+//					assocfiles, datasetnames, genenames,
+//					outoverlapfile, outoverlapplot,
+//					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation, false);
 //
 			bedfiles = new String[]{
 					"/Data/Enhancers/CD4TimelinePilot/list.txt"
@@ -207,18 +238,121 @@ public class MergeCredibleSets {
 					"Atac"
 			};
 
-			c.bedOverlap(bedregions,
-					bedfiles,
-					bedfilenames,
-					assocfiles, datasetnames, genenames,
-					outoverlapfileatac, outoverlapplotatac,
-					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation, false);
+//			c.bedOverlap(bedregions,
+//					bedfiles,
+//					bedfilenames,
+//					assocfiles, datasetnames, genenames,
+//					outoverlapfileatac, outoverlapplotatac,
+//					maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation, false);
 //
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (DocumentException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void rewritepQTLFiles() throws IOException {
+		String pQTLFile1 = "/Data/eQTLs/Sun-pQTL/table1.txt";
+		String pQTLFile1Out = "/Data/eQTLs/Sun-pQTL/table1.tab.gz";
+
+		// in:
+		// Variant	chr	pos	regionsta	regionsto	al1	al2	EAF	INFO	SomaID	Target	FullName	UniProt	cistrans	gene	coh1beta	co1se	co1p	coh2beta	co2se	co2p	metabeta	metase	metap	nrConditional	prevreported	locusid
+		// out:
+		// Chr1    168921757       rs12095636      ENSG00000000460.11      1.047e-02
+
+		TextFile tf = new TextFile(pQTLFile1, TextFile.R);
+		TextFile tfout = new TextFile(pQTLFile1Out, TextFile.W);
+		tf.readLine();
+		String[] elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+			String pos = elems[2].replaceAll(",", "");
+			pos = pos.replaceAll("\"", "");
+			String out = elems[1]
+					+ "\t" + pos
+					+ "\t" + elems[0]
+					+ "\t" + elems[12] + "/" + elems[10]
+					+ "\t" + elems[23];
+			tfout.writeln(out);
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
+		tf.close();
+		tfout.close();
+
+		// input:
+		// SOMAmer ID	Target	UniProt	Sentinel variant	Conditional variant	LD with sentinel variant (r2)	Conditional variant Chr	Conditional variant Pos	Conditional variant EA	Conditional variant OA	Conditional variant EAF	Conditional variant INFO	Joint model beta	Joint model SE	Joint model p	Univariate beta	Univariate SE	Univariate p
+		String pQTLFile2 = "/Data/eQTLs/Sun-pQTL/table2.txt";
+		String pQTLFile2Out = "/Data/eQTLs/Sun-pQTL/table2.tab.gz";
+		tf = new TextFile(pQTLFile2, TextFile.R);
+		tfout = new TextFile(pQTLFile2Out, TextFile.W);
+		tf.readLine();
+		elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+			String pos = elems[7].replaceAll(",", "");
+			pos = pos.replaceAll("\"", "");
+			String out = elems[6]
+					+ "\t" + pos
+					+ "\t" + elems[4]
+					+ "\t" + elems[2] + "/" + elems[1]
+					+ "\t" + elems[14];
+			tfout.writeln(out);
+			elems = tf.readLineElems(TextFile.tab);
+		}
+
+		tf.close();
+		tfout.close();
+	}
+
+	public void rewriteGTEX() throws IOException {
+		String listfile = "/Data/eQTLs/GTEx/v6peQTLs.txt";
+		String listfileout = "/Data/eQTLs/GTEx/v6peQTLsTab.txt";
+		TextFile tf = new TextFile(listfile, TextFile.R);
+		TextFile tfout1 = new TextFile(listfileout, TextFile.W);
+		String[] elems = tf.readLineElems(TextFile.tab);
+		while (elems != null) {
+
+			String file = elems[0];
+
+			String outfile = elems[0] + ".tab.gz";
+			TextFile tfin = new TextFile(file, TextFile.R);
+			TextFile tfout = new TextFile(outfile, TextFile.W);
+			tfin.readLine();
+			String[] elems2 = tfin.readLineElems(TextFile.tab);
+			int ctr = 0;
+			while (elems2 != null) {
+// out:
+				// Chr1    168921757       rs12095636      ENSG00000000460.11      1.047e-02
+
+				//in
+				// variant_id      gene_id tss_distance    pval_nominal    slope   slope_se        slope_fpkm      slope_fpkm_se   pval_nominal_threshold  min_pval_nominal        pval_beta
+				// 1_662622_G_A_b37
+
+				if (elems2.length < 4) {
+					System.err.println("Unexpected end of line? " + elems2.length + " elems found...");
+					System.out.println(Strings.concat(elems2, Strings.tab));
+
+					System.exit(-1);
+				}
+				String var = elems2[0];
+				String[] varelems = var.split("_");
+				String outln = varelems[0]
+						+ "\t" + varelems[1]
+						+ "\t" + var
+						+ "\t" + elems2[1]
+						+ "\t" + elems2[3];
+				tfout.writeln(outln);
+				ctr++;
+				elems2 = tfin.readLineElems(TextFile.tab);
+			}
+			tfin.close();
+			tfout.close();
+			tfout1.writeln(outfile + "\t" + elems[1]);
+			System.out.println(ctr + "\tin\t" + outfile);
+			elems = tf.readLineElems(TextFile.tab);
+		}
+		tf.close();
+		tfout1.close();
 	}
 
 
@@ -682,6 +816,7 @@ public class MergeCredibleSets {
 	private void eQTLOverlap(String bedregions,
 							 String[] eqtlfiles,
 							 String[] eqtlfilenames,
+
 							 String tabixPrefix,
 							 String tabixFilter,
 							 String[] assocFiles,
@@ -890,6 +1025,217 @@ public class MergeCredibleSets {
 		out2.close();
 	}
 
+	private void eQTLOverlapGTEX(String bedregions,
+								 String[] eqtlfiles,
+								 String[] eqtlfilenames,
+								 String tabixPrefix,
+								 String tabixFilter,
+								 String[] assocFiles,
+								 String[] datasetNames,
+								 String genenamefile,
+								 String outfile, double maxPosteriorCredibleSet, int maxNrVariantsInCredibleSet, String annot) throws
+			IOException {
+//		GTFAnnotation annotation = new GTFAnnotation(annot);
+//		TreeSet<Gene> genes = annotation.getGeneTree();
+
+		HashMap<String, String> locusToGene = loadLocusToGene(genenamefile);
+
+
+		BedFileReader reader = new BedFileReader();
+		ArrayList<Feature> regions = reader.readAsList(bedregions);
+
+		// region variant1 pval1 posterior1 variant2 pval2 posterior2 variant3 pval3 posterior3
+		AssociationFile f = new AssociationFile();
+
+
+		// [dataset][region][variants]
+		AssociationResult[][][] crediblesets = new AssociationResult[assocFiles.length][regions.size()][];
+
+		AssociationResult[][][] data = new AssociationResult[assocFiles.length][regions.size()][];
+
+		ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
+		ArrayList<Feature> regionsWithCredibleSets = new ArrayList<>();
+
+
+		ArrayList<ArrayList<AssociationResult>> associationResults = new ArrayList<>();
+		for (int i = 0; i < assocFiles.length; i++) {
+			associationResults.add(f.read(assocFiles[i]));
+		}
+
+		for (int d = 0; d < regions.size(); d++) {
+			boolean hasSet = false;
+			Feature region = regions.get(d);
+			for (int i = 0; i < assocFiles.length; i++) {
+				ArrayList<AssociationResult> allDatasetData = filterAssocResults(associationResults.get(i), region);
+
+				data[i][d] = allDatasetData.toArray(new AssociationResult[0]);
+				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(allDatasetData, maxPosteriorCredibleSet);
+				crediblesets[i][d] = credibleSet.toArray(new AssociationResult[0]);
+				if (credibleSet.size() <= maxNrVariantsInCredibleSet) {
+					hasSet = true;
+				}
+			}
+			if (hasSet) {
+				regionsWithCredibleSets.add(regions.get(d));
+			}
+		}
+
+		HashSet<Feature> regionsWithCredibleSetsHash = new HashSet<Feature>();
+		regionsWithCredibleSetsHash.addAll(regionsWithCredibleSets);
+
+		int len = maxNrVariantsInCredibleSet;
+		TextFile out = new TextFile(outfile, TextFile.W);
+		String header2 = "\t\t";
+
+		String header1 = "region\tgene";
+
+		for (int i = 0; i < data.length; i++) {
+			header2 += datasetNames[i] + "" +
+					"\t" +
+					"\t" +
+					"\t" +
+					"\t" +
+					"\t";
+			header1 += "\tNrVariantsInCredibleSet" +
+					"\tVariants" +
+					"\tPosterior" +
+					"\tNrTissues" +
+					"\tTissues" +
+					"\tGenes" +
+					"\tSNPs" +
+					"\tP(eQTL)" +
+					"\tLD";
+		}
+		out.writeln(header2);
+		out.writeln(header1);
+
+
+		ArrayList<String> eQTLFileListArr = new ArrayList<>();
+		ArrayList<String> eQTLFileListNameArr = new ArrayList<>();
+		TextFile tfq = new TextFile(eqtlfiles[0], TextFile.R);
+		String[] tfqel = tfq.readLineElems(TextFile.tab);
+		while (tfqel != null) {
+			eQTLFileListArr.add(tfqel[0]);
+			eQTLFileListNameArr.add(tfqel[1]);
+			tfqel = tfq.readLineElems(TextFile.tab);
+		}
+		tfq.close();
+
+		eqtlfiles = eQTLFileListArr.toArray(new String[0]);
+		eqtlfilenames = eQTLFileListNameArr.toArray(new String[0]);
+		// load all top eQTLs per gene for all regions (+- 1mb)
+		EQTL[][][] eqtls = loadEQTLs(eqtlfiles, regions); // [eqtldataset][region][eqtl]
+
+		int nrDatasets = data.length;
+		int ctr = 0;
+
+		for (int regionId = 0; regionId < regions.size(); regionId++) {
+//		for (int regionId = 0; regionId < 10; regionId++) {
+			Feature region = regions.get(regionId);
+			if (regionsWithCredibleSetsHash.contains(region)) {
+
+				ctr++;
+
+				// get all VCFVariants in region
+				String tabixFile = tabixPrefix.replaceAll("CHR", "" + region.getChromosome().getNumber());
+
+				VCFTabix tabix = new VCFTabix(tabixFile);
+				boolean[] filter = tabix.getSampleFilter(tabixFilter);
+				Feature eqtlregion = new Feature(region);
+				eqtlregion.setStart(eqtlregion.getStart() - 10000);
+				eqtlregion.setStop(eqtlregion.getStop() + 10000);
+				ArrayList<VCFVariant> all1kgvariants = tabix.getAllVariants(region, filter);
+				System.out.println(all1kgvariants.size() + " variants in LD reference for region: " + region.toString());
+
+				ArrayList<ArrayList<AssociationResult>> resultsPerDs = new ArrayList<>();
+
+				for (int datasetId = 0; datasetId < nrDatasets; datasetId++) {
+					ArrayList<AssociationResult> topResults = getTopVariants(data, datasetId, regionId, len);
+					resultsPerDs.add(topResults);
+				}
+
+				double[] regionsums = new double[data.length];
+				for (int snpId = 0; snpId < len; snpId++) {
+					String ln = "";
+
+					boolean allSNPsPrinted = true;
+					for (int datasetId = 0; datasetId < data.length; datasetId++) {
+						if (regionsums[datasetId] < maxPosteriorCredibleSet) {
+							allSNPsPrinted = false;
+						}
+					}
+
+					if (!allSNPsPrinted) {
+						if (snpId == 0) {
+							ln = region.toString() + "\t" + locusToGene.get(region.toString());
+
+							for (int datasetId = 0; datasetId < data.length; datasetId++) {
+								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
+								ln += "\t" + crediblesets[datasetId][regionId].length
+										+ "\t" + r.getSnp().toString()
+										+ "\t" + r.getPosterior();
+
+								String lnblock = eqtllineblockGTEX(all1kgvariants,
+										r,
+										eqtlfilenames,
+										eqtls,
+										regionId);
+
+								ln += lnblock;
+
+
+								regionsums[datasetId] += r.getPosterior();
+							}
+						} else {
+							ln = "\t";
+
+							for (int datasetId = 0; datasetId < data.length; datasetId++) {
+								AssociationResult r = resultsPerDs.get(datasetId).get(snpId); //data[datasetId][regionId][snpId];
+
+
+								String lnblock = eqtllineblockGTEX(all1kgvariants,
+										r,
+										eqtlfilenames,
+										eqtls,
+										regionId);
+
+								if (regionsums[datasetId] < maxPosteriorCredibleSet) {
+									ln += "\t"
+											+ "\t" + r.getSnp().toString()
+											+ "\t" + r.getPosterior();
+									ln += lnblock;
+								} else {
+									ln += "\t"
+											+ "\t"
+											+ "\t"
+											+ "\t"
+											+ "\t"
+											+ "\t"
+											+ "\t"
+											+ "\t"
+											+ "\t";
+								}
+
+
+								regionsums[datasetId] += r.getPosterior();
+							}
+
+						}
+						out.writeln(ln);
+
+					}
+
+				}
+				System.out.println(ctr + "/" + regionsWithCredibleSets.size() + " regions processed....");
+			}
+
+
+		}
+
+		out.close();
+
+	}
+
 	private String eqtllineblock(ArrayList<VCFVariant> all1kgvariants,
 								 AssociationResult r,
 								 String[] eqtlfilenames,
@@ -968,6 +1314,110 @@ public class MergeCredibleSets {
 						+ "\t" + maxLD;
 			}
 		}
+		return ln;
+	}
+
+	private String eqtllineblockGTEX(ArrayList<VCFVariant> all1kgvariants,
+									 AssociationResult r,
+									 String[] eqtlfilenames,
+									 EQTL[][][] eqtls,
+									 int regionId) {
+
+		VCFVariant finemapvariant = getVariant(all1kgvariants, r.getSnp());
+
+		DetermineLD ldcal = new DetermineLD();
+
+		// out:
+		/*
+		header1 += "\tNrVariantsInCredibleSet" +
+					"\tVariants" +
+					"\tPosterior" +
+					"\tTissues" +
+					"\tGenes" +
+					"\tSNPs" +
+					"\tP(eQTL)" +
+					"\tLD";
+		 */
+
+
+		ArrayList<String> tissues = new ArrayList<>();
+		ArrayList<String> genes = new ArrayList<>();
+		ArrayList<String> SNPs = new ArrayList<>();
+		ArrayList<String> peqtl = new ArrayList<>();
+		ArrayList<String> LD = new ArrayList<>();
+
+
+		for (int e = 0; e < eqtlfilenames.length; e++) {
+			// get linked eQTLs for this dataset
+			// get top linked eQTL for this eQTL dataset
+			// print top effect
+
+			EQTL[] eqtlsInRegion = eqtls[e][regionId];
+
+			double maxLD = -1;
+			double minpval = 2;
+			EQTL maxEQTL = null;
+			int maxdistance = Integer.MAX_VALUE;
+//			System.out.println();
+			for (EQTL eqtl : eqtlsInRegion) {
+				if (eqtl.getSnp().getStart() == r.getSnp().getStart()) {
+					// found it
+
+					maxLD = 1;
+					maxEQTL = eqtl;
+					maxdistance = 0;
+					double pval = eqtl.getPval();
+//					System.out.println("select\t" + r.getSnp().toString() + "\t" + eqtl.getSnp().toString() + "\t" + 0 + "\t" + 1 + "\t" + pval);
+					break;
+				} else {
+					if (finemapvariant != null) {
+						VCFVariant eqtlvariant = getVariant(all1kgvariants, eqtl.getSnp());
+
+
+						if (finemapvariant != null && eqtlvariant != null) {
+							Pair<Double, Double> ld = ldcal.getLD(finemapvariant, eqtlvariant);
+							double rsq = ld.getRight();
+							int distance = Math.abs(finemapvariant.getPos() - eqtlvariant.getPos());
+
+							double pval = eqtl.getPval();
+							if (rsq > maxLD) {
+								maxLD = rsq;
+								maxEQTL = eqtl;
+								maxdistance = distance;
+								minpval = pval;
+//								System.out.println("select\t" + r.getSnp().toString() + "\t" + eqtl.getSnp().toString() + "\t" + distance + "\t" + rsq + "\t" + pval);
+							} else if (rsq == maxLD) {
+								if (pval < minpval) {
+									maxLD = rsq;
+									maxEQTL = eqtl;
+									maxdistance = distance;
+									minpval = pval;
+//									System.out.println("select\t" + r.getSnp().toString() + "\t" + eqtl.getSnp().toString() + "\t" + distance + "\t" + rsq + "\t" + pval);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if (maxEQTL == null || maxLD < 0.8) {
+			} else {
+				// esnp egene pval ld
+				tissues.add(eqtlfilenames[e]);
+				genes.add(maxEQTL.getGenename());
+				SNPs.add(maxEQTL.getSnp().toString());
+				peqtl.add("" + maxEQTL.getPval());
+				LD.add("" + maxLD);
+			}
+		}
+
+		String ln = "\t" + tissues.size()
+				+ "\t" + Strings.concat(tissues, Strings.semicolon)
+				+ "\t" + Strings.concat(genes, Strings.semicolon)
+				+ "\t" + Strings.concat(SNPs, Strings.semicolon)
+				+ "\t" + Strings.concat(peqtl, Strings.semicolon)
+				+ "\t" + Strings.concat(LD, Strings.semicolon);
+
 		return ln;
 	}
 
