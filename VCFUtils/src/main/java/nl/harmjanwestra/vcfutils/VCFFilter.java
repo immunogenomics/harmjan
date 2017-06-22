@@ -1,5 +1,6 @@
 package nl.harmjanwestra.vcfutils;
 
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 import nl.harmjanwestra.utilities.plink.PlinkFamFile;
@@ -23,16 +24,16 @@ public class VCFFilter {
 
 
 	public void filter(String in,
-					   String out,
-					   String fam,
-					   double mafthreshold,
-					   double callratethreshold,
-					   double hwepthreshold,
-					   Double missingnessthreshold,
-					   Integer readdepth,
-					   Integer gqual,
-					   Double allelicBalance,
-					   boolean onlyAutosomes) throws IOException {
+	                   String out,
+	                   String fam,
+	                   double mafthreshold,
+	                   double callratethreshold,
+	                   double hwepthreshold,
+	                   Double missingnessthreshold,
+	                   Integer readdepth,
+	                   Integer gqual,
+	                   Double allelicBalance,
+	                   boolean onlyAutosomes) throws IOException {
 
 		TextFile tf1 = new TextFile(in, TextFile.R);
 		TextFile tf2 = new TextFile(out, TextFile.W);
@@ -41,6 +42,7 @@ public class VCFFilter {
 
 		System.out.println("Filtering: " + in);
 		System.out.println("Out: " + out);
+		System.out.println("FAM: " + fam);
 		System.out.println("mafthreshold > " + mafthreshold);
 		System.out.println("readdepth > " + readdepth);
 		System.out.println("gqual > " + gqual);
@@ -54,7 +56,15 @@ public class VCFFilter {
 		variantFilters.add(new VCFVariantCallRateFilter(callratethreshold));
 		variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.CONTROLS));
 
+		if(!Gpio.exists(in)){
+			System.out.println("Could not find IN file");
+			System.exit(-1);
+		}
 
+		if(!Gpio.exists(fam)){
+			System.out.println("Could not find FAM file");
+			System.exit(-1);
+		}
 		PlinkFamFile pf = new PlinkFamFile(fam);
 		SampleAnnotation sampleAnnotation = pf.getSampleAnnotation();
 
@@ -114,10 +124,15 @@ public class VCFFilter {
 			} else {
 				boolean passesThresholds = false;
 				VCFVariant var = new VCFVariant(ln, genotypeFilters, true, sampleAnnotation);
-				if (variantFilters.passesFilters(var)) {
-					tf2.writeln(ln);
-					passesThresholds = true;
+
+				boolean autosomal = var.getChrObj().isAutosome();
+				if (autosomal && onlyAutosomes || !onlyAutosomes) {
+					if (variantFilters.passesFilters(var)) {
+						tf2.writeln(ln);
+						passesThresholds = true;
+					}
 				}
+
 				String logout = var.toString()
 						+ "\t" + Strings.concat(var.getAlleles(), Strings.comma)
 						+ "\t" + var.getMinorAllele()

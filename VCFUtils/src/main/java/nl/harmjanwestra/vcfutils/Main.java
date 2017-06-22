@@ -345,6 +345,22 @@ public class Main {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.desc("Hardy-weinberg P threshold")
+				.argName("double")
+				.longOpt("hwep")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
+				.desc("Missingness P threshold")
+				.argName("double")
+				.longOpt("missingnessp")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("i")
 				.desc("Input VCF")
 				.argName("file")
@@ -390,6 +406,7 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder("f")
+				.longOpt("fam")
 				.argName("file")
 				.hasArg()
 				.desc("Input family information (PED or FAM path)")
@@ -895,8 +912,10 @@ public class Main {
 				Integer readdepth = null;
 				Double allelicBalance = null;
 
-				double maf = 0;
-				double callrate = 0;
+				double maf = 0.005;
+				double hwep = 1E-5;
+				double callrate = 0.90;
+				double missingnessp = 1E-4;
 				boolean onlyautosomes = false;
 				if (cmd.hasOption("readdepth")) {
 					readdepth = Integer.parseInt(cmd.getOptionValue("readdepth"));
@@ -913,6 +932,16 @@ public class Main {
 					maf = Double.parseDouble(cmd.getOptionValue("maf"));
 				}
 
+				if (cmd.hasOption("hwep")) {
+					hwep = Double.parseDouble(cmd.getOptionValue("hwep"));
+				}
+				if (cmd.hasOption("missingnessp")) {
+					missingnessp = Double.parseDouble(cmd.getOptionValue("missingnessp"));
+				}
+
+
+
+
 				if (cmd.hasOption("callrate")) {
 					callrate = Double.parseDouble(cmd.getOptionValue("callrate"));
 				}
@@ -921,6 +950,14 @@ public class Main {
 					onlyautosomes = true;
 				}
 
+				String fam = null;
+				if (cmd.hasOption("f")) {
+					fam = cmd.getOptionValue("f");
+				}
+
+
+
+				filter.filter(input, out, fam, maf, callrate, hwep, missingnessp, readdepth, gqual, allelicBalance, onlyautosomes);
 
 				// filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);
 
