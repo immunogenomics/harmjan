@@ -16,6 +16,10 @@ public class VCFVariantFilters {
 		checkRegionFilter();
 	}
 
+	public void add(VCFVariantFilter filter) {
+		addFilter(filter);
+	}
+
 	public void addFilter(VCFVariantFilter filter) {
 		filters.add(filter);
 		checkRegionFilter();

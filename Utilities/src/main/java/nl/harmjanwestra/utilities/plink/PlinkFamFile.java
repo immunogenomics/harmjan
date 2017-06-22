@@ -6,6 +6,7 @@ import nl.harmjanwestra.utilities.individuals.Family;
 import nl.harmjanwestra.utilities.individuals.Individual;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -159,5 +160,12 @@ public class PlinkFamFile {
 
 	public ArrayList<Individual> getSamples() {
 		return samples;
+	}
+
+	public SampleAnnotation getSampleAnnotation() {
+		SampleAnnotation s = new SampleAnnotation();
+		s.setIndividuals(samples);
+		s.setFamilies(families);
+		return s;
 	}
 }

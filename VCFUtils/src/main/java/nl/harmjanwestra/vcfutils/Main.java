@@ -894,6 +894,7 @@ public class Main {
 				Integer gqual = null;
 				Integer readdepth = null;
 				Double allelicBalance = null;
+
 				double maf = 0;
 				double callrate = 0;
 				boolean onlyautosomes = false;

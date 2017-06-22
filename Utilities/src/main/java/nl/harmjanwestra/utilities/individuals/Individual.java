@@ -16,7 +16,7 @@ public class Individual {
 	ArrayList<Individual> children = new ArrayList<>();
 	Family family;
 	Gender gender;
-	DiseaseStatus diseaseStatus;
+	DiseaseStatus[] diseaseStatus;
 
 	public Individual(String name, Individual father, Individual mother, Family family, Gender gender, DiseaseStatus diseaseStatus) {
 		this.name = name;
@@ -24,13 +24,13 @@ public class Individual {
 		this.mother = mother;
 		this.family = family;
 		this.gender = gender;
-		this.diseaseStatus = diseaseStatus;
+		this.diseaseStatus = new DiseaseStatus[]{diseaseStatus};
 	}
 
 	public Individual(String name, Gender gender, DiseaseStatus diseaseStatus) {
 		this.name = name;
 		this.gender = gender;
-		this.diseaseStatus = diseaseStatus;
+		this.diseaseStatus = new DiseaseStatus[]{diseaseStatus};
 	}
 
 	public Individual(String name) {
@@ -85,11 +85,23 @@ public class Individual {
 		this.gender = gender;
 	}
 
-	public DiseaseStatus getDiseaseStatus() {
+	public DiseaseStatus[] getDiseaseStatuses() {
 		return diseaseStatus;
 	}
 
+	public DiseaseStatus getDiseaseStatus() {
+		return diseaseStatus[0];
+	}
+
+	public DiseaseStatus getDiseaseStatus(int disease) {
+		return diseaseStatus[disease];
+	}
+
 	public void setDiseaseStatus(DiseaseStatus diseaseStatus) {
+		this.diseaseStatus = new DiseaseStatus[]{diseaseStatus};
+	}
+
+	public void setDiseaseStatus(DiseaseStatus[] diseaseStatus) {
 		this.diseaseStatus = diseaseStatus;
 	}
 
