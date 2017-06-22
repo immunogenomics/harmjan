@@ -9,6 +9,7 @@ import umcg.genetica.io.trityper.SNP;
 import umcg.genetica.io.trityper.SNPLoader;
 import umcg.genetica.io.trityper.TriTyperGenotypeData;
 
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

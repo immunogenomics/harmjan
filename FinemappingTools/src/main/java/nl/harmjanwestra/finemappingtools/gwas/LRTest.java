@@ -17,13 +17,6 @@ import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.individuals.Individual;
-import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
-import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
-import nl.harmjanwestra.utilities.plink.PlinkFamFile;
-import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
-import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import nl.harmjanwestra.utilities.vcf.filter.variantfilters.*;
 import nl.harmjanwestra.utilities.legacy.genetica.console.ProgressBar;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
@@ -31,6 +24,13 @@ import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.math.matrix2.DoubleMatrixDataset;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
+import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
+import nl.harmjanwestra.utilities.plink.PlinkFamFile;
+import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
+import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.*;
 
 import java.io.Console;
 import java.io.IOException;
@@ -437,7 +437,13 @@ public class LRTest {
 //			sampleAnnotation.setIndividualGender(individualGender);
 			sampleAnnotation.setCovariateNames(covariates.getColObjects());
 			sampleAnnotation.setCovariates(finalCovariates);
-			sampleAnnotation.setSampleDiseaseStatus(finalDiseaseStatus);
+
+			ArrayList<Individual> individuals = new ArrayList<>();
+			for (int i = 0; i < finalDiseaseStatus.length; i++) {
+				Individual ind = new Individual(null, null, finalDiseaseStatus[i]);
+				individuals.add(ind);
+			}
+			sampleAnnotation.setIndividuals(individuals);
 
 //			// write sample annotation back to disk // debug
 //			TextFile tf2 = new TextFile("/Data/tmp/sh2b3fix/loadedcovars.txt", TextFile.W);
@@ -996,9 +1002,9 @@ public class LRTest {
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-																	  Feature region,
-																	  ArrayList<VCFVariant> variantsInRegion,
-																	  String variantQuery) {
+	                                                                  Feature region,
+	                                                                  ArrayList<VCFVariant> variantsInRegion,
+	                                                                  String variantQuery) {
 
 		AssociationResult topResult = null;
 		if (variantQuery != null) {
@@ -1049,9 +1055,9 @@ public class LRTest {
 	}
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-							int iter, ArrayList<VCFVariant> variants,
-							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
-							ArrayList<AssociationResult> associationResults) throws IOException {
+	                        int iter, ArrayList<VCFVariant> variants,
+	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
+	                        ArrayList<AssociationResult> associationResults) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -1183,9 +1189,9 @@ public class LRTest {
 	}
 
 	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
-																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
-																int firstColumnToRemove,
-																int lastColumnToRemove) {
+	                                                            ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
+	                                                            int firstColumnToRemove,
+	                                                            int lastColumnToRemove) {
 		// get a random variant
 		// prepare the matrix
 

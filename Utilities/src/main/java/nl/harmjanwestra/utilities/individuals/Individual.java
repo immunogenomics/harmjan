@@ -33,6 +33,12 @@ public class Individual {
 		this.diseaseStatus = new DiseaseStatus[]{diseaseStatus};
 	}
 
+	public Individual(String name, Gender gender, DiseaseStatus[] diseaseStatus) {
+		this.name = name;
+		this.gender = gender;
+		this.diseaseStatus = diseaseStatus;
+	}
+
 	public Individual(String name) {
 		this.name = name;
 	}

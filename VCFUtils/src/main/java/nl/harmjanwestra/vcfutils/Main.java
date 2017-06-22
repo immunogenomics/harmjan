@@ -922,7 +922,7 @@ public class Main {
 				}
 
 
-				filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);
+				// filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);
 
 			} else if (cmd.hasOption("similarity")) {
 				GeneticSimilarity sim = new GeneticSimilarity();

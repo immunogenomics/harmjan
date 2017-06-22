@@ -3,10 +3,14 @@ package nl.harmjanwestra.utilities.vcf;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import nl.harmjanwestra.utilities.enums.Gender;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
-import nl.harmjanwestra.utilities.individuals.Individual;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.HWE;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 import nl.harmjanwestra.utilities.plink.PedAndMapFunctions;
 import nl.harmjanwestra.utilities.plink.PlinkFamFile;
 import nl.harmjanwestra.utilities.sets.StringSets;
@@ -14,12 +18,6 @@ import nl.harmjanwestra.utilities.shell.ProcessRunner;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.GenotypeQualityFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.ReadDepthFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
-import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
-import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
-import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
-import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
-import nl.harmjanwestra.utilities.legacy.genetica.math.stats.HWE;
-import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -571,8 +569,8 @@ public class VCFFunctions {
 	}
 
 	public Pair<byte[][], String[]> loadVCFGenotypes(String vcf,
-													 HashMap<String, Integer> sampleMap,
-													 HashMap<Feature, Integer> variantMap) throws IOException {
+	                                                 HashMap<String, Integer> sampleMap,
+	                                                 HashMap<Feature, Integer> variantMap) throws IOException {
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -873,12 +871,12 @@ public class VCFFunctions {
 
 
 	public void filterLowFrequencyVariants(String sequencingVCF,
-										   String outputdir,
-										   String famfile, boolean filterGT,
-										   int minimalReadDepth,
-										   int minimalGenotypeQual,
-										   double callratethreshold,
-										   int minObservationsPerAllele) throws IOException {
+	                                       String outputdir,
+	                                       String famfile, boolean filterGT,
+	                                       int minimalReadDepth,
+	                                       int minimalGenotypeQual,
+	                                       double callratethreshold,
+	                                       int minObservationsPerAllele) throws IOException {
 
 
 		System.out.println("Filtering for low freq variants: " + sequencingVCF);
@@ -929,7 +927,7 @@ public class VCFFunctions {
 		TextFile filteredVCF = new TextFile(outputdir + "filtered.vcf.gz", TextFile.W);
 
 		HashMap<String, Integer> sampleMap = new HashMap<String, Integer>();
-		Gender[] sampleIsFemale = null;
+		SampleAnnotation sampleAnnotation = null;
 		while (ln != null) {
 			if (ln.startsWith("##")) {
 // metadata
@@ -946,12 +944,11 @@ public class VCFFunctions {
 
 				if (famfile != null) {
 					PlinkFamFile pf = new PlinkFamFile(famfile);
-					sampleIsFemale = new Gender[sampleMap.size()];
-					for (Individual ind : pf.getSamples()) {
-						Integer id = sampleMap.get(ind.getName());
-						if (id != null) {
-							sampleIsFemale[id] = ind.getGender();
-						}
+					sampleAnnotation = pf.getSampleAnnotation();
+					sampleAnnotation.reorder(sampleNames, true);
+					if (sampleAnnotation.getSampleName().length != sampleNames.size()) {
+						System.out.println("Error: not all samples present in FAM file..");
+						System.exit(-1);
 					}
 				}
 
@@ -968,9 +965,8 @@ public class VCFFunctions {
 					filters.add(new ReadDepthFilter(minimalReadDepth));
 				}
 
-				SampleAnnotation annotation = new SampleAnnotation();
-				annotation.setIndividualGender(sampleIsFemale);
-				VCFVariant variant = new VCFVariant(ln, filters, true, annotation);
+
+				VCFVariant variant = new VCFVariant(ln, filters, true, sampleAnnotation);
 
 				short[] depths = variant.getApproximateDepth();
 
@@ -1003,7 +999,7 @@ public class VCFFunctions {
 				String alt = "";
 				Chromosome chr = Chromosome.parseChr(variant.getChr());
 
-				if (sampleIsFemale != null && (chr.equals(Chromosome.X) || chr.equals(Chromosome.Y))) {
+				if (sampleAnnotation != null && (chr.equals(Chromosome.X) || chr.equals(Chromosome.Y))) {
 					variant.recalculateMAFAndCallRate();
 				}
 

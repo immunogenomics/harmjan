@@ -2,19 +2,17 @@ package nl.harmjanwestra.vcfutils;
 
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureTree;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
-import nl.harmjanwestra.utilities.individuals.Individual;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
+import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 import nl.harmjanwestra.utilities.plink.PlinkFamFile;
 import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFGenotypeData;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
-import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
-import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,10 +55,11 @@ public class VCFVariantStats {
 		int submitted = 0;
 		int written = 0;
 		int returned = 0;
+
 		for (int i = 0; i < vcfFiles.length; i++) {
 			String file = vcfFiles[i];
 			boolean[] samplestoinclude = null;
-			DiseaseStatus[] sampleDiseaseStatus = null;
+
 
 			int nroverlappingsamples = 0;
 			if (Gpio.exists(file)) {
@@ -71,6 +70,7 @@ public class VCFVariantStats {
 					samplestoinclude = t.getSampleFilter(list);
 					System.out.println(nroverlappingsamples + " samples overlap with list");
 				}
+				SampleAnnotation sampleAnnotation = null;
 
 				if (famfile != null) {
 					System.out.println("Loading famfile: " + famfile);
@@ -78,29 +78,17 @@ public class VCFVariantStats {
 					ArrayList<String> allSamples = d.getSamples();
 					d.close();
 
-					HashMap<String, Integer> sampleToId = new HashMap<String, Integer>();
-					int ctr = 0;
-					for (int s = 0; s < allSamples.size(); s++) {
-						if (samplestoinclude == null || samplestoinclude[s]) {
-							sampleToId.put(allSamples.get(s), ctr);
-							ctr++;
+					ArrayList<String> samples = new ArrayList<String>();
+					for (int q = 0; q < allSamples.size(); q++) {
+						if (samplestoinclude[q]) {
+							samples.add(allSamples.get(q));
 						}
-					}
-
-					sampleDiseaseStatus = new DiseaseStatus[sampleToId.size()];
-					for (int q = 0; q < sampleDiseaseStatus.length; q++) {
-						sampleDiseaseStatus[q] = DiseaseStatus.UNKNOWN;
 					}
 
 					PlinkFamFile pf = new PlinkFamFile(famfile);
-					ArrayList<Individual> individuals = pf.getSamples();
-					for (Individual ind : individuals) {
-						String sampleName = ind.getName();
-						Integer id = sampleToId.get(sampleName);
-						if (id != null) {
-							sampleDiseaseStatus[id] = ind.getDiseaseStatus();
-						}
-					}
+					sampleAnnotation = pf.getSampleAnnotation();
+					sampleAnnotation.reorder(samples, true);
+
 				}
 
 
@@ -127,7 +115,7 @@ public class VCFVariantStats {
 
 					} else {
 
-						VariantStatsTask t = new VariantStatsTask(ln, samplestoinclude, sampleDiseaseStatus);
+						VariantStatsTask t = new VariantStatsTask(ln, samplestoinclude, sampleAnnotation);
 						jobHandler.submit(t);
 						submitted++;
 
@@ -516,19 +504,13 @@ public class VCFVariantStats {
 
 		private final String ln;
 		private final boolean[] samplesToInclude;
-
 		private SampleAnnotation sampleAnnotation;
 
-		public VariantStatsTask(String in, boolean[] samplesToInclude, DiseaseStatus[] sampleDiseaseStatus) {
+		public VariantStatsTask(String in, boolean[] samplesToInclude, SampleAnnotation sampleAnnotation) {
 			ln = in;
 			this.samplesToInclude = samplesToInclude;
 
-			if (sampleDiseaseStatus != null) {
-				sampleAnnotation = new SampleAnnotation();
-				sampleAnnotation.setSampleDiseaseStatus(sampleDiseaseStatus);
-			} else {
-				sampleAnnotation = null;
-			}
+			this.sampleAnnotation = sampleAnnotation;
 		}
 
 		@Override
