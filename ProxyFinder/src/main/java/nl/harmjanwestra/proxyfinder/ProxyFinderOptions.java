@@ -41,6 +41,14 @@ public class ProxyFinderOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+
+		option = Option.builder("h")
+				.longOpt("hwep")
+				.hasArg()
+				.desc("HWE-P threshold [default: 0.0001]")
+				.build();
+		OPTIONS.addOption(option);
+
 		option = Option.builder("t")
 				.longOpt("threshold")
 				.hasArg()
@@ -64,7 +72,7 @@ public class ProxyFinderOptions {
 
 		option = Option.builder()
 				.longOpt("pairwise")
-				.desc("Perform Pairwise LD calculation (use 6 column file for --snps)")
+				.desc("Perform Pairwise LD calculation")
 				.build();
 		OPTIONS.addOption(option);
 
@@ -114,8 +122,9 @@ public class ProxyFinderOptions {
 	public boolean pairwise;
 	public String regionfile;
 	public boolean locusld;
-	public double mafthreshold;
+	public double mafthreshold = 0.005;
 	public String vcf;
+	public double hwepthreshold = 0.0001;
 
 	public ProxyFinderOptions(String[] args) {
 
@@ -175,6 +184,10 @@ public class ProxyFinderOptions {
 
 			if (cmd.hasOption("maf")) {
 				mafthreshold = Double.parseDouble(cmd.getOptionValue("maf"));
+			}
+
+			if (cmd.hasOption("hwep")) {
+				hwepthreshold = Double.parseDouble(cmd.getOptionValue("hwep"));
 			}
 
 			if (cmd.hasOption("threads")) {

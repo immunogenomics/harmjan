@@ -240,13 +240,13 @@ public class ProxyFinder {
 				for (int i = 0; i < variants.size(); i++) {
 
 					VCFVariant variant1 = variants.get(i);
-					if (variant1.getAlleles().length == 2) {
+					if (variant1.getAlleles().length == 2 && variant1.getMAF() > options.mafthreshold && variant1.getHwep() > options.hwepthreshold) {
 						String variant1Str = variant1.getChr().toString() + "\t" + variant1.getPos() + "\t" + variant1.getId()
 								+ "\t" + Strings.concat(variant1.getAlleles(), Strings.comma) + "\t" + variant1.getMinorAllele() + "\t" + variant1.getMAF() + "\t" + variant1.getHwep();
 						for (int j = i + 1; j < variants.size(); j++) {
 							DetermineLD ldcalc = new DetermineLD();
 							VCFVariant variant2 = variants.get(j);
-							if (variant2.getAlleles().length == 2) {
+							if (variant2.getAlleles().length == 2 && variant2.getMAF() > options.mafthreshold && variant2.getHwep() > options.hwepthreshold) {
 								Pair<Double, Double> ld = ldcalc.getLD(variant1, variant2);
 								if (ld.getRight() > options.threshold) {
 									String variant2Str = "\t" + variant2.getChr().toString() + "\t" + variant2.getPos() + "\t" + variant2.getId()
@@ -580,7 +580,7 @@ public class ProxyFinder {
 				VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL, snpSampleFilter);
 				if (!variant.equals(testSNPObj)) {
 					// correlate
-					if (variant.getMAF() > options.mafthreshold && variant.getAlleles().length == 2) {
+					if (variant.getMAF() > options.mafthreshold && variant.getHwep() > options.hwepthreshold && variant.getAlleles().length == 2) {
 
 						Pair<Double, Double> ld = ldcalc.getLD(testSNPObj, variant);
 						double rsq = ld.getRight();
