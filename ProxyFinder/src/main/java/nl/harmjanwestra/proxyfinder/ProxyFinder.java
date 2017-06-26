@@ -36,8 +36,7 @@ public class ProxyFinder {
 		this.options = options;
 	}
 
-
-	// use tabix to find proxyfinder
+	// use tabix to find proxies
 	public void findProxies() throws IOException {
 		ArrayList<SNPFeature> snps = new ArrayList<SNPFeature>();
 
