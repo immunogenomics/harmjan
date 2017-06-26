@@ -13,15 +13,15 @@ import java.util.concurrent.*;
  */
 public class VCFVariantLoader {
 
-	boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
+	boolean[] samplesToInclude;
 	SampleAnnotation sampleAnnotation;
 
 	public VCFVariantLoader() {
 
 	}
 
-	public VCFVariantLoader(boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus, SampleAnnotation sampleAnnotation) {
-		this.genotypeSamplesWithCovariatesAndDiseaseStatus = genotypeSamplesWithCovariatesAndDiseaseStatus;
+	public VCFVariantLoader(boolean[] samplesToInclude, SampleAnnotation sampleAnnotation) {
+		this.samplesToInclude = samplesToInclude;
 		this.sampleAnnotation = sampleAnnotation;
 	}
 
@@ -30,10 +30,19 @@ public class VCFVariantLoader {
 	}
 
 	public ArrayList<VCFVariant> run(String vcf, VCFVariantFilters filters) throws IOException {
-		return run(vcf, filters, -1);
+		return run(vcf, filters, -1, null);
 	}
 
 	public ArrayList<VCFVariant> run(String vcf, VCFVariantFilters filters, int nrThreads) throws IOException {
+		return run(vcf, filters, nrThreads, null);
+	}
+
+	public ArrayList<VCFVariant> run(String vcf, VCFVariantFilters filters, int nrThreads, String samplesToIncludeStr) throws IOException {
+
+		if (samplesToIncludeStr != null) {
+			VCFTabix t = new VCFTabix();
+			samplesToInclude = t.getSampleFilter(samplesToIncludeStr,vcf);
+		}
 		boolean sharedExService = false;
 		int threadsToUse = Runtime.getRuntime().availableProcessors();
 		if (nrThreads > 0) {
@@ -300,7 +309,7 @@ public class VCFVariantLoader {
 					}
 
 					if (parseln) {
-						VCFVariant v = new VCFVariant(s, VCFVariant.PARSE.ALL, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation);
+						VCFVariant v = new VCFVariant(s, VCFVariant.PARSE.ALL, samplesToInclude, sampleAnnotation);
 						if (filters != null) {
 							if (filters.passesFilters(v)) {
 								output.add(v);

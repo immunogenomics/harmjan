@@ -38,31 +38,61 @@ public class ProxyFinder {
 
 	// use tabix to find proxies
 	public void findProxies() throws IOException {
+		System.out.println("Trying to find proxies for snps specified in :" + options.snpfile);
 		ArrayList<SNPFeature> snps = new ArrayList<SNPFeature>();
 
 		if (options.snpfile == null) {
 			System.out.println("Please set snp file");
 			System.exit(-1);
+		} else if (!Gpio.exists(options.snpfile)) {
+			System.out.println("Could not find file: " + options.snpfile);
+			System.exit(-1);
 		}
 
 		TextFile tf = new TextFile(options.snpfile, TextFile.R);
 		String ln = tf.readLine();
+		if (ln == null) {
+			System.out.println("Error with snp file. First line is null");
+			System.exit(-1);
+		}
+		int chrCol = 0;
+		int posCol = 1;
+		int rsCol = 2;
+		if (ln.trim().length() > 0) {
+			String[] firstlnelems = Strings.whitespace.split(ln);
+			if (firstlnelems.length >= 3 &&
+					firstlnelems[0].toLowerCase().equals("snp") &&
+					firstlnelems[1].toLowerCase().equals("chrom") &&
+					firstlnelems[2].toLowerCase().equals("bp")) {
+				// goshifter input file format
+				System.out.println("File is in GoShifter format...");
+				rsCol = 0;
+				chrCol = 1;
+				posCol = 2;
+				ln = tf.readLine();
+			} else {
+				System.out.println("Assuming three column format");
+			}
+		}
 
 		// format: chr pos rsid or chr_pos_rsid
 		while (ln != null) {
-			String[] elems = ln.split("\t");
-			if (elems.length >= 3) {
-				SNPFeature snp = new SNPFeature();
-				snp.setStart(Integer.parseInt(elems[1]));
-				snp.setStop(snp.getStart());
-				snp.setName(elems[2]);
-				snp.setChromosome(Chromosome.parseChr(elems[0]));
-				snps.add(snp);
-			} else if (elems.length == 2) {
-				SNPFeature snp = SNPFeature.parseSNPFeature(elems[1]);
-				snps.add(snp);
+			if (ln.trim().length() > 0) {
+				String[] elems = ln.split("\t");
+				if (elems.length >= 3) {
+					SNPFeature snp = new SNPFeature();
+					snp.setStart(Integer.parseInt(elems[posCol]));
+					snp.setStop(snp.getStart());
+					snp.setName(elems[rsCol]);
+					snp.setChromosome(Chromosome.parseChr(elems[chrCol]));
+					snps.add(snp);
+				} else if (elems.length == 2) {
+					// can't quite remember which format this was...
+					SNPFeature snp = SNPFeature.parseSNPFeature(elems[1]);
+					snps.add(snp);
+				}
+				ln = tf.readLine();
 			}
-			ln = tf.readLine();
 		}
 		tf.close();
 
@@ -132,15 +162,27 @@ public class ProxyFinder {
 		pb.close();
 		outFile.close();
 		threadPool.shutdown();
-		System.out.println("Done. Have a nice day, and don't forget your output here: " + outFile.getFullPath());
+		System.out.println("Done. Have a nice day, and don't forget that your output is here: " + outFile.getFullPath());
 	}
 
+	// calculate ld for all variants within a locus
 	public void locusLD() throws IOException {
 
 		BedFileReader br = new BedFileReader();
-		ArrayList<Feature> regions = br.readAsList(options.regionfile);
+		if (options.regionfile == null) {
+			System.out.println("Please set region file");
+			System.exit(-1);
+		} else if (!Gpio.exists(options.regionfile)) {
+			System.out.println("Could not find region file: " + options.regionfile);
+			System.exit(-1);
+		}
 
+		ArrayList<Feature> regions = br.readAsList(options.regionfile);
 		System.out.println(regions.size() + " regions in " + options.regionfile);
+		if (regions.isEmpty()) {
+			System.out.println("No regions defined.");
+			System.exit(-1);
+		}
 		// check whether the reference VCFs are here..
 
 		boolean allfilespresent = true;
@@ -168,7 +210,7 @@ public class ProxyFinder {
 				while (next != null) {
 					// correlate
 					VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL, sampleSelect);
-					if (variant.getMAF() > 0.01 && variant.getAlleles().length == 2) {
+					if (variant.getMAF() > options.mafthreshold && variant.getAlleles().length == 2) {
 						variant.calculateHWEP();
 //						System.out.println(variant.getId() + "\t" + variant.getHwep());
 
@@ -186,10 +228,13 @@ public class ProxyFinder {
 				System.out.println(variants.size() + " variants in region " + f.toString());
 
 
+				System.out.println("Creating output: " + options.output + "-" + f.toString() + ".txt.gz");
 				TextFile out = new TextFile(options.output + "-" + f.toString() + ".txt.gz", TextFile.W);
-				out.writeln("snp1Chr\tsnp1Pos\tsnp1Id\tsnp1Alleles\tsnp1MinorAllele\tsnp1MAF\tsnp1HWEP\t" +
-						"snp2Chr\tsnp2Pos\tsnp2Id\tsnp2Alleles\tsnp2MinorAllele\tsnp2MAF\tsnp2HWEP\t" +
-						"distance\tR-squared\tDprime");
+
+				// ChromA\tPosA\tRsIdA\tChromB\tPosB\tRsIdB\tDistance\tRSquared\tDprime
+				out.writeln("ChromA\tPosA\tRsIdA\tAllelesA\tMinorAlleleA\tMAFA\tHWEPA\t" +
+						"ChromB\tPosB\tRsIdB\tAllelesB\tMinorAlleleB\tMAFB\tHWEPB\t" +
+						"Distance\tR-squared\tDprime");
 
 				ProgressBar pb = new ProgressBar(variants.size(), f.toString());
 				for (int i = 0; i < variants.size(); i++) {
@@ -225,6 +270,15 @@ public class ProxyFinder {
 
 	// use tabix for pairwise LD calculations
 	public void pairwiseLD() throws IOException {
+
+		if (options.snpfile == null) {
+			System.out.println("Please set snp file");
+			System.exit(-1);
+		} else if (!Gpio.exists(options.snpfile)) {
+			System.out.println("Could not find file: " + options.snpfile);
+			System.exit(-1);
+		}
+
 		ArrayList<Pair<SNPFeature, SNPFeature>> pairs = new ArrayList<>();
 		TextFile tf = new TextFile(options.snpfile, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -275,6 +329,7 @@ public class ProxyFinder {
 		}
 
 		System.out.println(pairs.size() + " pairs loaded.");
+
 		// check if all VCF files are there
 		if (pairs.isEmpty()) {
 			System.err.println("Error: no snp pairs in " + options.snpfile);
@@ -314,20 +369,15 @@ public class ProxyFinder {
 			}
 		}
 
-		TextFile out = new TextFile(options.output, TextFile.W);
-		out.writeln("Variant1\tVariant2\tPearsonRSquare\tDprime\tR-square");
 		int nr = 0;
 		ArrayList<VCFVariant> allVariants = null;
 		if (options.tabixrefprefix == null && options.vcf != null) {
 			int nrthreads = Runtime.getRuntime().availableProcessors();
-
-
 			if (options.nrthreads < nrthreads && options.nrthreads > 0) {
 				nrthreads = options.nrthreads;
 			}
 
 			VCFVariantLoader loader = new VCFVariantLoader();
-
 			VCFVariantFilters filter = new VCFVariantFilters();
 			ArrayList<SNPFeature> snps = new ArrayList<>();
 			for (Pair<SNPFeature, SNPFeature> p : pairs) {
@@ -335,10 +385,12 @@ public class ProxyFinder {
 				snps.add(p.getRight());
 			}
 			filter.addFilter(new VCFVariantSetFilter(snps));
-			allVariants = loader.run(options.vcf, filter, nrthreads);
+			allVariants = loader.run(options.vcf, filter, nrthreads, options.samplefilter);
 			Collections.sort(allVariants, new VCFVariantComparator());
 		}
 
+		TextFile out = new TextFile(options.output, TextFile.W);
+		out.writeln("ChromA\tPosA\tRsIdA\tChromB\tPosB\tRsIdB\tDistance\tRSquared\tDprime");
 		for (Pair<SNPFeature, SNPFeature> p : pairs) {
 
 			SNPFeature snpfeature1 = p.getLeft();
@@ -365,7 +417,11 @@ public class ProxyFinder {
 				DetermineLD ldcalc = new DetermineLD();
 				Pair<Double, Double> ldvals = ldcalc.getLD(variant1, variant2);
 
-				out.writeln(variant1.toString() + "\t" + variant2.toString() + "\t" + rsq + "\t" + ldvals.getRight() + "\t" + ldvals.getLeft());
+				String outStr = variant1.getChrObj().toString() + "\t" + variant1.getPos() + "\t" + variant1.getId()
+						+ "\t" + variant2.getChrObj().toString() + "\t" + variant2.getPos() + "\t" + variant2.getId()
+						+ "\t" + ldvals.getRight() + "\t" + ldvals.getLeft();
+
+				out.writeln(outStr);
 
 				if (rsq > options.threshold) {
 					nr++;

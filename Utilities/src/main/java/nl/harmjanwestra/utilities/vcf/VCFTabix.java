@@ -18,6 +18,11 @@ public class VCFTabix {
 	private final String tabixfile;
 	private final TabixReader treader;
 
+	public VCFTabix() {
+		this.tabixfile = null;
+		this.treader = null;
+	}
+
 	public VCFTabix(String filename) throws IOException {
 		this.tabixfile = filename;
 		if (Gpio.exists(tabixfile + ".tbi")) {
@@ -30,11 +35,15 @@ public class VCFTabix {
 	}
 
 	public boolean[] getSampleFilter(String tabixsamplelimit) throws IOException {
+		return getSampleFilter(tabixsamplelimit, this.tabixfile);
+	}
+
+	public boolean[] getSampleFilter(String tabixsamplelimit, String vcffile) throws IOException {
 		if (tabixsamplelimit == null) {
 			return null;
 		}
 		boolean[] samplesToInclude = null;
-		VCFGenotypeData d = new VCFGenotypeData(tabixfile);
+		VCFGenotypeData d = new VCFGenotypeData(vcffile);
 		ArrayList<String> tabixSamples = d.getSamples();
 		d.close();
 
