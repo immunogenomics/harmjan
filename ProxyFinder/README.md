@@ -14,9 +14,10 @@ ProxyFinder has three modes:
 
 **This program currently cannot properly handle Chromosome X and Y.**
 **This program currently cannot calculate LD for multi-allelic variants.**
+**This program assumes human genotypes.**
 
 ### Output format
-Output is plain text. You want it gzipped? Just append .gz to the output filename. Generally the output will look something like this:
+Output is plain text. You want it gzipped? Just append .gz to the output filename. Generally the output will look something like this (except for --locusld):
 
 <pre>
 ChromA	PosA	RsIdA	ChromB	PosB	RsIdB	Distance	RSquared	Dprime
@@ -26,7 +27,8 @@ Chr2	202149589	rs1045485	Chr2	202150914	rs35550815	1325	0.9999999999999981	0.999
 
 ### Input genotypes and Tabix chromosome template
 ProxyFinder relies on user supplied VCF variant files. These may be indexed with Tabix (e.g. [1000 genomes](http://bochet.gcc.biostat.washington.edu/beagle/1000_Genomes_phase3_v5a/individual_chromosomes/)), but may also be unsorted VCF files. Please note however, that using non-indexed or unsorted VCF files will seriously harm (heh, that's part of my name) performance. You have been warned.
-Some people like to store their Tabix VCF genotypes in a single file, others split everything in multiple chromosome files. I feel your pain, so I enable you to do both. If your files are split per chromosome, e.g. ``1kg.phase3.v5a.chr1.vcf.gz``, simply replace the chromosome number with the text CHR, e.g.: ``1kg.phase3.v5a.chrCHR.vcf.gz``. Magic will ensue. 
+
+Some people like to store their Tabix VCF genotypes in a single file, others split everything in multiple chromosome files. I feel your pain, so I enable you to do both. If your files are split per chromosome, e.g. ``1kg.phase3.v5a.chr1.vcf.gz``, simply replace the chromosome number with the text CHR, e.g.: ``1kg.phase3.v5a.chrCHR.vcf.gz`` with your ``--tabix`` command line switch. Magic will ensue. If you're supplying a single, unsorted vcf file, use the ``--vcf`` command line switch.
 
 ### Calculating LD for a subset of individuals
 You want to exclude some people from the party? Make a list of individual IDs, matching the IDs of your VCF header, store them in a text file (can be gzipped), and specify ``--samplefilter /path/to/your/list.txt``. One individual per line. e.g.:
@@ -37,26 +39,24 @@ sample3
 </pre>
 
 ### Matching on rsID
-ProxyFinder matches your input against the VCF files you provide. When it can't find one of the specified variants, it will return the variant as a proxy for itself. By default, ProxyFinder will match on chromosome+location. It does not care about alleles, and rsID. If you do want to make it care about rsIds (you know, because it's oldschool), use the ```--matchrsid flag```. Hopefully, ProxyFinder will still be able to find your SNPs. 
+ProxyFinder matches your input against the VCF files you provide. When it can't find one of the specified variants, it will return the variant as a proxy for itself. By default, ProxyFinder will match on chromosome+location. It does, by default, not care about alleles, and rsID. If you do want to make it care about rsIds (you know, because it's oldschool), use the ```--matchrsid``` command line flag. Hopefully, ProxyFinder will still be able to find your SNPs. 
 
 # Proxy mode
 Finds proxies for a given set of SNPs and other parameters. Example:
 ``java -Xmx4g -jar ./ProxyFinder.jar --proxy -i ./snps.txt -o ./proxies.txt.gz --tabix 1kg.phase3.v5a.chrCHR.vcf.gz``
 
-Specify an LD output cutoff (e.g. r2>0.8) using:  ``--threshold 0.8``
-
-Specify the width around the input SNP, where we should be looking for proxies (e.g. 1000 bp): ``--windowsize 1000`` 
-
-Specify the minimal MAF (e.g. 1%) for proxies: ``--maf 0.01``
-
-Specify the maximal Hardy-Weinberg P-value: ``--hwep 0.0001``
+There are several extra options for this mode: 
+* Specify an LD output cutoff (e.g. r2>0.8) using:  ``--threshold 0.8``
+* Specify the width around the input SNP, where we should be looking for proxies (e.g. 1000 bp): ``--windowsize 1000`` 
+* Specify the minimal MAF (e.g. 1%) for proxies: ``--maf 0.01``
+* Specify the maximal Hardy-Weinberg P-value: ``--hwep 0.0001``
  
 When using an unsorted VCF file, use: ``--vcf path.to.vcf.gz`` in stead of ``--tabix 1kg.phase3.v5a.chrCHR.vcf.gz``
 
 Computers have many cores nowadays. Make use of them with ``--threads n``. Set n to the number of CPUs in your machine, or lower, depending on your sysadmins generosity.
 
 #### Input file format
-The ``snps.txt`` file in the above example, can have several formats. It expects at least three columns (only the first three are read). You can use chr\tpos\tid or id\tchr\tpos (which is used in [GoShifter](https://github.com/immunogenomics/goshifter)). The former format doesn't have a header, but the latter does (for GoShifter compatibility reasons):
+The ``snps.txt`` file in the above example, can have several formats. ProxyFinder expects at least three columns (only the first three are read). You can use chr\tpos\tid or id\tchr\tpos (which is used in [GoShifter](https://github.com/immunogenomics/goshifter)). The former format doesn't have a header, but the latter does (for GoShifter compatibility reasons):
 <pre>
 chr5	1279790	rs10069690
 chr2	202149589	rs1045485
@@ -73,7 +73,7 @@ rs1045485	chr2	202149589
 # Pairwise mode
 Calculate LD between pairs of SNPs. Example: 
 ``java -Xmx4g -jar ./ProxyFinder.jar --pairwise -i ./snps.txt -o ./proxies.txt.gz --tabix 1kg.phase3.v5a.chrCHR.vcf.gz``
-Wow. That was familiar! No need to specify windows, thresholds or anything like that. You specify what you want to calculate. If both SNPs are present in the reference, you'll get a value.
+Wow. That was familiar! No need to specify windows, thresholds or anything like that. You specify what you want to calculate in the ```-i ./snps.txt``` file. If both SNPs are present in the reference, ProxyFinder will give you a value.
 
 When using an unsorted VCF file, use: ``--vcf path.to.vcf.gz`` in stead of ``--tabix 1kg.phase3.v5a.chrCHR.vcf.gz``
 
