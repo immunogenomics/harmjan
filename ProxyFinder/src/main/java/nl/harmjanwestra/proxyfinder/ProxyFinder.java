@@ -128,7 +128,6 @@ public class ProxyFinder {
 			System.out.println("Using: " + options.nrthreads + " threads");
 		}
 
-
 		ExecutorService threadPool = Executors.newFixedThreadPool(options.nrthreads);
 		CompletionService<ArrayList<String>> jobHandler = new ExecutorCompletionService<>(threadPool);
 

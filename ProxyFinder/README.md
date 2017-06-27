@@ -106,17 +106,16 @@ chr3	400001	400003
 
 # All command line parameters
 <pre>
-usage:
+ -h,--hwep <arg>           HWE-P threshold [default: 0.0001]
  -i,--snps <arg>           SNP path (format: 3 or 6 columns, tab
                            separated, one or two snps per line: chr pos
                            rsid)
     --locusld              Perform Pairwise LD calculation within a region
-                           (provide regions with --regions)
+                           (provide region with --regions)
  -m,--maf <arg>            MAF threshold [default: 0.005]
     --matchrsid            Match variants on RS id
  -o,--out <arg>            Output path
-    --pairwise             Perform Pairwise LD calculation (use 6 column
-                           file for --snps)
+    --pairwise             Perform Pairwise LD calculation
     --proxy
  -r,--regions <arg>        Region bed file path
     --samplefilter <arg>   Limit samples to individuals in this list (one
