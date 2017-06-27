@@ -1,7 +1,7 @@
 # ProxyFinder
 This is a JAVA 8 program to calculate LD proxies for a set of of input variants, and is partly built using the [HTSJDK library](https://github.com/samtools/htsjdk). It provides possibilities to search for proxies, given arbitrary genomic distances, LD and MAF cutoffs, but also allows for pairwise calculations. It uses Tabix to *quickly* grep SNPs out of large reference dataset VCFs (such as 1000 genomes). It's nevertheless probably slow as hell.
 
-[Download binaries here](https://github.com/immunogenomics/harmjan/releases)
+[Download binaries here](https://github.com/immunogenomics/harmjan/releases/latest)
 
 ## Requirements
 This program will run on anything that can run Java SE 8. It is a command line program. I do recommend ample RAM though (>4Gb), although it's hard to say how much, because Java. I also recommend running this software on a 64-bit machine, with a 64-bit Java 8 runtime environment. If you get a memory error, change the value for the -Xmx command line switch, e.g. -Xmx8g for 8 gigabytes of memory.
