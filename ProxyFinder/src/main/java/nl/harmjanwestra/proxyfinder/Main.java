@@ -9,11 +9,11 @@ public class Main {
 		ProxyFinderOptions options = new ProxyFinderOptions(args);
 		try {
 			ProxyFinder finder = new ProxyFinder(options);
-			if (options.locusld) {
+			if (options.mode.equals(ProxyFinderOptions.MODE.LOCUSLD)) {
 				finder.locusLD();
-			} else if (options.pairwise) {
+			} else if (options.mode.equals(ProxyFinderOptions.MODE.PAIRWISE)) {
 				finder.pairwiseLD();
-			} else {
+			} else if (options.mode.equals(ProxyFinderOptions.MODE.PROXY)) {
 				finder.findProxies();
 			}
 		} catch (IOException e) {

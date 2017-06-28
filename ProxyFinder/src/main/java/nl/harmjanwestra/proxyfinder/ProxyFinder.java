@@ -561,11 +561,12 @@ public class ProxyFinder {
 
 			VCFVariant testSNPObj = getSNP(queryVariantFeature);
 
+			if (options.addSNPasProxyToItself) {
+				output.add(selfStr);
+			}
+
 			if (testSNPObj == null) {
 				System.out.println("Query: " + queryVariantFeature.getName() + " not in reference. " + queryVariantFeature.getChromosome().getNumber() + ":" + (queryVariantFeature.getStart() - 1) + "-" + (queryVariantFeature.getStart() + 1));
-				if (output.isEmpty()) {
-					output.add(selfStr);
-				}
 				return output;
 			}
 
@@ -584,6 +585,9 @@ public class ProxyFinder {
 			}
 
 			DetermineLD ldcalc = new DetermineLD();
+			int variantctr = 0;
+			int variantstested = 0;
+			int variantsabovethresh = 0;
 			while (next != null) {
 				// correlate
 				VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL, snpSampleFilter);
@@ -605,15 +609,17 @@ public class ProxyFinder {
 									+ "\t" + (Math.abs(queryVariantFeature.getStart() - variant.getPos()))
 									+ "\t" + rsq
 									+ "\t" + dpr);
+							variantsabovethresh++;
 						}
+						variantstested++;
 					}
 				}
+				variantctr++;
 				next = window.next();
 			}
 			tabix.close();
-			if (output.isEmpty()) {
-				output.add(selfStr);
-			}
+
+			System.out.println(queryVariantFeature.toString() + " has\t" + variantctr + "\tnearby variants.\t" + variantstested + " were tested.\t" + variantsabovethresh + " actual proxies.");
 			return output;
 		}
 	}

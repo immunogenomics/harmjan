@@ -109,8 +109,19 @@ public class ProxyFinderOptions {
 				.build();
 		OPTIONS.addOption(option);
 
+		option = Option.builder()
+				.longOpt("dontaddself")
+				.desc("Don't add input as proxy to itself.")
+				.build();
+		OPTIONS.addOption(option);
+
 	}
 
+	enum MODE {
+		PAIRWISE, LOCUSLD, PROXY
+	}
+
+	public MODE mode;
 	public boolean matchrsid = false;
 	public String tabixrefprefix;
 	public String samplefilter;
@@ -119,12 +130,11 @@ public class ProxyFinderOptions {
 	public String snpfile;
 	public String output;
 	public int nrthreads = 1;
-	public boolean pairwise;
 	public String regionfile;
-	public boolean locusld;
 	public double mafthreshold = 0.005;
 	public String vcf;
 	public double hwepthreshold = 0.0001;
+	public boolean addSNPasProxyToItself = true;
 
 	public ProxyFinderOptions(String[] args) {
 
@@ -155,12 +165,15 @@ public class ProxyFinderOptions {
 				samplefilter = cmd.getOptionValue("samplefilter");
 			}
 
-			if (cmd.hasOption("pairwise")) {
-				pairwise = true;
-			}
-
-			if (cmd.hasOption("locusld")) {
-				locusld = true;
+			if (cmd.hasOption("proxy")) {
+				mode = MODE.PROXY;
+			} else if (cmd.hasOption("pairwise")) {
+				mode = MODE.PAIRWISE;
+			} else if (cmd.hasOption("locusld")) {
+				mode = MODE.LOCUSLD;
+			} else {
+				System.out.println("Please specify mode.");
+				System.exit(-1);
 			}
 
 			if (cmd.hasOption("t")) {
