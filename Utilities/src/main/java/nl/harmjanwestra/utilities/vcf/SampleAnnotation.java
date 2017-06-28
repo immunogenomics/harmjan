@@ -34,7 +34,7 @@ public class SampleAnnotation {
 	public DiseaseStatus[][] getSampleDiseaseStatus() {
 		if (sampleDiseaseStatus == null) {
 			int nrDiseases = individuals[0].getDiseaseStatuses().length;
-			sampleDiseaseStatus = new DiseaseStatus[sampleDiseaseStatus.length][nrDiseases];
+			sampleDiseaseStatus = new DiseaseStatus[individuals.length][nrDiseases];
 			for (int i = 0; i < individuals.length; i++) {
 				for (int j = 0; j < nrDiseases; j++) {
 					sampleDiseaseStatus[i][j] = individuals[i].getDiseaseStatus(j);
@@ -77,6 +77,8 @@ public class SampleAnnotation {
 
 	public void reorder(ArrayList<String> order, boolean pruneMissing) {
 
+		System.out.println("Reordering sample annotation..");
+		System.out.println(individuals.length + " individuals available.");
 		// clear precalculated arrays
 		individualNames = null;
 		individualGenders = null;
@@ -85,12 +87,14 @@ public class SampleAnnotation {
 		HashSet<String> set1 = new HashSet<String>();
 		set1.addAll(order);
 
+		System.out.println(set1.size() + " individuals requested");
 		HashSet<String> intersect = new HashSet<>();
 		for (int i = 0; i < individuals.length; i++) {
 			if (set1.contains(individuals[i].getName())) {
 				intersect.add(individuals[i].getName());
 			}
 		}
+		System.out.println(intersect.size() + " overlapping individuals.");
 
 		HashMap<String, Integer> orderMap = new HashMap<String, Integer>();
 		int ctr = 0;
@@ -99,6 +103,8 @@ public class SampleAnnotation {
 				// don't add sample to order if not present in data
 				boolean inData = intersect.contains(order.get(i));
 				if (inData) {
+					orderMap.put(order.get(i), ctr);
+					ctr++;
 				}
 			} else {
 				// add sample to order always
@@ -117,7 +123,7 @@ public class SampleAnnotation {
 		}
 
 		individuals = tmpInds;
-
+		System.out.println("Final size of sample annotation: " + individuals.length);
 		// reorder and prune covariates
 
 //

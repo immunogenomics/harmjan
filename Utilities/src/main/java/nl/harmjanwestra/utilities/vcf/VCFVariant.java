@@ -1114,6 +1114,7 @@ public class VCFVariant {
 
 	}
 
+
 	public double getHwepCases() {
 		return hwepCases;
 	}

@@ -295,6 +295,16 @@ public class ProxyFinder {
 			} else if (elems.length == 2) {
 				// format
 				pairs.add(new Pair(SNPFeature.parseSNPFeature(elems[0]), SNPFeature.parseSNPFeature(elems[1])));
+			} else if (elems.length == 3) {
+				if (toCombine == null) {
+					toCombine = new ArrayList<>();
+				}
+				SNPFeature snp1 = new SNPFeature();
+				snp1.setStart(Integer.parseInt(elems[1]));
+				snp1.setStop(snp1.getStart());
+				snp1.setName(elems[2]);
+				snp1.setChromosome(Chromosome.parseChr(elems[0]));
+				toCombine.add(snp1);
 			} else if (elems.length == 6) {
 				SNPFeature snp1 = new SNPFeature();
 				snp1.setStart(Integer.parseInt(elems[1]));

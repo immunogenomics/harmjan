@@ -24,16 +24,16 @@ public class VCFFilter {
 
 
 	public void filter(String in,
-	                   String out,
-	                   String fam,
-	                   double mafthreshold,
-	                   double callratethreshold,
-	                   double hwepthreshold,
-	                   Double missingnessthreshold,
-	                   Integer readdepth,
-	                   Integer gqual,
-	                   Double allelicBalance,
-	                   boolean onlyAutosomes) throws IOException {
+					   String out,
+					   String fam,
+					   double mafthreshold,
+					   double callratethreshold,
+					   double hwepthreshold,
+					   Double missingnessthreshold,
+					   Integer readdepth,
+					   Integer gqual,
+					   Double allelicBalance,
+					   boolean onlyAutosomes) throws IOException {
 
 		TextFile tf1 = new TextFile(in, TextFile.R);
 		TextFile tf2 = new TextFile(out, TextFile.W);
@@ -56,12 +56,12 @@ public class VCFFilter {
 		variantFilters.add(new VCFVariantCallRateFilter(callratethreshold));
 		variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.CONTROLS));
 
-		if(!Gpio.exists(in)){
+		if (!Gpio.exists(in)) {
 			System.out.println("Could not find IN file");
 			System.exit(-1);
 		}
 
-		if(!Gpio.exists(fam)){
+		if (!Gpio.exists(fam)) {
 			System.out.println("Could not find FAM file");
 			System.exit(-1);
 		}
@@ -100,7 +100,10 @@ public class VCFFilter {
 				+ "\tCallRate-P"
 				+ "\tPassesThresholds";
 
+		System.out.println("Starting filter...");
 		filterlog.writeln(logheader);
+		int lnctr = 0;
+		int kept = 0;
 		while (ln != null) {
 			if (ln.startsWith("##")) {
 				tf2.writeln(ln);
@@ -113,6 +116,8 @@ public class VCFFilter {
 				for (int i = 9; i < elems.length; i++) {
 					samples.add(elems[i]);
 				}
+
+				System.out.println(samples.size() + " individuals in VCF");
 				sampleAnnotation.reorder(samples, true);
 
 				int nrSamplesWithAnnotation = sampleAnnotation.getSampleName().length;
@@ -129,6 +134,7 @@ public class VCFFilter {
 				if (autosomal && onlyAutosomes || !onlyAutosomes) {
 					if (variantFilters.passesFilters(var)) {
 						tf2.writeln(ln);
+						kept++;
 						passesThresholds = true;
 					}
 				}
@@ -151,6 +157,10 @@ public class VCFFilter {
 
 			}
 			ln = tf1.readLine();
+			if (lnctr % 1000 == 0) {
+				System.out.println(lnctr+" lines parsed. "+kept+" kept.");
+			}
+			lnctr++;
 		}
 
 		tf1.close();
