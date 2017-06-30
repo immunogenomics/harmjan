@@ -141,7 +141,7 @@ public class ProxyFinder {
 		int returned = 0;
 		TextFile outFile = new TextFile(options.output, TextFile.W);
 		outFile.writeln("ChromA\tPosA\tRsIdA\tChromB\tPosB\tRsIdB\tDistance\tRSquared\tDprime");
-		ProgressBar pb = new ProgressBar(submit);
+//		ProgressBar pb = new ProgressBar(submit);
 		while (returned < submit) {
 			try {
 				ArrayList<String> proxies = jobHandler.take().get();
@@ -151,14 +151,14 @@ public class ProxyFinder {
 					}
 				}
 				returned++;
-				pb.set(returned);
+//				pb.set(returned);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
 		}
-		pb.close();
+//		pb.close();
 		outFile.close();
 		threadPool.shutdown();
 		System.out.println("Done. Have a nice day, and don't forget that your output is here: " + outFile.getFullPath());
@@ -561,12 +561,12 @@ public class ProxyFinder {
 
 			VCFVariant testSNPObj = getSNP(queryVariantFeature);
 
-			if (options.addSNPasProxyToItself) {
-				output.add(selfStr);
-			}
 
 			if (testSNPObj == null) {
 				System.out.println("Query: " + queryVariantFeature.getName() + " not in reference. " + queryVariantFeature.getChromosome().getNumber() + ":" + (queryVariantFeature.getStart() - 1) + "-" + (queryVariantFeature.getStart() + 1));
+				if (options.addSNPasProxyToItself) {
+					output.add(selfStr);
+				}
 				return output;
 			}
 
@@ -591,7 +591,9 @@ public class ProxyFinder {
 			while (next != null) {
 				// correlate
 				VCFVariant variant = new VCFVariant(next, VCFVariant.PARSE.ALL, snpSampleFilter);
-				if (!variant.equals(testSNPObj)) {
+				if (variant.equals(testSNPObj) && options.addSNPasProxyToItself) {
+					output.add(selfStr);
+				} else {
 					// correlate
 					if (variant.getMAF() > options.mafthreshold && variant.getHwep() > options.hwepthreshold && variant.getAlleles().length == 2) {
 
@@ -614,10 +616,16 @@ public class ProxyFinder {
 						variantstested++;
 					}
 				}
+
+//				}
 				variantctr++;
 				next = window.next();
 			}
 			tabix.close();
+
+			if (options.addSNPasProxyToItself && output.isEmpty()) {
+				output.add(selfStr);
+			}
 
 			System.out.println(queryVariantFeature.toString() + " has\t" + variantctr + "\tnearby variants.\t" + variantstested + " were tested.\t" + variantsabovethresh + " actual proxies.");
 			return output;

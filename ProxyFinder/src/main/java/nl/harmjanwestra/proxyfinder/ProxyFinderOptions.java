@@ -173,7 +173,7 @@ public class ProxyFinderOptions {
 				mode = MODE.LOCUSLD;
 			} else {
 				System.out.println("Please specify mode.");
-				System.exit(-1);
+				run = false;
 			}
 
 			if (cmd.hasOption("t")) {
@@ -217,7 +217,28 @@ public class ProxyFinderOptions {
 		if (!run) {
 			printHelp();
 			System.exit(-1);
+		} else {
+			printOptions();
 		}
+	}
+
+	private void printOptions() {
+		System.out.println("Parameters:");
+		System.out.println("MODE:\t" + mode);
+		System.out.println("matchrsid:\t" + matchrsid);
+		System.out.println("tabixrefprefix:\t" + tabixrefprefix);
+		System.out.println("samplefilter:\t" + samplefilter);
+		System.out.println("windowsize:\t" + windowsize);
+		System.out.println("threshold:\t" + threshold);
+		System.out.println("snpfile:\t" + snpfile);
+		System.out.println("output:\t\t" + output);
+		System.out.println("nrthreads:\t" + nrthreads);
+		System.out.println("regionfile:\t" + regionfile);
+		System.out.println("mafthreshold:\t" + mafthreshold);
+		System.out.println("hwepthreshold:\t" + hwepthreshold);
+		System.out.println("vcf:\t\t" + vcf);
+		System.out.println();
+
 	}
 
 	public void printHelp() {
