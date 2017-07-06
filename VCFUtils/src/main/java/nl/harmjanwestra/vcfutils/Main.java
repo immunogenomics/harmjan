@@ -957,6 +957,7 @@ public class Main {
 
 
 
+
 				filter.filter(input, out, fam, maf, callrate, hwep, missingnessp, readdepth, gqual, allelicBalance, onlyautosomes);
 
 				// filter.filter(input, out, maf, callrate, readdepth, gqual, allelicBalance, onlyautosomes);

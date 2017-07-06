@@ -481,7 +481,7 @@ public class PseudoControls {
 		data.close();
 
 		// index pseudocontrols
-		data = new VCFGenotypeData(vcfIn);
+//		data = new VCFGenotypeData(vcfIn);
 		Integer[] kidToPseudoIdArr = new Integer[vcfSamples.size()];
 		for (int i = 0; i < vcfSamples.size(); i++) {
 			String kidName = vcfSamples.get(i);
@@ -492,42 +492,47 @@ public class PseudoControls {
 		int finalNrSamples = vcfSamples.size() + nrTrios;
 		System.out.println("Final Nr of samples: " + finalNrSamples);
 
-		while (data.hasNext()) {
 
-			VCFVariant current = data.next();
-			DoubleMatrix2D alleles = current.getGenotypeAllelesAsMatrix2D();
-			byte[][] finalAlleles = new byte[2][finalNrSamples];
+		TextFile tfIn = new TextFile(vcfIn, TextFile.R);
+		String lnIn = tfin.readLine();
+		String tab = "\t";
+		while (lnIn != null) {
 
-			for (int kidId = 0; kidId < alleles.rows(); kidId++) {
-				Integer momId = momAndDad[0][kidId];
-				Integer dadId = momAndDad[1][kidId];
-				fixMendelianErrors(kidId, momId, dadId, alleles);
-			}
+			if (!lnIn.startsWith("#")) {
+				VCFVariant current = new VCFVariant(lnIn);
+				DoubleMatrix2D alleles = current.getGenotypeAllelesAsMatrix2D();
+				byte[][] finalAlleles = new byte[2][finalNrSamples];
 
-
-			for (int i = 0; i < finalAlleles[0].length; i++) {
-				finalAlleles[0][i] = -1;
-				finalAlleles[1][i] = -1;
-			}
-
-			for (int kidId = 0; kidId < alleles.rows(); kidId++) {
-				Integer pseudoId = kidToPseudoIdArr[kidId];
-				Integer momId = momAndDad[0][kidId];
-				Integer dadId = momAndDad[1][kidId];
-
-				// copy original alleles
-				finalAlleles[0][kidId] = (byte) alleles.getQuick(kidId, 0);
-				finalAlleles[1][kidId] = (byte) alleles.getQuick(kidId, 1);
-
-				// make the pseudo control
-				if (pseudoId != null) {
-					// first round.. find mendelian errors: some parents can be children as well, mendelian errors in these
-					// trios will propagate to the pseudocontrols
-
-
-					// second round // fix mendelian errors
-					makePseudoControl(kidId, momId, dadId, pseudoId, alleles, finalAlleles, current);
+				for (int kidId = 0; kidId < alleles.rows(); kidId++) {
+					Integer momId = momAndDad[0][kidId];
+					Integer dadId = momAndDad[1][kidId];
+					fixMendelianErrors(kidId, momId, dadId, alleles);
 				}
+
+
+				for (int i = 0; i < finalAlleles[0].length; i++) {
+					finalAlleles[0][i] = -1;
+					finalAlleles[1][i] = -1;
+				}
+
+				for (int kidId = 0; kidId < alleles.rows(); kidId++) {
+					Integer pseudoId = kidToPseudoIdArr[kidId];
+					Integer momId = momAndDad[0][kidId];
+					Integer dadId = momAndDad[1][kidId];
+
+					// copy original alleles
+					finalAlleles[0][kidId] = (byte) alleles.getQuick(kidId, 0);
+					finalAlleles[1][kidId] = (byte) alleles.getQuick(kidId, 1);
+
+					// make the pseudo control
+					if (pseudoId != null) {
+						// first round.. find mendelian errors: some parents can be children as well, mendelian errors in these
+						// trios will propagate to the pseudocontrols
+
+
+						// second round // fix mendelian errors
+						makePseudoControl(kidId, momId, dadId, pseudoId, alleles, finalAlleles, current);
+					}
 
 //				if (pseudoId != null) {
 //					byte[] allelesMom = getAlleles(alleles, momId);
@@ -538,34 +543,36 @@ public class PseudoControls {
 //							+ "\tkid - " + kidId + " - " + allelesKid[0] + "/" + allelesKid[1]
 //							+ "\tPseudo - " + pseudoId + " - " + finalAlleles[0][pseudoId] + "/" + finalAlleles[1][pseudoId]);
 //				}
-			}
-
-			// write the results to the disque..
-			StringBuilder builder = new StringBuilder(10000);
-			// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
-			builder.append(current.getChr()).append("\t")
-					.append(current.getPos()).append("\t")
-					.append(current.getId()).append("\t")
-					.append(current.getAlleles()[0]).append("\t")
-					.append(Strings.concat(current.getAlleles(), Strings.comma, 1, current.getAlleles().length)).append("\t")
-					.append(current.getQual()).append("\t")
-					.append(current.getFilter()).append("\t")
-					.append(current.getInfoString()).append("\t")
-					.append("GT");
-
-			for (int j = 0; j < finalAlleles[0].length; j++) {
-				if (finalAlleles[0][j] == -1) {
-					builder.append("\t").append("./.");
-				} else {
-					builder.append("\t").append(finalAlleles[0][j]).append("/").append(finalAlleles[1][j]);
 				}
 
+				// write the results to the disque..
+				StringBuilder builder = new StringBuilder(10000);
+				// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+				builder.append(current.getChr()).append(tab)
+						.append(current.getPos()).append(tab)
+						.append(current.getId()).append(tab)
+						.append(current.getAlleles()[0]).append(tab)
+						.append(Strings.concat(current.getAlleles(), Strings.comma, 1, current.getAlleles().length)).append(tab)
+						.append(current.getQual()).append(tab)
+						.append(current.getFilter()).append(tab)
+						.append(current.getInfoString()).append(tab)
+						.append("GT");
 
+				for (int j = 0; j < finalAlleles[0].length; j++) {
+					if (finalAlleles[0][j] == -1) {
+						builder.append("\t").append("./.");
+					} else {
+						builder.append("\t").append(finalAlleles[0][j]).append("/").append(finalAlleles[1][j]);
+					}
+
+
+				}
+
+				tfOut.writeln(builder.toString());
+//			}
 			}
 
-			tfOut.writeln(builder.toString());
-//			}
-
+			lnIn = tfIn.readLine();
 		}
 		System.out.println("Done parsing. Output is here: " + vcfOut);
 		tfOut.close();

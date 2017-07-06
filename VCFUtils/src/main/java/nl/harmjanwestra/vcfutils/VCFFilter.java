@@ -46,6 +46,7 @@ public class VCFFilter {
 		System.out.println("mafthreshold > " + mafthreshold);
 		System.out.println("readdepth > " + readdepth);
 		System.out.println("gqual > " + gqual);
+		System.out.println("hwep > " + hwepthreshold);
 		System.out.println("callrate > " + callratethreshold);
 		System.out.println("missingness > " + missingnessthreshold);
 
@@ -167,6 +168,8 @@ public class VCFFilter {
 		tf2.close();
 
 		filterlog.close();
+		System.out.println("Done");
+		System.out.println(lnctr+" lines parsed. "+kept+" kept.");
 	}
 
 	/*
