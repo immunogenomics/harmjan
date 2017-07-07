@@ -37,7 +37,7 @@ public class MissingnessPerSample {
 		}
 
 		tf.close();
-		;
+
 		TextFile outf = new TextFile(out, TextFile.W);
 		for (int i = 0; i < samples.size(); i++) {
 			outf.writeln(samples.get(i) + "\t" + nrCalled[i] + "\t" + ((double) nrCalled[i] / nrVars));
