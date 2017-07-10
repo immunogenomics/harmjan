@@ -940,8 +940,6 @@ public class Main {
 				}
 
 
-
-
 				if (cmd.hasOption("callrate")) {
 					callrate = Double.parseDouble(cmd.getOptionValue("callrate"));
 				}
@@ -954,8 +952,6 @@ public class Main {
 				if (cmd.hasOption("f")) {
 					fam = cmd.getOptionValue("f");
 				}
-
-
 
 
 				filter.filter(input, out, fam, maf, callrate, hwep, missingnessp, readdepth, gqual, allelicBalance, onlyautosomes);
@@ -1435,6 +1431,11 @@ public class Main {
 				}
 				Random random = new Random();
 
+				String limitsample = null;
+				if (cmd.hasOption("l")) {
+					limitsample = cmd.getOptionValue("l");
+				}
+
 				long seed = random.nextLong();
 				if (cmd.hasOption("s")) {
 					seed = Long.parseLong(cmd.getOptionValue("s"));
@@ -1449,7 +1450,7 @@ public class Main {
 					System.out.println(ped);
 					System.out.println(out);
 					System.out.println(seed);
-					f.splitVCFOverRandomBatches(input, ped, out, n, seed);
+					f.splitVCFOverRandomBatches(input, ped, out, limitsample, n, seed);
 
 				} else {
 					printHelp();

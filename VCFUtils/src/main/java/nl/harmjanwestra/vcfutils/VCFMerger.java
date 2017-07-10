@@ -31,6 +31,20 @@ public class VCFMerger {
 	public void concatenate(String vcf, String out) throws IOException {
 
 		String[] list = vcf.split(",");
+		if (list.length == 1) {
+			if (vcf.contains("CHR")) {
+				ArrayList<String> listArr = new ArrayList<>();
+				for (int i = 1; i < 23; i++) {
+					String rep = vcf.replaceAll("CHR", "" + i);
+					if (Gpio.exists(rep)) {
+						listArr.add(rep);
+					}
+				}
+				list = listArr.toArray(new String[0]);
+				System.out.println(list.length + " files to concat.");
+			}
+
+		}
 
 
 		String tmp = out + "_tmp1.vcf.gz";
