@@ -3,6 +3,7 @@ package nl.harmjanwestra.finemappingtools.gwas;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.finemappingtools.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
@@ -41,8 +42,13 @@ public class GUESS extends LRTest {
 
 		for (Feature region : regions) {
 			// make output directory
-			String dirOut = options.getOutputdir() + "/" + region.toString() + "/";
+			String dirGuessScript = options.getOutputdir() + "/" + region.toString() + "/";
+			String dirOut = options.getOutputdir() + "/" + region.toString() + "/input/";
+			String dirGuessOut = options.getOutputdir() + "/" + region.toString() + "/output/";
+			Gpio.createDir(dirGuessScript);
 			Gpio.createDir(dirOut);
+			Gpio.createDir(dirGuessOut);
+
 
 			// filter variants
 			ArrayList<VCFVariant> regionVariants = getRegionVariants(variants, region);
@@ -54,6 +60,7 @@ public class GUESS extends LRTest {
 
 			// write number of predictors
 			DoubleMatrix2D covariates = sampleAnnotation.getCovariates();
+			DiseaseStatus[][] diseaseStatuses = sampleAnnotation.getSampleDiseaseStatus();
 
 			// prune for correlated covariates
 			covariates = prune(covariates);
@@ -101,9 +108,20 @@ public class GUESS extends LRTest {
 			varOut.close();
 
 			// write list of phenotypes
+			TextFile yOut = new TextFile(dirOut + "y.txt", TextFile.W);
+			yOut.writeln("" + nrSamples);
+			yOut.writeln("" + 1);
+
+			for (int i = 0; i < diseaseStatuses.length; i++) {
+				yOut.writeln("" + diseaseStatuses[i][0].getNumber());
+			}
+			yOut.close();
 
 			// write GUESS command line
-
+			String guessshell = "GUESS -X " + dirOut + "x.txt -Y " + dirOut + "y.txt -out_full " + dirGuessOut;
+			TextFile scriptout = new TextFile(dirGuessScript + "bashguess.sh", TextFile.W);
+			scriptout.writeln(guessshell);
+			scriptout.close();
 
 		}
 	}
