@@ -197,6 +197,12 @@ public class Main {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Determine missingness per sample")
+				.longOpt("missing")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.desc("Replace missing codes")
 				.longOpt("rmc")
 				.build();
@@ -763,6 +769,9 @@ public class Main {
 					System.out.println("use -i2 with --countoverlap");
 				}
 
+			} else if (cmd.hasOption("missing")) {
+				MissingnessPerSample p = new MissingnessPerSample();
+				p.run(input, out);
 			} else if (cmd.hasOption("updateimputationquals")) {
 
 				VCFCorrelator correlator = new VCFCorrelator();
