@@ -1,5 +1,6 @@
 package nl.harmjanwestra.finemappingtools.gwas;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import nl.harmjanwestra.finemappingtools.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
@@ -24,17 +25,24 @@ public class FINEMAP extends LRTest {
 
 	public FINEMAP(LRTestOptions options) throws IOException {
 		super(options);
+		run();
 	}
 
 	public void run() throws IOException {
-
-
 		// region1.k --> prior prob thresholds for k causal variants
 		// e.g.: 0.6 0.3 0.1
-
-
+		initialize();
 		System.out.println("Running GUESS converter...");
 		options.setSplitMultiAllelic(true);
+
+		// read the association file
+		if (options.getAssocFile() == null) {
+			System.err.println("Please supply assoc file.");
+			System.exit(-1);
+		}
+		AssociationFile f = new AssociationFile();
+		String assocfile = options.getAssocFile();
+		ArrayList<AssociationResult> assocResults = f.read(assocfile);
 
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(options.getBedfile());
@@ -46,10 +54,6 @@ public class FINEMAP extends LRTest {
 			System.exit(-1);
 		}
 
-		// read the association file
-		AssociationFile f = new AssociationFile();
-		String assocfile = options.getAssocFile();
-		ArrayList<AssociationResult> assocResults = f.read(assocfile);
 
 		// open master file
 		// master file:
@@ -60,10 +64,10 @@ public class FINEMAP extends LRTest {
 		boolean append = false;
 		TextFile masterOut = null;
 		if (Gpio.exists(options.getOutputdir() + "master")) {
-			masterOut = new TextFile(new java.io.File(options.getOutputdir() + "master"), TextFile.MODE.APPEND);
+			masterOut = new TextFile(new java.io.File(options.getOutputdir() + "master.config"), TextFile.MODE.APPEND);
 		} else {
 			masterOut = new TextFile(options.getOutputdir() + "master", TextFile.W);
-			masterOut.writeln("z;\tld;\tsnp;\tconfig;\t	k;\tlog;\tn-ind");
+			masterOut.writeln("z;\tld;\tsnp;\tconfig;\tk;\tlog;\tn-ind");
 		}
 
 		for (Feature region : regions) {
@@ -83,7 +87,7 @@ public class FINEMAP extends LRTest {
 					variantIDSetAssocResults.add(id);
 				}
 
-				HashMap<String, Integer> variantIndex = new HashMap<String, Integer>();
+				HashMap<String, Integer> variantIndex = new HashMap<>();
 				int ctr = 0;
 				ArrayList<VCFVariant> sharedVariants = new ArrayList<>();
 				for (int i = 0; i < regionVariants.size(); i++) {
@@ -133,8 +137,18 @@ public class FINEMAP extends LRTest {
 rs2 	4.36
 rs3 	3.71
 		 */
-						TextFile zOut = new TextFile(region.toString() + ".z", TextFile.W);
 
+
+						String zoutfile = options.getOutputdir() + "-" + region.toString() + ".z";
+
+						TextFile zOut = new TextFile(zoutfile, TextFile.W);
+						for (int i = 0; i < sharedResults.length; i++) {
+							AssociationResult r = sharedResults[i];
+							SNPFeature snp = r.getSnp();
+							String id = snp.getChromosome().toString() + "_" + snp.getStart() + "_" + snp.getName() + "_" + snp.getAlleles()[0] + "_" + snp.getAlleles()[1];
+							String ln = id + " " + r.getZ();
+							zOut.writeln(ln);
+						}
 						zOut.close();
 
 						// calculate correlation matrix
@@ -144,13 +158,57 @@ rs3 	3.71
 0.95 	1.00 	0.96
 0.97 	0.96 	1.00
 		 */
+
+
+						double[][] corMat = new double[sharedVariants.size()][sharedVariants.size()];
+						int nrSamples = 0;
+						for (int i = 0; i < sharedVariants.size(); i++) {
+							corMat[i][i] = 1d;
+							double[] x = toArray(sharedVariants.get(i));
+							nrSamples = x.length;
+							for (int j = i + 1; j < sharedVariants.size(); j++) {
+								double[] y = toArray(sharedVariants.get(j));
+								corMat[i][j] = JSci.maths.ArrayMath.correlation(x, y);
+								corMat[j][i] = corMat[i][j];
+							}
+						}
+
+						String ldoutfile = options.getOutputdir() + "-" + region.toString() + ".ld";
+						TextFile ldout = new TextFile(ldoutfile, TextFile.W);
+						for (int i = 0; i < sharedVariants.size(); i++) {
+							String ln = "";
+							for (int j = 0; j < sharedVariants.size(); j++) {
+								if (ln.length() == 0) {
+									ln += corMat[i][j];
+								} else {
+									ln += " " + corMat[i][j];
+								}
+
+							}
+						}
+
+						ldout.close();
+
+
+						String snpoutfile = options.getOutputdir() + "-" + region.toString() + ".snp";
+						String configfile = options.getOutputdir() + "-" + region.toString() + ".config";
+						String kfileout = options.getOutputdir() + "-" + region.toString() + ".k";
+						String logfileout = options.getOutputdir() + "-" + region.toString() + ".log";
+
+						// region1.z; 	region1.ld; 	region1.snp; 	region1.config; 	region1.k; 	region1.log; 	5363
+						String masterln = zoutfile + ";\t" + ldoutfile + ";\t" + snpoutfile + ";\t" + configfile + ";\t" + kfileout + ";\t" + logfileout + ";\t" + nrSamples;
+						masterOut.writeln(masterln);
 					}
 				}
 			}
 		}
 		masterOut.close();
+	}
 
-
+	private double[] toArray(VCFVariant vcfVariant) {
+		DoubleMatrix2D mat = vcfVariant.getDosagesAsMatrix2D();
+		double[] output = mat.viewColumn(0).toArray();
+		return output;
 	}
 
 	private ArrayList<AssociationResult> getRegionAssocResults(ArrayList<AssociationResult> assocResults, Feature region) {

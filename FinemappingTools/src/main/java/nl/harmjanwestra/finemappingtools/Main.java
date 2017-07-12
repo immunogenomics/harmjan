@@ -47,6 +47,8 @@ public class Main {
 				new QTLTest(new QTLTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.GUESS)) {
 				new GUESS(new LRTestOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.FINEMAP)) {
+				new FINEMAP(new LRTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
 				LRTestOptions optionsLR = new LRTestOptions(args);
 				if (optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.HAPLOTYPE) ||

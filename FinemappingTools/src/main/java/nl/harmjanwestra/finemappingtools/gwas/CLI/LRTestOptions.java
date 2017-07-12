@@ -40,6 +40,12 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("finemap")
+				.desc("Run finemap converter")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("haplotype")
 				.desc("Determine haplotypes from variants and perform haplotype based test (warning: can only handle a limited number of haplotypes!)")
 				.build();
@@ -430,6 +436,10 @@ public class LRTestOptions {
 				analysisType = ANALYSIS.HAPLOTYPE;
 			} else if (cmd.hasOption("stats")) {
 				analysisType = ANALYSIS.STATS;
+			} else if (cmd.hasOption("guess")) {
+				analysisType = ANALYSIS.GUESS;
+			} else if (cmd.hasOption("finemap")) {
+				analysisType = ANALYSIS.FINEMAP;
 			}
 
 			if (cmd.hasOption("maxiter")) {
@@ -577,7 +587,11 @@ public class LRTestOptions {
 		CONDITIONAL,
 		EXHAUSTIVE,
 		HAPLOTYPE,
-		CONDITIONALHAPLOTYPE, NORMAL, STATS;
+		CONDITIONALHAPLOTYPE,
+		NORMAL,
+		FINEMAP,
+		GUESS,
+		STATS;
 
 	}
 

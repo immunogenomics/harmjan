@@ -85,6 +85,12 @@ public class LRTest {
 			case HAPLOTYPE:
 				System.out.println("Will perform haplotype logistic regression");
 				break;
+			case GUESS:
+				System.out.println("Will convert data for GUESS");
+				break;
+			case FINEMAP:
+				System.out.println("Will convert data for FINEMAP");
+				break;
 			case STATS:
 				System.out.println("Will calculate variant stats");
 				break;
@@ -1002,9 +1008,9 @@ public class LRTest {
 	}
 
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
-	                                                                  Feature region,
-	                                                                  ArrayList<VCFVariant> variantsInRegion,
-	                                                                  String variantQuery) {
+																	  Feature region,
+																	  ArrayList<VCFVariant> variantsInRegion,
+																	  String variantQuery) {
 
 		AssociationResult topResult = null;
 		if (variantQuery != null) {
@@ -1055,9 +1061,9 @@ public class LRTest {
 	}
 
 	private void clearQueue(TextFile logout, TextFile pvalout,
-	                        int iter, ArrayList<VCFVariant> variants,
-	                        CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
-	                        ArrayList<AssociationResult> associationResults) throws IOException {
+							int iter, ArrayList<VCFVariant> variants,
+							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
+							ArrayList<AssociationResult> associationResults) throws IOException {
 //		System.out.println(submitted + " results to process.");
 		while (returned < submitted) {
 			try {
@@ -1189,9 +1195,9 @@ public class LRTest {
 	}
 
 	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
-	                                                            ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
-	                                                            int firstColumnToRemove,
-	                                                            int lastColumnToRemove) {
+																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
+																int firstColumnToRemove,
+																int lastColumnToRemove) {
 		// get a random variant
 		// prepare the matrix
 
