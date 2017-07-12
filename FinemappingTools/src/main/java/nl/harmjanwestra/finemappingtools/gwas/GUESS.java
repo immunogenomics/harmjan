@@ -27,7 +27,7 @@ public class GUESS extends LRTest {
 	}
 
 	private void convert() throws IOException {
-		System.out.println("Testing haplotypes");
+		System.out.println("Running GUESS converter...");
 		options.setSplitMultiAllelic(true);
 
 		BedFileReader reader = new BedFileReader();
@@ -170,7 +170,7 @@ public class GUESS extends LRTest {
 		}
 	}
 
-	private ArrayList<VCFVariant> getRegionVariants(ArrayList<VCFVariant> variants, Feature region) {
+	public ArrayList<VCFVariant> getRegionVariants(ArrayList<VCFVariant> variants, Feature region) {
 		ArrayList<VCFVariant> output = new ArrayList<VCFVariant>();
 		for (VCFVariant v : variants) {
 			if (!v.isMultiallelic() && v.asFeature().overlaps(region)) {

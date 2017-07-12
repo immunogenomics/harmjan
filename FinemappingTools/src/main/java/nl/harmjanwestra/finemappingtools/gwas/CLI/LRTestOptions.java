@@ -34,6 +34,12 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("guess")
+				.desc("Run guess converter")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("haplotype")
 				.desc("Determine haplotypes from variants and perform haplotype based test (warning: can only handle a limited number of haplotypes!)")
 				.build();
@@ -196,6 +202,13 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("assocfile")
+				.desc("Associationfile (for use with FINEMAP).")
+				.hasArg()
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("testmultiallelicindepently")
 				.desc("Test each allele in a multiple allelic variant independently. Does not split variant.")
 				.build();
@@ -211,6 +224,7 @@ public class LRTestOptions {
 	private String haplotypeOrThresholdFile;
 	public boolean debug = false;
 	public double collinearitythreshold = 0.9;
+	private String assocFile;
 
 	public Integer getStartIter() {
 		return startIter;
@@ -303,6 +317,10 @@ public class LRTestOptions {
 			} else {
 				System.out.println("Please provide output: -o");
 				run = false;
+			}
+
+			if (cmd.hasOption("assocfile")) {
+				assocFile = cmd.getOptionValue("assocfile");
 			}
 
 			if (cmd.hasOption("d")) {
@@ -549,6 +567,10 @@ public class LRTestOptions {
 
 	public String getHaplotypeOrThresholdFile() {
 		return haplotypeOrThresholdFile;
+	}
+
+	public String getAssocFile() {
+		return assocFile;
 	}
 
 	public enum ANALYSIS {

@@ -27,6 +27,13 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.desc("Run guess converter")
+				.longOpt("guess")
+				.build();
+		OPTIONS.addOption(option);
+
+
+		option = Option.builder()
 				.desc("Merge association files")
 				.longOpt("merge")
 				.build();
@@ -124,6 +131,8 @@ public class MainOptions {
 				mode = MODE.PROXYFINDER;
 			} else if (cmd.hasOption("qtl")) {
 				mode = MODE.QTL;
+			} else if (cmd.hasOption("guess")) {
+				mode = MODE.GUESS;
 			} else if (cmd.hasOption("countvariants")) {
 				mode = MODE.COUNTVARIANTS;
 			} else if (cmd.hasOption("updaters")) {
@@ -152,7 +161,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOTPOSTERIORS,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, UPDATERS, STATS, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, UPDATERS, STATS, GUESS, NA
 	}
 
 }

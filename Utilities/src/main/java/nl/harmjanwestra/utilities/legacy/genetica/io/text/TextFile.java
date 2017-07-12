@@ -12,6 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -35,35 +36,44 @@ public class TextFile implements Iterable<String> {
 	protected BufferedReader in;
 	protected Path path;
 	protected BufferedWriter out;
-	protected boolean writeable;
 	private boolean gzipped;
 	private int buffersize;
-	private boolean parallel = false;
+
 	private String fullPath;
+	private MODE mode;
+
+	public enum MODE {
+		READ,
+		WRITE,
+		APPEND
+	}
+
+	public TextFile(File f, MODE mode) throws IOException {
+		this(f.toPath(), false, mode, DEFAULT_BUFFER_SIZE);
+	}
 
 	public TextFile(File f, boolean mode) throws IOException {
 		this(f.toPath(), mode);
 	}
 
 	public TextFile(String file, boolean mode) throws IOException {
-		this(Paths.get(file), mode, DEFAULT_BUFFER_SIZE, false);
+		this(Paths.get(file), mode, null, DEFAULT_BUFFER_SIZE);
 	}
 
 	public TextFile(Path file, boolean mode) throws IOException {
-		this(file, mode, DEFAULT_BUFFER_SIZE, false);
+		this(file, mode, null, DEFAULT_BUFFER_SIZE);
 	}
 
-	public TextFile(File file, boolean mode, boolean parallel) throws IOException {
-		this(file.toPath(), mode, DEFAULT_BUFFER_SIZE, parallel);
-	}
+	public TextFile(Path file, boolean boolMode, MODE mode, int buffersize) throws IOException {
 
-	public TextFile(Path file, boolean mode, boolean parallel) throws IOException {
-		this(file, mode, DEFAULT_BUFFER_SIZE, parallel);
-	}
+		if (mode == null) {
+			if (boolMode) {
+				this.mode = MODE.WRITE;
+			} else {
+				this.mode = MODE.READ;
+			}
+		}
 
-	public TextFile(Path file, boolean mode, int buffersize, boolean parallel) throws IOException {
-
-		this.parallel = parallel;
 		this.buffersize = buffersize;
 		this.path = file;
 
@@ -71,7 +81,6 @@ public class TextFile implements Iterable<String> {
 		if (loc.trim().length() == 0) {
 			throw new IOException("Could not find path: no path specified");
 		}
-		this.writeable = mode;
 
 		if (loc.endsWith(".gz")) {
 			this.buffersize = 500 * 1024;
@@ -80,27 +89,27 @@ public class TextFile implements Iterable<String> {
 		open();
 	}
 
-	public TextFile(String file, boolean mode, int buffersize) throws IOException {
-		this(Paths.get(file), mode, buffersize, false);
-	}
 
 	public final void open() throws IOException {
 
-		if (!Files.exists(path) && !writeable) {
+		if (!Files.exists(path) && !(mode.equals(MODE.WRITE) || mode.equals(MODE.APPEND))) {
 			throw new IOException("Could not find path: " + path);
 		} else {
-			if (writeable) {
-				if (gzipped) {
+			if (mode.equals(MODE.WRITE) || mode.equals(MODE.APPEND)) {
+				if (gzipped && mode.equals(MODE.WRITE)) {
 					this.buffersize = 1000 * 1024;
-//					if (parallel) {
-//						ParallelGZIPOutputStream gzipOutputStream = new ParallelGZIPOutputStream(new FileOutputStream(path));
-//						out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
-//					} else {
 					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(Files.newOutputStream(path), buffersize);
 					out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
 //					}
+				}
+				if (gzipped && mode.equals(MODE.APPEND)) {
+					throw new UnsupportedOperationException("Cannot append to GZIP file");
 				} else {
-					out = Files.newBufferedWriter(path);
+					if (mode.equals(MODE.APPEND)) {
+						out = Files.newBufferedWriter(path, StandardOpenOption.APPEND);
+					} else {
+						out = Files.newBufferedWriter(path);
+					}
 				}
 			} else {
 				if (gzipped) {
@@ -126,7 +135,7 @@ public class TextFile implements Iterable<String> {
 
 	public void close() throws IOException {
 //        System.out.println("Closing "+path);
-		if (writeable) {
+		if (mode.equals(MODE.APPEND) || mode.equals(MODE.WRITE)) {
 			out.close();
 		} else {
 			in.close();

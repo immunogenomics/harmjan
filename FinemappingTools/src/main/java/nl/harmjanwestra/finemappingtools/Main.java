@@ -45,6 +45,8 @@ public class Main {
 				new ReannotateRSIds(new ReannotateRSIdsOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.QTL)) {
 				new QTLTest(new QTLTestOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.GUESS)) {
+				new GUESS(new LRTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
 				LRTestOptions optionsLR = new LRTestOptions(args);
 				if (optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.HAPLOTYPE) ||
