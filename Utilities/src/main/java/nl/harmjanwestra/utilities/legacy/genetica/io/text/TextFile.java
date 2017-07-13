@@ -72,6 +72,8 @@ public class TextFile implements Iterable<String> {
 			} else {
 				this.mode = MODE.READ;
 			}
+		} else {
+			this.mode = mode;
 		}
 
 		this.buffersize = buffersize;
@@ -106,7 +108,7 @@ public class TextFile implements Iterable<String> {
 					throw new UnsupportedOperationException("Cannot append to GZIP file");
 				} else {
 					if (mode.equals(MODE.APPEND)) {
-						out = Files.newBufferedWriter(path, StandardOpenOption.APPEND);
+						out = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 					} else {
 						out = Files.newBufferedWriter(path);
 					}

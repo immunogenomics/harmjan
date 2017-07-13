@@ -7,6 +7,7 @@ import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
+import nl.harmjanwestra.utilities.legacy.genetica.console.ProgressBar;
 import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -31,7 +32,7 @@ public class FINEMAP extends LRTest {
 	public void run() throws IOException {
 		// region1.k --> prior prob thresholds for k causal variants
 		// e.g.: 0.6 0.3 0.1
-		initialize();
+
 		System.out.println("Running GUESS converter...");
 		options.setSplitMultiAllelic(true);
 
@@ -44,6 +45,7 @@ public class FINEMAP extends LRTest {
 		String assocfile = options.getAssocFile();
 		ArrayList<AssociationResult> assocResults = f.read(assocfile);
 
+		System.out.println(assocResults.size() + " association results loaded from: " + assocfile);
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> regions = reader.readAsList(options.getBedfile());
 		ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt", regions);
@@ -63,10 +65,11 @@ public class FINEMAP extends LRTest {
 
 		boolean append = false;
 		TextFile masterOut = null;
-		if (Gpio.exists(options.getOutputdir() + "master")) {
-			masterOut = new TextFile(new java.io.File(options.getOutputdir() + "master.config"), TextFile.MODE.APPEND);
+		String masterfile = options.getOutputdir() + "-master";
+		if (Gpio.exists(masterfile)) {
+			masterOut = new TextFile(new java.io.File(masterfile), TextFile.MODE.APPEND);
 		} else {
-			masterOut = new TextFile(options.getOutputdir() + "master", TextFile.W);
+			masterOut = new TextFile(masterfile, TextFile.W);
 			masterOut.writeln("z;\tld;\tsnp;\tconfig;\tk;\tlog;\tn-ind");
 		}
 
@@ -75,13 +78,13 @@ public class FINEMAP extends LRTest {
 
 			// filter variants
 			ArrayList<VCFVariant> regionVariants = getRegionVariants(variants, region);
-			ArrayList<AssociationResult> associationResults = getRegionAssocResults(assocResults, region);
-			if (!regionVariants.isEmpty() && !associationResults.isEmpty()) {
+			ArrayList<AssociationResult> regionAssocResults = getRegionAssocResults(assocResults, region);
+			if (!regionVariants.isEmpty() && !regionAssocResults.isEmpty()) {
 				// get the intersect between variants and associationresults
-
+				System.out.println("Processing region: " + region.toString());
 				HashSet<String> variantIDSetAssocResults = new HashSet<String>();
-				for (int i = 0; i < associationResults.size(); i++) {
-					AssociationResult r = associationResults.get(i);
+				for (int i = 0; i < regionAssocResults.size(); i++) {
+					AssociationResult r = regionAssocResults.get(i);
 					SNPFeature snp = r.getSnp();
 					String id = snp.getChromosome().toString() + "_" + snp.getStart() + "_" + snp.getName() + "_" + snp.getAlleles()[0] + "_" + snp.getAlleles()[1];
 					variantIDSetAssocResults.add(id);
@@ -107,10 +110,11 @@ public class FINEMAP extends LRTest {
 				if (sharedVariants.isEmpty()) {
 					System.err.println("No shared variants for region: " + region.toString());
 				} else {
+
 					// index association results, reorder
 					AssociationResult[] sharedResults = new AssociationResult[sharedVariants.size()];
-					for (int i = 0; i < associationResults.size(); i++) {
-						AssociationResult r = associationResults.get(i);
+					for (int i = 0; i < regionAssocResults.size(); i++) {
+						AssociationResult r = regionAssocResults.get(i);
 						SNPFeature snp = r.getSnp();
 						String id = snp.getChromosome().toString() + "_" + snp.getStart() + "_" + snp.getName() + "_" + snp.getAlleles()[0] + "_" + snp.getAlleles()[1];
 						Integer index = variantIndex.get(id);
@@ -119,6 +123,7 @@ public class FINEMAP extends LRTest {
 						}
 					}
 
+					System.out.println(sharedVariants.size() + " variants overlap with " + sharedResults.length + " out of " + regionAssocResults.size());
 					// check whether there are any nulls (you never know)
 					boolean run = true;
 					for (int i = 0; i < sharedResults.length; i++) {
@@ -140,6 +145,7 @@ rs3 	3.71
 
 
 						String zoutfile = options.getOutputdir() + "-" + region.toString() + ".z";
+						System.out.println("z out: " + zoutfile);
 
 						TextFile zOut = new TextFile(zoutfile, TextFile.W);
 						for (int i = 0; i < sharedResults.length; i++) {
@@ -162,6 +168,8 @@ rs3 	3.71
 
 						double[][] corMat = new double[sharedVariants.size()][sharedVariants.size()];
 						int nrSamples = 0;
+						System.out.println("Calculating correlations for: " + sharedVariants.size() + " variants");
+						ProgressBar pb = new ProgressBar(sharedVariants.size());
 						for (int i = 0; i < sharedVariants.size(); i++) {
 							corMat[i][i] = 1d;
 							double[] x = toArray(sharedVariants.get(i));
@@ -171,20 +179,23 @@ rs3 	3.71
 								corMat[i][j] = JSci.maths.ArrayMath.correlation(x, y);
 								corMat[j][i] = corMat[i][j];
 							}
+							pb.set(i);
 						}
+						pb.close();
 
 						String ldoutfile = options.getOutputdir() + "-" + region.toString() + ".ld";
 						TextFile ldout = new TextFile(ldoutfile, TextFile.W);
+						System.out.println("LD info: " + ldoutfile);
 						for (int i = 0; i < sharedVariants.size(); i++) {
-							String ln = "";
+							StringBuilder ln = new StringBuilder();
 							for (int j = 0; j < sharedVariants.size(); j++) {
 								if (ln.length() == 0) {
-									ln += corMat[i][j];
+									ln.append(corMat[i][j]);
 								} else {
-									ln += " " + corMat[i][j];
+									ln.append(" ").append(corMat[i][j]);
 								}
-
 							}
+							ldout.writeln(ln.toString());
 						}
 
 						ldout.close();
@@ -196,8 +207,16 @@ rs3 	3.71
 						String logfileout = options.getOutputdir() + "-" + region.toString() + ".log";
 
 						// region1.z; 	region1.ld; 	region1.snp; 	region1.config; 	region1.k; 	region1.log; 	5363
-						String masterln = zoutfile + ";\t" + ldoutfile + ";\t" + snpoutfile + ";\t" + configfile + ";\t" + kfileout + ";\t" + logfileout + ";\t" + nrSamples;
+						String masterln = zoutfile
+								+ ";\t" + ldoutfile
+								+ ";\t" + snpoutfile
+								+ ";\t" + configfile
+								+ ";\t" + kfileout
+								+ ";\t" + logfileout
+								+ ";\t" + nrSamples;
 						masterOut.writeln(masterln);
+						System.out.println("Done processing region: " + region.toString());
+						System.out.println();
 					}
 				}
 			}
