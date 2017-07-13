@@ -22,16 +22,7 @@
             <artifactId>genetica-libraries</artifactId>
             <version>1.0.9-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>nl.systemsgenetics</groupId>
-            <artifactId>genetica-libraries</artifactId>
-            <version>1.0.8-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>nl.systemsgenetics</groupId>
-            <artifactId>genetica-libraries</artifactId>
-            <version>1.0.9-SNAPSHOT</version>
-        </dependency>
+
     </dependencies>
 
 </project>
