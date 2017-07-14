@@ -331,7 +331,7 @@ public class LRTestHaploTestTask {
 				}
 			}
 			
-			int nrDiseases = y.length;
+			int nrDiseases = y[0].length;
 			double devx = resultX.getDeviance();
 			double devnull = resultCovars.getDeviance();
 			double[][] betasmlelr = new double[nrDiseases][nrRemaining];

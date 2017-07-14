@@ -359,12 +359,9 @@ public class LRTestHaplotype extends LRTest {
 				int nrRemaining = haps.columns();
 				double devx = resultX.getDeviance();
 				double devnull = resultCovars.getDeviance();
-				int nrDiseases = y.length;
+				int nrDiseases = y[0].length;
 				double[][] betasmlelr = new double[nrDiseases][nrRemaining];
 				double[][] stderrsmlelr = new double[nrDiseases][nrRemaining];
-				double[][] or = new double[nrDiseases][nrRemaining];
-				double[][] orhi = new double[nrDiseases][nrRemaining];
-				double[][] orlo = new double[nrDiseases][nrRemaining];
 				
 				
 				for (int disease = 0; disease < nrDiseases; disease++) {
@@ -374,12 +371,7 @@ public class LRTestHaplotype extends LRTest {
 						betasmlelr[disease][q - 1] = beta;
 						stderrsmlelr[disease][q - 1] = se;
 						
-						double OR = Math.exp(beta);
-						double orLow = Math.exp(beta - 1.96 * se);
-						double orHigh = Math.exp(beta + 1.96 * se);
-						or[disease][q - 1] = OR;
-						orhi[disease][q - 1] = orHigh;
-						orlo[disease][q - 1] = orLow;
+						
 					}
 				}
 				
@@ -664,12 +656,10 @@ public class LRTestHaplotype extends LRTest {
 		int nrRemaining = 1;
 		double devx = resultX.getDeviance();
 		double devnull = resultCovars.getDeviance();
-		int nrDiseases = y.length;
+		int nrDiseases = y[0].length;
 		double[][] betasmlelr = new double[nrDiseases][nrRemaining];
 		double[][] stderrsmlelr = new double[nrDiseases][nrRemaining];
-		double[][] or = new double[nrDiseases][nrRemaining];
-		double[][] orhi = new double[nrDiseases][nrRemaining];
-		double[][] orlo = new double[nrDiseases][nrRemaining];
+		
 		int ctr = 0;
 		
 		for (int disease = 0; disease < nrDiseases; disease++) {
@@ -678,12 +668,7 @@ public class LRTestHaplotype extends LRTest {
 			betasmlelr[disease][ctr] = beta;
 			stderrsmlelr[disease][ctr] = se;
 			
-			double OR = Math.exp(beta);
-			double orLow = Math.exp(beta - 1.96 * se);
-			double orHigh = Math.exp(beta + 1.96 * se);
-			or[disease][ctr] = OR;
-			orhi[disease][ctr] = orHigh;
-			orlo[disease][ctr] = orLow;
+		
 		}
 		
 		
@@ -753,13 +738,11 @@ public class LRTestHaplotype extends LRTest {
 					double devx = resultX.getDeviance();
 					double devnull = resultCovars.getDeviance();
 					
-					int nrDiseases = y.length;
+					int nrDiseases = y[0].length;
 					
 					double[][] betasmlelr = new double[nrDiseases][nrRemaining];
 					double[][] stderrsmlelr = new double[nrDiseases][nrRemaining];
-					double[][] or = new double[nrDiseases][nrRemaining];
-					double[][] orhi = new double[nrDiseases][nrRemaining];
-					double[][] orlo = new double[nrDiseases][nrRemaining];
+					
 					int ctr = 0;
 					
 					for (int disease = 0; disease < nrDiseases; disease++) {
@@ -768,12 +751,7 @@ public class LRTestHaplotype extends LRTest {
 						betasmlelr[disease][ctr] = beta;
 						stderrsmlelr[disease][ctr] = se;
 						
-						double OR = Math.exp(beta);
-						double orLow = Math.exp(beta - 1.96 * se);
-						double orHigh = Math.exp(beta + 1.96 * se);
-						or[disease][ctr] = OR;
-						orhi[disease][ctr] = orHigh;
-						orlo[disease][ctr] = orLow;
+					
 					}
 					
 					
@@ -828,7 +806,7 @@ public class LRTestHaplotype extends LRTest {
 						int nrRemaining = 1;
 						double devx = resultX.getDeviance();
 						double devnull = resultCovars.getDeviance();
-						int nrDiseases = y.length;
+						int nrDiseases = y[0].length;
 						double[][] betasmlelr = new double[nrDiseases][nrRemaining];
 						double[][] stderrsmlelr = new double[nrDiseases][nrRemaining];
 						
@@ -905,7 +883,7 @@ public class LRTestHaplotype extends LRTest {
 			int nrRemaining = 1;
 			double devx = resultX.getDeviance();
 			double devnull = resultCovars.getDeviance();
-			int nrDiseases = y.length;
+			int nrDiseases = y[0].length;
 			double[][] betasmlelr = new double[nrDiseases][nrRemaining];
 			double[][] stderrsmlelr = new double[nrDiseases][nrRemaining];
 			
@@ -975,7 +953,7 @@ public class LRTestHaplotype extends LRTest {
 				LogisticRegressionResult resultX = reg.univariate(y, x);
 				
 				int nrRemaining = 1;
-				int nrDiseases = y.length;
+				int nrDiseases = y[0].length;
 				double devx = resultX.getDeviance();
 				double devnull = resultCovars.getDeviance();
 				double[][] betasmlelr = new double[nrDiseases][nrRemaining];

@@ -237,7 +237,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 //			}
 			int nrRemaining = remainingGenotypeColumns.size();
 			double devnull = resultCovars.getDeviance();
-			int nrDiseases = y.length;
+			int nrDiseases = y[0].length;
 			double[][] betasmlelr = new double[nrDiseases][nrRemaining];
 			double[][] stderrsmlelr = new double[nrDiseases][nrRemaining];
 			
