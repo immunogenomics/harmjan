@@ -5,6 +5,7 @@ import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -126,55 +127,60 @@ public class VCFBedFilter {
 				vcfoutf.writeln(ln);
 			} else {
 
-				VCFBedFilterTask t = new VCFBedFilterTask(ln, set);
-				jobHandler.submit(t);
-				submitted++;
-				if (submitted % 10000 == 0) {
-					while (returned != submitted) {
-						try {
-							Future<String[]> f = jobHandler.take();
-							if (f != null) {
-								String[] output = f.get();
-								if (output[0] != null) {
-									vcfoutf.writeln(output[0]);
-									written++;
-								} else {
-									vcfoutf2.writeln(output[1]);
-								}
-							}
-							returned++;
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							e.printStackTrace();
-						}
-					}
-					System.out.print(lnnum + " lines parsed. " + submitted + " submitted. " + written + " written. " + returned + " returned \r");
+				String substr = ln.substring(0,200);
+				VCFVariant v = new VCFVariant(substr, VCFVariant.PARSE.HEADER);
+				if(v.asFeature().overlaps(set)){
+					vcfoutf.writeln(ln);
 				}
+//				VCFBedFilterTask t = new VCFBedFilterTask(ln, set);
+//				jobHandler.submit(t);
+//				submitted++;
+//				if (submitted % 10000 == 0) {
+//					while (returned != submitted) {
+//						try {
+//							Future<String[]> f = jobHandler.take();
+//							if (f != null) {
+//								String[] output = f.get();
+//								if (output[0] != null) {
+//									vcfoutf.writeln(output[0]);
+//									written++;
+//								} else {
+//									vcfoutf2.writeln(output[1]);
+//								}
+//							}
+//							returned++;
+//						} catch (InterruptedException e) {
+//							e.printStackTrace();
+//						} catch (ExecutionException e) {
+//							e.printStackTrace();
+//						}
+//					}
+					System.out.print(lnnum + " lines parsed. " + submitted + " submitted. " + written + " written. " + returned + " returned \r");
+//				}
 			}
 			ln = vcftf.readLine();
 			lnnum++;
 		}
 
-		while (returned != submitted) {
-			try {
-				Future<String[]> f = jobHandler.take();
-				if (f != null) {
-					String[] output = f.get();
-					if (output[0] != null) {
-						vcfoutf.writeln(output[0]);
-						written++;
-					} else {
-						vcfoutf2.writeln(output[1]);
-					}
-				}
-				returned++;
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-		}
+//		while (returned != submitted) {
+//			try {
+//				Future<String[]> f = jobHandler.take();
+//				if (f != null) {
+//					String[] output = f.get();
+//					if (output[0] != null) {
+//						vcfoutf.writeln(output[0]);
+//						written++;
+//					} else {
+//						vcfoutf2.writeln(output[1]);
+//					}
+//				}
+//				returned++;
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			} catch (ExecutionException e) {
+//				e.printStackTrace();
+//			}
+//		}
 		System.out.print(lnnum + " lines parsed. " + submitted + " submitted. " + written + " written. " + returned + " returned \r");
 
 		vcfoutf.close();

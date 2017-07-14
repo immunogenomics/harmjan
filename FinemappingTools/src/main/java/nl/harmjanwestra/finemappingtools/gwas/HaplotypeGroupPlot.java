@@ -43,11 +43,11 @@ public class HaplotypeGroupPlot {
 
 		for (Pair<HaplotypeGroup, AssociationResult> p : allResults) {
 			AssociationResult r = p.getRight();
-			if (r.getConfHi()[0] > maxOr) {
-				maxOr = r.getConfHi()[0];
+			if (r.getConf(true)[0][0] > maxOr) {
+				maxOr = r.getConf(true)[0][0];
 			}
-			if (r.getConfLo()[0] < minOR) {
-				minOR = r.getConfLo()[0];
+			if (r.getConf(false)[0][0] < minOR) {
+				minOR = r.getConf(false)[0][0];
 			}
 			HaplotypeGroup g = p.getLeft();
 
@@ -207,9 +207,9 @@ public class HaplotypeGroupPlot {
 				g2d.drawRect(x1, y, hapWidth, blockSize);
 			}
 
-			double or = a.getORs()[0];
-			double orhi = a.getConfHi()[0];
-			double orlo = a.getConfLo()[0];
+			double or = a.getORs()[0][0];
+			double orhi = a.getConf(true)[0][0];
+			double orlo = a.getConf(false)[0][0];
 
 			double perc1 = range.getRelativePositionX(or);
 			double perc2 = range.getRelativePositionX(orhi);
@@ -282,8 +282,8 @@ class HaplogroupComparator implements Comparator<Pair<HaplotypeGroup, Associatio
 		AssociationResult r1 = o1.getRight();
 		AssociationResult r2 = o2.getRight();
 
-		double d1 = r1.getORs()[0];
-		double d2 = r2.getORs()[0];
+		double d1 = r1.getORs()[0][0];
+		double d2 = r2.getORs()[0][0];
 
 		if (d1 > d2) {
 			return -1;

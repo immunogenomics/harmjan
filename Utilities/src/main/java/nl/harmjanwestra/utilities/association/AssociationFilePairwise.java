@@ -331,19 +331,38 @@ public class AssociationFilePairwise {
 					}
 
 					if (BetaGenotypecol != -1) {
-						String[] subelems = Strings.semicolon.split(elems[BetaGenotypecol]);
-						double[] beta = new double[subelems.length];
-						for (int e = 0; e < subelems.length; e++) {
-							beta[e] = Double.parseDouble(subelems[e]);
+						String betaStr = elems[BetaGenotypecol];
+						String[] betaStrElems = betaStr.split(";");
+						
+						double[][] beta = new double[betaStrElems.length][];
+						for (int i = 0; i < betaStrElems.length; i++) {
+							String[] betaAlleleElems = betaStrElems[i].split(",");
+							beta[i] = new double[betaAlleleElems.length];
+							for (int j = 0; j < betaAlleleElems.length; j++) {
+								try {
+									beta[i][j] = Double.parseDouble(betaAlleleElems[j]);
+								} catch (NumberFormatException e) {
+								
+								}
+							}
 						}
 						r.setBeta(beta);
 					}
 
 					if (SEGenotypecol != -1) {
-						String[] subelems = Strings.semicolon.split(elems[SEGenotypecol]);
-						double[] se = new double[subelems.length];
-						for (int e = 0; e < subelems.length; e++) {
-							se[e] = Double.parseDouble(subelems[e]);
+						String seStr = elems[SEGenotypecol];
+						String[] seStrElems = seStr.split(";");
+						double[][] se = new double[seStrElems.length][];
+						for (int i = 0; i < seStrElems.length; i++) {
+							String[] seAlleleElems = seStrElems[i].split(",");
+							se[i] = new double[seAlleleElems.length];
+							for (int j = 0; j < seAlleleElems.length; j++) {
+								try {
+									se[i][j] = Double.parseDouble(seAlleleElems[j]);
+								} catch (NumberFormatException e) {
+								
+								}
+							}
 						}
 						r.setSe(se);
 					}

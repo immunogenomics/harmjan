@@ -175,10 +175,10 @@ public class CompareDatasetsZScores {
 					for (int i = 0; i < z1.length; i++) {
 						String allelesA = Strings.concat(resultA[i].getSnp().getAlleles(), Strings.comma);
 						String minorAlleleA = resultA[i].getSnp().getMinorAllele();
-						double betaA = resultA[i].getBeta()[0];
-						double orA = resultA[i].getORs()[0];
+						double betaA = resultA[i].getBeta()[0][0];
+						double orA = resultA[i].getORs()[0][0];
 						String rsA = resultA[i].getSnp().getName();
-						double seA = resultA[i].getSe()[0];
+						double seA = resultA[i].getSe()[0][0];
 						int nA = resultA[i].getN();
 
 						if (betaA < 0 && z1[i] > 0 || z1[i] < 0 && betaA > 0) {
@@ -190,11 +190,11 @@ public class CompareDatasetsZScores {
 
 						String allelesB = Strings.concat(shared.get(i).getSnp().getAlleles(), Strings.comma);
 						String minorAlleleB = shared.get(i).getSnp().getMinorAllele();
-						double betaB = shared.get(i).getBeta()[0];
-						double orB = shared.get(i).getORs()[0];
+						double betaB = shared.get(i).getBeta()[0][0];
+						double orB = shared.get(i).getORs()[0][0];
 						String rsB = shared.get(i).getSnp().getName();
 
-						double seB = shared.get(i).getSe()[0];
+						double seB = shared.get(i).getSe()[0][0];
 						int nB = shared.get(i).getN();
 
 						double metaZ = ZScores.getWeightedZ(new double[]{z1[i], z2[i]}, new int[]{nA, nB});

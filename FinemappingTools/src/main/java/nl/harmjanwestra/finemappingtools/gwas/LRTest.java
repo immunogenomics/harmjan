@@ -448,7 +448,7 @@ public class LRTest {
                     finalDiseaseStatus[id] = diseaseStatus.get(sample);
                     for (int i = 0; i < finalDiseaseStatus[id].length; i++) {
                         if (finalDiseaseStatus[id][i].equals(DiseaseStatus.CASE)) {
-                            nrCases[i]++
+                            nrCases[i]++;
                         } else if (finalDiseaseStatus[id][i].equals(DiseaseStatus.CONTROL)) {
                             nrControls[i]++;
                         } else {
@@ -469,7 +469,7 @@ public class LRTest {
 //			System.exit(-1);
             System.out.println("Disease\tNrCases\tNrControls\tnrUnknown");
             for (int i = 0; i < nrDiseases; i++) {
-                System.out.println(i+"\t"+nrCases[i] + "\t" + nrControls[i] + "\t" + nrUnknown);
+                System.out.println(i + "\t" + nrCases[i] + "\t" + nrControls[i] + "\t" + nrUnknown);
             }
 
             System.out.println(nrTotal + " with covariates");
@@ -485,7 +485,7 @@ public class LRTest {
                 individuals.add(ind);
             }
             sampleAnnotation.setIndividuals(individuals);
-            
+
             return true;
         }
     }
@@ -512,6 +512,76 @@ public class LRTest {
         }
     }
 
+    protected Triple<ArrayList<HashMap<Feature, String>>, Integer, ArrayList<Feature>> parseConditionalFile() throws IOException {
+        System.out.println("Parsing: " + options.getConditional());
+        ArrayList<HashMap<Feature, String>> variantsToConditionOn = new ArrayList<>();
+
+
+        // you can provide one file for each iteration.
+        String conditionalFile = options.getConditional();
+
+        // determine number of iterations in file
+        TextFile tf = new TextFile(conditionalFile, TextFile.R);
+        String[] head = tf.readLineElems(TextFile.tab);
+        if (head.length > 3) {
+            if (!head[0].equals("Region") || !head[1].equals("Iter") || !head[2].equals("Variant")) {
+                System.err.println("Error: " + conditionalFile + " does not have expected format (Region\tIter\tVariant)");
+                System.exit(-1);
+            }
+        }
+        String[] elems = tf.readLineElems(TextFile.tab);
+        int maxiter = 0;
+
+        while (elems != null) {
+            if (elems.length >= 2) {
+                Integer iter = Integer.parseInt(elems[1]);
+                if (iter > maxiter) {
+                    maxiter = iter;
+                }
+            }
+            elems = tf.readLineElems(TextFile.tab);
+        }
+        tf.close();
+        Integer nrMaxIter = maxiter + 2;
+        // now load the data
+        for (int q = 0; q < maxiter + 1; q++) {
+            variantsToConditionOn.add(new HashMap<>());
+        }
+
+        System.out.println("Max iter in file: " + maxiter);
+        options.setMaxIter(nrMaxIter);
+        System.out.println("Setting max iter: " + nrMaxIter);
+
+        tf.open();
+        tf.readLine();
+        elems = tf.readLineElems(TextFile.tab);
+        HashSet<Feature> regionsInFile = new HashSet<Feature>();
+        while (elems != null) {
+            if (elems.length >= 3) {
+                String region = elems[0];
+                String[] regionElems = region.split("_");
+                Chromosome chr = Chromosome.parseChr(regionElems[0]);
+                String[] posElems = regionElems[1].split("-");
+                Integer start = Integer.parseInt(posElems[0]);
+                Integer stop = Integer.parseInt(posElems[1]);
+                Feature reg = new Feature(chr, start, stop);
+                Integer iter = Integer.parseInt(elems[1]);
+                regionsInFile.add(reg);
+                String varStr = elems[2];
+                String[] varStrElems = varStr.split("_");
+                varStr = Chromosome.parseChr(varStrElems[0]).toString() + "_" + varStrElems[1] + "_" + varStrElems[2];
+
+                HashMap<Feature, String> toAdd = variantsToConditionOn.get(iter);
+                toAdd.put(reg, varStr);
+            }
+            elems = tf.readLineElems(TextFile.tab);
+        }
+        tf.close();
+        ArrayList<Feature> regionsToTest = new ArrayList<>();
+        regionsToTest.addAll(regionsInFile);
+        return new Triple<ArrayList<HashMap<Feature, String>>, Integer, ArrayList<Feature>>(variantsToConditionOn, nrMaxIter, regionsToTest);
+    }
+
     public void testConditional() throws IOException {
 
 
@@ -526,71 +596,10 @@ public class LRTest {
         ArrayList<HashMap<Feature, String>> variantsToConditionOn = null;
         int nrMaxIter = 0;
         if (options.getConditional() != null) {
-            System.out.println("Parsing: " + options.getConditional());
-            variantsToConditionOn = new ArrayList<>();
-
-            // you can provide one file for each iteration.
-            String conditionalFile = options.getConditional();
-
-            // determine number of iterations in file
-            TextFile tf = new TextFile(conditionalFile, TextFile.R);
-            String[] head = tf.readLineElems(TextFile.tab);
-            if (head.length > 3) {
-                if (!head[0].equals("Region") || !head[1].equals("Iter") || !head[2].equals("Variant")) {
-                    System.err.println("Error: " + conditionalFile + " does not have expected format (Region\tIter\tVariant)");
-                    System.exit(-1);
-                }
-            }
-            String[] elems = tf.readLineElems(TextFile.tab);
-            int maxiter = 0;
-
-            while (elems != null) {
-                if (elems.length >= 2) {
-                    Integer iter = Integer.parseInt(elems[1]);
-                    if (iter > maxiter) {
-                        maxiter = iter;
-                    }
-                }
-                elems = tf.readLineElems(TextFile.tab);
-            }
-            tf.close();
-            nrMaxIter = maxiter + 2;
-            // now load the data
-            for (int q = 0; q < maxiter + 1; q++) {
-                variantsToConditionOn.add(new HashMap<>());
-            }
-
-            System.out.println("Max iter in file: " + maxiter);
-            options.setMaxIter(nrMaxIter);
-            System.out.println("Setting max iter: " + nrMaxIter);
-
-            tf.open();
-            tf.readLine();
-            elems = tf.readLineElems(TextFile.tab);
-            HashSet<Feature> regionsInFile = new HashSet<Feature>();
-            while (elems != null) {
-                if (elems.length >= 3) {
-                    String region = elems[0];
-                    String[] regionElems = region.split("_");
-                    Chromosome chr = Chromosome.parseChr(regionElems[0]);
-                    String[] posElems = regionElems[1].split("-");
-                    Integer start = Integer.parseInt(posElems[0]);
-                    Integer stop = Integer.parseInt(posElems[1]);
-                    Feature reg = new Feature(chr, start, stop);
-                    Integer iter = Integer.parseInt(elems[1]);
-                    regionsInFile.add(reg);
-                    String varStr = elems[2];
-                    String[] varStrElems = varStr.split("_");
-                    varStr = Chromosome.parseChr(varStrElems[0]).toString() + "_" + varStrElems[1] + "_" + varStrElems[2];
-
-                    HashMap<Feature, String> toAdd = variantsToConditionOn.get(iter);
-                    toAdd.put(reg, varStr);
-                }
-                elems = tf.readLineElems(TextFile.tab);
-            }
-            tf.close();
-            regionsToTest = new ArrayList<>();
-            regionsToTest.addAll(regionsInFile);
+            Triple<ArrayList<HashMap<Feature, String>>, Integer, ArrayList<Feature>> conditionalInput = parseConditionalFile();
+            variantsToConditionOn = conditionalInput.getLeft();
+            nrMaxIter = conditionalInput.getMiddle();
+            regionsToTest = conditionalInput.getRight();
 
         }
 
@@ -624,9 +633,7 @@ public class LRTest {
                         0,
                         sampleAnnotation,
                         options);
-
                 jobHandler.submit(task);
-
                 submitted++;
             }
 
@@ -636,7 +643,6 @@ public class LRTest {
             pvalout.close();
             logout.close();
             progressBar.close();
-
         }
 
 
@@ -1223,7 +1229,7 @@ public class LRTest {
 
         // generate pseudocontrol genotypes
         LRTestTask lrt = new LRTestTask(sampleAnnotation);
-        Pair<DoubleMatrix2D, double[]> xandy = lrt.prepareMatrices(
+        Pair<DoubleMatrix2D, double[][]> xandy = lrt.prepareMatrices(
                 variant,
                 conditional
         );

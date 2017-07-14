@@ -47,7 +47,7 @@ public class VCFCorrelator {
 		}
 
 		TextFile tf = new TextFile(vcfin, TextFile.R);
-		TextFile out = new TextFile(new File(vcfOut), TextFile.W, true);
+		TextFile out = new TextFile(new File(vcfOut), TextFile.W);
 		String ln = tf.readLine();
 		int submitted = 0;
 

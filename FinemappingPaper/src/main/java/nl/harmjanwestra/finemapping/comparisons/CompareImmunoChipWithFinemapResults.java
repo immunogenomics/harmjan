@@ -210,11 +210,11 @@ public class CompareImmunoChipWithFinemapResults {
 			return "NA\tNA\tNA\tNA\tNA";
 		}
 
-		double[] beta = result.getBeta();
-		double[] ors = result.getORs();
+		double[] beta = result.getBeta()[0];
+		double[] ors = result.getORs()[0];
 		String[] alleles = result.getSnp().getAlleles();
 		if (beta == null) {
-			beta = new double[]{Math.log(result.getORs()[0])};
+			beta = new double[]{Math.log(result.getORs()[0][0])};
 		}
 
 		if (flip) {

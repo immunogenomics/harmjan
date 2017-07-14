@@ -694,8 +694,12 @@ public class QTLTest {
 
 								if (permutation == -1) {
 									results[f] = new AssociationResult();
-									results[f].setBeta(new double[]{betaSNP});
-									results[f].setSe(new double[]{seSNP});
+									double[][] beta = new double[1][1];
+									beta[0][0] = betaSNP;
+									double[][] se = new double[1][1];
+									se[0][0] = seSNP;
+									results[f].setBeta(beta);
+									results[f].setSe(se);
 									results[f].setPval(pSNP);
 									geneWideReal[bin]++;
 								} else {
@@ -716,8 +720,12 @@ public class QTLTest {
 							} else {
 								if (permutation == -1) {
 									results[f] = new AssociationResult();
-									results[f].setBeta(new double[]{betaSNP});
-									results[f].setSe(new double[]{seSNP});
+									double[][] beta = new double[1][1];
+									beta[0][0] = betaSNP;
+									double[][] se = new double[1][1];
+									se[0][0] = seSNP;
+									results[f].setBeta(beta);
+									results[f].setSe(se);
 									results[f].setPval(1);
 								}
 							}
@@ -749,7 +757,7 @@ public class QTLTest {
 						snpBuilder.append("\t").append(variant.getPos());
 						snpBuilder.append("\t").append(results[f].getBeta()[0]);
 						double z = ZScores.pToZ(results[f].getPval());
-						if (results[f].getBeta()[0] < 0) {
+						if (results[f].getBeta()[0][0] < 0) {
 							z *= -1;
 						}
 						snpBuilder.append("\t").append(results[f].getSe()[0]);

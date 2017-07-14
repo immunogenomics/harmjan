@@ -79,7 +79,7 @@ public class LRTestHaploTestTask {
 //		double hwep = stats.getRight();
 
 		// generate pseudocontrol genotypes
-		Pair<DoubleMatrix2D, double[]> xandy = prepareMatrices(
+		Pair<DoubleMatrix2D, double[][]> xandy = prepareMatrices(
 				haplotypeDosages,
 				qcdata.getLeft(),
 				conditionalHaplotypeDosages,
@@ -88,7 +88,7 @@ public class LRTestHaploTestTask {
 		);
 
 		int nrAlleles = haplotypeDosages.columns() + 1;
-		double[] y = xandy.getRight(); // get the phenotypes for all non-missing genotypes
+		double[][] y = xandy.getRight(); // get the phenotypes for all non-missing genotypes
 		DoubleMatrix2D x = xandy.getLeft();
 
 		// TODO: replace these:
@@ -138,7 +138,7 @@ public class LRTestHaploTestTask {
 //		} // end maf > threshold
 	}
 
-	public Pair<DoubleMatrix2D, double[]> prepareMatrices(DoubleMatrix2D x,
+	public Pair<DoubleMatrix2D, double[][]> prepareMatrices(DoubleMatrix2D x,
 														  int[] left,
 														  DoubleMatrix2D conditionalDosages,
 														  DiseaseStatus[][] finalDiseaseStatus,
@@ -162,9 +162,11 @@ public class LRTestHaploTestTask {
 		x = DoubleFactory2D.dense.appendColumns(vector, x);
 
 		if (missingGenotypeIds.isEmpty()) {
-			double[] y = new double[finalDiseaseStatus.length];
+			double[][] y = new double[finalDiseaseStatus.length][finalDiseaseStatus[0].length];
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
-				y[i] = finalDiseaseStatus[i][0].getNumber();
+				for(int d=0;d<finalDiseaseStatus[0].length;d++) {
+					y[i][d] = finalDiseaseStatus[i][d].getNumber();
+				}
 			}
 			return new Pair<>(x, y);
 		} else {
@@ -174,11 +176,13 @@ public class LRTestHaploTestTask {
 
 			x = dda.subMatrix(x, rowIndexes, 0, x.columns() - 1);
 
-			double[] y = new double[finalDiseaseStatus.length - missingGenotypeIds.size()];
+			double[][] y = new double[finalDiseaseStatus.length - missingGenotypeIds.size()][finalDiseaseStatus[0].length];
 			int ctr = 0;
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
 				if (!missingGenotypeIds.contains(i)) {
-					y[ctr] = finalDiseaseStatus[i][0].getNumber();
+					for(int d=0;d<finalDiseaseStatus[d].length;d++) {
+						y[ctr][d] = finalDiseaseStatus[i][d].getNumber();
+					}
 					ctr++;
 				}
 			}
@@ -241,7 +245,7 @@ public class LRTestHaploTestTask {
 	}
 
 	private AssociationResult pruneAndTest(DoubleMatrix2D x,
-										   double[] y,
+										   double[][] y,
 										   int firstColumnToRemove,
 										   int lastColumnToRemove,
 										   double maf) {
@@ -284,8 +288,8 @@ public class LRTestHaploTestTask {
 			result.setDevianceNull(0);
 			result.setDevianceGeno(0);
 			result.setDf(0);
-			result.setBeta(new double[]{0d});
-			result.setSe(new double[]{0d});
+			result.setBeta(new double[1][1]);
+			result.setSe(new double[1][1]);
 			result.setPval(1);
 			return result;
 		} else {
@@ -326,32 +330,29 @@ public class LRTestHaploTestTask {
 					return null;
 				}
 			}
-
+			
+			int nrDiseases = y.length;
 			double devx = resultX.getDeviance();
 			double devnull = resultCovars.getDeviance();
-			double[] betasmlelr = new double[nrRemaining];
-			double[] stderrsmlelr = new double[nrRemaining];
-			double[] or = new double[nrRemaining];
-			double[] orhi = new double[nrRemaining];
-			double[] orlo = new double[nrRemaining];
+			double[][] betasmlelr = new double[nrDiseases][nrRemaining];
+			double[][] stderrsmlelr = new double[nrDiseases][nrRemaining];
+			
 
 			int ctr = 0;
 
-			for (int i = 0; i < alleleIndex.length; i++) {
-				int idx = alleleIndex[i];
-				if (idx != -1) {
-					double beta = -resultX.getBeta()[idx];
-					double se = resultX.getStderrs()[idx];
-					betasmlelr[ctr] = beta;
-					stderrsmlelr[ctr] = se;
 
-					double OR = Math.exp(beta);
-					double orLow = Math.exp(beta - 1.96 * se);
-					double orHigh = Math.exp(beta + 1.96 * se);
-					or[ctr] = OR;
-					orhi[ctr] = orHigh;
-					orlo[ctr] = orLow;
-					ctr++;
+			for(int d=0;d<nrDiseases;d++) {
+				for (int i = 0; i < alleleIndex.length; i++) {
+					int idx = alleleIndex[i];
+					if (idx != -1) {
+						double beta = -resultX.getBeta()[d][idx];
+						double se = resultX.getStderrs()[d][idx];
+						betasmlelr[d][ctr] = beta;
+						stderrsmlelr[d][ctr] = se;
+						
+						
+						ctr++;
+					}
 				}
 			}
 

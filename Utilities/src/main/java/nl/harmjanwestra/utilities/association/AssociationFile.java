@@ -14,20 +14,20 @@ import java.util.HashSet;
  * Created by hwestra on 10/27/15.
  */
 public class AssociationFile {
-
-
+	
+	
 	private String model = null;
-
+	
 	public ArrayList<AssociationResult> readTabFile(String pvaluefile, Feature region) throws IOException {
 		System.out.println("Reading tab path: " + pvaluefile);
 		HashSet<String> variantHash = new HashSet<String>();
 		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
-
+		
 		ArrayList<AssociationResult> output = new ArrayList<AssociationResult>();
-
+		
 		// skip header
 		String[] headerelems = textfile.readLineElems(TextFile.tab);
-
+		
 		// Marker	Chr	Position	PValue	OR(MinAllele)	LowerOR	UpperOR	Alleles(Maj>Min)
 		int markercol = 0;
 		int chrcol = 0;
@@ -37,7 +37,7 @@ public class AssociationFile {
 		int lowerorcol = 0;
 		int upperorcol = 0;
 		int allelescol = 0;
-
+		
 		for (int c = 0; c < headerelems.length; c++) {
 			String elem = headerelems[c].toLowerCase();
 			if (elem.equals("marker")) {
@@ -58,12 +58,12 @@ public class AssociationFile {
 				allelescol = c;
 			}
 		}
-
+		
 		String[] elems = textfile.readLineElems(TextFile.tab);
 		int pvalctr = 0;
 		while (elems != null) {
 			// Marker	Chr	Position	PValue	Odds Ratio
-
+			
 			Chromosome chr = Chromosome.parseChr(elems[1]);
 			if (region.getChromosome().equals(chr)) {
 				String variant = elems[chrcol] + "_" + elems[poscol] + "_" + elems[markercol];
@@ -73,7 +73,7 @@ public class AssociationFile {
 				f2.setStop(Integer.parseInt(elems[poscol]));
 				if (f2.overlaps(region)) {
 					try {
-
+						
 						String alleles = elems[allelescol];
 						String[] allelesArr = alleles.split(">");
 						f2.setAlleles(allelesArr);
@@ -82,57 +82,59 @@ public class AssociationFile {
 						} else {
 							f2.setMinorAllele(allelesArr[1]);
 						}
-
+						
 						Double or = Double.parseDouble(elems[orcol]);
-
+						
 						Double pval = 1d;
 						try {
 							pval = Double.parseDouble(elems[pvalcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 						variantHash.add(variant);
-
+						
 						f2.setName(elems[markercol]);
 						AssociationResult r = new AssociationResult();
 						r.setSnp(f2);
 						r.setPval(pval);
-						r.setOR(new double[]{or});
-
+						double[][] ors = new double[0][1];
+						ors[0][1] = or;
+						r.setOR(ors);
+						
 						output.add(r);
 					} catch (NumberFormatException e) {
 						e.printStackTrace();
 					}
 					pvalctr++;
 				}
-
+				
 			}
 			elems = textfile.readLineElems(TextFile.tab);
 		}
 		textfile.close();
-
+		
 		System.out.println(pvalctr + " pvalues for " + pvalctr + " positions from path: " + pvaluefile);
-
+		
 		return output;
-
+		
 	}
-
+	
 	public String getModel() {
 		return model;
 	}
-
+	
 	public ArrayList<AssociationResult> read(String file) throws IOException {
 		Feature region = null;
 		return read(file, region);
 	}
-
-
+	
+	
 	public ArrayList<AssociationResult> read(String file, Feature region) throws IOException {
-
+		
 		if (file.endsWith("tab") || file.endsWith("tab.gz")) {
 			return readTabFile(file, region);
 		}
-
+		
 		if (region == null) {
 			ArrayList<Feature> f = null;
 			return read(file, f);
@@ -140,18 +142,18 @@ public class AssociationFile {
 		ArrayList<Feature> regions = new ArrayList<>();
 		regions.add(region);
 		return read(file, regions);
-
-
+		
+		
 	}
-
+	
 	public ArrayList<AssociationResult> read(String file, ArrayList<Feature> regions) throws IOException {
-
+		
 		System.out.println("Reading assoc path: " + file);
 		TextFile tf = new TextFile(file, TextFile.R);
 		String ln = tf.readLine();
-
+		
 		model = null;
-
+		
 		// Chr     Pos     Id      CombinedId      N       MAF     DevianceNull    DevianceGeno    Df      Beta(Genotype)  SE(Genotype)    OR      OR-Hi   OR-Lo   Pval    -Log10(pval)
 		int chrcol = -1;
 		int poscol = -1;
@@ -180,15 +182,15 @@ public class AssociationFile {
 		int bfcol = -1;
 		int regioncol = -1;
 		int hwepcol = -1;
-
-
+		
+		
 		ArrayList<AssociationResult> results = new ArrayList<AssociationResult>();
 		int nr = 0;
 		while (ln != null) {
 			if (ln.startsWith("#Chromosome") || ln.startsWith("Chr\tPos")) {
 // skip header
 //				System.out.println("Found header");
-
+				
 				String[] elems = Strings.tab.split(ln);
 				for (int i = 0; i < elems.length; i++) {
 					String e = elems[i];
@@ -268,18 +270,18 @@ public class AssociationFile {
 					double afcases = 0d;
 					double afcontrols = 0d;
 					int df = 0;
-					double[] beta = null;
-					double[] se = null;
-
+					double[][] beta = null;
+					double[][] se = null;
+					
 					double pval = 1d;
-
+					
 					double bf = 0d;
 					double posterior = 0d;
 					Feature assocregion = null;
 					double impqualscore = Double.NaN;
 					String[] alleles = null;
 					String minorAllele = null;
-
+					
 					if (chrcol != -1) {
 						chr = Chromosome.parseChr(elems[chrcol]);
 					}
@@ -287,13 +289,13 @@ public class AssociationFile {
 						try {
 							pos = Integer.parseInt(elems[poscol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
 					if (idcol != -1) {
 						id = elems[idcol];
 					}
-
+					
 					if (allelesCol != -1) {
 						String alleleStr = elems[allelesCol];
 						String[] alleletmp = alleleStr.split(",");
@@ -309,151 +311,160 @@ public class AssociationFile {
 						try {
 							n = Integer.parseInt(elems[ncol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
 					if (mafcol != -1) {
 						try {
 							maf = Double.parseDouble(elems[mafcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
-
+					
 					if (crcol != -1) {
 						try {
 							cr = Double.parseDouble(elems[crcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
-
+					
 					if (missingnesspcol != -1) {
 						try {
 							missingnessp = Double.parseDouble(elems[missingnesspcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
-
+					
 					if (afcasescol != -1) {
 						try {
 							afcases = Double.parseDouble(elems[afcasescol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
-
+					
 					if (afcontrolscol != -1) {
 						try {
 							afcontrols = Double.parseDouble(elems[afcontrolscol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
-
+					
 					if (hwepcol != -1) {
 						try {
 							hwep = Double.parseDouble(elems[hwepcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
 					if (deviancenullcol != -1) {
 						try {
 							deviancenull = Double.parseDouble(elems[deviancenullcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
 					if (deviancegenocol != -1) {
 						try {
 							deviancegeno = Double.parseDouble(elems[deviancegenocol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
 					if (dfcol != -1) {
 						try {
 							df = Integer.parseInt(elems[dfcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
-
+						
 					}
-
+					
 					if (betacol != -1) {
 						String betaStr = elems[betacol];
 						String[] betaStrElems = betaStr.split(";");
-						beta = new double[betaStrElems.length];
+						
+						beta = new double[betaStrElems.length][];
 						for (int i = 0; i < betaStrElems.length; i++) {
-							try {
-								beta[i] = Double.parseDouble(betaStrElems[i]);
-							} catch (NumberFormatException e) {
-
+							String[] betaAlleleElems = betaStrElems[i].split(",");
+							beta[i] = new double[betaAlleleElems.length];
+							for (int j = 0; j < betaAlleleElems.length; j++) {
+								try {
+									beta[i][j] = Double.parseDouble(betaAlleleElems[j]);
+								} catch (NumberFormatException e) {
+								
+								}
 							}
 						}
 					}
-
+					
 					if (secol != -1) {
 						String seStr = elems[secol];
 						String[] seStrElems = seStr.split(";");
-						se = new double[seStrElems.length];
+						se = new double[seStrElems.length][];
 						for (int i = 0; i < seStrElems.length; i++) {
-							try {
-								se[i] = Double.parseDouble(seStrElems[i]);
-							} catch (NumberFormatException e) {
-
+							String[] seAlleleElems = seStrElems[i].split(",");
+							se[i] = new double[seAlleleElems.length];
+							for (int j = 0; j < seAlleleElems.length; j++) {
+								try {
+									se[i][j] = Double.parseDouble(seAlleleElems[j]);
+								} catch (NumberFormatException e) {
+								
+								}
 							}
 						}
 					}
-
-
+					
+					
 					if (pvalcol != -1 && pvalcol < elems.length) {
 						try {
 							pval = Double.parseDouble(elems[pvalcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
-
-
+					
+					
 					if (impqualscorecol != -1) {
 						try {
 							impqualscore = Double.parseDouble(elems[impqualscorecol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
-
+					
 					if (regioncol != -1) {
 						String regionStr = elems[regioncol];
 						assocregion = Feature.parseFeature(regionStr);
 					}
-
+					
 					if (bfcol != -1) {
 						try {
 							bf = Double.parseDouble(elems[bfcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
 					if (posteriorcol != -1) {
 						try {
 							posterior = Double.parseDouble(elems[posteriorcol]);
 						} catch (NumberFormatException e) {
-
+						
 						}
 					}
-
-
+					
+					
 					SNPFeature snp = new SNPFeature(chr, pos, pos);
 					snp.setName(id);
 					snp.setImputationQualityScore(impqualscore);
 					snp.setAlleles(alleles);
 					snp.setMinorAllele(minorAllele);
-
-
+					
+					
 					if (regions == null || snp.overlaps(regions)) {
 						AssociationResult result = new AssociationResult();
 						result.setSnp(snp);
@@ -466,6 +477,7 @@ public class AssociationFile {
 						result.setDevianceNull(deviancenull);
 						result.setDevianceGeno(deviancegeno);
 						result.setDf(df);
+						
 						result.setBeta(beta);
 						result.setSe(se);
 						result.setPval(pval);
@@ -473,22 +485,22 @@ public class AssociationFile {
 						snp.setHwep(hwep);
 						result.setPosterior(posterior);
 						result.setRegion(assocregion);
-
+						
 						results.add(result);
-
+						
 					}
 				}
 			}
-
+			
 			ln = tf.readLine();
 		}
 		tf.close();
-
+		
 		return results;
 	}
-
+	
 	public String getHeader() {
-
+		
 		String str = "";
 		if (model != null) {
 			str = model + "\n";
@@ -519,8 +531,8 @@ public class AssociationFile {
 				"\tOR-Lo" +
 				"\tPval" +
 				"\tLog10(p)";
-
+		
 		return str;
 	}
-
+	
 }

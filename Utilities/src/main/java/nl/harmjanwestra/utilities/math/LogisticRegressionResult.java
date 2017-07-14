@@ -6,14 +6,14 @@ package nl.harmjanwestra.utilities.math;
 public class LogisticRegressionResult {
 
 
-	private final double[] beta;
-	private final double[] stderrs;
-	private final double[] sigprms;
+	private final double[][] beta; // format: [disease][allele]
+	private final double[][] stderrs;
+	private final double[][] sigprms;
 	private final double deviance;
-	private final double[] loglike;
+	private final double[][] loglike;
 	private final double loglike0;
 
-	public LogisticRegressionResult(double[] beta, double[] stderrs, double[] sigprms, double deviance, double[] loglike, double loglike0) {
+	public LogisticRegressionResult(double[][] beta, double[][] stderrs, double[][] sigprms, double deviance, double[][] loglike, double loglike0) {
 		this.beta = beta;
 		this.stderrs = stderrs;
 		this.sigprms = sigprms;
@@ -22,15 +22,15 @@ public class LogisticRegressionResult {
 		this.loglike0 = loglike0;
 	}
 
-	public double[] getBeta() {
+	public double[][] getBeta() {
 		return beta;
 	}
 
-	public double[] getStderrs() {
+	public double[][] getStderrs() {
 		return stderrs;
 	}
 
-	public double[] getSigprms() {
+	public double[][] getSigprms() {
 		return sigprms;
 	}
 
@@ -38,7 +38,7 @@ public class LogisticRegressionResult {
 		return deviance;
 	}
 
-	public double[] getLoglike() {
+	public double[][] getLoglike() {
 		return loglike;
 	}
 

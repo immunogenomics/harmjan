@@ -51,7 +51,7 @@ public class Caviar {
 			Integer id = variantHash.get(variant);
 			if (id != null) {
 				pvals[id] = ZScores.pToZ(result.getPval());
-				if (result.getBeta()[0] < 0) {
+				if (result.getBeta()[0][0] < 0) {
 					pvals[id] = -pvals[id];
 				}
 			}

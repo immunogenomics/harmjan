@@ -7,35 +7,35 @@ import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
  * Created by hwestra on 6/22/16.
  */
 public class AssociationResultPairwise extends AssociationResult {
-
-
+	
+	
 	private SNPFeature snp2;
 	private double ldRSquared;
 	private Double ldDprime;
-
+	
 	public double getLdRSquared() {
 		return ldRSquared;
 	}
-
+	
 	public SNPFeature getSnp2() {
 		return snp2;
 	}
-
+	
 	public void setSnp2(SNPFeature snp2) {
 		this.snp2 = snp2;
 	}
-
+	
 	public void setLDRSquared(double LD) {
 		this.ldRSquared = LD;
 	}
-
+	
 	public void setLdDprime(Double ldDprime) {
 		this.ldDprime = ldDprime;
 	}
-
+	
 	@Override
 	public String toString() {
-
+		
 		String str = snp.getChromosome().toString()
 				+ "\t" + snp.getStart()
 				+ "\t" + snp.getName()
@@ -68,7 +68,7 @@ public class AssociationResultPairwise extends AssociationResult {
 				+ "\t" + dfnull
 				+ "\t" + dfalt
 				+ "\t" + df;
-
+		
 		if (beta != null) {
 			str += "\t" + Strings.concat(beta, Strings.semicolon);
 		} else {
@@ -79,19 +79,20 @@ public class AssociationResultPairwise extends AssociationResult {
 		} else {
 			str += "\tnull";
 		}
-
+		
 		if (beta != null && se != null) {
+			
 			str += "\t" + Strings.concat(getORs(), Strings.semicolon)
-					+ "\t" + Strings.concat(getConfHi(), Strings.semicolon)
-					+ "\t" + Strings.concat(getConfLo(), Strings.semicolon);
+					+ "\t" + mergeMultiStr(getConf(true))
+					+ "\t" + mergeMultiStr(getConf(false));
 		} else {
 			str += "\tnull";
 		}
-
+		
 		str += "\t" + pval
 				+ "\t" + getLog10Pval();
 		return str;
 	}
-
-
+	
+	
 }

@@ -77,9 +77,11 @@ public class CompareJointAnalysisToSingleDatasetAnalyses {
 				line += "\t" + Strings.concat(top[r].getSnp().getAlleles(), Strings.comma);
 				// line += "\t" + top[r].getSnp().get;
 				line += "\t" + top[r].getLog10Pval();
-				line += "\t" + Strings.concat(top[r].getBeta(), Strings.semicolon);
-				line += "\t" + Strings.concat(top[r].getORs(), Strings.semicolon);
-				line += "\t" + Strings.concat(top[r].getConfLo(), Strings.semicolon) + "," + Strings.concat(top[r].getConfHi(), Strings.comma);
+				
+				// TODO: does not work for multinomial analysis
+				line += "\t" + Strings.concat(top[r].getBeta()[0], Strings.semicolon);
+				line += "\t" + Strings.concat(top[r].getORs()[0], Strings.semicolon);
+				line += "\t" + Strings.concat(top[r].getConf(false)[0], Strings.semicolon) + "," + Strings.concat(top[r].getConf(true)[0], Strings.comma);
 
 				if (r > 0) {
 					int distance = top[0].getSnp().getStart() - top[r].getSnp().getStart();

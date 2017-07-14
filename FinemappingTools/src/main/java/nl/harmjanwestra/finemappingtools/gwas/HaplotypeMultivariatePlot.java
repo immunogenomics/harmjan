@@ -55,8 +55,8 @@ public class HaplotypeMultivariatePlot {
 		double maxOr = 0;
 
 
-		double[] orhi = associationResult.getConfHi();
-		double[] orlo = associationResult.getConfLo();
+		double[] orhi = associationResult.getConf(true)[0];
+		double[] orlo = associationResult.getConf(false)[0];
 
 		for (double d : orhi) {
 			if (d < minOR) {
@@ -166,7 +166,7 @@ public class HaplotypeMultivariatePlot {
 
 		ArrayList<Pair<Integer, Double>> d = new ArrayList<Pair<Integer, Double>>();
 		for (int q = 0; q < testedHaps.size(); q++) {
-			d.add(new Pair<Integer, Double>(q, associationResult.getORs()[q]));
+			d.add(new Pair<Integer, Double>(q, associationResult.getORs()[0][q]));
 		}
 
 		Collections.sort(d, new PairSorter());
@@ -177,9 +177,9 @@ public class HaplotypeMultivariatePlot {
 			drawHap(variants,
 					testedHaps.get(q),
 					z + 1,
-					associationResult.getORs()[q],
-					associationResult.getConfHi()[q],
-					associationResult.getConfLo()[q],
+					associationResult.getORs()[0][q],
+					associationResult.getConf(true)[0][q],
+					associationResult.getConf(false)[0][q],
 					g2d,
 					blockSize,
 					margin,
