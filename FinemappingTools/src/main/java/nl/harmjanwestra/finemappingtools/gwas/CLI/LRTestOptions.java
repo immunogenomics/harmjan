@@ -208,6 +208,12 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 
 		option = Option.builder()
+				.longOpt("multinomial")
+				.desc("Perform multinomial analysis (>1 phenotype)")
+				.build();
+		OPTIONS.addOption(option);
+
+		option = Option.builder()
 				.longOpt("assocfile")
 				.desc("Associationfile (for use with FINEMAP).")
 				.hasArg()
@@ -440,6 +446,8 @@ public class LRTestOptions {
 				analysisType = ANALYSIS.GUESS;
 			} else if (cmd.hasOption("finemap")) {
 				analysisType = ANALYSIS.FINEMAP;
+			} else if (cmd.hasOption("multinomial")){
+				analysisType = ANALYSIS.MULTINOMIAL;
 			}
 
 			if (cmd.hasOption("maxiter")) {
