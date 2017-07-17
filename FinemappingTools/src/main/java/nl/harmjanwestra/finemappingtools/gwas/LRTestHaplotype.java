@@ -169,13 +169,13 @@ public class LRTestHaplotype extends LRTest {
 					DoubleMatrix2D intercept = dspruned.getIntercept();
 					DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
 					double[][] y = dspruned.getDiseaseStatus();
-					LogisticRegressionResult nullModelResult = reg.univariate(y, xprime);
+					LogisticRegressionResult nullModelResult = reg.multinomial(y, xprime);
 					
 					Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
 					DoubleMatrix2D haps = data.getLeft();
 					DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
 					DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
-					LogisticRegressionResult altModelResult = reg.univariate(y, x);
+					LogisticRegressionResult altModelResult = reg.multinomial(y, x);
 					
 					prevNrDf = haps.columns();
 					prevNrSamples = haps.rows();
@@ -224,7 +224,7 @@ public class LRTestHaplotype extends LRTest {
 					DoubleMatrix2D intercept = dspruned.getIntercept();
 					DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
 					double[][] y = dspruned.getDiseaseStatus();
-					LogisticRegressionResult nullModelResult = reg.univariate(y, xprime);
+					LogisticRegressionResult nullModelResult = reg.multinomial(y, xprime);
 					
 					Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
 					DoubleMatrix2D haps = data.getLeft();
@@ -240,7 +240,7 @@ public class LRTestHaplotype extends LRTest {
 					} else {
 						DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
 						DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
-						LogisticRegressionResult altModelResult = reg.univariate(y, x);
+						LogisticRegressionResult altModelResult = reg.multinomial(y, x);
 						
 						
 						int deltaDf = df - prevNrDf;
@@ -347,14 +347,14 @@ public class LRTestHaplotype extends LRTest {
 				DoubleMatrix2D intercept = dspruned.getIntercept();
 				DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
 				double[][] y = dspruned.getDiseaseStatus();
-				LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+				LogisticRegressionResult resultCovars = reg.multinomial(y, xprime);
 				
 				
 				Pair<DoubleMatrix2D, ArrayList<BitVector>> data = dspruned.getHaplotypesExcludeReference();
 				DoubleMatrix2D haps = data.getLeft();
 				DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
 				DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
-				LogisticRegressionResult resultX = reg.univariate(y, x);
+				LogisticRegressionResult resultX = reg.multinomial(y, x);
 				
 				int nrRemaining = haps.columns();
 				double devx = resultX.getDeviance();
@@ -366,7 +366,7 @@ public class LRTestHaplotype extends LRTest {
 				
 				for (int disease = 0; disease < nrDiseases; disease++) {
 					for (int q = 1; q < nrRemaining + 1; q++) {
-						double beta = -resultX.getBeta()[disease][q];
+						double beta = resultX.getBeta()[disease][q];
 						double se = resultX.getStderrs()[disease][q];
 						betasmlelr[disease][q - 1] = beta;
 						stderrsmlelr[disease][q - 1] = se;
@@ -647,11 +647,11 @@ public class LRTestHaplotype extends LRTest {
 		DoubleMatrix2D intercept = dspruned.getIntercept();
 		DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
 		double[][] y = dspruned.getDiseaseStatus();
-		LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+		LogisticRegressionResult resultCovars = reg.multinomial(y, xprime);
 		
 		DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, group.getHaplotypeMatrixCollapsed());
 		DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
-		LogisticRegressionResult resultX = reg.univariate(y, x);
+		LogisticRegressionResult resultX = reg.multinomial(y, x);
 		
 		int nrRemaining = 1;
 		double devx = resultX.getDeviance();
@@ -663,7 +663,7 @@ public class LRTestHaplotype extends LRTest {
 		int ctr = 0;
 		
 		for (int disease = 0; disease < nrDiseases; disease++) {
-			double beta = -resultX.getBeta()[disease][1];
+			double beta = resultX.getBeta()[disease][1];
 			double se = resultX.getStderrs()[disease][1];
 			betasmlelr[disease][ctr] = beta;
 			stderrsmlelr[disease][ctr] = se;
@@ -727,12 +727,12 @@ public class LRTestHaplotype extends LRTest {
 					DoubleMatrix2D intercept = dspruned.getIntercept();
 					DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
 					double[][] y = dspruned.getDiseaseStatus();
-					LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+					LogisticRegressionResult resultCovars = reg.multinomial(y, xprime);
 					
 					DoubleMatrix2D haps = dspruned.getHaplotype(hap);
 					DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
 					DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
-					LogisticRegressionResult resultX = reg.univariate(y, x);
+					LogisticRegressionResult resultX = reg.multinomial(y, x);
 					
 					int nrRemaining = 1;
 					double devx = resultX.getDeviance();
@@ -746,7 +746,7 @@ public class LRTestHaplotype extends LRTest {
 					int ctr = 0;
 					
 					for (int disease = 0; disease < nrDiseases; disease++) {
-						double beta = -resultX.getBeta()[disease][1];
+						double beta = resultX.getBeta()[disease][1];
 						double se = resultX.getStderrs()[disease][1];
 						betasmlelr[disease][ctr] = beta;
 						stderrsmlelr[disease][ctr] = se;
@@ -794,14 +794,14 @@ public class LRTestHaplotype extends LRTest {
 						DoubleMatrix2D intercept = refDs.getIntercept();
 						double[][] y = refDs.getDiseaseStatus();
 						DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, refDs.getFinalCovariates());
-						LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+						LogisticRegressionResult resultCovars = reg.multinomial(y, xprime);
 						
 						Integer newHapIndex = refDs.getHaplotypeId(hapToRun);
 						Integer newRefHapIndex = refDs.getHaplotypeId(dspruned.getReferenceHaplotype());
 						DoubleMatrix2D haps = refDs.getHaplotype(newHapIndex);
 						DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
 						DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, refDs.getFinalCovariates());
-						LogisticRegressionResult resultX = reg.univariate(y, x);
+						LogisticRegressionResult resultX = reg.multinomial(y, x);
 						
 						int nrRemaining = 1;
 						double devx = resultX.getDeviance();
@@ -813,7 +813,7 @@ public class LRTestHaplotype extends LRTest {
 						int ctr = 0;
 						
 						for (int disease = 0; disease < nrDiseases; disease++) {
-							double beta = -resultX.getBeta()[disease][1];
+							double beta = resultX.getBeta()[disease][1];
 							double se = resultX.getStderrs()[disease][1];
 							betasmlelr[disease][ctr] = beta;
 							stderrsmlelr[disease][ctr] = se;
@@ -873,12 +873,12 @@ public class LRTestHaplotype extends LRTest {
 			DoubleMatrix2D intercept = dspruned.getIntercept();
 			DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, dspruned.getFinalCovariates());
 			double[][] y = dspruned.getDiseaseStatus();
-			LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+			LogisticRegressionResult resultCovars = reg.multinomial(y, xprime);
 			
 			DoubleMatrix2D haps = dspruned.getHaplotype(hap);
 			DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
 			DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, dspruned.getFinalCovariates());
-			LogisticRegressionResult resultX = reg.univariate(y, x);
+			LogisticRegressionResult resultX = reg.multinomial(y, x);
 			
 			int nrRemaining = 1;
 			double devx = resultX.getDeviance();
@@ -889,7 +889,7 @@ public class LRTestHaplotype extends LRTest {
 			
 			int ctr = 0;
 			for(int disease=0;disease<nrDiseases;disease++) {
-				double beta = -resultX.getBeta()[disease][1];
+				double beta = resultX.getBeta()[disease][1];
 				double se = resultX.getStderrs()[disease][1];
 				betasmlelr[disease][ctr] = beta;
 				stderrsmlelr[disease][ctr] = se;
@@ -943,14 +943,14 @@ public class LRTestHaplotype extends LRTest {
 				DoubleMatrix2D intercept = refDs.getIntercept();
 				double[][] y = refDs.getDiseaseStatus();
 				DoubleMatrix2D xprime = DoubleFactory2D.dense.appendColumns(intercept, refDs.getFinalCovariates());
-				LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+				LogisticRegressionResult resultCovars = reg.multinomial(y, xprime);
 				
 				Integer newHapIndex = refDs.getHaplotypeId(hapToRun);
 				Integer newRefHapIndex = refDs.getHaplotypeId(dspruned.getReferenceHaplotype());
 				DoubleMatrix2D haps = refDs.getHaplotype(newHapIndex);
 				DoubleMatrix2D interceptWHaps = DoubleFactory2D.dense.appendColumns(intercept, haps);
 				DoubleMatrix2D x = DoubleFactory2D.dense.appendColumns(interceptWHaps, refDs.getFinalCovariates());
-				LogisticRegressionResult resultX = reg.univariate(y, x);
+				LogisticRegressionResult resultX = reg.multinomial(y, x);
 				
 				int nrRemaining = 1;
 				int nrDiseases = y[0].length;
@@ -962,7 +962,7 @@ public class LRTestHaplotype extends LRTest {
 				
 				for(int disease=0;disease<nrDiseases;disease++) {
 					
-					double beta = -resultX.getBeta()[disease][1];
+					double beta = resultX.getBeta()[disease][1];
 					double se = resultX.getStderrs()[disease][1];
 					betasmlelr[disease][ctr] = beta;
 					stderrsmlelr[disease][ctr] = se;

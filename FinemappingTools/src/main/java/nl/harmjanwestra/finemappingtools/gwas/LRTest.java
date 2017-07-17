@@ -1282,7 +1282,7 @@ public class LRTest {
 
 		DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
 		LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
-		return new Pair<>(reg.univariate(xandy.getRight(), xprime), xprime.columns());
+		return new Pair<>(reg.multinomial(xandy.getRight(), xprime), xprime.columns());
 	}
 
 

@@ -75,7 +75,7 @@ public class LRTestTest {
 
 			System.out.println("Binomial");
 			LogisticRegressionOptimized r = new LogisticRegressionOptimized();
-			LogisticRegressionResult result = r.binomial(y1, x1);
+			//LogisticRegressionResult result = r.binomial(y1, x1);
 
 			System.out.println();
 			System.out.println("Multinomial");

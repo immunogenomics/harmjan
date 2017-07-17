@@ -297,7 +297,7 @@ public class LRTestHaploTestTask {
 
 
 			DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
-			LogisticRegressionResult resultCovars = reg.univariate(y, xprime);
+			LogisticRegressionResult resultCovars = reg.multinomial(y, xprime);
 			if (resultCovars == null) {
 				System.err.println("ERROR: null-model regression did not converge. ");
 //					System.err.println("Variant: " + snp.getChromosome().toString()
@@ -313,11 +313,11 @@ public class LRTestHaploTestTask {
 			}
 			int nrCovars = xprime.columns();
 
-			LogisticRegressionResult resultX = reg.univariate(y, x);
+			LogisticRegressionResult resultX = reg.multinomial(y, x);
 			if (resultX == null) {
 				// try once more with some more iterations
 				LogisticRegressionOptimized reg2 = new LogisticRegressionOptimized(1000);
-				resultX = reg2.univariate(y, x);
+				resultX = reg2.multinomial(y, x);
 				if (resultX == null) {
 					System.err.println("ERROR: did not converge.");
 //					System.err.println("Variant: " + snp.getChromosome().toString()
@@ -345,7 +345,7 @@ public class LRTestHaploTestTask {
 				for (int i = 0; i < alleleIndex.length; i++) {
 					int idx = alleleIndex[i];
 					if (idx != -1) {
-						double beta = -resultX.getBeta()[d][idx];
+						double beta = resultX.getBeta()[d][idx];
 						double se = resultX.getStderrs()[d][idx];
 						betasmlelr[d][ctr] = beta;
 						stderrsmlelr[d][ctr] = se;
