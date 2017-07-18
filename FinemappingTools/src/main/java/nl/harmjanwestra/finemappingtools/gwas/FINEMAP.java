@@ -33,7 +33,7 @@ public class FINEMAP extends LRTest {
 		// region1.k --> prior prob thresholds for k causal variants
 		// e.g.: 0.6 0.3 0.1
 
-		System.out.println("Running GUESS converter...");
+		System.out.println("Running FINEMAP converter...");
 		options.setSplitMultiAllelic(true);
 
 		// read the association file
@@ -150,6 +150,7 @@ rs3 	3.71
 						TextFile zOut = new TextFile(zoutfile, TextFile.W);
 						for (int i = 0; i < sharedResults.length; i++) {
 							AssociationResult r = sharedResults[i];
+
 							SNPFeature snp = r.getSnp();
 							String id = snp.getChromosome().toString() + "_" + snp.getStart() + "_" + snp.getName() + "_" + snp.getAlleles()[0] + "_" + snp.getAlleles()[1];
 							String ln = id + " " + r.getZ();
@@ -176,8 +177,15 @@ rs3 	3.71
 							nrSamples = x.length;
 							for (int j = i + 1; j < sharedVariants.size(); j++) {
 								double[] y = toArray(sharedVariants.get(j));
-								corMat[i][j] = JSci.maths.ArrayMath.correlation(x, y);
-								corMat[j][i] = corMat[i][j];
+								double r = JSci.maths.ArrayMath.correlation(x, y);
+								if (r <= -1d) {
+									r += 1E-9;
+								}
+								if (r >= 1) {
+									r = 1;
+								}
+								corMat[i][j] = r;
+								corMat[j][i] = r;
 							}
 							pb.set(i);
 						}

@@ -75,25 +75,33 @@ public class LRTestTest {
 
 			System.out.println("Binomial");
 			LogisticRegressionOptimized r = new LogisticRegressionOptimized();
-			//LogisticRegressionResult result = r.binomial(y1, x1);
+			r.debug = true;
 
+			LogisticRegressionResult result = r.binomial(y1, x1);
+			printResult(result);
+			System.exit(-1);
 			System.out.println();
 			System.out.println("Multinomial");
 
 			LogisticRegressionResult result2 = r.multinomial(y2, x1);
+			printResult(result2);
 //
-//			double[][] beta = result.getBeta();
-//			double[][] se = result.getStderrs();
-//
-//			for (int i = 0; i < beta.length; i++) {
-//				for (int j = 0; j < beta.length; j++) {
-//					System.out.println(i + "\t" + j + "\t" + beta[i][j] + "\t" + se[i][j]);
-//				}
-//			}
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	public static void printResult(LogisticRegressionResult result2) {
+
+		double[][] beta = result2.getBeta();
+		double[][] se = result2.getStderrs();
+
+		for (int i = 0; i < beta.length; i++) {
+			for (int j = 0; j < beta[i].length; j++) {
+				System.out.println("disease: " + i + "\tcov: " + j + "\t" + beta[i][j] + "\t" + se[i][j]);
+			}
+		}
 	}
 }

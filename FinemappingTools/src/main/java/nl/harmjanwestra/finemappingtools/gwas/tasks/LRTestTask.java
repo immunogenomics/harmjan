@@ -3,17 +3,12 @@ package nl.harmjanwestra.finemappingtools.gwas.tasks;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
+import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.finemappingtools.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.enums.DiseaseStatus;
 import nl.harmjanwestra.utilities.features.SNPFeature;
-import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
-import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
-import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import org.apache.commons.math3.linear.SingularMatrixException;
-import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Triple;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
@@ -21,6 +16,13 @@ import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ChiSquare;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Descriptives;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
+import nl.harmjanwestra.utilities.math.LogisticRegressionOptimizedOrig;
+import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
+import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
+import nl.harmjanwestra.utilities.vcf.VCFVariant;
+import org.apache.commons.math3.linear.SingularMatrixException;
+import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -480,6 +482,7 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					if (options.debug) {
 						System.out.println("xprime size: " + xprime.rows() + "x" + xprime.columns());
 					}
+
 					resultCovars = reg.multinomial(y, xprime);
 				} catch (IndexOutOfBoundsException q) {
 					System.out.println(variant.getId() + "\tcols:" + x.columns());
@@ -496,7 +499,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				}
 
 
-				if (resultCovars == null) {
+				if (snp.getName().equals("rs8136398")) {
+					DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y);
+					resultCovars = reg.multinomial(ytmp, xprime, "/Data/tmp/2017-07-17-meh/data.txt");
 					System.err.println("ERROR: null-model regression did not converge. ");
 					System.err.println("Variant: " + snp.getChromosome().toString()
 							+ "\t" + snp.getStart()
@@ -507,6 +512,20 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					System.err.println(x.rows() + "\t" + x.columns());
 					System.err.println(xprime.rows() + "\t" + xprime.columns());
 					System.err.println("-----");
+
+
+					LogisticRegressionOptimizedOrig rego = new LogisticRegressionOptimizedOrig();
+					double[] y1 = new double[y.length];
+					for (int i = 0; i < y1.length; i++) {
+						y1[i] = y[i][0];
+					}
+					rego.debug = true;
+					rego.univariate(y1, xprime);
+
+					System.exit(-1);
+				}
+
+				if (resultCovars == null) {
 					return null;
 				}
 				nrCovars = xprime.columns();

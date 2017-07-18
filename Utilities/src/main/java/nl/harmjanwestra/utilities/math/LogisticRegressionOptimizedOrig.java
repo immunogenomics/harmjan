@@ -9,13 +9,11 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.jet.stat.Gamma;
-import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
+import nl.harmjanwestra.utilities.legacy.genetica.math.stats.ChiSquare;
 
-import java.io.IOException;
+public class LogisticRegressionOptimizedOrig {
 
-public class LogisticRegressionOptimized {
-
-	int max_iter = 100;
+	int max_iter = 1000;
 	double EPSILON = 1E-6;
 	DoubleMatrix2D xtwx;
 	private double[] g;
@@ -23,18 +21,15 @@ public class LogisticRegressionOptimized {
 	private DoubleMatrix2D pi;
 	private DoubleMatrix2D H;
 
-
-	public boolean debug = false;
-
-	public LogisticRegressionOptimized() {
+	public LogisticRegressionOptimizedOrig() {
 
 	}
 
-	public LogisticRegressionOptimized(int maxiter) {
+	public LogisticRegressionOptimizedOrig(int maxiter) {
 		max_iter = maxiter;
 	}
 
-	public LogisticRegressionOptimized(int maxiter, double epsilon) {
+	public LogisticRegressionOptimizedOrig(int maxiter, double epsilon) {
 		max_iter = maxiter;
 		EPSILON = epsilon;
 	}
@@ -48,180 +43,117 @@ public class LogisticRegressionOptimized {
 	}
 
 
-	public LogisticRegressionResult binomial(double[] y, double[][] x) {
-		if (x.length != y.length) {
-			throw new IllegalArgumentException("Error in logistic regression: length of y does not match length of x");
-		}
-		DoubleMatrix2D xtmp = new DenseDoubleMatrix2D(x);
-		return binomial(y, xtmp);
-	}
+	public boolean debug = false;
 
-	public LogisticRegressionResult binomial(double[] y, DoubleMatrix2D x) {
-		if (x.rows() != y.length) {
-			throw new IllegalArgumentException("Error in logistic regression: length of y does not match length of x");
-		}
-
-		DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y.length, 2);
-		for (int i = 0; i < y.length; i++) {
-			int index = (int) Math.abs(y[i]);
-			ytmp.setQuick(i, index, 1);
-		}
-
-		return mlelr(x, ytmp);
-	}
-
-	public LogisticRegressionResult multinomial(double[][] y, double[][] x) {
-		if (x.length != y.length) {
-			throw new IllegalArgumentException("Error in logistic regression: length of y does not match length of x");
-		}
-		DoubleMatrix2D xtmp = new DenseDoubleMatrix2D(x);
-		DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y);
-
-		return multinomial(ytmp, xtmp);
-	}
-
-	public LogisticRegressionResult multinomial(double[][] y, DoubleMatrix2D xprime) {
-		if (xprime.rows() != y.length) {
-			throw new IllegalArgumentException("Error in logistic regression: length of y does not match length of x");
-		}
-		DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y);
-		return multinomial(ytmp, xprime);
-	}
-
-
-	public LogisticRegressionResult multinomial(DoubleMatrix2D y, DoubleMatrix2D x) {
-		return multinomial(y, x, null);
-	}
-
-	public LogisticRegressionResult multinomial(DoubleMatrix2D y, DoubleMatrix2D x, String output) {
+	public LogisticRegressionResultOrig univariate(DoubleMatrix2D y, DoubleMatrix2D x) {
 		if (x.rows() != y.rows()) {
 			throw new IllegalArgumentException("Error in logistic regression: length of y does not match length of x");
 		}
-
-		DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y.rows(), y.columns() + 1);
-
-//		System.out.println("ytmp: " + ytmp.rows() + "\t" + ytmp.columns());
-		int lastCol = ytmp.columns() - 1;
-
-		if (y.columns() == 1) {
-			for (int i = 0; i < ytmp.rows(); i++) {
-				ytmp.set(i, (int) y.get(i, 0), 1);
-			}
-		} else {
-			for (int i = 0; i < ytmp.rows(); i++) {
-				int nrnull = 0;
-				for (int j = 0; j < y.columns(); j++) {
-					// y[ind][disease1] =0
-					// y[ind][disease2] =0 --> y[i][0] = 1
-
-					// y[ind][disease1] =1
-					// y[ind][disease2] =0 --> y[i][1] = 1
-
-					// y[ind][disease1] =0
-					// y[ind][disease2] =1 --> y[i][2] = 1
-					// y=1 --> y[i][1] = 1
-					double val = y.getQuick(i, j);
-					if (val == 0) {
-						nrnull++;
-					}
-
-					int index = y.columns() - j - 1;
-					// col0 -> col 1 //
-					// col1 -> col 0
-					ytmp.setQuick(i, index, val);
-				}
-				// set first column to 1 if 0 everywhere else (individual is in reference group)
-				if (nrnull == y.columns()) {
-					ytmp.setQuick(i, lastCol, 1);
-				}
-			}
+		int J = y.columns();
+		int N = x.rows();
+		int K = x.columns();
+		double[] n = new double[y.rows()];
+		for (int i = 0; i < y.rows(); i++) {
+			n[i] = 1;
 		}
 
-		debug = false;
-		LogisticRegressionResult r = mlelr(x, ytmp);
-		if (output != null) {
-			System.out.println("Model did not converge.. here is the input: ");
+		return mlelr(J, N, K, n, x, y);
+	}
 
-			System.out.println(y.columns());
-			System.out.println(ytmp.columns());
+	public LogisticRegressionResultOrig univariate(double[][] y, double[][] x) {
+		if (x.length != y.length) {
+			throw new IllegalArgumentException("Error in logistic regression: length of y does not match length of x");
+		}
+		DoubleMatrix2D xtmp = new DenseDoubleMatrix2D(x);
+		DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y);
 
-			debug = true;
+		return univariate(ytmp, xtmp);
+	}
 
-			r = mlelr(x, ytmp);
-			debug = false;
-			for (int i = 0; i < r.getBeta().length; i++) {
-				for (int j = 0; j < r.getBeta()[i].length; j++) {
-					System.out.println(i + "\t" + j + "\tbeta: " + r.getBeta()[i][j] + "\tse: " + r.getStderrs()[i][j]);
-				}
+	public LogisticRegressionResultOrig univariate(double[] y, DoubleMatrix2D x) {
+		if (x.rows() != y.length) {
+			throw new IllegalArgumentException("Error in logistic regression: length of y does not match length of x");
+		}
+		DoubleMatrix2D yreg = new DenseDoubleMatrix2D(x.rows(), 2);
+		for (int i = 0; i < y.length; i++) {
+			if (y[i] > 1 || y[i] < 0) {
+				throw new IllegalArgumentException("Error in univariate logistic regression; unexpected categorical value: " + y[i] + ". Expected 0 or 1");
 			}
+
+			int index = (int) Math.abs(y[i] - 1);
+//			index = (int) Math.abs(y[i]);
+			yreg.setQuick(i, index, 1);
+		}
+
+		LogisticRegressionResultOrig r = univariate(yreg, x);
+		if (debug) {
+
+			double[] b = r.getBeta();
+			for (int i = 0; i < b.length; i++) {
+				System.out.println(b[i] + "\t" + r.getStderrs()[i]);
+			}
+
+			int printrows = 20;
+			System.out.println("X: " + x.rows() + " x " + x.columns());
+			System.out.println("Y: " + yreg.rows() + " x " + yreg.columns());
+			System.out.println("Y: " + y.length);
+			System.out.println();
 			System.out.println("Deviance: " + r.getDeviance());
-
-
-			int printrows = 10;
-			if (y.rows() < 100) {
-				printrows = y.rows();
-			}
-			try {
-				TextFile outputf = new TextFile(output, TextFile.W);
-				for (int i = 0; i < y.rows(); i++) {
-					String ln = "" + i;
-					String lnout = "";
-					for (int j = 0; j < ytmp.columns(); j++) {
-						ln += "\t" + ytmp.getQuick(i, j);
-					}
-					ln += "\torig";
-					for (int j = 0; j < y.columns(); j++) {
-						ln += "\t" + y.getQuick(i, j);
-						if (j == 0) {
-							lnout += y.getQuick(i, j);
-						} else {
-							lnout += "\t" + y.getQuick(i, j);
-						}
-					}
-					ln += "\torigX:\t";
-					for (int j = 1; j < x.columns(); j++) {
-						ln += "\t" + x.getQuick(i, j);
-//						if (j > 0) {
-						lnout += "\t" + x.getQuick(i, j);
-//						}
-					}
-					outputf.writeln(lnout);
-					if (i < printrows) {
-						System.out.println(ln);
-					}
+			for (int i = 0; i < y.length; i++) {
+				String ln = "" + i;
+//				String lnout = "";
+				for (int j = 0; j < yreg.columns(); j++) {
+					ln += "\t" + yreg.getQuick(i, j);
 				}
-				outputf.close();
+				ln += "\torig";
 
-				return null;
-			} catch (IOException e) {
-				e.printStackTrace();
+				ln += "\t" + y[i];
 
+				ln += "\torigX:\t";
+				for (int j = 0; j < x.columns(); j++) {
+					ln += "\t" + x.getQuick(i, j);
+//						if (j > 0) {
+//					lnout += "\t" + x.getQuick(i, j);
+//						}
+				}
+				if (i < printrows) {
+					System.out.println(ln);
+				}
 			}
-
 		}
 
 
 		return r;
 	}
 
-
-	public LogisticRegressionResult mlelr(
-			DoubleMatrix2D X,
-			DoubleMatrix2D Y) {
-
-		double[] n = new double[Y.rows()];
-		for (int i = 0; i < Y.rows(); i++) {
-			n[i] = 1;
+	public LogisticRegressionResultOrig univariate(double[] y, double[][] x) {
+		if (x.length != y.length) {
+			throw new IllegalArgumentException("Error in logistic regression: length of y does not match length of x");
 		}
+		DoubleMatrix2D xtmp = new DenseDoubleMatrix2D(x);
+		DoubleMatrix2D yreg = new DenseDoubleMatrix2D(x.length, 2);
+
+		for (int i = 0; i < y.length; i++) {
+			if (y[i] > 1 || y[i] < 0) {
+				throw new IllegalArgumentException("Error in univariate logistic regression; unexpected categorical value: " + y[i] + ". Expected 0 or 1");
+			}
+			yreg.setQuick(i, (int) y[i], 1);
+
+		}
+		return univariate(yreg, xtmp);
+	}
+
+	public LogisticRegressionResultOrig mlelr(int J,
+											  int N,
+											  int K,
+											  double[] n,
+											  DoubleMatrix2D X,
+											  DoubleMatrix2D Y) {
 
 		int i, j, k;
 
 		int iter = 0;
 		boolean converged = false;
-
-		int N = X.rows();
-		int K = X.columns();
-		int J = Y.columns();
 
 		int kJMinusOne = K * (J - 1);
 		// start values for beta can be determined by linear regression of log(pij/piJ) on design matrix x
@@ -281,8 +213,11 @@ public class LogisticRegressionOptimized {
 			converged = true;
 			for (k = 0; k < kJMinusOne; k++) {
 				double beta0k = beta0[k];
-				double delta = Math.abs(beta[k] - beta0k);
-				if (Double.isNaN(delta) || Double.isInfinite(delta) || delta > EPSILON * Math.abs(beta0k)) {
+//				diff[k] = Math.abs(beta[k] - beta0k);
+//				diffb[k] = true;
+
+
+				if (Math.abs(beta[k] - beta0k) > EPSILON * Math.abs(beta0k)) {
 					converged = false;
 //					diffb[k] = false;
 					break;
@@ -305,6 +240,7 @@ public class LogisticRegressionOptimized {
 			}
 		}
 
+
 //		for (int q = 0; q < diffb.length; q++) {
 //
 //			double[] bliep = new double[X.rows()];
@@ -317,8 +253,11 @@ public class LogisticRegressionOptimized {
 //
 //		}
 
-
-		// chi2 tests for significance
+		double[] sigprms = new double[kJMinusOne];
+		double[] stderrs = new double[kJMinusOne];
+		double[] wald = new double[kJMinusOne];
+		if (converged || debug) {
+			// chi2 tests for significance
 //			double chi1 = 2 * (loglike[0] - loglike0);
 //			int df1 = (K * (J - 1)) - J - 1;
 //			double chiTest = 1 - ChiSquare.getP(df1, chi1);
@@ -327,58 +266,22 @@ public class LogisticRegressionOptimized {
 //			int df2 = (N * (J - 1)) - (K * (J - 1));
 //			double chiTest2 = 1 - ChiSquare.getP(df2, chi2);
 
-//			double[] sigprms = new double[kJMinusOne];
-		double[] stderrs = new double[kJMinusOne];
-		double[] wald = new double[kJMinusOne];
-		for (i = 0; i < kJMinusOne; i++) {
-			double xtwxii = xtwx.get(i, i);
-			if (xtwxii > 0) {
-				stderrs[i] = Math.sqrt(xtwxii);
-				wald[i] = Math.pow(beta[i] / stderrs[i], 2);
-//					sigprms[i] = 1 - ChiSquare.getP(1, wald[i]);
-			} else {
-//					sigprms[i] = -1;
+			if (debug) {
+				System.out.println("Converged: " + converged);
 			}
-		}
-
-		int nrDiseases = Y.columns() - 1;
-		int nrPredictors = X.columns();
-//			System.out.println(outputYdim + " x " + outputXdim);
-		double[][] outputbeta = new double[nrDiseases][nrPredictors];
-		double[][] outputse = new double[nrDiseases][nrPredictors];
-
-		// output is inverted for some reason..
-		int ctr = 0;
-
-		if (debug) {
-			System.out.println(beta.length);
-			System.out.println(X.columns());
-		}
-//			System.out.println(betasPerDisase);
-		for (int disease = 0; disease < nrDiseases; disease++) {
-			// order:
-			// 2 disases -> disease0 --> 2 - 0 - 1 = 1
-			//           -> disease1 --> 2 - 1 - 1 = 0
-			for (int col = 0; col < nrPredictors; col++) {
-//					System.out.println(disease + "\t" + col);
-				outputbeta[disease][col] = beta[ctr];
-				outputse[disease][col] = stderrs[ctr];
-				ctr++;
+			for (i = 0; i < kJMinusOne; i++) {
+				double xtwxii = xtwx.get(i, i);
+				if (xtwxii > 0) {
+					stderrs[i] = Math.sqrt(xtwxii);
+					wald[i] = Math.pow(beta[i] / stderrs[i], 2);
+					sigprms[i] = 1 - ChiSquare.getP(1, wald[i]);
+				} else {
+					sigprms[i] = -1;
+				}
 			}
-		}
-		if (debug) {
-			System.out.println("before parsing:");
-			for (int q = 0; q < beta.length; q++) {
-				System.out.println(q + "\t" + beta[q] + "\t" + stderrs[q]);
-			}
-			System.out.println();
-			return new LogisticRegressionResult(outputbeta, outputse, deviance[0]);
-		}
-		if (converged) {
-			return new LogisticRegressionResult(outputbeta, outputse, deviance[0]);
-//			return null;
+			// VariantID	N	MAF	DevianceNull	DfNull	DevianceGeno	DfAlt	Beta(Genotype)	SE(Genotype)	OR	OR-Hi	OR-Lo	Pval	#NAME?
+			return new LogisticRegressionResultOrig(beta, stderrs, sigprms, deviance[0], loglike, loglike0);
 		} else {
-
 			return null;
 		}
 	}

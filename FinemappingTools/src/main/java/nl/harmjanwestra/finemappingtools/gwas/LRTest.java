@@ -126,7 +126,6 @@ public class LRTest {
 
 		String[] args4 = new String[]{
 				"--gwas",
-				"--haplotype",
 				"-c", "/Data/tmp/tnfaip3/covarmerged.txtmergedCovariates.txt",
 				"-d", "/Data/tmp/tnfaip3/covarmerged.txtmergeddisease.txt",
 				"-f", "/Data/tmp/tnfaip3/covarmerged.txtmergedfam.fam",
@@ -146,7 +145,6 @@ public class LRTest {
 
 		String[] args5 = new String[]{
 				"--gwas",
-				"--exhaustive",
 				"-c", "/Data/tmp/sh2b3fix/covarmerged.txtmergedCovariates.txt",
 				"-d", "/Data/tmp/sh2b3fix/covarmerged.txtmergeddisease.txt",
 				"-f", "/Data/tmp/sh2b3fix/covarmerged.txtmergedfam.fam",
@@ -155,6 +153,20 @@ public class LRTest {
 				"-t", "4",
 				"-q", "0.3",
 				"-o", "/Data/tmp/sh2b3fix/testout-origcode.txt"
+		};
+
+		String[] args6 = new String[]{
+				"--gwas",
+				"-c", "/Data/tmp/2017-07-17-meh/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
+				"-d", "/Data/tmp/2017-07-17-meh/2016-03-11-T1D-diseaseStatusWithPseudos.txt",
+				"-f", "/Data/tmp/2017-07-17-meh/T1D-recode-maf0005-ICRegions-samplenamefix-pseudo.vcf.gz-filtered-merged.fam",
+				"-e", "/Data/tmp/2017-07-17-meh/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
+				"-i", "/Data/tmp/2017-07-17-meh/select.vcf",
+				"-r", "/Data/tmp/sh2b3fix/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed",
+				"-t", "1",
+				"-q", "0.3",
+				"--limittosamplesinfam",
+				"-o", "/Data/tmp/2017-07-17-meh/testout-tool2.txt"
 		};
 
 //		args5 = new String[]{
@@ -169,7 +181,7 @@ public class LRTest {
 //				"-o", "/Data/tmp/metatest/testout.txt"
 //		};
 
-		LRTestOptions options = new LRTestOptions(args5);
+		LRTestOptions options = new LRTestOptions(args6);
 		options.debug = false;
 		options.collinearitythreshold = 0.90;
 		options.splitMultiAllelicIntoMultipleVariants = true;
@@ -408,15 +420,19 @@ public class LRTest {
 			System.out.println("Problem with matching samples...");
 			return false;
 		} else {
-			DiseaseStatus[][] finalDiseaseStatus = new DiseaseStatus[sampleToIntGenotypes.size()][0];
+
+			// count number of diseases
+			DiseaseStatus[][] finalDiseaseStatus = new DiseaseStatus[sampleToIntGenotypes.size()][];
 			DoubleMatrix2D finalCovariates = new DenseDoubleMatrix2D(sampleToIntGenotypes.size(), covariates.columns());
 
+			// write a list of samples used in this analysis...
 			TextFile sampleListOut = new TextFile(options.getOutputdir() + "samplelist.txt", TextFile.W);
 			System.out.println(options.getOutputdir() + "samplelist.txt");
 			for (int i = 0; i < finalCovariates.rows(); i++) {
 				sampleListOut.writeln(samplesIntersect.get(i));
 			}
 			sampleListOut.close();
+
 
 			System.out.println("Final covariate array size: " + finalCovariates.rows());
 			System.out.println("Final disease status array size: " + finalDiseaseStatus.length);
@@ -426,19 +442,8 @@ public class LRTest {
 			int minstatus = Integer.MAX_VALUE;
 			int maxstatus = -Integer.MAX_VALUE;
 
-			// count number of diseases
-			{
-				String sample = samplesFromCovariates.get(0);
-				Integer id = sampleToIntGenotypes.get(sample);
-				if (id == null) {
-					id = sampleToIntGenotypes.get(altToSample.get(sample));
-				}
-				if (id != null) {
-					finalDiseaseStatus[id] = diseaseStatus.get(sample);
-					nrDiseases = finalDiseaseStatus[0].length;
-				}
-			}
 
+			System.out.println("Number of diseases: " + nrDiseases);
 			int[] nrCases = new int[nrDiseases];
 			int[] nrControls = new int[nrDiseases];
 			int[] nrUnknown = new int[nrDiseases];
@@ -455,13 +460,13 @@ public class LRTest {
 				}
 				if (id != null) {
 					finalDiseaseStatus[id] = diseaseStatus.get(sample);
-					for (int i = 0; i < finalDiseaseStatus[id].length; i++) {
-						if (finalDiseaseStatus[id][i].equals(DiseaseStatus.CASE)) {
-							nrCases[i]++;
-						} else if (finalDiseaseStatus[id][i].equals(DiseaseStatus.CONTROL)) {
-							nrControls[i]++;
+					for (int disease = 0; disease < finalDiseaseStatus[id].length; disease++) {
+						if (finalDiseaseStatus[id][disease].equals(DiseaseStatus.CASE)) {
+							nrCases[disease]++;
+						} else if (finalDiseaseStatus[id][disease].equals(DiseaseStatus.CONTROL)) {
+							nrControls[disease]++;
 						} else {
-							nrUnknown[i]++;
+							nrUnknown[disease]++;
 						}
 					}
 
@@ -472,13 +477,25 @@ public class LRTest {
 				}
 			}
 
+			// check whether there are any nulls
+			boolean run = true;
+			for (int i = 0; i < finalDiseaseStatus.length; i++) {
+				if (finalDiseaseStatus[i] == null) {
+					System.err.println(samplesIntersect.get(i) + " has not has it's disease status set for some reason..");
+					run = false;
+				}
+			}
+			if (!run) {
+				System.exit(-1);
+			}
+
 //			for (int id = 0; id < finalDiseaseStatus.length; id++) {
 //				System.out.println(id + "\t" + finalDiseaseStatus[id] + "\t" + finalDiseaseStatus[id].getNumber());
 //			}
 //			System.exit(-1);
 			System.out.println("Disease\tNrCases\tNrControls\tnrUnknown");
 			for (int i = 0; i < nrDiseases; i++) {
-				System.out.println(i + "\t" + nrCases[i] + "\t" + nrControls[i] + "\t" + nrUnknown);
+				System.out.println(i + "\t" + nrCases[i] + "\t" + nrControls[i] + "\t" + nrUnknown[i]);
 				if (nrCases[i] == 0 || nrControls[i] == 0) {
 					System.out.println("There are no case/control status labels for your selected samples, for disease: " + i);
 					return false;
