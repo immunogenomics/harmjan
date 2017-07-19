@@ -499,9 +499,23 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 				}
 
 
-				if (snp.getName().equals("rs8136398")) {
+				if (options.debug) {
+					// debug shizzle
 					DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y);
-					resultCovars = reg.multinomial(ytmp, xprime, "/Data/tmp/2017-07-17-meh/data.txt");
+					reg.debug = true;
+					resultCovars = reg.multinomial(ytmp, xprime, options.getOutputdir() + "debugdata-" + snp.getName() + ".txt");
+
+					LogisticRegressionOptimizedOrig rego = new LogisticRegressionOptimizedOrig();
+					double[] y1 = new double[y.length];
+					for (int i = 0; i < y1.length; i++) {
+						y1[i] = y[i][0];
+					}
+					rego.debug = true;
+					rego.univariate(y1, xprime);
+					System.exit(-1);
+				}
+
+				if (resultCovars == null) {
 					System.err.println("ERROR: null-model regression did not converge. ");
 					System.err.println("Variant: " + snp.getChromosome().toString()
 							+ "\t" + snp.getStart()
@@ -512,20 +526,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 					System.err.println(x.rows() + "\t" + x.columns());
 					System.err.println(xprime.rows() + "\t" + xprime.columns());
 					System.err.println("-----");
-
-
-					LogisticRegressionOptimizedOrig rego = new LogisticRegressionOptimizedOrig();
-					double[] y1 = new double[y.length];
-					for (int i = 0; i < y1.length; i++) {
-						y1[i] = y[i][0];
-					}
-					rego.debug = true;
-					rego.univariate(y1, xprime);
-
-					System.exit(-1);
-				}
-
-				if (resultCovars == null) {
 					return null;
 				}
 				nrCovars = xprime.columns();

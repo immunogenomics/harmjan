@@ -137,18 +137,23 @@ public class LogisticRegressionOptimized {
 			}
 		}
 
-		debug = false;
+
 		LogisticRegressionResult r = mlelr(x, ytmp);
-		if (output != null) {
+		if (y.columns() == 1) {
+			// TODO: find out what is wrong here...
+			// flip beta's
+			double[][] betas = r.getBeta();
+			for (int i = 0; i < betas[0].length; i++) {
+				betas[0][i] *= -1;
+			}
+		}
+		if (output != null || debug) {
 			System.out.println("Model did not converge.. here is the input: ");
 
 			System.out.println(y.columns());
 			System.out.println(ytmp.columns());
 
-			debug = true;
-
 			r = mlelr(x, ytmp);
-			debug = false;
 			for (int i = 0; i < r.getBeta().length; i++) {
 				for (int j = 0; j < r.getBeta()[i].length; j++) {
 					System.out.println(i + "\t" + j + "\tbeta: " + r.getBeta()[i][j] + "\tse: " + r.getStderrs()[i][j]);
@@ -162,7 +167,11 @@ public class LogisticRegressionOptimized {
 				printrows = y.rows();
 			}
 			try {
-				TextFile outputf = new TextFile(output, TextFile.W);
+
+				TextFile outputf = null;
+				if (output != null) {
+					outputf = new TextFile(output, TextFile.W);
+				}
 				for (int i = 0; i < y.rows(); i++) {
 					String ln = "" + i;
 					String lnout = "";
@@ -185,19 +194,21 @@ public class LogisticRegressionOptimized {
 						lnout += "\t" + x.getQuick(i, j);
 //						}
 					}
-					outputf.writeln(lnout);
+					if (outputf != null) {
+						outputf.writeln(lnout);
+					}
 					if (i < printrows) {
 						System.out.println(ln);
 					}
 				}
-				outputf.close();
+				if (outputf != null) {
+					outputf.close();
+				}
 
 				return null;
 			} catch (IOException e) {
 				e.printStackTrace();
-
 			}
-
 		}
 
 
@@ -376,9 +387,7 @@ public class LogisticRegressionOptimized {
 		}
 		if (converged) {
 			return new LogisticRegressionResult(outputbeta, outputse, deviance[0]);
-//			return null;
 		} else {
-
 			return null;
 		}
 	}
