@@ -183,7 +183,7 @@ public class LRTest {
 //		};
 
 		LRTestOptions options = new LRTestOptions(args6);
-		options.debug = true;
+//		options.debug = true;
 		options.collinearitythreshold = 0.90;
 		options.splitMultiAllelicIntoMultipleVariants = true;
 
