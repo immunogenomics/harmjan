@@ -72,7 +72,7 @@ public class FINEMAP extends LRTest {
 			masterOut = new TextFile(new java.io.File(masterfile), TextFile.MODE.APPEND);
 		} else {
 			masterOut = new TextFile(masterfile, TextFile.W);
-			masterOut.writeln("z;\tld;\tsnp;\tconfig;\tk;\tlog;\tn-ind");
+			masterOut.writeln("z;ld;snp;config;k;log;n-ind");
 		}
 
 		if (exService == null) {

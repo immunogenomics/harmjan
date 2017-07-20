@@ -1,5 +1,6 @@
 package nl.harmjanwestra.finemappingtools.gwas;
 
+import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
@@ -182,7 +183,7 @@ public class LRTest {
 //		};
 
 		LRTestOptions options = new LRTestOptions(args6);
-		options.debug = false;
+		options.debug = true;
 		options.collinearitythreshold = 0.90;
 		options.splitMultiAllelicIntoMultipleVariants = true;
 
@@ -496,13 +497,55 @@ public class LRTest {
 			System.out.println("Disease\tNrCases\tNrControls\tnrUnknown");
 			for (int i = 0; i < nrDiseases; i++) {
 				System.out.println(i + "\t" + nrCases[i] + "\t" + nrControls[i] + "\t" + nrUnknown[i]);
-				if (nrCases[i] == 0 || nrControls[i] == 0) {
-					System.out.println("There are no case/control status labels for your selected samples, for disease: " + i);
+				if (nrCases[i] <= 1 || nrControls[i] <= 1) {
+					System.out.println("There are not enough case/control status labels for your selected samples, for disease: " + i);
 					return false;
 				}
 			}
 
-			System.out.println(nrTotal + " with covariates");
+			System.out.println(nrTotal + " samples with covariates");
+			System.out.println("Checking covariate variance");
+
+			System.out.println("Cov\tVariance\tNrZeroMeasurements");
+			ArrayList<Integer> selectCovariates = new ArrayList<>();
+			for (int c = 0; c < finalCovariates.columns(); c++) {
+				DoubleMatrix1D covariate = finalCovariates.viewColumn(c);
+				double[] covariateArr = covariate.toArray();
+				int nrzero = 0;
+				for (int i = 0; i < covariateArr.length; i++) {
+					if (covariateArr[i] == 0) {
+						nrzero++;
+					}
+				}
+
+				double variance = JSci.maths.ArrayMath.variance(covariateArr);
+				if (nrzero >= (finalCovariates.rows() - 2)) {
+					System.err.println("Warning: covariate " + c + " has " + nrzero + " zero measurements. Covariate will be removed.");
+				} else {
+					selectCovariates.add(c);
+				}
+				System.out.println(c + "\t" + variance + "\t" + nrzero);
+			}
+
+			DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
+			int[] selectedCovariatesArr = Primitives.toPrimitiveArr(selectCovariates.toArray(new Integer[0]));
+			finalCovariates = dda.subMatrix(finalCovariates, 0, finalCovariates.rows() - 1, selectedCovariatesArr);
+			System.out.println(finalCovariates.columns() + " covariates remain for " + finalCovariates.rows() + " samples.");
+
+//			System.out.println("Checking for samples with zero covariate variance");
+//			ArrayList<Integer> remainingSamples = new ArrayList<>();
+//			for (int r = 0; r < finalCovariates.rows(); r++) {
+//				DoubleMatrix1D sample = finalCovariates.viewRow(r);
+//				double[] sampleArr = sample.toArray();
+//				double variance = JSci.maths.ArrayMath.variance(sampleArr);
+//				if (variance == 0) {
+//
+//					System.err.println("Warning: sample " + r + "\t" + samplesIntersect.get(r) + " has zero variance on covariates: " + Strings.concat(sampleArr, Strings.tab));
+//				} else {
+//					remainingSamples.add(r);
+//				}
+//			}
+//			System.out.println(remainingSamples.size() + " samples remain.");
 
 			sampleAnnotation = new SampleAnnotation();
 //			sampleAnnotation.setIndividualGender(individualGender);
@@ -511,7 +554,7 @@ public class LRTest {
 
 			ArrayList<Individual> individuals = new ArrayList<>();
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
-				Individual ind = new Individual(null, null, finalDiseaseStatus[i]);
+				Individual ind = new Individual(samplesIntersect.get(i), null, finalDiseaseStatus[i]);
 				individuals.add(ind);
 			}
 			sampleAnnotation.setIndividuals(individuals);

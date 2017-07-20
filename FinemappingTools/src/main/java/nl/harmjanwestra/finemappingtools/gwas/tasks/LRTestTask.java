@@ -3,7 +3,6 @@ package nl.harmjanwestra.finemappingtools.gwas.tasks;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
-import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import nl.harmjanwestra.finemappingtools.gwas.CLI.LRTestOptions;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.enums.Chromosome;
@@ -17,7 +16,6 @@ import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Descriptives;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 import nl.harmjanwestra.utilities.math.LogisticRegressionOptimized;
-import nl.harmjanwestra.utilities.math.LogisticRegressionOptimizedOrig;
 import nl.harmjanwestra.utilities.math.LogisticRegressionResult;
 import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -207,13 +205,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 	// remove variables with zero variance and perfect correlation
 	public Pair<DoubleMatrix2D, boolean[]> removeCollinearVariables(DoubleMatrix2D mat) {
 
-
-//		System.out.println(mat.columns() + " columns to start with...");
-		// TODO: calculate variance inflation factor using OLS
 		OLSMultipleLinearRegression olsMultipleLinearRegression = new OLSMultipleLinearRegression();
 		// skip first column, because it is the intercept
 		ArrayList<Integer> columns = new ArrayList<>();
-
 
 		// check mean and variance
 		for (int i = 1; i < mat.columns(); i++) {
@@ -285,11 +279,6 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 								double[] col = mat.viewColumn(c).toArray();
 								System.out.println(c + "\t" + Descriptives.mean(col) + "\t" + Descriptives.variance(col));
 							}
-
-//						TextFile tf = new TextFile(options.getOutputdir() + variant.getId() + "-data.txt", TextFile.W);
-//
-//
-//						tf.close();
 
 							System.exit(-1);
 						} else {
@@ -501,17 +490,17 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 
 				if (options.debug) {
 					// debug shizzle
-					DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y);
-					reg.debug = true;
-					resultCovars = reg.multinomial(ytmp, xprime, options.getOutputdir() + "debugdata-" + snp.getName() + ".txt");
 
-					LogisticRegressionOptimizedOrig rego = new LogisticRegressionOptimizedOrig();
-					double[] y1 = new double[y.length];
-					for (int i = 0; i < y1.length; i++) {
-						y1[i] = y[i][0];
-					}
-					rego.debug = true;
-					rego.univariate(y1, xprime);
+					reg.debug = true;
+					reg.printIters = true;
+					reg.flipCoding = false;
+					reg.output = options.getOutputdir() + "debugdata-" + snp.getName() + ".txt";
+					resultCovars = reg.multinomial(y, xprime);
+
+					System.out.println("Flipping signs");
+					reg.flipCoding = true;
+					resultCovars = reg.multinomial(y, xprime);
+
 					System.exit(-1);
 				}
 
