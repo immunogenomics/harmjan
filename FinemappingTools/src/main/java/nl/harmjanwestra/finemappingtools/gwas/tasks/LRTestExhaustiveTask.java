@@ -189,7 +189,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 			LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 			if (resultCovars == null) {
 				DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(remainingCovariateColumns.toArray(new Integer[0])));
-				resultCovars = reg.univariate(y, xprime);
+				resultCovars = reg.multinomial(y, xprime);
 				if (resultCovars == null) {
 					System.err.println("ERROR: null-model regression did not converge. ");
 					System.err.println(x.rows() + "\t" + x.columns());
@@ -203,7 +203,7 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 			// perform testNormal on full model
 			// remove genotypes and run testNormal on reduced model
 			
-			LogisticRegressionResult resultX = reg.univariate(y, x);
+			LogisticRegressionResult resultX = reg.multinomial(y, x);
 			if (resultX == null) {
 				System.err.println("ERROR: did not converge. ");
 				VCFVariant variant1 = variants.get(snpid1);
@@ -250,15 +250,10 @@ public class LRTestExhaustiveTask implements Callable<AssociationResultPairwise>
 				for (int i = 0; i < alleleIndex.length; i++) {
 					int idx = alleleIndex[i];
 					if (idx != -1) {
-						double beta = -resultX.getBeta()[disease][idx];
+						double beta = resultX.getBeta()[disease][idx];
 						double se = resultX.getStderrs()[disease][idx];
 						betasmlelr[disease][ctr] = beta;
 						stderrsmlelr[disease][ctr] = se;
-						
-						double OR = Math.exp(beta);
-						double orLow = Math.exp(beta - 1.96 * se);
-						double orHigh = Math.exp(beta + 1.96 * se);
-						
 						ctr++;
 					}
 				}

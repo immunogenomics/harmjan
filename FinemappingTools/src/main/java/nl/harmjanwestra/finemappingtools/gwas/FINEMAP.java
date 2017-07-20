@@ -8,6 +8,7 @@ import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.legacy.genetica.console.ProgressBar;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.*;
 
 /**
  * Created by hwestra on 7/12/17.
@@ -33,7 +35,7 @@ public class FINEMAP extends LRTest {
 		// region1.k --> prior prob thresholds for k causal variants
 		// e.g.: 0.6 0.3 0.1
 
-		System.out.println("Running GUESS converter...");
+		System.out.println("Running FINEMAP converter...");
 		options.setSplitMultiAllelic(true);
 
 		// read the association file
@@ -70,7 +72,13 @@ public class FINEMAP extends LRTest {
 			masterOut = new TextFile(new java.io.File(masterfile), TextFile.MODE.APPEND);
 		} else {
 			masterOut = new TextFile(masterfile, TextFile.W);
-			masterOut.writeln("z;\tld;\tsnp;\tconfig;\tk;\tlog;\tn-ind");
+			masterOut.writeln("z;ld;snp;config;k;log;n-ind");
+		}
+
+		if (exService == null) {
+			exService = Executors.newWorkStealingPool(options.getNrThreads());
+
+
 		}
 
 		for (Feature region : regions) {
@@ -150,6 +158,7 @@ rs3 	3.71
 						TextFile zOut = new TextFile(zoutfile, TextFile.W);
 						for (int i = 0; i < sharedResults.length; i++) {
 							AssociationResult r = sharedResults[i];
+
 							SNPFeature snp = r.getSnp();
 							String id = snp.getChromosome().toString() + "_" + snp.getStart() + "_" + snp.getName() + "_" + snp.getAlleles()[0] + "_" + snp.getAlleles()[1];
 							String ln = id + " " + r.getZ();
@@ -167,21 +176,45 @@ rs3 	3.71
 
 
 						double[][] corMat = new double[sharedVariants.size()][sharedVariants.size()];
-						int nrSamples = 0;
-						System.out.println("Calculating correlations for: " + sharedVariants.size() + " variants");
-						ProgressBar pb = new ProgressBar(sharedVariants.size());
+
+
+						int nrSamples = sampleAnnotation.getSampleDiseaseStatus().length;
+
+						CompletionService<Pair<Integer, double[]>> service = new ExecutorCompletionService<Pair<Integer, double[]>>(exService);
 						for (int i = 0; i < sharedVariants.size(); i++) {
 							corMat[i][i] = 1d;
-							double[] x = toArray(sharedVariants.get(i));
-							nrSamples = x.length;
-							for (int j = i + 1; j < sharedVariants.size(); j++) {
-								double[] y = toArray(sharedVariants.get(j));
-								corMat[i][j] = JSci.maths.ArrayMath.correlation(x, y);
-								corMat[j][i] = corMat[i][j];
+							CorrelationTask t = new CorrelationTask(sharedVariants, i);
+							service.submit(t);
+						}
+
+						System.out.println("Calculating correlations for: " + sharedVariants.size() + " variants");
+						ProgressBar pb = new ProgressBar(sharedVariants.size());
+						int returned = 0;
+						while (returned < sharedVariants.size()) {
+							try {
+								Future<Pair<Integer, double[]>> future = service.take();
+								Pair<Integer, double[]> vars = future.get();
+								int i = vars.getLeft();
+								corMat[i] = vars.getRight();
+
+								returned++;
+								pb.set(returned);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							} catch (ExecutionException e) {
+								e.printStackTrace();
 							}
-							pb.set(i);
 						}
 						pb.close();
+
+						System.out.println("Completing corrmat");
+						for (int i = 0; i < corMat.length; i++) {
+							for (int j = i + 1; j < corMat.length; j++) {
+								corMat[j][i] = corMat[i][j];
+							}
+							corMat[i][i] = 1d;
+						}
+
 
 						String ldoutfile = options.getOutputdir() + "-" + region.toString() + ".ld";
 						TextFile ldout = new TextFile(ldoutfile, TextFile.W);
@@ -208,12 +241,12 @@ rs3 	3.71
 
 						// region1.z; 	region1.ld; 	region1.snp; 	region1.config; 	region1.k; 	region1.log; 	5363
 						String masterln = zoutfile
-								+ ";\t" + ldoutfile
-								+ ";\t" + snpoutfile
-								+ ";\t" + configfile
-								+ ";\t" + kfileout
-								+ ";\t" + logfileout
-								+ ";\t" + nrSamples;
+								+ ";" + ldoutfile
+								+ ";" + snpoutfile
+								+ ";" + configfile
+								+ ";" + kfileout
+								+ ";" + logfileout
+								+ ";" + nrSamples;
 						masterOut.writeln(masterln);
 						System.out.println("Done processing region: " + region.toString());
 						System.out.println();
@@ -221,14 +254,48 @@ rs3 	3.71
 				}
 			}
 		}
+
+		if (exService != null) {
+			exService.shutdown();
+		}
 		masterOut.close();
 	}
 
-	private double[] toArray(VCFVariant vcfVariant) {
-		DoubleMatrix2D mat = vcfVariant.getDosagesAsMatrix2D();
-		double[] output = mat.viewColumn(0).toArray();
-		return output;
+	private class CorrelationTask implements Callable<Pair<Integer, double[]>> {
+
+		private int i = 0;
+		ArrayList<VCFVariant> sharedVariants;
+
+		public CorrelationTask(ArrayList<VCFVariant> sharedV, int i) {
+			this.i = i;
+			this.sharedVariants = sharedV;
+		}
+
+		@Override
+		public Pair<Integer, double[]> call() throws Exception {
+			double[] x = toArray(sharedVariants.get(i));
+			double[] output = new double[sharedVariants.size()];
+			for (int j = i + 1; j < sharedVariants.size(); j++) {
+				double[] y = toArray(sharedVariants.get(j));
+				double r = JSci.maths.ArrayMath.correlation(x, y);
+				if (r <= -1d) {
+					r = -1d;
+				}
+				if (r >= 1) {
+					r = 1d;
+				}
+				output[j] = r;
+			}
+			return new Pair<Integer, double[]>(i, output);
+		}
+
+		private double[] toArray(VCFVariant vcfVariant) {
+			DoubleMatrix2D mat = vcfVariant.getDosagesAsMatrix2D();
+			double[] output = mat.viewColumn(0).toArray();
+			return output;
+		}
 	}
+
 
 	private ArrayList<AssociationResult> getRegionAssocResults(ArrayList<AssociationResult> assocResults, Feature region) {
 		ArrayList<AssociationResult> output = new ArrayList<>();
