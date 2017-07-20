@@ -239,6 +239,7 @@ public class LogisticRegressionOptimized {
 			// convert to matrix format
 
 //			return new LogisticRegressionResult(beta, stderrs, sigprms, deviance[0], loglike, loglike0);
+			// TODO: this is broken!!
 			return null;
 		} else {
 			return null;

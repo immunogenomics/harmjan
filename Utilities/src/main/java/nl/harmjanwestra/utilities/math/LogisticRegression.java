@@ -147,6 +147,7 @@ public class LogisticRegression {
 				}
 			}
 			// VariantID	N	MAF	DevianceNull	DfNull	DevianceGeno	DfAlt	Beta(Genotype)	SE(Genotype)	OR	OR-Hi	OR-Lo	Pval	#NAME?
+			// TODO: this is broken!!
 			return null;
 			//return new LogisticRegressionResult(beta, stderrs, sigprms, deviance[0], loglike, loglike0);
 		} else {
