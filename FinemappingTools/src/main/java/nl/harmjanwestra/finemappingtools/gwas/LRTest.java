@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  * Created by hwestra on 11/7/15.
  */
 public class LRTest {
-
+	
 	protected ExecutorService exService;
 	protected SampleAnnotation sampleAnnotation;
 	LRTestOptions options;
@@ -57,28 +57,28 @@ public class LRTest {
 	private ArrayList<Feature> bedRegions = null;
 	private boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
 	private ProgressBar progressBar;
-
-
+	
+	
 	public LRTest(LRTestOptions options) throws IOException {
 		this.options = options;
-
-
+		
+		
 		if (!initialize()) {
 			System.err.println("Something went wrong during initialization.. Please check the input.");
 			System.exit(-1);
 		}
-
+		
 		switch (options.getAnalysisType()) {
 			case CONDITIONAL:
 				System.out.println("Will perform conditional logistic regression");
 				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
-
+				
 				exService = Executors.newWorkStealingPool(options.getNrThreads());
 				testConditional();
 				exService.shutdown();
 				break;
 			case EXHAUSTIVE:
-
+				
 				System.out.println("Will perform exhaustive pairwise logistic regression");
 				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
 				exService = Executors.newWorkStealingPool(options.getNrThreads());
@@ -86,7 +86,7 @@ public class LRTest {
 				exService.shutdown();
 				break;
 			case HAPLOTYPE:
-
+				
 				System.out.println("Will perform haplotype logistic regression");
 				break;
 			case MULTINOMIAL:
@@ -97,19 +97,19 @@ public class LRTest {
 				exService.shutdown();
 				break;
 			case GUESS:
-
+				
 				System.out.println("Will convert data for GUESS");
 				break;
 			case FINEMAP:
 				System.out.println("Will convert data for FINEMAP");
-
+				
 				break;
 			case STATS:
 				System.out.println("Will calculate variant stats");
-
+				
 				break;
 			case NORMAL:
-
+				
 				System.out.println("Will perform normal logistic regression");
 				System.out.println("Setting up threadpool with: " + options.getNrThreads() + " threads..");
 				exService = Executors.newWorkStealingPool(options.getNrThreads());
@@ -117,14 +117,14 @@ public class LRTest {
 				exService.shutdown();
 				break;
 		}
-
+		
 		// System.exit(0);
 		System.out.println("Done.");
 	}
-
+	
 	public static void main(String[] args) {
-
-
+		
+		
 		String[] args4 = new String[]{
 				"--gwas",
 				"-c", "/Data/tmp/tnfaip3/covarmerged.txtmergedCovariates.txt",
@@ -143,7 +143,7 @@ public class LRTest {
 //		double p = ZScores.betaToP(-0.072988183, 0.052305814, 26136);
 //		System.out.println(p);
 //		System.exit(-1);
-
+		
 		String[] args5 = new String[]{
 				"--gwas",
 				"-c", "/Data/tmp/sh2b3fix/covarmerged.txtmergedCovariates.txt",
@@ -155,7 +155,7 @@ public class LRTest {
 				"-q", "0.3",
 				"-o", "/Data/tmp/sh2b3fix/testout-origcode.txt"
 		};
-
+		
 		String[] args6 = new String[]{
 				"--gwas",
 				"-c", "/Data/tmp/2017-07-17-meh/2016-03-11-T1D-covarmerged.txtmergedCovariates-withPseudos.txt",
@@ -169,6 +169,22 @@ public class LRTest {
 				"--limittosamplesinfam",
 				"-o", "/Data/tmp/2017-07-17-meh/testout-tool2.txt"
 		};
+		
+		String[] args7 = new String[]{
+				"--gwas",
+				"--multinomial",
+				"-d", "C:\\Data\\tmp\\2017-07-20-ToolTest\\multi\\diseaseStatusMulti.txt",
+				"-c", "C:\\Data\\tmp\\2017-07-20-ToolTest\\multi\\meta-merged-covar.txt",
+//				"-d", "C:\\Data\\tmp\\2017-07-20-ToolTest\\multi\\meta-merged-disease.txt",
+				"-f", "C:\\Data\\tmp\\2017-07-20-ToolTest\\multi\\meta-merged.fam",
+//				"-e", "/Data/tmp/2017-07-17-meh/T1D-recode-regionsfiltered-allelesfiltered-samplenamefix-pseudo.vcf.gz-parents.txt",
+				"-i", "C:\\Data\\tmp\\2017-07-20-ToolTest\\multi\\select.vcf",
+				"-r", "C:\\Data\\tmp\\2017-07-20-ToolTest\\multi\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed",
+				"-t", "1",
+				"-q", "0.3",
+				"--limittosamplesinfam",
+				"-o", "c:/Data/tmp/2017-07-20-ToolTest/multi/testout-tool2.txt"
+		};
 
 //		args5 = new String[]{
 //				"--gwas",
@@ -181,21 +197,21 @@ public class LRTest {
 //				"-q", "0.3",
 //				"-o", "/Data/tmp/metatest/testout.txt"
 //		};
-
-		LRTestOptions options = new LRTestOptions(args6);
-//		options.debug = true;
-		options.collinearitythreshold = 0.90;
+		
+		LRTestOptions options = new LRTestOptions(args7);
+		options.debug = true;
+		options.collinearitythreshold = 0.98;
 		options.splitMultiAllelicIntoMultipleVariants = true;
-
-
+		
+		
 		try {
 			new LRTest(options);
-
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public static void waitForEnter(String message, Object... args) {
 		Console c = System.console();
 		if (c != null) {
@@ -206,13 +222,13 @@ public class LRTest {
 			c.readLine();
 		}
 	}
-
-
+	
+	
 	public void testNormal() throws IOException {
-
-
+		
+		
 		ArrayList<VCFVariant> variants = readVariants(options.getOutputdir() + "variantlog.txt", bedRegions);
-
+		
 		// keep a list of genotypes to condition on
 		int iter = 0;
 		ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional = new ArrayList<>();
@@ -220,10 +236,10 @@ public class LRTest {
 //		ArrayList<String> conditionalVariantIds = new ArrayList<String>();
 		AssociationFile associationFile = new AssociationFile();
 		String header = associationFile.getHeader();
-
+		
 		submitted = 0;
 		returned = 0;
-
+		
 		int alleleOffsetGenotypes = 0;
 		highestLog10p = 0;
 		LogisticRegressionResult nullmodelresult = null;
@@ -233,8 +249,8 @@ public class LRTest {
 			nrNullColumns = nullmodelresultpair.getRight();
 			nullmodelresult = nullmodelresultpair.getLeft();
 		}
-
-
+		
+		
 		CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
 		for (int i = 0; i < variants.size(); i++) {
 			VCFVariant variant = variants.get(i);
@@ -246,16 +262,16 @@ public class LRTest {
 					alleleOffsetGenotypes,
 					sampleAnnotation,
 					options);
-
+			
 			if (nullmodelresult != null) {
 				task.setResultNullmodel(nullmodelresult, nrNullColumns);
 			}
-
+			
 			jobHandler.submit(task);
-
+			
 			submitted++;
 		}
-
+		
 		TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iter + ".txt", TextFile.W);
 		System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iter + ".txt");
 		pvalout.writeln(header);
@@ -263,21 +279,21 @@ public class LRTest {
 		clearQueue(null, pvalout, iter, variants, jobHandler, null);
 		progressBar.close();
 		pvalout.close();
-
+		
 	}
-
+	
 	protected boolean initialize() throws IOException {
 		System.out.println("Assoc: " + options.getVcf());
 		System.out.println("Covar: " + options.getCovariateFile());
 		System.out.println("Disease: " + options.getDiseaseStatusFile());
 		System.out.println("Out: " + options.getOutputdir());
-
+		
 		boolean multinomial = false;
-
+		
 		if (options.getAnalysisType().equals(LRTestOptions.ANALYSIS.MULTINOMIAL)) {
 			multinomial = true;
 		}
-
+		
 		// index covariate samples to vcf samples
 		HashSet<String> excludeTheseSamples = new HashSet<String>();
 		if (options.getSamplesToExclude() != null) {
@@ -287,7 +303,7 @@ public class LRTest {
 			System.out.println("Loaded: " + excludeTheseSamples.size() + " samples to exclude from " + options.getSamplesToExclude());
 		}
 		HashMap<String, DiseaseStatus[]> diseaseStatus = new HashMap<String, DiseaseStatus[]>();
-
+		
 		// load disease status
 		TextFile tf = new TextFile(options.getDiseaseStatusFile(), TextFile.R);
 		String[] elems = tf.readLineElems(Strings.tab);
@@ -312,19 +328,19 @@ public class LRTest {
 			elems = tf.readLineElems(Strings.tab);
 		}
 		tf.close();
-
+		
 		System.out.println(diseaseStatus.size() + " disease status samples loaded for " + nrDiseases);
 		if (nrDiseases < 2 && multinomial) {
 			System.err.println("Selected multinomial analysis, but only " + nrDiseases + " found in disease status file.");
 			return false;
 		}
-
+		
 		// load samples from vcf path
 		String loadvcf = options.getVcf();
 		if (loadvcf.contains("CHR")) {
 			loadvcf = loadvcf.replaceAll("CHR", "1");
 		}
-
+		
 		VCFGenotypeData data = new VCFGenotypeData(loadvcf);
 		ArrayList<String> vcfSamples = data.getSamples();
 		HashSet<String> vcfSamplesWithDiseaseStatus = new HashSet<String>();
@@ -335,19 +351,19 @@ public class LRTest {
 				}
 			}
 		}
-
+		
 		// remove related samples based on fam path if any
 		if (options.getFamfile() != null) {
 			if (excludeTheseSamples == null) {
 				excludeTheseSamples = new HashSet<String>();
 			}
-
+			
 			if (options.isTestallsamplesinfam()) {
 				excludeSamplesNotInFAMFile(excludeTheseSamples, vcfSamplesWithDiseaseStatus);
 			} else {
 				determineSamplesToRemoveFromFam(excludeTheseSamples, vcfSamplesWithDiseaseStatus);
 			}
-
+			
 			HashSet<String> tmpVCFSamples = new HashSet<String>();
 			for (String s : vcfSamplesWithDiseaseStatus) {
 				if (!excludeTheseSamples.contains(s)) {
@@ -357,7 +373,7 @@ public class LRTest {
 			vcfSamplesWithDiseaseStatus = tmpVCFSamples;
 			System.out.println(vcfSamplesWithDiseaseStatus.size() + " samples left after filtering relateds");
 		}
-
+		
 		// assume rows are samples and columns are covariates
 		// this loads only samples that also have a disease status loaded..
 		HashSet<String> covariatesToInclude = null;
@@ -368,17 +384,17 @@ public class LRTest {
 			excl.close();
 			System.out.println(covariatesToInclude + " covariates selected from: " + options.getCovariatesToInclude());
 		}
-
+		
 		// load covariates
 		DoubleMatrixDataset<String, String> covariates = DoubleMatrixDataset.loadSubsetOfTextDoubleData(options.getCovariateFile(), "\t", vcfSamplesWithDiseaseStatus, covariatesToInclude);
 		System.out.println("Covariate matrix: " + covariates.rows() + " samples " + covariates.columns() + " covariates");
-
+		
 		LinkedHashMap<String, Integer> covariateSampleHash = covariates.getHashRows();
 		sampleToIntGenotypes = new HashMap<String, Integer>();
 		int ctr = 0;
 		genotypeSamplesWithCovariatesAndDiseaseStatus = new boolean[vcfSamples.size()];
 		int vcfSampleCtr = 0;
-
+		
 		// index covariate samples
 		HashSet<String> alternatecovariateSamples = new HashSet<String>();
 		Set<String> keys = covariateSampleHash.keySet();
@@ -387,7 +403,7 @@ public class LRTest {
 			alternatecovariateSamples.add(sample + "_" + sample); // sometimes covariates have a weird samplename
 			altToSample.put(sample, sample + "_" + sample);
 		}
-
+		
 		// index the final list of samples
 		ArrayList<String> samplesIntersect = new ArrayList<>();
 		for (String sample : vcfSamples) {
@@ -399,7 +415,7 @@ public class LRTest {
 			}
 			vcfSampleCtr++;
 		}
-
+		
 		// load bed regions, if any
 		if (options.getBedfile() != null) {
 			BedFileReader reader = new BedFileReader();
@@ -407,25 +423,25 @@ public class LRTest {
 			System.out.println(bedRegions.size() + " regions loaded from: " + options.getBedfile());
 			Collections.sort(bedRegions, new FeatureComparator(false));
 		}
-
+		
 		// load list of variants to limit upon if any
 		if (options.getSnpLimitFile() != null) {
 			TextFile excl = new TextFile(options.getSnpLimitFile(), TextFile.R);
 			snpLimit = (HashSet<String>) excl.readAsSet(0, TextFile.tab);
 			excl.close();
 		}
-
-
+		
+		
 		System.out.println(sampleToIntGenotypes.size() + " samples with disease status, covariates and genotypes");
 		if (sampleToIntGenotypes.size() == 0) {
 			System.out.println("Problem with matching samples...");
 			return false;
 		} else {
-
+			
 			// count number of diseases
 			DiseaseStatus[][] finalDiseaseStatus = new DiseaseStatus[sampleToIntGenotypes.size()][];
 			DoubleMatrix2D finalCovariates = new DenseDoubleMatrix2D(sampleToIntGenotypes.size(), covariates.columns());
-
+			
 			// write a list of samples used in this analysis...
 			TextFile sampleListOut = new TextFile(options.getOutputdir() + "samplelist.txt", TextFile.W);
 			System.out.println(options.getOutputdir() + "samplelist.txt");
@@ -433,28 +449,28 @@ public class LRTest {
 				sampleListOut.writeln(samplesIntersect.get(i));
 			}
 			sampleListOut.close();
-
-
+			
+			
 			System.out.println("Final covariate array size: " + finalCovariates.rows());
 			System.out.println("Final disease status array size: " + finalDiseaseStatus.length);
-
+			
 			// reorder the covariates to match the genotyped samples
 			ArrayList<String> samplesFromCovariates = covariates.getRowObjects();
 			int minstatus = Integer.MAX_VALUE;
 			int maxstatus = -Integer.MAX_VALUE;
-
-
+			
+			
 			System.out.println("Number of diseases: " + nrDiseases);
 			int[] nrCases = new int[nrDiseases];
 			int[] nrControls = new int[nrDiseases];
 			int[] nrUnknown = new int[nrDiseases];
 			int nrTotal = 0;
-
+			
 			// make final list of covariates
 			// remap disease status to 0 and 1
 			for (int sid = 0; sid < samplesFromCovariates.size(); sid++) {
 				String sample = samplesFromCovariates.get(sid);
-
+				
 				Integer id = sampleToIntGenotypes.get(sample);
 				if (id == null) {
 					id = sampleToIntGenotypes.get(altToSample.get(sample));
@@ -470,14 +486,14 @@ public class LRTest {
 							nrUnknown[disease]++;
 						}
 					}
-
+					
 					for (int col = 0; col < covariates.columns(); col++) {
 						finalCovariates.setQuick(id, col, covariates.getElement(sid, col));
 					}
 					nrTotal++;
 				}
 			}
-
+			
 			// check whether there are any nulls
 			boolean run = true;
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
@@ -502,10 +518,10 @@ public class LRTest {
 					return false;
 				}
 			}
-
+			
 			System.out.println(nrTotal + " samples with covariates");
 			System.out.println("Checking covariate variance");
-
+			
 			System.out.println("Cov\tVariance\tNrZeroMeasurements");
 			ArrayList<Integer> selectCovariates = new ArrayList<>();
 			for (int c = 0; c < finalCovariates.columns(); c++) {
@@ -517,7 +533,7 @@ public class LRTest {
 						nrzero++;
 					}
 				}
-
+				
 				double variance = JSci.maths.ArrayMath.variance(covariateArr);
 				if (nrzero >= (finalCovariates.rows() - 2)) {
 					System.err.println("Warning: covariate " + c + " has " + nrzero + " zero measurements. Covariate will be removed.");
@@ -526,7 +542,7 @@ public class LRTest {
 				}
 				System.out.println(c + "\t" + variance + "\t" + nrzero);
 			}
-
+			
 			DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 			int[] selectedCovariatesArr = Primitives.toPrimitiveArr(selectCovariates.toArray(new Integer[0]));
 			finalCovariates = dda.subMatrix(finalCovariates, 0, finalCovariates.rows() - 1, selectedCovariatesArr);
@@ -546,53 +562,53 @@ public class LRTest {
 //				}
 //			}
 //			System.out.println(remainingSamples.size() + " samples remain.");
-
+			
 			sampleAnnotation = new SampleAnnotation();
 //			sampleAnnotation.setIndividualGender(individualGender);
 			sampleAnnotation.setCovariateNames(covariates.getColObjects());
 			sampleAnnotation.setCovariates(finalCovariates);
-
+			
 			ArrayList<Individual> individuals = new ArrayList<>();
 			for (int i = 0; i < finalDiseaseStatus.length; i++) {
 				Individual ind = new Individual(samplesIntersect.get(i), null, finalDiseaseStatus[i]);
 				individuals.add(ind);
 			}
 			sampleAnnotation.setIndividuals(individuals);
-
+			
 			return true;
 		}
 	}
-
+	
 	private void excludeSamplesNotInFAMFile(HashSet<String> excludeTheseSamples, HashSet<String> vcfSamplesWithDiseaseStatus) throws IOException {
-
+		
 		PlinkFamFile famfile = new PlinkFamFile(options.getFamfile());
 		ArrayList<Individual> samples = famfile.getSamples();
 		ArrayList<String> samplesHash = new ArrayList<>();
 		for (int i = 0; i < samples.size(); i++) {
 			samplesHash.add(samples.get(i).getName());
 		}
-
+		
 		for (String sample : vcfSamplesWithDiseaseStatus) {
 			if (!samplesHash.contains(sample)) {
 				excludeTheseSamples.add(sample);
 			}
 		}
-
+		
 		for (String sample : samplesHash) {
 			if (!vcfSamplesWithDiseaseStatus.contains(sample)) {
 				System.out.println(sample + "\t not present in my data?");
 			}
 		}
 	}
-
+	
 	protected Triple<ArrayList<HashMap<Feature, String>>, Integer, ArrayList<Feature>> parseConditionalFile() throws IOException {
 		System.out.println("Parsing: " + options.getConditional());
 		ArrayList<HashMap<Feature, String>> variantsToConditionOn = new ArrayList<>();
-
-
+		
+		
 		// you can provide one file for each iteration.
 		String conditionalFile = options.getConditional();
-
+		
 		// determine number of iterations in file
 		TextFile tf = new TextFile(conditionalFile, TextFile.R);
 		String[] head = tf.readLineElems(TextFile.tab);
@@ -604,7 +620,7 @@ public class LRTest {
 		}
 		String[] elems = tf.readLineElems(TextFile.tab);
 		int maxiter = 0;
-
+		
 		while (elems != null) {
 			if (elems.length >= 2) {
 				Integer iter = Integer.parseInt(elems[1]);
@@ -620,11 +636,11 @@ public class LRTest {
 		for (int q = 0; q < maxiter + 1; q++) {
 			variantsToConditionOn.add(new HashMap<>());
 		}
-
+		
 		System.out.println("Max iter in file: " + maxiter);
 		options.setMaxIter(nrMaxIter);
 		System.out.println("Setting max iter: " + nrMaxIter);
-
+		
 		tf.open();
 		tf.readLine();
 		elems = tf.readLineElems(TextFile.tab);
@@ -643,7 +659,7 @@ public class LRTest {
 				String varStr = elems[2];
 				String[] varStrElems = varStr.split("_");
 				varStr = Chromosome.parseChr(varStrElems[0]).toString() + "_" + varStrElems[1] + "_" + varStrElems[2];
-
+				
 				HashMap<Feature, String> toAdd = variantsToConditionOn.get(iter);
 				toAdd.put(reg, varStr);
 			}
@@ -654,17 +670,17 @@ public class LRTest {
 		regionsToTest.addAll(regionsInFile);
 		return new Triple<ArrayList<HashMap<Feature, String>>, Integer, ArrayList<Feature>>(variantsToConditionOn, nrMaxIter, regionsToTest);
 	}
-
+	
 	public void testConditional() throws IOException {
-
-
+		
+		
 		if (options.getConditional() != null) {
 			System.out.println("Using " + options.getConditional() + " for conditional analysis..");
 		}
-
+		
 		AssociationFile associationFile = new AssociationFile();
 		String header = associationFile.getHeader();
-
+		
 		ArrayList<Feature> regionsToTest = bedRegions;
 		ArrayList<HashMap<Feature, String>> variantsToConditionOn = null;
 		int nrMaxIter = 0;
@@ -673,33 +689,33 @@ public class LRTest {
 			variantsToConditionOn = conditionalInput.getLeft();
 			nrMaxIter = conditionalInput.getMiddle();
 			regionsToTest = conditionalInput.getRight();
-
+			
 		}
-
+		
 		ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt", regionsToTest);
 		CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler = new ExecutorCompletionService<Triple<String, AssociationResult, VCFVariant>>(exService);
 		ArrayList<AssociationResult> assocResults = new ArrayList<>();
-
-
+		
+		
 		int variantCtr = 0;
 		submitted = 0;
 		returned = 0;
 		highestLog10p = 0;
-
+		
 		if (options.getConditional() != null) {
 			System.out.println("Running conditional, starting at iter: " + options.getStartIter());
 		}
-
+		
 		if (options.getStartIter() == null || options.getStartIter() == 0) {
 			System.out.println("Iteration " + 0 + " starting. Model: y ~ SNP + covar.");
 			System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + 0 + ".txt");
 			TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + 0 + ".txt", TextFile.W);
 			TextFile logout = new TextFile(options.getOutputdir() + "gwas-" + 0 + "-log.txt.gz", TextFile.W);
 			pvalout.writeln(header);
-
+			
 			for (VCFVariant variant : allVariants) {
 				ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional = new ArrayList<>();
-
+				
 				LRTestTask task = new LRTestTask(variant,
 						0,
 						conditional,
@@ -709,7 +725,7 @@ public class LRTest {
 				jobHandler.submit(task);
 				submitted++;
 			}
-
+			
 			// clean up the queue
 			progressBar = new ProgressBar(submitted);
 			clearQueue(logout, pvalout, 0, null, jobHandler, assocResults);
@@ -717,15 +733,15 @@ public class LRTest {
 			logout.close();
 			progressBar.close();
 		}
-
-
+		
+		
 		System.out.println("Initial mapping done. Now performing conditional analysis");
 		// run conditional per region..
 		// get iter0 results
 		// get best associated variant in region
 		// testNormal conditional on best variant
-
-
+		
+		
 		HashSet<Feature> visitedRegions = new HashSet<Feature>();
 		for (VCFVariant v : allVariants) {
 			for (int f = 0; f < bedRegions.size(); f++) {
@@ -734,24 +750,24 @@ public class LRTest {
 				}
 			}
 		}
-
-
+		
+		
 		System.out.println(visitedRegions.size() + " regions are present in association output.");
 		if (visitedRegions.isEmpty()) {
 			System.out.println("No more work to do");
-
+			
 		} else {
 			ArrayList<Feature> remainingRegions = new ArrayList<>();
-
-
+			
+			
 			if (variantsToConditionOn != null) {
-
+				
 				HashSet<Feature> regionsToCondition = new HashSet<Feature>();
 				for (int q = 0; q < variantsToConditionOn.size(); q++) {
 					regionsToCondition.addAll(variantsToConditionOn.get(q).keySet());
 				}
 				System.out.println(regionsToCondition.size() + " total regions to run conditional analysis.");
-
+				
 				HashSet<Feature> regionsOnChr = new HashSet<Feature>();
 				for (VCFVariant variant : allVariants) {
 					for (Feature f : regionsToCondition) {
@@ -762,55 +778,55 @@ public class LRTest {
 				}
 				remainingRegions.addAll(regionsOnChr);
 				System.out.println(remainingRegions.size() + " regions remaining after filtering for variants");
-
-
+				
+				
 			}
-
+			
 			if (variantsToConditionOn == null) {
 				remainingRegions.addAll(visitedRegions);
 				nrMaxIter = options.getMaxIter();
 			}
-
+			
 			System.out.println("Total number of iterations to run: " + nrMaxIter);
-
-
+			
+			
 			ArrayList<ArrayList<VCFVariant>> conditionalVariants = new ArrayList<>();
 			for (int i = 0; i < remainingRegions.size(); i++) {
 				conditionalVariants.add(new ArrayList<>());
 			}
-
+			
 			TextFile modelsout = new TextFile(options.getOutputdir() + "gwas-conditional-models.txt", TextFile.W);
 			modelsout.writeln("Region\tIter\tModel");
 			TextFile topvariantsout = new TextFile(options.getOutputdir() + "gwas-topvariants.txt", TextFile.W);
 			topvariantsout.writeln("Region\tIter\tVariant\tPval");
-
+			
 			int startiter = 1;
 			if (options.getStartIter() > 0 && variantsToConditionOn != null) {
 				startiter = options.getStartIter();
 			}
-
+			
 			int iteration = startiter;
 			for (iteration = startiter; iteration < nrMaxIter; iteration++) {
-
+				
 				System.out.println("Output will be written here: " + options.getOutputdir() + "gwas-" + iteration + ".txt");
 				TextFile pvalout = new TextFile(options.getOutputdir() + "gwas-" + iteration + ".txt", TextFile.W);
-
-
+				
+				
 				pvalout.writeln(header);
-
+				
 				// start new result array
 				ArrayList<AssociationResult> assocResultsIter = new ArrayList<>();
 				submitted = 0;
-
+				
 				for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
 					boolean submitregion = true;
 					System.out.println("Running region: " + remainingRegions.get(regionId).toString());
-
+					
 					// get variants in region
 					ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
-
+					
 					VCFVariant bestVariantLastIter = null;
-
+					
 					if (variantsToConditionOn != null) {
 						HashMap<Feature, String> regionVars = variantsToConditionOn.get(iteration - 1);
 						if (regionVars.get(remainingRegions.get(regionId)) == null) {
@@ -850,11 +866,11 @@ public class LRTest {
 						bestVariantLastIter = bestAssocLastIter.getLeft();
 						topvariantsout.writeln(remainingRegions.get(regionId).toString() + "\t" + (iteration - 1) + "\t" + bestVariantLastIter.getChr() + "_" + bestVariantLastIter.getPos() + "_" + bestVariantLastIter.getId() + "\t" + bestAssocLastIter.getRight().getLog10Pval());
 					}
-
-
+					
+					
 					// get conditional variants for this region
 					if (submitregion) {
-
+						
 						ArrayList<VCFVariant> conditionalVariantsForRegion = conditionalVariants.get(regionId);
 						if (conditionalVariantsForRegion == null) {
 							conditionalVariantsForRegion = new ArrayList<>();
@@ -879,7 +895,7 @@ public class LRTest {
 							alleleOffsetGenotypes += variant.getAlleles().length - 1;
 						}
 						modelsout.writeln(remainingRegions.get(regionId).toString() + "\t" + iteration + "\t" + Strings.concat(modelvariants, Strings.semicolon));
-
+						
 						for (int v = 0; v < variantsInRegion.size(); v++) {
 							// throw into a threads
 							VCFVariant variant = variantsInRegion.get(v);
@@ -889,13 +905,13 @@ public class LRTest {
 									alleleOffsetGenotypes,
 									sampleAnnotation,
 									options);
-
+							
 							jobHandler.submit(task);
 							submitted++;
 						}
 					}
 				}
-
+				
 				progressBar = new ProgressBar(submitted);
 				clearQueue(null, pvalout, iteration, null, jobHandler, assocResultsIter);
 				assocResults = assocResultsIter;
@@ -903,13 +919,13 @@ public class LRTest {
 				progressBar.close();
 				System.out.println("Done");
 			}
-
+			
 			for (int regionId = 0; regionId < remainingRegions.size(); regionId++) {
 				ArrayList<VCFVariant> variantsInRegion = filterVariantsByRegion(allVariants, remainingRegions.get(regionId));
 				// get variants in region
 				Pair<VCFVariant, AssociationResult> bestAssocLastIter = null;
-
-
+				
+				
 				if (variantsToConditionOn != null) {
 					VCFVariant bestVariantLastIter = null;
 //					int iteration = nrMaxIter;
@@ -926,7 +942,7 @@ public class LRTest {
 
 
 //					bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion, variantToConditionOn);
-
+						
 						String variant = variantsToConditionOn.get(nrMaxIter - 1).get(remainingRegions.get(regionId));
 						bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion, variant);
 						if (bestVariantLastIter == null) {
@@ -934,7 +950,7 @@ public class LRTest {
 							System.exit(-1);
 						}
 					}
-
+					
 				} else {
 					bestAssocLastIter = getBestAssocForRegion(assocResults, remainingRegions.get(regionId), variantsInRegion, null);
 				}
@@ -947,7 +963,7 @@ public class LRTest {
 			topvariantsout.close();
 		}
 	}
-
+	
 	private VCFVariant getVariant(int iteration, ArrayList<HashMap<Feature, String>> variantsToConditionOn, int regionId, ArrayList<Feature> remainingRegions, ArrayList<VCFVariant> variantsInRegion) {
 		HashMap<Feature, String> regionVars = variantsToConditionOn.get(iteration - 1);
 		String variantToConditionOn = regionVars.get(remainingRegions.get(regionId));
@@ -961,15 +977,15 @@ public class LRTest {
 		}
 		return variantToSelect;
 	}
-
+	
 	public ArrayList<Feature> getRegions(String bedfile) throws IOException {
 		BedFileReader reader = new BedFileReader();
 		return reader.readAsList(bedfile);
 	}
-
+	
 	public ArrayList<VCFVariant> readVariants(String logfile, ArrayList<Feature> regions) throws IOException {
 		VariantLoader loader = new VariantLoader();
-
+		
 		ArrayList<VCFVariant> allVariants = loader.load(logfile, regions, options, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation, exService);
 		if (options.splitMultiAllelicIntoMultipleVariants) {
 			if (options.debug) {
@@ -997,21 +1013,21 @@ public class LRTest {
 			}
 			allVariants = tmpVars;
 		}
-
+		
 		return allVariants;
 	}
-
+	
 	public void testExhaustivePairwise() throws IOException {
 		System.out.println("Will perform exhaustive pairwise analysis");
-
+		
 		// get a list of variants for the region
 		HashMap<Feature, ArrayList<VCFVariant>> variantsInRegions = new HashMap<Feature, ArrayList<VCFVariant>>();
 		HashSet<Feature> availableRegions = new HashSet<Feature>();
-
-
+		
+		
 		ArrayList<VCFVariant> allVariants = readVariants(options.getOutputdir() + "variantlog.txt", bedRegions);
-
-
+		
+		
 		if (allVariants.isEmpty()) {
 			System.out.println("Sorry. No work.");
 		} else {
@@ -1029,7 +1045,7 @@ public class LRTest {
 					}
 				}
 			}
-
+			
 			// combinatorial madness!
 			if (availableRegions.isEmpty() || variantsInRegions.isEmpty()) {
 				// print some fancy error message;
@@ -1037,7 +1053,7 @@ public class LRTest {
 			} else {
 				System.out.println(availableRegions.size() + " regions to query.");
 				CompletionService<AssociationResultPairwise> jobHandler = new ExecutorCompletionService<AssociationResultPairwise>(exService);
-
+				
 				LogisticRegressionResult nullmodelresult = null;
 				Integer nrNullColumns = null;
 				if (options.assumeNoMissingData) {
@@ -1048,7 +1064,7 @@ public class LRTest {
 					nrNullColumns = nullmodelresultpair.getRight();
 					nullmodelresult = nullmodelresultpair.getLeft();
 				}
-
+				
 				System.out.println("Submitting jobs");
 				int submitted = 0;
 				for (Feature region : availableRegions) {
@@ -1067,17 +1083,17 @@ public class LRTest {
 							}
 							jobHandler.submit(lrtet);
 							submitted++;
-
+							
 						}
 					}
 				}
-
+				
 				System.out.println("Submitted a total of " + submitted + " jobs");
 				ProgressBar pb = new ProgressBar(submitted);
 				int returned = 0;
 				TextFile pvalOut = new TextFile(options.getOutputdir() + "pairwise.txt.gz", TextFile.W);
 				AssociationFilePairwise assocFile = new AssociationFilePairwise();
-
+				
 				pvalOut.writeln(assocFile.getHeader());
 				while (returned < submitted) {
 					try {
@@ -1103,14 +1119,14 @@ public class LRTest {
 				pb.close();
 			}
 		}
-
+		
 	}
-
+	
 	private Pair<VCFVariant, AssociationResult> getBestAssocForRegion(ArrayList<AssociationResult> assocResults,
 																	  Feature region,
 																	  ArrayList<VCFVariant> variantsInRegion,
 																	  String variantQuery) {
-
+		
 		AssociationResult topResult = null;
 		if (variantQuery != null) {
 			for (AssociationResult r : assocResults) {
@@ -1124,7 +1140,7 @@ public class LRTest {
 		} else {
 			for (AssociationResult r : assocResults) {
 				if (r.getSnp().overlaps(region)) {
-
+					
 					if (topResult == null) {
 						topResult = r;
 					} else {
@@ -1135,30 +1151,30 @@ public class LRTest {
 				}
 			}
 		}
-
-
+		
+		
 		// get the variant belonging to this assoc result
 		if (topResult != null) {
 			for (VCFVariant v : variantsInRegion) {
 				if (v.asFeature().overlaps(topResult.getSnp())) {
 					String alleles1 = Strings.concat(v.getAlleles(), Strings.comma);
 					String alleles2 = Strings.concat(topResult.getSnp().getAlleles(), Strings.comma);
-
+					
 					if (v.getId().equals(topResult.getSnp().getName()) && alleles1.equals(alleles2)) {
 						return new Pair<VCFVariant, AssociationResult>(v, topResult);
 					}
 				}
 			}
 		}
-
+		
 		return null;
 	}
-
+	
 	private ArrayList<VCFVariant> filterVariantsByRegion(ArrayList<VCFVariant> variants, Feature region) {
 		ArrayList<VCFVariant> output = variants.stream().filter(v -> v.asFeature().overlaps(region)).collect(Collectors.toCollection(ArrayList::new));
 		return output;
 	}
-
+	
 	private void clearQueue(TextFile logout, TextFile pvalout,
 							int iter, ArrayList<VCFVariant> variants,
 							CompletionService<Triple<String, AssociationResult, VCFVariant>> jobHandler,
@@ -1181,7 +1197,7 @@ public class LRTest {
 							if (p > highestLog10p) {
 								highestLog10p = p;
 							}
-
+							
 							if (options.testMultiAllelicVariantsIndependently && variant.getNrAlleles() > 2) {
 								AssociationResult[] subresults = assoc.getSubresults();
 								for (AssociationResult r : subresults) {
@@ -1190,8 +1206,8 @@ public class LRTest {
 							} else {
 								pvalout.writeln(assoc.toString());
 							}
-
-
+							
+							
 							if (associationResults != null) {
 								associationResults.add(assoc);
 							}
@@ -1199,7 +1215,7 @@ public class LRTest {
 								variants.add(variant);
 							}
 						}
-
+						
 					}
 				}
 				returned++;
@@ -1207,7 +1223,7 @@ public class LRTest {
 					progressBar.iterate();
 				}
 //				System.out.print(returned + "/" + submitted);
-
+			
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
@@ -1218,21 +1234,21 @@ public class LRTest {
 		returned = 0;
 		submitted = 0;
 	}
-
+	
 	private ArrayList<Pair<String, Triple<String, String, String>>> getTrios(String famfile) throws IOException {
 		System.out.println("Loading trios from FAM path: " + famfile);
 		ArrayList<Pair<String, Triple<String, String, String>>> output = new ArrayList<>();
 		TextFile tf = new TextFile(famfile, TextFile.R);
 		String[] elems = tf.readLineElems(Strings.whitespace);
 		while (elems != null) {
-
+			
 			if (elems.length >= 4) {
 				String family = elems[0];
-
+				
 				String kid = elems[1];
 				String dad = elems[2];
 				String mom = elems[3];
-
+				
 				if (!dad.equals("0") && !mom.equals("0")) {
 					Integer control = Integer.parseInt(elems[5]);
 					if (control.equals(2)) {
@@ -1248,18 +1264,18 @@ public class LRTest {
 		System.out.println(output.size() + " trios found in FAM path");
 		return output;
 	}
-
+	
 	public void determineSamplesToRemoveFromFam(HashSet<String> samplesToRemove, HashSet<String> samplesWithGenotypeAndDiseaseStatus) throws IOException {
-
+		
 		// get the trios (only trios where kid is a case)
 		ArrayList<Pair<String, Triple<String, String, String>>> famData = getTrios(options.getFamfile()); // format: familyname<kid, mom, dad>
-
+		
 		HashSet<String> visitedFamilies = new HashSet<String>();
 		if (famData.size() > 0) {
-
+			
 			for (Pair<String, Triple<String, String, String>> p : famData) {
 				Triple<String, String, String> trio = p.getRight();
-
+				
 				String fam = p.getLeft();
 				String kid = trio.getLeft();
 				if (visitedFamilies.contains(fam)) {
@@ -1281,51 +1297,51 @@ public class LRTest {
 						String altMom = mom + "_" + mom;
 						samplesToRemove.add(altDad);
 						samplesToRemove.add(dad);
-
+						
 						samplesToRemove.add(mom);
 						samplesToRemove.add(altMom);
 					}
 				}
 			}
-
+			
 			System.out.println(samplesToRemove.size() + " samples to remove using FAM path");
 		}
-
+		
 	}
-
+	
 	public Pair<LogisticRegressionResult, Integer> getNullModel(VCFVariant variant,
 																ArrayList<Pair<VCFVariant, Triple<int[], boolean[], Integer>>> conditional,
 																int firstColumnToRemove,
 																int lastColumnToRemove) {
 		// get a random variant
 		// prepare the matrix
-
+		
 		// generate pseudocontrol genotypes
 		LRTestTask lrt = new LRTestTask(sampleAnnotation);
 		Pair<DoubleMatrix2D, double[][]> xandy = lrt.prepareMatrices(
 				variant,
 				conditional
 		);
-
+		
 		// remove collinear variables and prune
 		Pair<DoubleMatrix2D, boolean[]> pruned = lrt.removeCollinearVariables(xandy.getLeft());
-
-
+		
+		
 		DoubleMatrix2D x = pruned.getLeft(); // x is now probably shorter than original X
 		DenseDoubleAlgebra dda = new DenseDoubleAlgebra();
 		boolean[] notaliased = pruned.getRight(); // length of original X
-
+		
 		// check if the alleles we put in are aliased
 		int firstAllele = firstColumnToRemove; // intercept + allleles we conditioned on (original X indexing)
 		int lastAllele = lastColumnToRemove;   // intercept + allleles we conditioned on + alleles for this variant (original X indexing)
-
-
+		
+		
 		int nrRemaining = 0;
 		int[] alleleIndex = new int[lastColumnToRemove - firstColumnToRemove];
 		for (int i = 0; i < alleleIndex.length; i++) {
 			alleleIndex[i] = -1;
 		}
-
+		
 		int newXIndex = 0;
 		ArrayList<Integer> colIndexArr = new ArrayList<>(x.columns());
 		for (int i = 0; i < notaliased.length; i++) {
@@ -1339,11 +1355,11 @@ public class LRTest {
 				newXIndex++;
 			}
 		}
-
+		
 		DoubleMatrix2D xprime = dda.subMatrix(x, 0, x.rows() - 1, Primitives.toPrimitiveArr(colIndexArr.toArray(new Integer[0])));
 		LogisticRegressionOptimized reg = new LogisticRegressionOptimized();
 		return new Pair<>(reg.multinomial(xandy.getRight(), xprime), xprime.columns());
 	}
-
-
+	
+	
 }

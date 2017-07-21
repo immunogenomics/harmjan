@@ -53,6 +53,7 @@ public class VCFBedFilter {
 
 		} else {
 			FilterTask t = new FilterTask(0, vcfIn, referenceOut, regionFile, 0);
+			t.run();
 		}
 	}
 

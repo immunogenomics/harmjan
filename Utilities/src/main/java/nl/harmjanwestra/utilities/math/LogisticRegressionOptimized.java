@@ -96,9 +96,12 @@ public class LogisticRegressionOptimized {
 	private DoubleMatrix2D formatBinomialData(DoubleMatrix2D y) {
 		DoubleMatrix2D ytmp = new DenseDoubleMatrix2D(y.rows(), y.columns() + 1);
 		for (int i = 0; i < y.rows(); i++) {
-//			int index = (int) y.get(i, 0);
+//			int
 //			if (flipCoding) {
 			int index = (int) Math.abs(y.get(i, 0) - 1);
+			if(flipCoding){
+				index = (int) y.get(i, 0);
+			}
 //			}
 			ytmp.set(i, index, 1);
 		}
@@ -375,92 +378,92 @@ public class LogisticRegressionOptimized {
 				System.out.println("Col: " + k + "\tIter " + iter + "\tb0: " + beta0k + "\tbk: " + beta[k] + "\td: " + delta + "\teps: " + eps + "\tparam converged: " + !(delta > eps));
 			}
 
-			System.out.println("Will try to rerun the MLE");
-			if (!converged) {
-
-				System.out.println("Rerunning MLE");
-
-				// try another round of MLE, but now reset the conflicting parameter's estimates...
-				for (k = 0; k < kJMinusOne; k++) {
-					double beta0k = beta0[k];
-					double delta = Math.abs(beta[k] - beta0k);
-					double eps = EPSILON * Math.abs(beta0k);
-
-//					if (delta > eps) {
-					beta[k] = beta[k];
-					beta0[k] = beta0[k];
+//			System.out.println("Will try to rerun the MLE");
+//			if (!converged) {
+//
+//				System.out.println("Rerunning MLE");
+//
+//				// try another round of MLE, but now reset the conflicting parameter's estimates...
+//				for (k = 0; k < kJMinusOne; k++) {
+//					double beta0k = beta0[k];
+//					double delta = Math.abs(beta[k] - beta0k);
+//					double eps = EPSILON * Math.abs(beta0k);
+//
+////					if (delta > eps) {
+//					beta[k] = beta[k];
+//					beta0[k] = beta0[k];
+////					}
+//				}
+//
+//				iter = 0;
+//
+//				while (iter < max_iter && !converged) {
+//
+//					for (k = 0; k < kJMinusOne; k++) {
+//						beta0[k] = beta[k];
 //					}
-				}
-
-				iter = 0;
-
-				while (iter < max_iter && !converged) {
-
-					for (k = 0; k < kJMinusOne; k++) {
-						beta0[k] = beta[k];
-					}
-
-					// ! nr function needs error handling
-					nr(X, Y, n, J, N, K, beta0, beta, xtwx, loglike, deviance);
-
-					if (loglike[0] < loglike0 && iter > 0) {
-						// backtracking code
-						// run subiterations to halve the distance to prior iteration
-						// until difference in log_like increases (which is when the model has converged)
-						// remember: ml is about maximizing loglike
-					}
-
-//			// test for infinity of beta
-//			for (k = 0; k < kJMinusOne; k++) {
-//				if (beta_inf[k] != 0) {
-//					beta[k] = beta_inf[k];
-//				} else {
-//					//  Math.sqrt(xtwx[k][k]) contains the variance of beta[k]
-//					double betak = beta[k];
-//					double absbeta = Math.abs(betak);
-//					if (absbeta > (5d / xrange[k]) && Math.sqrt(xtwx[k][k]) >= (3 * absbeta)) {
-//						beta_inf[k] = betak;
+//
+//					// ! nr function needs error handling
+//					nr(X, Y, n, J, N, K, beta0, beta, xtwx, loglike, deviance);
+//
+//					if (loglike[0] < loglike0 && iter > 0) {
+//						// backtracking code
+//						// run subiterations to halve the distance to prior iteration
+//						// until difference in log_like increases (which is when the model has converged)
+//						// remember: ml is about maximizing loglike
 //					}
+//
+////			// test for infinity of beta
+////			for (k = 0; k < kJMinusOne; k++) {
+////				if (beta_inf[k] != 0) {
+////					beta[k] = beta_inf[k];
+////				} else {
+////					//  Math.sqrt(xtwx[k][k]) contains the variance of beta[k]
+////					double betak = beta[k];
+////					double absbeta = Math.abs(betak);
+////					if (absbeta > (5d / xrange[k]) && Math.sqrt(xtwx[k][k]) >= (3 * absbeta)) {
+////						beta_inf[k] = betak;
+////					}
+////				}
+////			}
+//
+//					// test for convergence
+//					converged = true;
+//					for (k = 0; k < kJMinusOne; k++) {
+//						double beta0k = beta0[k];
+//						double delta = Math.abs(beta[k] - beta0k);
+//						if (Double.isNaN(delta) || Double.isInfinite(delta) || delta > EPSILON * Math.abs(beta0k)) {
+//							converged = false;
+////					diffb[k] = false;
+//							break;
+//						}
+//					}
+//
+//					if (iter == 0) {
+//						loglike0 = loglike[0];
+//					}
+//
+//					if (printIters) {
+//						for (k = 0; k < kJMinusOne; k++) {
+//							double beta0k = beta0[k];
+//							double delta = Math.abs(beta[k] - beta0k);
+//							double eps = EPSILON * Math.abs(beta0k);
+//							DecimalFormat f = new DecimalFormat("#.######");
+//							String prefix = "";
+//							if ((delta > eps)) {
+//								prefix = (char) 27 + "[35m";
+//							} else {
+//								prefix = (char) 27 + "[37m";
+//							}
+//							System.out.println(prefix + "Col: " + k + "\tmodel converged:\t" + converged + "\titer:" + iter + "\tb0: " + f.format(beta0k) + "\tbk: " + f.format(beta[k]) + "\td: " + f.format(delta) + "\teps: " + f.format(eps) + "\tparam converged: " + !(delta > eps));
+////					}
+//
+//
+//						}
+//					}
+//					iter++;
 //				}
 //			}
-
-					// test for convergence
-					converged = true;
-					for (k = 0; k < kJMinusOne; k++) {
-						double beta0k = beta0[k];
-						double delta = Math.abs(beta[k] - beta0k);
-						if (Double.isNaN(delta) || Double.isInfinite(delta) || delta > EPSILON * Math.abs(beta0k)) {
-							converged = false;
-//					diffb[k] = false;
-							break;
-						}
-					}
-
-					if (iter == 0) {
-						loglike0 = loglike[0];
-					}
-
-					if (printIters) {
-						for (k = 0; k < kJMinusOne; k++) {
-							double beta0k = beta0[k];
-							double delta = Math.abs(beta[k] - beta0k);
-							double eps = EPSILON * Math.abs(beta0k);
-							DecimalFormat f = new DecimalFormat("#.######");
-							String prefix = "";
-							if ((delta > eps)) {
-								prefix = (char) 27 + "[35m";
-							} else {
-								prefix = (char) 27 + "[37m";
-							}
-							System.out.println(prefix + "Col: " + k + "\tmodel converged:\t" + converged + "\titer:" + iter + "\tb0: " + f.format(beta0k) + "\tbk: " + f.format(beta[k]) + "\td: " + f.format(delta) + "\teps: " + f.format(eps) + "\tparam converged: " + !(delta > eps));
-//					}
-
-
-						}
-					}
-					iter++;
-				}
-			}
 		}
 
 		// chi2 tests for significance
