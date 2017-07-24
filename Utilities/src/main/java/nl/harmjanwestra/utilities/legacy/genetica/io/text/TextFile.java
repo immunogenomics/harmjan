@@ -67,7 +67,7 @@ public class TextFile implements Iterable<String> {
 	public TextFile(Path file, boolean boolMode, MODE mode, int buffersize) throws IOException {
 
 		if (mode == null) {
-			if (boolMode) {
+			if (boolMode == W) {
 				this.mode = MODE.WRITE;
 			} else {
 				this.mode = MODE.READ;
@@ -103,8 +103,7 @@ public class TextFile implements Iterable<String> {
 					GZIPOutputStream gzipOutputStream = new GZIPOutputStream(Files.newOutputStream(path), buffersize);
 					out = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), buffersize);
 //					}
-				}
-				if (gzipped && mode.equals(MODE.APPEND)) {
+				} else if (gzipped && mode.equals(MODE.APPEND)) {
 					throw new UnsupportedOperationException("Cannot append to GZIP file");
 				} else {
 					if (mode.equals(MODE.APPEND)) {

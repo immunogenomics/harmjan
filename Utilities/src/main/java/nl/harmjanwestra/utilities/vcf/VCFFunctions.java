@@ -21,6 +21,8 @@ import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -569,8 +571,8 @@ public class VCFFunctions {
 	}
 
 	public Pair<byte[][], String[]> loadVCFGenotypes(String vcf,
-	                                                 HashMap<String, Integer> sampleMap,
-	                                                 HashMap<Feature, Integer> variantMap) throws IOException {
+													 HashMap<String, Integer> sampleMap,
+													 HashMap<Feature, Integer> variantMap) throws IOException {
 
 		TextFile tf = new TextFile(vcf, TextFile.R);
 		String[] elems = tf.readLineElems(TextFile.tab);
@@ -871,12 +873,12 @@ public class VCFFunctions {
 
 
 	public void filterLowFrequencyVariants(String sequencingVCF,
-	                                       String outputdir,
-	                                       String famfile, boolean filterGT,
-	                                       int minimalReadDepth,
-	                                       int minimalGenotypeQual,
-	                                       double callratethreshold,
-	                                       int minObservationsPerAllele) throws IOException {
+										   String outputdir,
+										   String famfile, boolean filterGT,
+										   int minimalReadDepth,
+										   int minimalGenotypeQual,
+										   double callratethreshold,
+										   int minObservationsPerAllele) throws IOException {
 
 
 		System.out.println("Filtering for low freq variants: " + sequencingVCF);
@@ -2858,6 +2860,13 @@ public class VCFFunctions {
 		tf.close();
 		tf.open();
 		TextFile out = new TextFile(vcfOut, TextFile.W);
+		Path path = Paths.get(vcfOut);
+		String loc = path.getFileName().toString();
+
+		if (loc.endsWith(".gz")) {
+			System.out.println("Output should be gzipped.");
+		}
+
 		linenumber = 0;
 		ln = tf.readLine();
 		HashSet<Integer> positionsWritten = new HashSet<>();
