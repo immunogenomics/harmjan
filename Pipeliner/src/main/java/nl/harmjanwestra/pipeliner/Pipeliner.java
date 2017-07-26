@@ -10,52 +10,58 @@ import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.Pipe;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
-
 
 
 /**
  * Created by hwestra on 11/25/15.
  */
 public class Pipeliner {
-
+	
 	private static Options OPTIONS;
-
+	
 	static {
 		OPTIONS = new Options();
-
-
+		
+		
 		Option option;
-
+		
+		option = Option.builder("m")
+				.desc("Make template. Use name and input variables in template.")
+				.longOpt("listastemplate")
+				.build();
+		OPTIONS.addOption(option);
+		
 		option = Option.builder("k")
 				.desc("File with keys and values")
 				.longOpt("keyfile")
 				.hasArg()
-				.required()
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder("t")
 				.desc("Template")
 				.longOpt("template")
-				.required()
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder("f")
 				.desc("Require all keys to be present in filename template")
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder("c")
 				.desc("Use a counter in stead of filename template")
 				.build();
 		OPTIONS.addOption(option);
-
-
+		
+		
 		option = Option.builder("o")
 				.desc("Outdir")
 				.longOpt("out")
@@ -64,19 +70,42 @@ public class Pipeliner {
 				.build();
 		OPTIONS.addOption(option);
 	}
-
-
+	
+	
 	public static void main(String[] args) {
 		try {
 			CommandLineParser parser = new DefaultParser();
 			final CommandLine cmd = parser.parse(OPTIONS, args, true);
-
-			if (cmd.hasOption("o") && cmd.hasOption("t") && cmd.hasOption("k")) {
+			
+			if (cmd.hasOption("m")) {
+				String out = null;
+				if (cmd.hasOption("m")) {
+					out = cmd.getOptionValue("o");
+				}
+				
+				String tpl = null;
+				if (cmd.hasOption("t")) {
+					tpl = cmd.getOptionValue("t");
+				}
+				
+				
+				String key = null;
+				if (cmd.hasOption("k")) {
+					key = cmd.getOptionValue("k");
+				}
+				
+				if (tpl == null || key == null || out == null) {
+					System.out.println("use -t, -k and -o");
+				} else {
+					Pipeliner p = new Pipeliner();
+					p.useListAsTemplate(key, tpl, out);
+				}
+			} else if (cmd.hasOption("o") && cmd.hasOption("t") && cmd.hasOption("k")) {
 				String out = cmd.getOptionValue("o");
 				String tpl = cmd.getOptionValue("t");
 				String key = cmd.getOptionValue("k");
-
-
+				
+				
 				boolean requireAllVarsInFileNametemplate = false;
 				boolean useCounterAsFileName = false;
 				if (cmd.hasOption("f")) {
@@ -85,17 +114,17 @@ public class Pipeliner {
 				if (cmd.hasOption("c")) {
 					useCounterAsFileName = true;
 				}
-
+				
 				Pipeliner p = new Pipeliner();
 				p.run(key, tpl, out, requireAllVarsInFileNametemplate, useCounterAsFileName);
 			} else {
 				printHelp();
 			}
-
-
+			
+			
 		} catch (ParseException ex) {
 			System.out.println(ex.getMessage());
-
+			
 			printHelp();
 		}
 
@@ -105,24 +134,70 @@ public class Pipeliner {
 //		String out = "/Data/Pipelines/liftoverIC/";
 //		boolean requireAllVarsInFileNametemplate = false;
 //		p.run(key, tpl, out, requireAllVarsInFileNametemplate);
-
-
+		
+		
 		System.exit(0);
 	}
-
-
+	
+	private void useListAsTemplate(String key, String template, String out) {
+		
+		TextFile tf = null;
+		try {
+			tf = new TextFile(key, TextFile.R);
+			
+			ArrayList<Path> files = new ArrayList<Path>();
+			String ln = tf.readLine();
+			while (ln != null) {
+				if (ln.trim().length() > 0 && Gpio.exists(ln)) {
+					files.add(Paths.get(ln));
+				}
+				ln = tf.readLine();
+			}
+			tf.close();
+			System.out.println(files.size() + " file locations read from " + key);
+			
+			
+			ArrayList<String> lines = readTemplate(template);
+			
+			int ctr = 1;
+			for (Path p : files) {
+				String name = p.getFileName().toString();
+				// remove extension
+				
+				String[] nameElems = Strings.dot.split(name);
+				name = nameElems[0];
+				String path = p.toAbsolutePath().toString();
+				TextFile outf = new TextFile(out + "" + ctr + ".sh", TextFile.W);
+				for (int i = 0; i < lines.size(); i++) {
+					String outln = update(lines.get(i), "name", name);
+					outln = update(outln, "input", path);
+					outf.writeln(outln);
+				}
+				System.out.println(out + "" + ctr + ".sh\t" + name + "\t" + path);
+				outf.close();
+				ctr++;
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
+	
 	public static void printHelp() {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp(" ", OPTIONS);
 		System.exit(-1);
 	}
-
+	
 	public void run(String keyfile, String templateFile, String dirout, boolean requireAllVarsInFileNametemplate, boolean useCounterAsFilename) {
-
+		
 		System.out.println("Key: " + keyfile);
 		System.out.println("Template: " + templateFile);
 		System.out.println("Dirout: " + dirout);
-
+		
 		try {
 			boolean continueRun = true;
 			if (!Gpio.exists(keyfile)) {
@@ -133,50 +208,50 @@ public class Pipeliner {
 				System.out.println("Template path: " + templateFile + " not found.");
 				continueRun = false;
 			}
-
+			
 			if (continueRun) {
 				Gpio.createDir(dirout);
-
+				
 				Triple<String, ArrayList<String>, HashMap<String, ArrayList<String>>> p = readKeysAndValues(keyfile);
 				String combotemplate = p.getLeft();
 				ArrayList<String> keys = p.getMiddle();
 				HashMap<String, ArrayList<String>> replacements = p.getRight();
 				ArrayList<String> template = readTemplate(templateFile);
-
+				
 				keys = checkKeys(template, keys);
-
+				
 				if (requireAllVarsInFileNametemplate) {
 					ArrayList<String> tmp = new ArrayList<String>();
 					tmp.add(combotemplate);
 					keys = checkKeys(tmp, keys);
 				}
-
+				
 				if (keys.isEmpty()) {
 					System.err.println("Error: no keys remain");
 				} else {
 					System.out.println(keys.size() + " keys will be used.");
-
+					
 					// check whether all keys are in template
 					Pair<ArrayList<String>, ArrayList<ArrayList<String>>> combos = combine(keys, replacements, template, combotemplate);
-
+					
 					Gpio.createDir(dirout);
 					ArrayList<String> combonames = combos.getLeft();
 					ArrayList<ArrayList<String>> pipelines = combos.getRight();
-
-
+					
+					
 					for (int i = 0; i < combonames.size(); i++) {
 						String name = combonames.get(i);
-
+						
 						if (useCounterAsFilename) {
 							name = "" + (i + 1);
 						}
-
+						
 						ArrayList<String> pipeline = pipelines.get(i);
-
+						
 						String fullnameOut = dirout + name + ".sh";
 						File f = new File(fullnameOut);
 						String parent = f.getParent();
-
+						
 						if (!Gpio.exists(parent)) {
 							Gpio.createDir(parent);
 							System.out.println(parent);
@@ -184,19 +259,19 @@ public class Pipeliner {
 						System.out.println("Writing: " + dirout + name + ".sh");
 						writePipeline(dirout + name + ".sh", pipeline);
 						f.setExecutable(true, false);
-
+						
 					}
-
+					
 				}
 			}
-
-
+			
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		
 	}
-
+	
 	private void writePipeline(String outfile, ArrayList<String> pipeline) throws IOException {
 		TextFile out = new TextFile(outfile, TextFile.W);
 		for (String s : pipeline) {
@@ -204,14 +279,14 @@ public class Pipeliner {
 		}
 		out.close();
 	}
-
+	
 	private Pair<ArrayList<String>, ArrayList<ArrayList<String>>> combine(ArrayList<String> keys,
 																		  HashMap<String, ArrayList<String>> replacements,
 																		  ArrayList<String> template,
 																		  String combotemplate) {
 		ArrayList<ArrayList<String>> allcombos = new ArrayList<ArrayList<String>>();
 		ArrayList<String> combonames = new ArrayList<String>();
-
+		
 		for (int k = 0; k < keys.size(); k++) {
 			String key = keys.get(k);
 			ArrayList<String> values = replacements.get(key);
@@ -219,11 +294,11 @@ public class Pipeliner {
 				ArrayList<ArrayList<String>> allcombosTmp = new ArrayList<ArrayList<String>>();
 				ArrayList<String> comboNamesTmp = new ArrayList<String>();
 				for (int c = 0; c < allcombos.size(); c++) {
-
+					
 					for (int v = 0; v < values.size(); v++) {
 						ArrayList<String> tpl = allcombos.get(c);
 						String comboName = combonames.get(c);
-
+						
 						String val = values.get(v);
 						tpl = update(tpl, key, val);
 						comboName = update(comboName, key, val);
@@ -249,7 +324,7 @@ public class Pipeliner {
 		}
 		return new Pair<ArrayList<String>, ArrayList<ArrayList<String>>>(combonames, allcombos);
 	}
-
+	
 	private ArrayList<String> update(ArrayList<String> template, String key, String val) {
 		ArrayList<String> updated = new ArrayList<String>();
 		for (int i = 0; i < template.size(); i++) {
@@ -257,15 +332,15 @@ public class Pipeliner {
 		}
 		return updated;
 	}
-
+	
 	private String update(String template, String key, String val) {
 		String replacedLn = template.replaceAll("\\{" + key + "\\}", val);
 		return replacedLn;
 	}
-
+	
 	private ArrayList<String> checkKeys(ArrayList<String> template, ArrayList<String> keys) {
 		ArrayList<String> output = new ArrayList<String>();
-
+		
 		for (String key : keys) {
 			boolean present = false;
 			Pattern p = Pattern.compile(".*\\{" + key + "\\}.*");
@@ -285,7 +360,7 @@ public class Pipeliner {
 		}
 		return output;
 	}
-
+	
 	private Triple<String, ArrayList<String>, HashMap<String, ArrayList<String>>> readKeysAndValues(String f) throws IOException {
 		TextFile tf = new TextFile(f, TextFile.R);
 		String combotemplate = tf.readLine();
@@ -305,11 +380,11 @@ public class Pipeliner {
 			}
 			elems = tf.readLineElems(Strings.whitespace);
 		}
-
+		
 		tf.close();
 		return new Triple<String, ArrayList<String>, HashMap<String, ArrayList<String>>>(combotemplate, keys, values);
 	}
-
+	
 	private ArrayList<String> readTemplate(String filename) throws IOException {
 		ArrayList<String> output = new ArrayList<String>();
 		TextFile tf = new TextFile(filename, TextFile.R);
