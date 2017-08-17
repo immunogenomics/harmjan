@@ -40,15 +40,15 @@ public class CompareDatasetsZScores {
 		
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ZScoreComparisons/regionsToCompare.bed";
 		bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci.bed";
-		String outloc = "C:\\Data\\tmp\\2017-07-20-ToolTest\\";
+		String outloc = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-15-ReImpute3\\normal\\1kg-T1D-ComparisonToOldResults";
 		String[] assocfiles = new String[]{
-				"C:\\Data\\tmp\\2017-07-20-ToolTest\\T1D-chr22-tool1.txt",
-				"C:\\Data\\tmp\\2017-07-20-ToolTest\\T1D-chr22-tool2.txt"
+				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-15-ReImpute3\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\normal\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz"
 		};
-		
+//
 		String[] assocfilenames = new String[]{
-				"Tool1",
-				"Tool2",
+				"2017-08-15",
+				"2017-03-25",
 		};
 		
 		String regionToGenesFile = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";

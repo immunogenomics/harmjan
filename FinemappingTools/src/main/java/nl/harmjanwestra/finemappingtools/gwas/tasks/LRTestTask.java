@@ -438,6 +438,9 @@ public class LRTestTask implements Callable<Triple<String, AssociationResult, VC
 		result.setSnp(snp);
 		result.setN(x.rows());
 		snp.setMaf(maf);
+		snp.setCrCases(variant.getCallrateCases());
+		snp.setCrControls(variant.getCallrateControls());
+		snp.setMissingnessP(variant.getDiffMissingnessP());
 		
 		Double imputationqualityscore = variant.getImputationQualityScore();
 		if (imputationqualityscore != null) {

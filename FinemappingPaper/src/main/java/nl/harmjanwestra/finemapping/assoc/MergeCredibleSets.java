@@ -50,13 +50,13 @@ public class MergeCredibleSets {
 
 //			c.determineRegionSignificanceThresholds(bedregions, assocfiles, datasetnames, genenames, outfile);
 
-			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+			String bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/overlapplots/regions.bed";
 //		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
-			String genenames = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
-			String geneAnnotation = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
+			String genenames = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
+			String geneAnnotation = "c:/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
 
-			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/mergedcrediblesets/";
+			String outdir = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-08-15-ReImpute3/normal/1kg-";
 			String outfile = outdir + "mergedCredibleSets.txt";
 			String outeqtlfile = outdir + "mergedCredibleSets-eqtls.txt";
 			String outeqtlfileblueprint = outdir + "mergedCredibleSets-eqtls-blueprint";
@@ -69,15 +69,14 @@ public class MergeCredibleSets {
 			String outgtex = outdir + "mergedCredibleSets-eqtls-gtex.txt";
 
 			String[] assocfiles = new String[]{
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/META-assoc0.3-COSMO-merged-posterior.txt.gz"
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-15-ReImpute3\\normal\\1kg-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-15-ReImpute3\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					
 			};
 
 			String[] datasetnames = new String[]{
 					"RA",
 					"T1D",
-					"Combined"
 			};
 
 
@@ -86,7 +85,7 @@ public class MergeCredibleSets {
 			double maxPosteriorCredibleSet = 0.9;
 			boolean includeAllLoci = true;
 
-//			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
 //
 			boolean onlyincludevariantsbelowsignificancethreshold = false;
 //			c.makeCircularPlot(bedregions,
@@ -183,7 +182,7 @@ public class MergeCredibleSets {
 //			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-tcell.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 
 			// pQTL
-			c.rewritepQTLFiles();
+//			c.rewritepQTLFiles();
 			eqtlfilenames = new String[]{
 					"Sun-pQTL",
 					"Sun-pQTL-Conditional",
@@ -206,7 +205,7 @@ public class MergeCredibleSets {
 					"/Data/eQTLs/GTEx/v6peQTLsTab.txt"
 			};
 			boolean eQTLFileIsList = true;
-			c.eQTLOverlapGTEX(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outgtex, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+//			c.eQTLOverlapGTEX(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outgtex, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 //
 //			/*
 //			Bed file overlap

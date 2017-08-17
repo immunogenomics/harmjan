@@ -986,16 +986,35 @@ public class LRTest {
 	public ArrayList<VCFVariant> readVariants(String logfile, ArrayList<Feature> regions) throws IOException {
 		VariantLoader loader = new VariantLoader();
 		
-		ArrayList<VCFVariant> allVariants = loader.load(logfile, regions, options, genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation, exService);
+		VCFVariantFilters filter = new VCFVariantFilters();
+		
+		// there is a file that limits the snps to include
+		if (options.getSnpLimitFile() != null) {
+			filter.addFilter(new VCFVariantSetFilter(options.getSnpLimitFile()));
+		}
+		if (options.getMissingNessP() != null) {
+			filter.addFilter(new VCFVariantMissingnessPFilter(options.getMissingNessP()));
+		}
+		filter.addFilter(new VCFVariantCallRateFilter(options.getCallrateThreshold()));
+		filter.addFilter(new VCFVariantImpQualFilter(options.getImputationqualitythreshold(), true));
+		filter.addFilter(new VCFVariantMAFFilter(options.getMafthresholdD(), VCFVariantMAFFilter.MODE.CONTROLS));
+		filter.addFilter(new VCFVariantHWEPFilter(options.getHWEPThreshold(), VCFVariantHWEPFilter.MODE.CONTROLS));
+		filter.addFilter(new VCFVariantRegionFilter(regions));
+		
+		
+		ArrayList<VCFVariant> allVariants = loader.load(logfile,
+				options.getVcf(),
+				options.getNrThreads(),
+				regions,
+				filter,
+				genotypeSamplesWithCovariatesAndDiseaseStatus,
+				sampleAnnotation,
+				exService);
 		if (options.splitMultiAllelicIntoMultipleVariants) {
 			if (options.debug) {
 				System.out.println("Splitting multiple allelic variants");
 			}
-			VCFVariantFilters filter = new VCFVariantFilters();
-			filter.addFilter(new VCFVariantCallRateFilter(options.getCallrateThreshold()));
-			filter.addFilter(new VCFVariantImpQualFilter(options.getImputationqualitythreshold(), true));
-			filter.addFilter(new VCFVariantMAFFilter(options.getMafthresholdD(), VCFVariantMAFFilter.MODE.CONTROLS));
-			filter.addFilter(new VCFVariantHWEPFilter(options.getHWEPThreshold(), VCFVariantHWEPFilter.MODE.CONTROLS));
+			
 			ArrayList<VCFVariant> tmpVars = new ArrayList<>();
 			for (VCFVariant v : allVariants) {
 				if (v.isMultiallelic()) {

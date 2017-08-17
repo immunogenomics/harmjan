@@ -9,10 +9,7 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.AllelicDepthFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.GenotypeQualityFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
-import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantCallRateFilter;
-import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantFilters;
-import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantHWEPFilter;
-import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantMAFFilter;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,8 +18,8 @@ import java.util.ArrayList;
  * Created by Harm-Jan on 02/04/16.
  */
 public class VCFFilter {
-
-
+	
+	
 	public void filter(String in,
 					   String out,
 					   String fam,
@@ -34,12 +31,12 @@ public class VCFFilter {
 					   Integer gqual,
 					   Double allelicBalance,
 					   boolean onlyAutosomes) throws IOException {
-
+		
 		TextFile tf1 = new TextFile(in, TextFile.R);
 		TextFile tf2 = new TextFile(out, TextFile.W);
 		String ln = tf1.readLine();
-
-
+		
+		
 		System.out.println("Filtering: " + in);
 		System.out.println("Out: " + out);
 		System.out.println("FAM: " + fam);
@@ -49,26 +46,29 @@ public class VCFFilter {
 		System.out.println("hwep > " + hwepthreshold);
 		System.out.println("callrate > " + callratethreshold);
 		System.out.println("missingness > " + missingnessthreshold);
-
+		
 		TextFile filterlog = new TextFile(out + "_log.txt", TextFile.W);
-
+		
 		VCFVariantFilters variantFilters = new VCFVariantFilters();
+		
 		variantFilters.add(new VCFVariantHWEPFilter(hwepthreshold, VCFVariantHWEPFilter.MODE.CONTROLS));
 		variantFilters.add(new VCFVariantCallRateFilter(callratethreshold));
 		variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.CONTROLS));
-
+		variantFilters.add(new VCFVariantMissingnessPFilter(missingnessthreshold));
+		
+		System.out.println(variantFilters.toString());
 		if (!Gpio.exists(in)) {
 			System.out.println("Could not find IN file");
 			System.exit(-1);
 		}
-
+		
 		if (!Gpio.exists(fam)) {
 			System.out.println("Could not find FAM file");
 			System.exit(-1);
 		}
 		PlinkFamFile pf = new PlinkFamFile(fam);
 		SampleAnnotation sampleAnnotation = pf.getSampleAnnotation();
-
+		
 		ArrayList<VCFGenotypeFilter> genotypeFilters = new ArrayList<>();
 		if (gqual != null) {
 			genotypeFilters.add(new GenotypeQualityFilter(gqual));
@@ -85,7 +85,7 @@ public class VCFFilter {
 		} else if (readdepth != null) {
 			System.out.println("Adding read depth filter: " + readdepth);
 		}
-
+		
 		String logheader = "Variant"
 				+ "\tAlleles"
 				+ "\tMinorAllele"
@@ -100,7 +100,7 @@ public class VCFFilter {
 				+ "\tCallRate"
 				+ "\tCallRate-P"
 				+ "\tPassesThresholds";
-
+		
 		System.out.println("Starting filter...");
 		filterlog.writeln(logheader);
 		int lnctr = 0;
@@ -109,18 +109,18 @@ public class VCFFilter {
 			if (ln.startsWith("##")) {
 				tf2.writeln(ln);
 			} else if (ln.startsWith("#CHROM")) {
-				tf2.writeln("##VCFGenotypeFilter=maf>" + mafthreshold + ",cr>" + callratethreshold + ",dp>" + readdepth + ",gq>" + gqual + ",ab>" + allelicBalance);
-
+				tf2.writeln("##VCFGenotypeFilter=maf>" + mafthreshold + ",cr>" + callratethreshold + ",dp>" + readdepth + ",gq>" + gqual + ",ab>" + allelicBalance + ",missingnessp>" + missingnessthreshold);
+				
 				// reorder sample annotation
 				ArrayList<String> samples = new ArrayList<>();
 				String[] elems = ln.split("\t");
 				for (int i = 9; i < elems.length; i++) {
 					samples.add(elems[i]);
 				}
-
+				
 				System.out.println(samples.size() + " individuals in VCF");
 				sampleAnnotation.reorder(samples, true);
-
+				
 				int nrSamplesWithAnnotation = sampleAnnotation.getSampleName().length;
 				if (nrSamplesWithAnnotation != samples.size()) {
 					System.err.println("Error: nr of samples with annotation: " + nrSamplesWithAnnotation + ", while number of samples in VCF: " + samples.size());
@@ -130,16 +130,21 @@ public class VCFFilter {
 			} else {
 				boolean passesThresholds = false;
 				VCFVariant var = new VCFVariant(ln, genotypeFilters, true, sampleAnnotation);
-
+				
 				boolean autosomal = var.getChrObj().isAutosome();
-				if (autosomal && onlyAutosomes || !onlyAutosomes) {
+				if (autosomal) {
 					if (variantFilters.passesFilters(var)) {
 						tf2.writeln(ln);
 						kept++;
 						passesThresholds = true;
 					}
 				}
-
+				
+				if (var.getId().equals("rs3826110")) {
+					VCFVariantMissingnessPFilter v = new VCFVariantMissingnessPFilter(missingnessthreshold);
+					System.out.println(var.getId() + "\t" + var.getDiffMissingnessP() + "\t" + v.passesThreshold(var) + "\t" + passesThresholds);
+				}
+				
 				String logout = var.toString()
 						+ "\t" + Strings.concat(var.getAlleles(), Strings.comma)
 						+ "\t" + var.getMinorAllele()
@@ -155,21 +160,21 @@ public class VCFFilter {
 						+ "\t" + var.getDiffMissingnessP()
 						+ "\t" + passesThresholds;
 				filterlog.writeln(logout);
-
+				
 			}
 			ln = tf1.readLine();
 			if (lnctr % 1000 == 0) {
-				System.out.println(lnctr+" lines parsed. "+kept+" kept.");
+				System.out.println(lnctr + " lines parsed. " + kept + " kept.");
 			}
 			lnctr++;
 		}
-
+		
 		tf1.close();
 		tf2.close();
-
+		
 		filterlog.close();
 		System.out.println("Done");
-		System.out.println(lnctr+" lines parsed. "+kept+" kept.");
+		System.out.println(lnctr + " lines parsed. " + kept + " kept.");
 	}
 
 	/*
@@ -183,13 +188,13 @@ public class VCFFilter {
 
 		}
 	 */
-
+	
 	public void filterNonACTGVariants(String vcfin, String vcfout) throws IOException {
 		System.out.println("in: " + vcfin);
 		System.out.println("out: " + vcfout);
 		TextFile out = new TextFile(vcfout, TextFile.W);
 		TextFile tf = new TextFile(vcfin, TextFile.R);
-
+		
 		int written = 0;
 		int total = 0;
 		String ln = tf.readLine();
@@ -219,7 +224,7 @@ public class VCFFilter {
 			}
 			ln = tf.readLine();
 		}
-
+		
 		System.out.println("weird alleles: " + written + "/" + total + " written..");
 		tf.close();
 		out.close();

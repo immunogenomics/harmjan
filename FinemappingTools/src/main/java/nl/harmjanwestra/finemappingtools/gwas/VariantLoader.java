@@ -19,8 +19,10 @@ import java.util.concurrent.ExecutorService;
 public class VariantLoader {
 
 	public ArrayList<VCFVariant> load(String logfile,
+									  String vcf,
+									  int nrThreads,
 									  ArrayList<Feature> regions,
-									  LRTestOptions options,
+									  VCFVariantFilters variantFilters,
 									  boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus,
 									  SampleAnnotation sampleAnnotation,
 									  ExecutorService exService
@@ -28,20 +30,8 @@ public class VariantLoader {
 	) throws IOException {
 
 		VCFVariantLoader loader = new VCFVariantLoader(genotypeSamplesWithCovariatesAndDiseaseStatus, sampleAnnotation);
-		VCFVariantFilters filter = new VCFVariantFilters();
-
-		// there is a file that limits the snps to include
-		if (options.getSnpLimitFile() != null) {
-			filter.addFilter(new VCFVariantSetFilter(options.getSnpLimitFile()));
-		}
-
-		filter.addFilter(new VCFVariantCallRateFilter(options.getCallrateThreshold()));
-		filter.addFilter(new VCFVariantImpQualFilter(options.getImputationqualitythreshold(), true));
-		filter.addFilter(new VCFVariantMAFFilter(options.getMafthresholdD(), VCFVariantMAFFilter.MODE.CONTROLS));
-		filter.addFilter(new VCFVariantHWEPFilter(options.getHWEPThreshold(), VCFVariantHWEPFilter.MODE.CONTROLS));
-		filter.addFilter(new VCFVariantRegionFilter(regions));
-
-		ArrayList<VCFVariant> variants = loader.run(options.getVcf(), filter, options.getNrThreads());
+		
+		ArrayList<VCFVariant> variants = loader.run(vcf, variantFilters, nrThreads);
 		Collections.sort(variants, new VCFVariantComparator());
 
 

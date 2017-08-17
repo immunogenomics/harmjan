@@ -162,7 +162,8 @@ public class AssociationFile {
 		int minorAlleleCol = -1;
 		int combinedIdCol = -1;
 		int ncol = -1;
-		int crcol = -1;
+		int crcasescol = -1;
+		int crcontrolscol = -1;
 		int missingnesspcol = -1;
 		int mafcol = -1;
 		int afcasescol = -1;
@@ -170,7 +171,10 @@ public class AssociationFile {
 		int impqualscorecol = -1;
 		int deviancenullcol = -1;
 		int deviancegenocol = -1;
+		int dfnullcol = -1;
+		int dfaltcol = -1;
 		int dfcol = -1;
+		
 		int betacol = -1;
 		int secol = -1;
 		int orcol = -1;
@@ -208,8 +212,10 @@ public class AssociationFile {
 						minorAlleleCol = i;
 					} else if (e.equals("N")) {
 						ncol = i;
-					} else if (e.equals("CallRate")) {
-						crcol = i;
+					} else if (e.equals("CallRateCases")) {
+						crcasescol = i;
+					} else if (e.equals("CallRateControls")) {
+						crcontrolscol = i;
 					} else if (e.equals("DifferentialMissingnessP")) {
 						missingnesspcol = i;
 					} else if (e.equals("MAF")) {
@@ -224,7 +230,11 @@ public class AssociationFile {
 						deviancenullcol = i;
 					} else if (e.equals("DevianceGeno")) {
 						deviancegenocol = i;
-					} else if (e.equals("Df")) {
+					} else if (e.equals("DfNull")) {
+						dfnullcol = i;
+					} else if (e.equals("DfAlt")) {
+						dfaltcol = i;
+					} else if (e.equals("DiffDf")) {
 						dfcol = i;
 					} else if (e.equals("Beta(Genotype)")) {
 						betacol = i;
@@ -262,13 +272,17 @@ public class AssociationFile {
 					String id = null;
 					int n = 0;
 					double maf = 0d;
-					double cr = 1d;
+					double crcases = 1d;
+					double crcontrols = 1d;
 					double missingnessp = 1;
 					double hwep = 0d;
 					double deviancenull = 0d;
 					double deviancegeno = 0d;
+					
 					double afcases = 0d;
 					double afcontrols = 0d;
+					int dfnull = 0;
+					int dfalt = 0;
 					int df = 0;
 					double[][] beta = null;
 					double[][] se = null;
@@ -322,9 +336,17 @@ public class AssociationFile {
 						}
 					}
 					
-					if (crcol != -1) {
+					if (crcasescol != -1) {
 						try {
-							cr = Double.parseDouble(elems[crcol]);
+							crcases = Double.parseDouble(elems[crcasescol]);
+						} catch (NumberFormatException e) {
+						
+						}
+					}
+					
+					if (crcontrolscol != -1) {
+						try {
+							crcontrols = Double.parseDouble(elems[crcontrolscol]);
 						} catch (NumberFormatException e) {
 						
 						}
@@ -375,6 +397,23 @@ public class AssociationFile {
 						
 						}
 					}
+					if (dfnullcol != -1) {
+						try {
+							dfnull = Integer.parseInt(elems[dfnullcol]);
+						} catch (NumberFormatException e) {
+						
+						}
+						
+					}
+					if (dfaltcol != -1) {
+						try {
+							dfalt = Integer.parseInt(elems[dfaltcol]);
+						} catch (NumberFormatException e) {
+						
+						}
+						
+					}
+					
 					if (dfcol != -1) {
 						try {
 							df = Integer.parseInt(elems[dfcol]);
@@ -463,19 +502,23 @@ public class AssociationFile {
 					snp.setImputationQualityScore(impqualscore);
 					snp.setAlleles(alleles);
 					snp.setMinorAllele(minorAllele);
-					
+					snp.setMissingnessP(missingnessp);
+					snp.setCrCases(crcases);
+					snp.setCrControls(crcontrols);
+					snp.setMaf(maf);
+					snp.setAFCases(afcases);
+					snp.setAFControls(afcontrols);
 					
 					if (regions == null || snp.overlaps(regions)) {
 						AssociationResult result = new AssociationResult();
 						result.setSnp(snp);
-						snp.setMissingnessP(missingnessp);
-						snp.setCr(cr);
+						
 						result.setN(n);
-						snp.setMaf(maf);
-						snp.setAFCases(afcases);
-						snp.setAFControls(afcontrols);
+						
 						result.setDevianceNull(deviancenull);
 						result.setDevianceGeno(deviancegeno);
+						result.setDfnull(dfnull);
+						result.setDfalt(dfalt);
 						result.setDf(df);
 						
 						result.setBeta(beta);
@@ -513,7 +556,8 @@ public class AssociationFile {
 				"\tMinorAllele" +
 				"\tImputationQualScore" +
 				"\tN" +
-				"\tCallRate" +
+				"\tCallRateCases" +
+				"\tCallRateControls" +
 				"\tDifferentialMissingnessP" +
 				"\tMAF" +
 				"\tAFCases" +

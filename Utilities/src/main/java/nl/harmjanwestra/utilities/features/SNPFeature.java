@@ -17,8 +17,10 @@ public class SNPFeature extends Feature {
 	private double[] AFCases;
 	private double[] AFControls;
 	private double missingnessP;
-
-
+	private double crCases;
+	private double crControls;
+	
+	
 	public double getMaf() {
 		return maf;
 	}
@@ -171,5 +173,21 @@ public class SNPFeature extends Feature {
 
 	public double getMissingnessP() {
 		return missingnessP;
+	}
+	
+	public void setCrCases(double crCases) {
+		this.crCases = crCases;
+	}
+	
+	public void setCrControls(double crControls) {
+		this.crControls = crControls;
+	}
+	
+	public double getCrCases() {
+		return crCases;
+	}
+	
+	public double getCrControls() {
+		return crControls;
 	}
 }
