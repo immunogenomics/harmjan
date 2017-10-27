@@ -10,70 +10,76 @@ import java.io.IOException;
  * Created by Harm-Jan on 02/01/16.
  */
 public class TXTr {
-
+	
 	private static Options OPTIONS;
-
+	
 	static {
 		OPTIONS = new Options();
-
+		
 		Option option;
-
+		
+		option = Option.builder()
+				.desc("Test GZipped file")
+				.longOpt("testgz")
+				.build();
+		OPTIONS.addOption(option);
+		
 		option = Option.builder()
 				.desc("Split textfile by lines")
 				.longOpt("split")
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder()
 				.desc("Multiple line hashtag delimited header")
 				.longOpt("multilineheader")
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder()
 				.desc("Merge while skipping first line of all files except 1st")
 				.longOpt("merge")
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder("i")
 				.desc("Input")
 				.hasArg().required()
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder()
 				.longOpt("comma")
 				.desc("input is comma separated (in stead of a single path with locations)")
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder()
 				.longOpt("pattern")
 				.desc("input contains CHR pattern")
 				.build();
 		OPTIONS.addOption(option);
-
-
+		
+		
 		option = Option.builder("n")
 				.desc("Nr lines for splitting")
 				.hasArg()
 				.build();
 		OPTIONS.addOption(option);
-
+		
 		option = Option.builder("o")
 				.desc("Input")
 				.hasArg().required()
 				.build();
 		OPTIONS.addOption(option);
 	}
-
+	
 	public static void main(String[] args) {
 		TXTr t = new TXTr();
 		try {
 			CommandLineParser parser = new DefaultParser();
 			final CommandLine cmd = parser.parse(OPTIONS, args, true);
-
+			
 			String input = "";
 			String output = "";
 			boolean commaseparated = false;
@@ -86,9 +92,15 @@ public class TXTr {
 			if (cmd.hasOption("comma")) {
 				commaseparated = true;
 			}
-
-			if (cmd.hasOption("split")) {
-
+			
+			if (cmd.hasOption("testgz")) {
+				try {
+					t.testGZ(input);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else if (cmd.hasOption("split")) {
+				
 				if (cmd.hasOption("n")) {
 					try {
 						int nrLines = Integer.parseInt(cmd.getOptionValue("n"));
@@ -102,7 +114,7 @@ public class TXTr {
 					}
 				} else {
 					System.out.println("Use -n for --split");
-
+					
 					printHelp();
 				}
 			} else if (cmd.hasOption("merge")) {
@@ -115,25 +127,44 @@ public class TXTr {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-
+				
 			}
-
-
+			
+			
 		} catch (ParseException e) {
 			printHelp();
 			e.printStackTrace();
 		}
-
+		
 	}
-
+	
+	private void testGZ(String input) throws IOException {
+		TextFile tf = new TextFile(input, TextFile.R);
+		int ctr = 0;
+		try {
+			while (tf.readLine() != null) {
+				tf.readLine();
+				ctr++;
+				if (ctr % 1000 == 0) {
+					System.out.print(ctr + " lines parsed...\r");
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("File failed at line "+ctr);
+			e.printStackTrace();
+		}
+		System.out.println();
+		tf.close();
+	}
+	
 	public static void printHelp() {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp(" ", OPTIONS);
 		System.exit(-1);
 	}
-
+	
 	public void split(String file, String fileout, int lns) throws IOException {
-
+		
 		TextFile in = new TextFile(file, TextFile.R);
 		int ctr = 0;
 		int ctr2 = 1;
@@ -150,12 +181,12 @@ public class TXTr {
 			}
 		}
 		out.close();
-
+		
 		in.close();
 	}
-
+	
 	public void mergeSkipHeader(String fileList, String output, boolean multilinehashtagheader, boolean commasep, boolean pattern) throws IOException {
-
+		
 		String[] files = null;
 		if (pattern) {
 			files = new String[22];
@@ -169,9 +200,9 @@ public class TXTr {
 			files = tf1.readAsArray();
 			tf1.close();
 		}
-
+		
 		boolean headerwritten = false;
-
+		
 		TextFile out = new TextFile(output, TextFile.W);
 		int fctr = 0;
 		for (String file : files) {
@@ -196,20 +227,20 @@ public class TXTr {
 							out.writeln(ln);
 						}
 					}
-
+					
 					ln = in.readLine();
 					lnctr++;
 				}
-
+				
 				in.close();
 				fctr++;
 			} else {
 				System.out.println("Warning - could not find file: " + file);
 			}
-
+			
 		}
 		out.close();
-
+		
 	}
-
+	
 }
