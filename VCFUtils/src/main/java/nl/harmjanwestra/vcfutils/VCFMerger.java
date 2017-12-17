@@ -2,6 +2,7 @@ package nl.harmjanwestra.vcfutils;
 
 import com.gs.collections.api.list.MutableList;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
@@ -18,6 +19,7 @@ import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantRegionFilter;
 
 import java.io.IOException;
 import java.util.*;
@@ -826,7 +828,14 @@ public class VCFMerger {
 	Variants present in only one VCF will be given null genotypes for the samples of the other VCF
 	 */
 	
-	public void merge(String vcf1, String vcf2, String out) throws IOException {
+	public void merge(String vcf1, String vcf2, String regionFile, String out) throws IOException {
+		
+		ArrayList<Feature> regions = null;
+		if (regionFile != null) {
+			BedFileReader b = new BedFileReader();
+			regions = b.readAsList(regionFile);
+		}
+		
 		
 		System.out.println("in1: " + vcf1);
 		System.out.println("in2: " + vcf2);
@@ -866,6 +875,9 @@ public class VCFMerger {
 		
 		VCFVariantFilters filters = new VCFVariantFilters();
 		filters.addFilter(new VCFVariantImpQualFilter(0.3, true));
+		if (regions != null) {
+			filters.add(new VCFVariantRegionFilter(regions));
+		}
 		
 		if (sharedSamples.size() == 0) {
 			HashMap<String, VCFVariant> variantMap = new HashMap<String, VCFVariant>();
@@ -1388,7 +1400,7 @@ public class VCFMerger {
 				vcfln = tf.readLine();
 			}
 			tf.close();
-		
+			
 			System.out.println("Done writing");
 			vcfout.close();
 			System.out.println();
