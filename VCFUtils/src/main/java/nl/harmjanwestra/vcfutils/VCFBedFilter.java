@@ -117,7 +117,7 @@ public class VCFBedFilter {
 						vcfoutf.writeln(ln);
 					} else {
 
-						String substr = ln.substring(0, 200);
+						String substr = ln.substring(0, 1000);
 						VCFVariant v = new VCFVariant(substr, VCFVariant.PARSE.HEADER);
 						if (v.asFeature().overlaps(set)) {
 							vcfoutf.writeln(ln);

@@ -8,6 +8,7 @@ import nl.harmjanwestra.utilities.vcf.SampleAnnotation;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.AllelicDepthFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.GenotypeQualityFilter;
+import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.ReadDepthFilter;
 import nl.harmjanwestra.utilities.vcf.filter.genotypefilters.VCFGenotypeFilter;
 import nl.harmjanwestra.utilities.vcf.filter.variantfilters.*;
 
@@ -50,11 +51,23 @@ public class VCFFilter {
 		TextFile filterlog = new TextFile(out + "_log.txt", TextFile.W);
 		
 		VCFVariantFilters variantFilters = new VCFVariantFilters();
-		
-		variantFilters.add(new VCFVariantHWEPFilter(hwepthreshold, VCFVariantHWEPFilter.MODE.CONTROLS));
 		variantFilters.add(new VCFVariantCallRateFilter(callratethreshold));
-		variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.CONTROLS));
-		variantFilters.add(new VCFVariantMissingnessPFilter(missingnessthreshold));
+
+		if (missingnessthreshold > 0) {
+			variantFilters.add(new VCFVariantMissingnessPFilter(missingnessthreshold));
+		}
+		
+		if (fam != null) {
+			variantFilters.add(new VCFVariantHWEPFilter(hwepthreshold, VCFVariantHWEPFilter.MODE.CONTROLS));
+		} else if (hwepthreshold > 0) {
+			variantFilters.add(new VCFVariantHWEPFilter(hwepthreshold, VCFVariantHWEPFilter.MODE.DEFAULT));
+		}
+		
+		if (fam != null) {
+			variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.CONTROLS));
+		} else {
+			variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.DEFAULT));
+		}
 		
 		System.out.println(variantFilters.toString());
 		if (!Gpio.exists(in)) {
@@ -62,12 +75,16 @@ public class VCFFilter {
 			System.exit(-1);
 		}
 		
-		if (!Gpio.exists(fam)) {
-			System.out.println("Could not find FAM file");
-			System.exit(-1);
+		SampleAnnotation sampleAnnotation = null;
+		if (fam != null) {
+			if (!Gpio.exists(fam)) {
+				System.out.println("Could not find FAM file");
+				System.exit(-1);
+			}
+			PlinkFamFile pf = new PlinkFamFile(fam);
+			sampleAnnotation = pf.getSampleAnnotation();
 		}
-		PlinkFamFile pf = new PlinkFamFile(fam);
-		SampleAnnotation sampleAnnotation = pf.getSampleAnnotation();
+		
 		
 		ArrayList<VCFGenotypeFilter> genotypeFilters = new ArrayList<>();
 		if (gqual != null) {
@@ -84,6 +101,7 @@ public class VCFFilter {
 			}
 		} else if (readdepth != null) {
 			System.out.println("Adding read depth filter: " + readdepth);
+			genotypeFilters.add(new ReadDepthFilter(readdepth));
 		}
 		
 		String logheader = "Variant"
@@ -99,7 +117,8 @@ public class VCFFilter {
 				+ "\tCallRateControls"
 				+ "\tCallRate"
 				+ "\tCallRate-P"
-				+ "\tPassesThresholds";
+				+ "\tPassesThresholds"
+				+ "\tFailedFilter";
 		
 		System.out.println("Starting filter...");
 		filterlog.writeln(logheader);
@@ -119,12 +138,13 @@ public class VCFFilter {
 				}
 				
 				System.out.println(samples.size() + " individuals in VCF");
-				sampleAnnotation.reorder(samples, true);
-				
-				int nrSamplesWithAnnotation = sampleAnnotation.getSampleName().length;
-				if (nrSamplesWithAnnotation != samples.size()) {
-					System.err.println("Error: nr of samples with annotation: " + nrSamplesWithAnnotation + ", while number of samples in VCF: " + samples.size());
-					System.exit(-1);
+				if (sampleAnnotation != null) {
+					sampleAnnotation.reorder(samples, true);
+					int nrSamplesWithAnnotation = sampleAnnotation.getSampleName().length;
+					if (nrSamplesWithAnnotation != samples.size()) {
+						System.err.println("Error: nr of samples with annotation: " + nrSamplesWithAnnotation + ", while number of samples in VCF: " + samples.size());
+						System.exit(-1);
+					}
 				}
 				tf2.writeln(ln);
 			} else {
@@ -139,11 +159,11 @@ public class VCFFilter {
 						passesThresholds = true;
 					}
 				}
-				
-				if (var.getId().equals("rs3826110")) {
-					VCFVariantMissingnessPFilter v = new VCFVariantMissingnessPFilter(missingnessthreshold);
-					System.out.println(var.getId() + "\t" + var.getDiffMissingnessP() + "\t" + v.passesThreshold(var) + "\t" + passesThresholds);
-				}
+
+//				if (var.getId().equals("rs3826110")) {
+//					VCFVariantMissingnessPFilter v = new VCFVariantMissingnessPFilter(missingnessthreshold);
+//					System.out.println(var.getId() + "\t" + var.getDiffMissingnessP() + "\t" + v.passesThreshold(var) + "\t" + passesThresholds);
+//				}
 				
 				String logout = var.toString()
 						+ "\t" + Strings.concat(var.getAlleles(), Strings.comma)
@@ -159,15 +179,21 @@ public class VCFFilter {
 						+ "\t" + var.getCallrate()
 						+ "\t" + var.getDiffMissingnessP()
 						+ "\t" + passesThresholds;
+				if (variantFilters.getFailedFilter() != null) {
+					logout += "\t" + variantFilters.getFailedFilter().toString();
+				} else {
+					logout += "\tNA";
+				}
 				filterlog.writeln(logout);
 				
 			}
 			ln = tf1.readLine();
 			if (lnctr % 1000 == 0) {
-				System.out.println(lnctr + " lines parsed. " + kept + " kept.");
+				System.out.print("\r"+lnctr + " lines parsed. " + kept + " kept.");
 			}
 			lnctr++;
 		}
+		System.out.println();
 		
 		tf1.close();
 		tf2.close();

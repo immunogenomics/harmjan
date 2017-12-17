@@ -17,10 +17,10 @@ import java.io.IOException;
  * Created by hwestra on 11/23/15.
  */
 public class Main {
-
-
+	
+	
 	public static void main(String[] args) {
-
+		
 		try {
 			MainOptions options = new MainOptions(args);
 			if (options.mode.equals(MainOptions.MODE.NA)) {
@@ -43,6 +43,8 @@ public class Main {
 				new AssociationResultMerger(new AssociationResultMergerOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.UPDATERS)) {
 				new ReannotateRSIds(new ReannotateRSIdsOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.FILTERASSOC)) {
+				new AssociationResultFilter(new AssociationFilterOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.QTL)) {
 				new QTLTest(new QTLTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.GUESS)) {
@@ -61,14 +63,16 @@ public class Main {
 				}
 			} else if (options.mode.equals(MainOptions.MODE.COUNTVARIANTS)) {
 				new CountVariants(new CountVariantsOptions(args));
+			} else if (options.mode.equals(MainOptions.MODE.PLINK)) {
+				new PLINKPCAConvert(args);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
 			e.printStackTrace();
 		}
-
+		
 	}
-
-
+	
+	
 }

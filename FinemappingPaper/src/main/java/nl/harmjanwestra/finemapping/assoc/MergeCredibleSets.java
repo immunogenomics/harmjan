@@ -2,6 +2,7 @@ package nl.harmjanwestra.finemapping.assoc;
 
 import com.itextpdf.text.DocumentException;
 import nl.harmjanwestra.finemapping.annotation.EQTL;
+import nl.harmjanwestra.finemappingtools.gwas.PosteriorPvalues;
 import nl.harmjanwestra.utilities.annotation.Annotation;
 import nl.harmjanwestra.utilities.annotation.ensembl.EnsemblStructures;
 import nl.harmjanwestra.utilities.annotation.gtf.GTFAnnotation;
@@ -20,6 +21,7 @@ import nl.harmjanwestra.utilities.graphics.panels.AnnotationTrackPanel;
 import nl.harmjanwestra.utilities.graphics.panels.AssociationPanel;
 import nl.harmjanwestra.utilities.graphics.panels.CircularHeatmapPanel;
 import nl.harmjanwestra.utilities.graphics.panels.GenePanel;
+import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
@@ -29,6 +31,7 @@ import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -74,36 +77,79 @@ public class MergeCredibleSets {
 //
 //			};
 			
-			String[] assocfiles = new String[]{
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\HRC-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-PBWT-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-PBWT-T1D-wGenotypes\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\HRC-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-merged-posterior.txt.gz",
-			};
-			
-			String[] datasetnames = new String[]{
-					"1kg-RA",
-					"HRC-RA",
-					"1kg-T1D",
-					"1kg-PBWT-T1D",
-					"1kg-PBWT-T1D-wGenotypes",
-					"HRC-T1D",
-					"1kg-META",
-				
-			};
-			
 			
 			double significanceThreshold = 7.5E-7;
 			int nrVariantsInCredibleSet = 10;
-			double maxPosteriorCredibleSet = 0.9;
+			double maxPosteriorCredibleSet = 0.95;
 			boolean includeAllLoci = true;
 			
+			String[] assocfiles = new String[]{
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\normal\\mergedcrediblesets\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-PBWT-RA-wGenotypes\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\HRC-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\normal\\mergedcrediblesets\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-PBWT-T1D-wGenotypes\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\HRC-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\normal\\mergedcrediblesets\\META-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-PBWT-META-wGenotypes\\META-assoc0.3-COSMO-merged-posterior.txt.gz",
+			};
+			String[] datasetnames = new String[]{
+					"1kg-RA-orig",
+					"1kg-RA",
+					"1kg-PBWT-RA",
+					"HRC-RA",
+					"1kg-T1D-orig",
+					"1kg-T1D",
+					"1kg-PBWT-T1D",
+					"HRC-T1D",
+					"1kg-META-orig",
+					"1kg-META",
+					"1kg-PBWT-META"
+			};
+			
+			// merge in TYK2
+			assocfiles = new String[]{
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt"
+			};
+			String[] assocfiles2 = new String[]{
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
+			};
+
+//			c.replaceLocus(assocfiles, assocfiles2, new Feature(Chromosome.NINETEEN, 10396336, 10628468), bedregions, maxPosteriorCredibleSet);
+			
+			
+			assocfiles = new String[]{
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
+			};
+			
+			
+			assocfiles = new String[]{
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
+			};
+			datasetnames = new String[]{
+					"1kg-RA",
+					"1kg-T1D",
+					"1kg-META"
+				
+			};
+			
+			outfile += "missp.txt";
+			
 			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+			System.out.println(outfile + "missp.txt");
 //
-			boolean onlyincludevariantsbelowsignificancethreshold = false;
+//			boolean onlyincludevariantsbelowsignificancethreshold = true;
 //			c.makeCircularPlot(bedregions,
 //					assocfiles,
 //					datasetnames,
@@ -265,6 +311,42 @@ public class MergeCredibleSets {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private void replaceLocus(String[] assocfiles, String[] assocfiles2, Feature feature, String regionfile, double bayesthreshold) throws IOException {
+		
+		for (int q = 0; q < assocfiles2.length; q++) {
+			if (Gpio.exists(assocfiles[q]) && Gpio.exists(assocfiles2[q])) {
+				AssociationFile f = new AssociationFile();
+				ArrayList<AssociationResult> results1 = f.read(assocfiles2[q]);
+				ArrayList<AssociationResult> filteredResults = new ArrayList<>();
+				System.out.println(results1.size() + " results in " + assocfiles2[q]);
+				for (AssociationResult r : results1) {
+					if (!r.getSnp().overlaps(feature)) {
+						filteredResults.add(r);
+					}
+				}
+				System.out.println(filteredResults.size() + " results after filtering");
+				ArrayList<AssociationResult> results2 = f.read(assocfiles[q]);
+				// calculate posteriors
+				ApproximateBayesPosterior abf = new ApproximateBayesPosterior();
+				abf.calculatePosterior(results2);
+				filteredResults.addAll(results2);
+				System.out.println(filteredResults.size() + " results after merging.");
+				// overwrite original
+				TextFile tf = new TextFile(assocfiles2[q] + "_tmp", TextFile.W);
+				tf.writeln(f.getHeader());
+				for (AssociationResult r : filteredResults) {
+					tf.writeln(r.toString());
+				}
+				tf.close();
+				PosteriorPvalues post = new PosteriorPvalues();
+				post.determinePosteriors(assocfiles2[q] + "_tmp", regionfile, assocfiles2[q], bayesthreshold);
+				Gpio.delete(assocfiles2[q] + "_tmp");
+			}
+		}
+		
+		
 	}
 	
 	private void rewritepQTLFiles() throws IOException {

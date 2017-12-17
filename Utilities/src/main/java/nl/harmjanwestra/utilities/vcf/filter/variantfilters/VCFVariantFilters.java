@@ -37,13 +37,21 @@ public class VCFVariantFilters {
 		
 	}
 	
+	VCFVariantFilter failedFilter = null;
+	
 	public boolean passesFilters(VCFVariant v) {
 		for (VCFVariantFilter f : filters) {
 			if (!f.passesThreshold(v)) {
+				failedFilter = f;
 				return false;
 			}
 		}
+		failedFilter = null;
 		return true;
+	}
+	
+	public VCFVariantFilter getFailedFilter() {
+		return failedFilter;
 	}
 	
 	public String toString() {
@@ -73,6 +81,10 @@ public class VCFVariantFilters {
 	public boolean hasRegionOrVariantSetFilter() {
 		
 		return hasRegionOrSetFilter;
+	}
+	
+	public ArrayList<VCFVariantFilter> getFilters() {
+		return filters;
 	}
 }
 

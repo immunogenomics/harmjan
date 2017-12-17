@@ -21,29 +21,106 @@ import java.util.HashSet;
  * Created by hwestra on 11/23/15.
  */
 public class AssociationResultMerger {
-
-
+	
+	
 	AssociationResultMergerOptions options;
-
+	
+	
 	public AssociationResultMerger(AssociationResultMergerOptions options) throws IOException {
 		this.options = options;
-
-		if (options.isConcat()) {
+		AssociationResultMergerOptions.MODE m = options.getMode();
+		if (m.equals(AssociationResultMergerOptions.MODE.EXHAUSTIVE)) {
+			mergeExhaustive(options.getInput(), options.getOutputprefix(), options.getNrBatches(), options.getIsIgnoreMissing());
+		} else if (m.equals(AssociationResultMergerOptions.MODE.CONCAT)) {
 			concat(options.getInput(), options.getOutputprefix());
 		} else {
-
 			mergeDatasetDifferentReferences(options.getOutputprefix(),
 					options.getRefStr(),
 					options.getInput(),
 					options.getRegions(),
 					options.getBayesthreshold());
-
+			
 		}
 	}
-
+	
+	public void mergeExhaustive(String loc, String outLoc, int nrBatches, boolean ignoremissing) throws IOException {
+		
+		// path: /path/to/batches/chr/ds-BATCH.txt.gz
+		// path: /path/to/batches/chr/ds-BATCH-checkpoint.txt.gz
+		
+		// check whether all the files are there..
+		boolean allFilesPresent = true;
+		boolean allFilesCorrectLen = true;
+		for (int i = 1; i < nrBatches + 1; i++) {
+			String filename = loc.replaceAll("BATCH", "" + i);
+			String checkpoint = filename.replaceAll(".txt.gz", "-checkpoint.txt.gz");
+			if (!Gpio.exists(filename) || !Gpio.exists(checkpoint)) {
+				System.out.println("file or checkpoint not found:\t" + filename + "\t" + checkpoint);
+				allFilesPresent = false;
+			} else {
+				// check whether the files are completed successfully
+				
+				TextFile tf = new TextFile(checkpoint, TextFile.R);
+				String nrlninesStr = tf.readLine();
+				String[] nrlinesStrElems = nrlninesStr.split("\t");
+				
+				int nrEffectsSubmit = Integer.parseInt(nrlinesStrElems[0]);
+				int nrEffectsRecvd = nrEffectsSubmit;
+				if (nrlinesStrElems.length > 1) {
+					nrEffectsRecvd = Integer.parseInt(nrlinesStrElems[1]);
+				}
+				tf.close();
+				
+				tf = new TextFile(filename, TextFile.R);
+				int nrLinesInFile = tf.countLines();
+				tf.close();
+				nrLinesInFile -= 1;
+//				if ((nrEffectsSubmit - nrEffectsRecvd) > 2) {
+				if (nrLinesInFile != nrEffectsSubmit) {
+					System.out.println("expected: " + nrEffectsSubmit + " but found " + nrLinesInFile + " for\t" + filename);
+					allFilesCorrectLen = false;
+				}
+//				}
+				if (ignoremissing) {
+					allFilesCorrectLen = true;
+				}
+			}
+		}
+		
+		if (allFilesPresent && allFilesCorrectLen) {
+			
+			System.out.println("OK: " + loc + "\tWriting to: " + outLoc);
+			
+			TextFile out = new TextFile(outLoc, TextFile.W);
+			for (int i = 1; i < nrBatches + 1; i++) {
+				String filename = loc.replaceAll("BATCH", "" + i);
+//				String checkpoint = filename.replaceAll(".txt.gz", "-checkpoint.txt.gz");
+				
+				TextFile tf = new TextFile(filename, TextFile.R);
+				String header = tf.readLine();
+				if (i == 1) {
+					out.writeln(header);
+				}
+				
+				String ln = tf.readLine();
+				while (ln != null) {
+					out.writeln(ln);
+					ln = tf.readLine();
+				}
+				tf.close();
+				System.out.print("\r" + i + "/" + (nrBatches + 1) + " files processed");
+			}
+			out.close();
+			System.out.println();
+			System.out.println("done");
+		}
+		
+		
+	}
+	
 	private void concat(String fileStr, String outfile) throws IOException {
 		String[] files = fileStr.split(",");
-
+		
 		if (files.length == 1) {
 			if (files[0].contains("CHR")) {
 				String[] tmpfiles = new String[22];
@@ -54,10 +131,10 @@ public class AssociationResultMerger {
 				files = tmpfiles;
 			}
 		}
-
+		
 		TextFile out = new TextFile(outfile, TextFile.W);
 		boolean headerwritten = false;
-
+		
 		System.out.println("Concatenating " + files.length + " files into: " + outfile);
 		int totalvars = 0;
 		for (String file : files) {
@@ -82,13 +159,13 @@ public class AssociationResultMerger {
 		out.close();
 		System.out.println("Done. " + totalvars + " associations written.");
 	}
-
+	
 	private void mergeDatasetDifferentReferences(String outputprefix,
 												 String refStr,
 												 String refFileStr,
 												 String regionfile,
 												 double bayesthreshold) throws IOException {
-
+		
 		String[] refs = refStr.split(",");
 		String[] refFiles = refFileStr.split(",");
 		ArrayList<ArrayList<AssociationResult>> associationResults = new ArrayList<>();
@@ -98,7 +175,7 @@ public class AssociationResultMerger {
 			System.out.println(results.size() + " associations read from: " + refs[f] + "; " + refFiles[f]);
 			associationResults.add(results);
 		}
-
+		
 		// get a list of unique variants
 		HashMap<Feature, Integer> uniqueVariants = new HashMap<Feature, Integer>();
 		ArrayList<Feature> allVariants = new ArrayList<>();
@@ -112,19 +189,19 @@ public class AssociationResultMerger {
 				} else {
 					dsVariants.add(snp);
 				}
-
+				
 				if (!uniqueVariants.containsKey(snp)) {
 					uniqueVariants.put(snp, uniqueVariants.size());
 					allVariants.add(snp);
 				}
-
+				
 			}
 			System.out.println(uniqueVariants.size() + " unique variants total after " + refs[q]);
 		}
-
-
+		
+		
 		System.out.println(uniqueVariants.size() + " unique variants total");
-
+		
 		// put them in a matrix for ease of use
 		AssociationResult[][] matrix = new AssociationResult[refs.length][uniqueVariants.size()];
 		for (int q = 0; q < associationResults.size(); q++) {
@@ -138,7 +215,7 @@ public class AssociationResultMerger {
 			}
 			System.out.println(uniqueVariants.size() + " unique variants total after " + refs[q]);
 		}
-
+		
 		// assign regions to variants
 		BedFileReader bf = new BedFileReader();
 		ArrayList<Feature> regions = bf.readAsList(regionfile);
@@ -152,8 +229,8 @@ public class AssociationResultMerger {
 				}
 			}
 		}
-
-
+		
+		
 		// headers etc
 		String outfilename = outputprefix + "-MergedTable.txt";
 		String credibleSetOut = outputprefix + "-CredibleSets-" + bayesthreshold + ".txt";
@@ -176,18 +253,18 @@ public class AssociationResultMerger {
 					+ "\tORs-" + rname
 					+ "\tPosteriors-" + rname;
 		}
-
-
+		
+		
 		// determine credible sets per region....
 		ApproximateBayesPosterior abp = new ApproximateBayesPosterior();
 		TextFile outfilecs = new TextFile(credibleSetOut, TextFile.W);
 		outfilecs.writeln(credibleSetHeader);
-
+		
 		System.out.println("Writing credible sets: " + credibleSetOut);
 		if (options.isRecalculatePosteriors()) {
 			System.out.println("Recalculating posteriors..");
 		}
-
+		
 		for (int r = 0; r < regions.size(); r++) {
 			// get variants in region
 			Feature region = regions.get(r);
@@ -199,7 +276,7 @@ public class AssociationResultMerger {
 				}
 			}
 			String line = region.toString() + "\t" + variantsInRegion.size();
-
+			
 			for (int ref = 0; ref < refs.length; ref++) {
 				ArrayList<AssociationResult> dsAssociations = new ArrayList<>();
 				for (Integer i : variantsInRegion) {
@@ -208,13 +285,13 @@ public class AssociationResultMerger {
 						dsAssociations.add(f);
 					}
 				}
-
+				
 				if (options.isRecalculatePosteriors()) {
 					abp.calculatePosterior(dsAssociations);
 				}
-
+				
 				ArrayList<AssociationResult> credibleSet = abp.createCredibleSet(dsAssociations, bayesthreshold);
-
+				
 				double[] csPosteriors = new double[credibleSet.size()];
 				double[] csPvals = new double[credibleSet.size()];
 				String[] csORs = new String[credibleSet.size()];
@@ -227,7 +304,7 @@ public class AssociationResultMerger {
 					Feature f = result.getSnp();
 					csNames[v] = f.getChromosome().toString() + ":" + f.getStart() + "-" + f.getName();
 				}
-
+				
 				line += "\t" + credibleSet.size();
 				line += "\t" + dsAssociations.size();
 				line += "\t" + Strings.concat(csNames, Strings.semicolon);
@@ -238,15 +315,15 @@ public class AssociationResultMerger {
 			outfilecs.writeln(line);
 		}
 		outfilecs.close();
-
+		
 		TextFile outfile = new TextFile(outfilename, TextFile.W);
 		System.out.println("Output will be written to: " + outfilename);
 		outfile.writeln(header);
-
+		
 		for (int f = 0; f < allVariants.size(); f++) {
 			Feature snp = allVariants.get(f);
 			Integer index = uniqueVariants.get(snp);
-
+			
 			StringBuilder ln = new StringBuilder();
 			ln.append(snp.getParent().toString());
 			ln.append("\t").append(snp.getStart());
@@ -276,8 +353,8 @@ public class AssociationResultMerger {
 			outfile.writeln(ln.toString());
 		}
 		outfile.close();
-
-
+		
+		
 	}
-
+	
 }

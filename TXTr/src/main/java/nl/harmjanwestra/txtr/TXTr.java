@@ -143,7 +143,6 @@ public class TXTr {
 		int ctr = 0;
 		try {
 			while (tf.readLine() != null) {
-				tf.readLine();
 				ctr++;
 				if (ctr % 1000 == 0) {
 					System.out.print(ctr + " lines parsed...\r");

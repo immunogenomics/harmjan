@@ -27,7 +27,7 @@ public class PlotterImpQual {
 	int width = 640;
 	int height = 480;
 	boolean onlyIc = false;
-	boolean windows = false;
+	boolean windows = true;
 
 	public static void main(String[] args) {
 
@@ -80,7 +80,7 @@ public class PlotterImpQual {
 
 		// T1D
 		files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO//T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-HRC-EAGLE.vcf.gz",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-04-INFO/T1D-HRC-SHAPEIT.vcf.gz",
@@ -101,42 +101,82 @@ public class PlotterImpQual {
 
 		if (windows) {
 
-			// RA
+//			// RA
+//			files = new String[]{
+//					"D:\\tmp\\2016-07-10\\RA-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+//					"D:\\tmp\\2016-07-10\\RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+//					"D:\\tmp\\2016-07-10\\RA-HRC-w100kb.vcf.gz"
+//			};
+//			labels = new String[]{
+//					"EUR",
+//					"COSMO",
+//					"HRC"
+//			};
+//			variantsOnIC = "D:\\tmp\\2016-07-10\\T1D-recode-stats.vcf.gz";
+//			bedregions = "D:\\tmp\\2016-07-10\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+//			outdir = "D:\\tmp\\2016-07-10\\RA-plotsImpQual\\";
+//
+//
+//			// T1D
+//			files = new String[]{
+//					"D:\\tmp\\2016-07-10\\T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
+//					"D:\\tmp\\2016-07-10\\T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
+//					"D:\\tmp\\2016-07-10\\T1D-HRC-EAGLE.vcf.gz",
+//					"D:\\tmp\\2016-07-10\\T1D-HRC-SHAPEIT.vcf.gz",
+//					"D:\\tmp\\2016-07-10\\T1D-HRC-EAGLE-Michigan.vcf.gz",
+//
+//
+//			};
+//			labels = new String[]{
+//					"EUR",
+//					"COSMO",
+//					"HRC / EAGLE",
+//					"HRC / SHAPEIT",
+//					"HRC / EAGLE / MICHIGAN"
+//			};
+//			variantsOnIC = "D:\\tmp\\2016-07-10\\T1D-recode-stats.vcf.gz";
+//			bedregions = "D:\\tmp\\2016-07-10\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+//			outdir = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-21-ImputationQuality\\2016-07-10-INFO\\T1D-plotsImpQual\\";
+			
+			
+			// RA 2017
 			files = new String[]{
-					"D:\\tmp\\2016-07-10\\RA-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
-					"D:\\tmp\\2016-07-10\\RA-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
-					"D:\\tmp\\2016-07-10\\RA-HRC-w100kb.vcf.gz"
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\RA-EUR.vcf.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\RA-COSMO.vcf.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\RA-HRC-EAGLE.vcf.gz",
 			};
 			labels = new String[]{
 					"EUR",
 					"COSMO",
 					"HRC"
 			};
-			variantsOnIC = "D:\\tmp\\2016-07-10\\T1D-recode-stats.vcf.gz";
-			bedregions = "D:\\tmp\\2016-07-10\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
-			outdir = "D:\\tmp\\2016-07-10\\RA-plotsImpQual\\";
-
-
-			// T1D
-			files = new String[]{
-					"D:\\tmp\\2016-07-10\\T1D-Beagle1kg-regionfiltered-EUR-ImpQualsReplaced-stats.vcf.gz",
-					"D:\\tmp\\2016-07-10\\T1D-Beagle1kg-regionfiltered-COSMO-ImpQualsReplaced-stats.vcf.gz",
-					"D:\\tmp\\2016-07-10\\T1D-HRC-EAGLE.vcf.gz",
-					"D:\\tmp\\2016-07-10\\T1D-HRC-SHAPEIT.vcf.gz",
-					"D:\\tmp\\2016-07-10\\T1D-HRC-EAGLE-Michigan.vcf.gz",
-
-
-			};
-			labels = new String[]{
-					"EUR",
-					"COSMO",
-					"HRC / EAGLE",
-					"HRC / SHAPEIT",
-					"HRC / EAGLE / MICHIGAN"
-			};
-			variantsOnIC = "D:\\tmp\\2016-07-10\\T1D-recode-stats.vcf.gz";
-			bedregions = "D:\\tmp\\2016-07-10\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
-			outdir = "D:\\Cloud\\Dropbox\\2016-03-RAT1D-Finemappng\\Data\\2016-06-21-ImputationQuality\\2016-07-10-INFO\\T1D-plotsImpQual\\";
+			variantsOnIC = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\";
+			variantsOnIC = null;
+			bedregions = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-09-06-SummaryStats\\NormalHWEP1e4\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+			outdir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\RA\\";
+			
+			
+			// T1D 2017
+//			files = new String[]{
+//					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\T1D-EUR.vcf.gz",
+//					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\T1D-COSMO.vcf.gz",
+//					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\T1D-HRC-EAGLE.vcf.gz",
+//					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\T1D-HRC-SHAPEIT.vcf.gz",
+//					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\T1D-HRC-Michigan.vcf.gz",
+//
+//
+//			};
+//			labels = new String[]{
+//					"EUR",
+//					"COSMO",
+//					"HRC / EAGLE",
+//					"HRC / SHAPEIT",
+//					"HRC / EAGLE / MICHIGAN"
+//			};
+//			variantsOnIC = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\";
+//			variantsOnIC = null;
+//			bedregions = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-09-06-SummaryStats\\NormalHWEP1e4\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+//			outdir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\infoscores\\T1D\\";
 		}
 
 		if (!Gpio.exists(outdir)) {

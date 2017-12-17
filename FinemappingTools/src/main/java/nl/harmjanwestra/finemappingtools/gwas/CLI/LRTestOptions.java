@@ -11,6 +11,7 @@ public class LRTestOptions {
 	
 	static {
 		OPTIONS = new Options();
+		
 		Option option = Option.builder().longOpt("gwas").build();
 		OPTIONS.addOption(option);
 		
@@ -221,6 +222,20 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 		
 		option = Option.builder()
+				.longOpt("batchid")
+				.hasArg()
+				.desc("Batch id for batchifying tasks")
+				.build();
+		OPTIONS.addOption(option);
+		
+		option = Option.builder()
+				.longOpt("batchsize")
+				.hasArg()
+				.desc("Batch size for batchifying tasks")
+				.build();
+		OPTIONS.addOption(option);
+		
+		option = Option.builder()
 				.longOpt("assocfile")
 				.desc("Associationfile (for use with FINEMAP).")
 				.hasArg()
@@ -245,6 +260,8 @@ public class LRTestOptions {
 	public double collinearitythreshold = 0.9;
 	private String assocFile;
 	private Double missingNessP;
+	private Integer batchsize = null;
+	private Integer batchid = null;
 	
 	public Integer getStartIter() {
 		return startIter;
@@ -320,6 +337,20 @@ public class LRTestOptions {
 			if (cmd.hasOption("haporthreshold")) {
 				haplotypeOrThresholdFile = cmd.getOptionValue("haporthreshold");
 			}
+			
+			if (cmd.hasOption("batchsize")) {
+				batchsize = Integer.parseInt(cmd.getOptionValue("batchsize"));
+			}
+			
+			if(cmd.hasOption("batchid")){
+				batchid = Integer.parseInt(cmd.getOptionValue("batchid"));
+			}
+			
+//			if(batchsize!=null && batchid !=null){
+//
+//			} else {
+//
+//			}
 			
 			if (cmd.hasOption("nomissing")) {
 				assumeNoMissingData = true;
@@ -605,6 +636,14 @@ public class LRTestOptions {
 	
 	public Double getMissingNessP() {
 		return missingNessP;
+	}
+	
+	public Integer getBatchsize() {
+		return batchsize;
+	}
+	
+	public Integer getBatchid() {
+		return batchid;
 	}
 	
 	public enum ANALYSIS {

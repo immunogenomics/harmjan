@@ -4,6 +4,8 @@ import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
@@ -40,18 +42,30 @@ public class CompareDatasetsZScores {
 		
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ZScoreComparisons/regionsToCompare.bed";
 		bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci.bed";
-		String outloc = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-15-ReImpute3\\normal\\1kg-T1D-ComparisonToOldResults";
+		String outloc = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\woSharedSamples\\";
 		String[] assocfiles = new String[]{
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-15-ReImpute3\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-03-25-SummaryStats\\normal\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz"
+				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\woSharedSamples\\RA-assoc0.3-COSMO-merged.txt.gz",
+				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\woSharedSamples\\T1D-assoc0.3-COSMO-merged.txt.gz"
 		};
 //
 		String[] assocfilenames = new String[]{
-				"2017-08-15",
-				"2017-03-25",
+				"RA",
+				"T1D",
 		};
 		
 		String regionToGenesFile = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
+		
+		
+		assocfiles = new String[]{
+				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\output\\META-ORIG-assoc0.3-COSMO-merged.txt.gz",
+				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\output\\META-assoc0.3-COSMO-merged.txt.gz"
+		};
+		assocfilenames = new String[]{
+				"META-covars",
+				"META-PCA",
+		};
+		
+		outloc = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\pcanonpcacomp";
 		
 		
 		CompareDatasetsZScores z = new CompareDatasetsZScores();
@@ -190,6 +204,11 @@ public class CompareDatasetsZScores {
 //					String fname = outloc + assocfilenames[a] + "-" + assocfilenames[b] + "-" + region.toString() + ".txt";
 					
 					if (!shared.isEmpty()) {
+						
+						Pair<double[], double[]> zs = removeNaN(z1, z2);
+						z1 = zs.getLeft();
+						z2 = zs.getRight();
+						
 						for (int i = 0; i < z1.length; i++) {
 							String allelesA = Strings.concat(resultA[i].getSnp().getAlleles(), Strings.comma);
 							String minorAlleleA = resultA[i].getSnp().getMinorAllele();
@@ -199,11 +218,11 @@ public class CompareDatasetsZScores {
 							double seA = resultA[i].getSe()[0][0];
 							int nA = resultA[i].getN();
 							
-							if (betaA < 0 && z1[i] > 0 || z1[i] < 0 && betaA > 0) {
-								double z = resultA[i].getZ();
-								System.out.println(betaA + "\t" + seA + "\t" + z + "\t" + z1[i]);
-								System.exit(-1);
-							}
+//							if (betaA < 0 && z1[i] > 0 || z1[i] < 0 && betaA > 0) {
+//								double z = resultA[i].getZ();
+//								System.out.println(betaA + "\t" + seA + "\t" + z + "\t" + z1[i]);
+//								System.exit(-1);
+//							}
 							
 							
 							String allelesB = Strings.concat(shared.get(i).getSnp().getAlleles(), Strings.comma);
@@ -250,6 +269,8 @@ public class CompareDatasetsZScores {
 							);
 						}
 						
+						
+						
 						double corr = Correlation.correlate(z1, z2);
 						SpearmansCorrelation c = new SpearmansCorrelation();
 						double spear = c.correlation(z1, z2);
@@ -276,6 +297,21 @@ public class CompareDatasetsZScores {
 		out.close();
 		
 		
+	}
+	
+	private Pair<double[], double[]> removeNaN(double[] z1, double[] z2) {
+		ArrayList<Double> d1 = new ArrayList<>();
+		ArrayList<Double> d2 = new ArrayList<>();
+		
+		for (int i = 0; i < z1.length; i++) {
+			if (!Double.isNaN(z1[i]) && !Double.isNaN(z2[i])) {
+				d1.add(z1[i]);
+				d2.add(z2[i]);
+			}
+		}
+		double[] o1 = Primitives.toPrimitiveArr(d1.toArray(new Double[0]));
+		double[] o2 = Primitives.toPrimitiveArr(d2.toArray(new Double[0]));
+		return new Pair<double[], double[]>(o1, o2);
 	}
 	
 	private ArrayList<AssociationResult> filter(ArrayList<AssociationResult> res, Feature region) {

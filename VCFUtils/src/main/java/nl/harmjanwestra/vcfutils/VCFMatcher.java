@@ -168,8 +168,6 @@ public class VCFMatcher {
 						String refMinorAllele = refVariant.getMiddle();
 						String[] testVariantAlleles = testVar.getAlleles();
 						String testVariantMinorAllele = testVar.getMinorAllele();
-
-
 						int nridenticalalleles = merger.countIdenticalAlleles(refAlleles, testVariantAlleles);
 						GenotypeTools gtools = new GenotypeTools();
 

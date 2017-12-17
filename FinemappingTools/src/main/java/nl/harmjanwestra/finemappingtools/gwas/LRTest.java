@@ -287,6 +287,8 @@ public class LRTest {
 		System.out.println("Covar: " + options.getCovariateFile());
 		System.out.println("Disease: " + options.getDiseaseStatusFile());
 		System.out.println("Out: " + options.getOutputdir());
+		System.out.println("Batch: " + options.getBatchid());
+		System.out.println("Batch Size: " + options.getBatchsize());
 		
 		boolean multinomial = false;
 		
@@ -1069,6 +1071,13 @@ public class LRTest {
 			if (availableRegions.isEmpty() || variantsInRegions.isEmpty()) {
 				// print some fancy error message;
 				System.out.println("Sorry. No work.");
+				Integer batchid = options.getBatchid();
+				if (batchid != null) {
+					String outfile = options.getOutputdir() + "pairwise-" + batchid + "-checkpoint.txt.gz";
+					TextFile outf = new TextFile(outfile, TextFile.W);
+					outf.writeln("" + 0);
+					outf.close();
+				}
 			} else {
 				System.out.println(availableRegions.size() + " regions to query.");
 				CompletionService<AssociationResultPairwise> jobHandler = new ExecutorCompletionService<AssociationResultPairwise>(exService);
@@ -1088,7 +1097,15 @@ public class LRTest {
 				int submitted = 0;
 				for (Feature region : availableRegions) {
 					ArrayList<VCFVariant> variants = variantsInRegions.get(region);
-					for (int i = 0; i < variants.size(); i++) {
+					Integer offset = options.getBatchsize();
+					Integer start = options.getBatchid();
+					if (offset == null || start == null) {
+						offset = 1;
+						start = 0;
+					} else {
+						start -= 1;
+					}
+					for (int i = start; i < variants.size(); i += offset) {
 						for (int j = i + 1; j < variants.size(); j++) {
 							// submit job to queue;
 							LRTestExhaustiveTask lrtet = new LRTestExhaustiveTask(variants,
@@ -1110,10 +1127,17 @@ public class LRTest {
 				System.out.println("Submitted a total of " + submitted + " jobs");
 				ProgressBar pb = new ProgressBar(submitted);
 				int returned = 0;
-				TextFile pvalOut = new TextFile(options.getOutputdir() + "pairwise.txt.gz", TextFile.W);
-				AssociationFilePairwise assocFile = new AssociationFilePairwise();
+				String outfile = options.getOutputdir() + "pairwise.txt.gz";
+				Integer batchid = options.getBatchid();
 				
+				if (batchid != null) {
+					outfile = options.getOutputdir() + "pairwise-" + batchid + ".txt.gz";
+				}
+				
+				TextFile pvalOut = new TextFile(outfile, TextFile.W);
+				AssociationFilePairwise assocFile = new AssociationFilePairwise();
 				pvalOut.writeln(assocFile.getHeader());
+				int written = 0;
 				while (returned < submitted) {
 					try {
 						Future<AssociationResultPairwise> future = jobHandler.take();
@@ -1122,6 +1146,7 @@ public class LRTest {
 							if (result != null) {
 								// write to disk
 								pvalOut.writeln(result.toString());
+								written++;
 							}
 						}
 						returned++;
@@ -1136,6 +1161,13 @@ public class LRTest {
 				}
 				pvalOut.close();
 				pb.close();
+				
+				if (batchid != null) {
+					outfile = options.getOutputdir() + "pairwise-" + batchid + "-checkpoint.txt.gz";
+					TextFile outf = new TextFile(outfile, TextFile.W);
+					outf.writeln("" + submitted + "\t" + written);
+					outf.close();
+				}
 			}
 		}
 		

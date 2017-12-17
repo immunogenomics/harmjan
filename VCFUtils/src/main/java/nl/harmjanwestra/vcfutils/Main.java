@@ -948,7 +948,6 @@ public class Main {
 					missingnessp = Double.parseDouble(cmd.getOptionValue("missingnessp"));
 				}
 
-
 				if (cmd.hasOption("callrate")) {
 					callrate = Double.parseDouble(cmd.getOptionValue("callrate"));
 				}

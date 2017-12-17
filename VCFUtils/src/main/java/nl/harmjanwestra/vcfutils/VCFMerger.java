@@ -1277,44 +1277,68 @@ public class VCFMerger {
 			System.out.println(variantToInt.size() + " variants in total");
 			
 			
-			VCFVariant[][] variantObjs = new VCFVariant[nrBatches][variantToInt.size()];
+			VCFVariant[][] variantObjs = new VCFVariant[nrBatches - 1][variantToInt.size()];
 			
 			StringBuilder header = new StringBuilder();
 			header.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
 			
 			for (int batch = 0; batch < nrBatches; batch++) {
+				boolean onlyprintheader = false;
+				if (batch == nrBatches - 1) {
+					onlyprintheader = true;
+				}
+				
 				String batchvcfName = dirInPrefix + batch + ".vcf.gz";
 				TextFile tf = new TextFile(batchvcfName, TextFile.R);
 				
-				System.out.println("reading: " + batchvcfName);
-				String ln = tf.readLine();
-				while (ln != null) {
-					if (ln.startsWith("##")) {
-					
-					} else if (ln.startsWith("#CHROM")) {
-						String[] elems = ln.split("\t");
-						for (int i = 9; i < elems.length; i++) {
-							header.append("\t").append(elems[i]);
-						}
+				if (onlyprintheader) {
+					// stupid hack.. tabix would be easier
+					System.out.println("reading: " + batchvcfName);
+					String ln = tf.readLine();
+					while (ln != null && ln.startsWith("#")) {
+						if (ln.startsWith("##")) {
 						
-					} else {
-						// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
-						String substr = ln.substring(0, 200);
-						String[] elems = substr.split("\t");
-						String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
-						
-						Integer id = variantToInt.get(variant);
-						if (id != null) {
-							VCFVariant variantObj = new VCFVariant(ln);
-							variantObjs[batch][id] = variantObj;
-						} else {
-							System.out.println("variant: " + variant + " not in index??");
-							System.exit(-1);
+						} else if (ln.startsWith("#CHROM")) {
+							String[] elems = ln.split("\t");
+							for (int i = 9; i < elems.length; i++) {
+								header.append("\t").append(elems[i]);
+							}
+							
 						}
+						ln = tf.readLine();
 					}
-					ln = tf.readLine();
+					tf.close();
+				} else {
+					System.out.println("reading: " + batchvcfName);
+					String ln = tf.readLine();
+					while (ln != null) {
+						if (ln.startsWith("##")) {
+						
+						} else if (ln.startsWith("#CHROM")) {
+							String[] elems = ln.split("\t");
+							for (int i = 9; i < elems.length; i++) {
+								header.append("\t").append(elems[i]);
+							}
+							
+						} else {
+							// #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT
+							String substr = ln.substring(0, 200);
+							String[] elems = substr.split("\t");
+							String variant = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+							
+							Integer id = variantToInt.get(variant);
+							if (id != null) {
+								VCFVariant variantObj = new VCFVariant(ln);
+								variantObjs[batch][id] = variantObj;
+							} else {
+								System.out.println("variant: " + variant + " not in index??");
+								System.exit(-1);
+							}
+						}
+						ln = tf.readLine();
+					}
+					tf.close();
 				}
-				tf.close();
 			}
 			
 			System.out.println("done reading. writing to: " + outfilename);
@@ -1322,21 +1346,49 @@ public class VCFMerger {
 			
 			vcfout.writeln("##fileformat=VCFv4.1");
 			vcfout.writeln(header.toString());
-			for (int i = 0; i < variantToInt.size(); i++) {
-				StringBuilder builder = new StringBuilder(100000);
-				for (int b = 0; b < nrBatches; b++) {
-					VCFVariant variant = variantObjs[b][i];
-					if (b == 0) {
-						builder.append(variant.toVCFString(true));
+			
+			// iterate last file
+			String batchvcfName = dirInPrefix + (nrBatches - 1) + ".vcf.gz";
+			TextFile tf = new TextFile(batchvcfName, TextFile.R);
+			String vcfln = tf.readLine();
+			int nrWritten = 0;
+			while (vcfln != null) {
+				if (!vcfln.startsWith("#")) {
+					StringBuilder builder = new StringBuilder(100000);
+					
+					String substr = vcfln.substring(0, 200);
+					String[] elems = substr.split("\t");
+					String variantStr = elems[0] + "_" + elems[1] + "_" + elems[2] + "_" + elems[3] + "_" + elems[4];
+					
+					Integer id = variantToInt.get(variantStr);
+					if (id == null) {
+						System.err.println(variantStr + " not found in index?");
 					} else {
-						builder.append("\t").append(variant.toVCFString(false));
+						for (int b = 0; b < nrBatches - 1; b++) {
+							VCFVariant variant = variantObjs[b][id];
+							if (b == 0) {
+								builder.append(variant.toVCFString(true));
+							} else {
+								builder.append("\t").append(variant.toVCFString(false));
+							}
+						}
+						// append last batch
+						VCFVariant variantObj = new VCFVariant(vcfln);
+						builder.append("\t").append(variantObj.toVCFString(false));
+						
+						vcfout.writeln(builder.toString());
+						
+						
+						if (nrWritten % 100 == 0) {
+							System.out.print("\rprogress: " + nrWritten + "/" + variantToInt.size() + " - " + ((double) nrWritten / variantToInt.size()) + "\r");
+						}
 					}
+					
 				}
-				vcfout.writeln(builder.toString());
-				if (i % 100 == 0) {
-					System.out.print("\rprogress: " + i + "/" + variantToInt.size() + " - " + ((double) i / variantToInt.size()) + "\r");
-				}
+				vcfln = tf.readLine();
 			}
+			tf.close();
+		
 			System.out.println("Done writing");
 			vcfout.close();
 			System.out.println();

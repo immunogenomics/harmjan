@@ -11,9 +11,7 @@ public class AllelicDepthFilter implements VCFGenotypeFilter {
 	private int minimumReadDepth;
 	private double abCutoff = 0.15;
 
-	public AllelicDepthFilter() {
-
-	}
+	public AllelicDepthFilter() { }
 
 	public AllelicDepthFilter(double allelicBalanceCutoff, int minimumReadDepth) {
 		this.abCutoff = allelicBalanceCutoff;

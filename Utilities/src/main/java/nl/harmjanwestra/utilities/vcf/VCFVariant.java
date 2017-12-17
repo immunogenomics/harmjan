@@ -183,7 +183,11 @@ public class VCFVariant {
 	
 	
 	public short[][] getAllelicDepth() {
-		return allelicDepth.toArray();
+		if (allelicDepth != null) {
+			return allelicDepth.toArray();
+		} else {
+			return null;
+		}
 	}
 	
 	
@@ -281,14 +285,19 @@ public class VCFVariant {
 							
 							for (int c = 0; c < format.length; c++) {
 								if (format[c].equals("GT")) {
+									// genotype
 									gtCol = c;
 								} else if (format[c].equals("AD")) {
+									// allelic read depth
+//									System.out.println("ADCol=" + c);
 									adCol = c;
 								} else if (format[c].equals("AB")) {
 									abCol = c;
 								} else if (format[c].equals("DP")) {
+									// nominal read depth
 									dpCol = c;
 								} else if (format[c].equals("GQ")) {
+									// genotype qual
 									gqCol = c;
 								} else if (format[c].equals("PL")) {
 									plCol = c;
@@ -297,15 +306,20 @@ public class VCFVariant {
 								} else if (format[c].equals("PID")) {
 									pidCol = c;
 								} else if (format[c].equals("DS")) {
+									// dosage
 									dsCol = c;
 								} else if (format[c].equals("GP")) {
+									// genotype probs
 									gpCol = c;
 								}
 								// GT:AD:DP:GQ:PGT:PID:PL
 							}
 							
 							if (gtCol == -1) {
-								System.out.println("No GT COL: " + token);
+								System.err.println("No GT COL: " + token);
+								System.err.println("Id: " + this.toString());
+								System.out.println(token);
+								System.out.println(lnheader);
 								System.exit(-1);
 							}
 							break;
