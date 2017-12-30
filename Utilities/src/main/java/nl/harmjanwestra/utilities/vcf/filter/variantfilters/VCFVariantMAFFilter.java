@@ -13,13 +13,13 @@ public class VCFVariantMAFFilter implements VCFVariantFilter {
 	public enum MODE {
 		CASES,
 		CONTROLS,
-		DEFAULT
+		OVERALL
 	}
 
 	private MODE m;
 
 	public VCFVariantMAFFilter(double thresholdm) {
-		this(thresholdm, MODE.DEFAULT);
+		this(thresholdm, MODE.OVERALL);
 	}
 
 	public VCFVariantMAFFilter(double threshold, MODE m) {

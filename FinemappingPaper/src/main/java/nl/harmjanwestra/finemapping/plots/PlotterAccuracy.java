@@ -25,7 +25,7 @@ import java.util.HashSet;
  * Created by hwestra on 5/18/16.
  */
 public class PlotterAccuracy extends VariantCounter {
-
+	
 	// id	allele1	allele2	maf	callrate	allele21	allele22	maf 	cr	df	nrsamples	r	rsq	beta	se	impqual0	impqual1
 	protected int width = 640;
 	protected int height = 480;
@@ -34,67 +34,122 @@ public class PlotterAccuracy extends VariantCounter {
 	final boolean windows = false;
 	final boolean includeId = true;
 	double qualthreshold = 0.5;
-
+	
 	public static void main(String[] args) {
 		PlotterAccuracy p = new PlotterAccuracy();
-
+		String[] files = null;
+		String[] labels = null;
+		String diseaseprefix = "";
+		
+		String seqpanelvcf = "";
+		String variantsOnIC = "";
+		String bedregions = "";
+		String samplelist = null;
+		String outdir = null;
+		
+		variantsOnIC = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
+		bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		
 		try {
-			p.plotCorr();
+			outdir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\output\\";
+			files = new String[]{
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-cosmo-HC.txt",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-eur-HC.txt",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-HRC-HC.txt",
+			};
+			labels = new String[]{
+					"COSMO",
+					"EUR",
+					"HRC"
+			};
+			diseaseprefix = "RA-HC";
+			seqpanelvcf = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
+			
+			files = new String[]{
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-cosmo-UG.txt",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-eur-UG.txt",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-HRC-UG.txt",
+			};
+			labels = new String[]{
+					"COSMO",
+					"EUR",
+					"HRC"
+			};
+			diseaseprefix = "RA-UG";
+			seqpanelvcf = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
+			
+			files = new String[]{
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-cosmo-ST.txt",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-eur-ST.txt",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-HRC-ST.txt",
+			};
+			labels = new String[]{
+					"COSMO",
+					"EUR",
+					"HRC"
+			};
+			diseaseprefix = "RA-ST";
+			seqpanelvcf = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\panels\\samtools-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
 			e.printStackTrace();
 		}
 	}
-
-
-	public void plotCorr() throws IOException, DocumentException {
-		String[] files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-SHAPEIT.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
-		};
-
-		String[] labels = new String[]{
-				"EUR",
-				"COSMO",
-				"HRC-EAGLE",
-				"HRC-SHAPEIT",
-				"HRC-EAGLE-MICHIGAN"
-		};
-		String samplelist = null;
-		String diseaseprefix = "T1D";
-
-		files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-HRC-w100kb.txt",
-		};
-		labels = new String[]{
-				"EUR",
-				"COSMO",
-				"HRC-EAGLE"
-		};
-		samplelist = null;
-		diseaseprefix = "RA";
-
-		String seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz-updatedRSId.vcf.gz";
-		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
-
-//		String[] files2 = new String[]{
-//				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
+	
+	
+	public void plotCorr(String[] files, String[] labels, String diseaseprefix, String seqpanelvcf, String variantsOnIC, String bedregions, String samplelist, String outdir) throws IOException, DocumentException {
+//		String[] files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-EUR.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-SHAPEIT.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
 //		};
-		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-//		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
-		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/" + diseaseprefix + "-plots/";
-
-		String ext = "pdf";
-
+//
+//		String[] labels = new String[]{
+//				"EUR",
+//				"COSMO",
+//				"HRC-EAGLE",
+//				"HRC-SHAPEIT",
+//				"HRC-EAGLE-MICHIGAN"
+//		};
+//		String samplelist = null;
+//		String diseaseprefix = "T1D";
+//
+//		files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-EUR.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-HRC-w100kb.txt",
+//		};
+//		labels = new String[]{
+//				"EUR",
+//				"COSMO",
+//				"HRC-EAGLE"
+//		};
+//		samplelist = null;
+//		diseaseprefix = "RA";
+//
+//
+//		String seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz-updatedRSId.vcf.gz";
+//		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
+//
+////		String[] files2 = new String[]{
+////				"/Data/tmp/2016-05-20/T1D/ImmunoChipGenotyped.txt"
+////		};
+//		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+////		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci.bed";
+//		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+//		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/" + diseaseprefix + "-plots/";
+//
+		String ext = "png";
+		
 		if (windows) {
-
+			
 			files = new String[]{
 					"D:\\tmp\\2016-05-19\\T1D\\T1D-EUR-merged.txt",
 					"D:\\tmp\\2016-05-19\\T1D\\T1D-COSMO-merged.txt",
@@ -110,49 +165,49 @@ public class PlotterAccuracy extends VariantCounter {
 //					"D:\\tmp\\2016-05-19\\ImmunoChipGenotyped.txt"
 //			};
 		}
-
-
+		
+		
 		BedFileReader reader = new BedFileReader();
 		ArrayList<Feature> bedfileRegions = reader.readAsList(bedregions);
-
+		
 		if (!Gpio.exists(outdir)) {
 			Gpio.createDir(outdir);
 		}
-
-
+		
+		
 		String out = "";
-
+		
 		HashSet<String> variantHash = null;
 		if (variantsOnIC != null) {
 			variantHash = loadVariantHash(variantsOnIC, includeId);
 		}
-
+		
 		boolean includeindels = true;
 		boolean usemafthreshold = false;
 		boolean includeICVariants = true;
-
+		
 		// including indels
-		int maxNrVariants = 1862;
+		int maxNrVariants = 3000;
 		includeindels = true;
 		usemafthreshold = false;
 		includeICVariants = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
-
+//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
+		
 		// maf > 1%
 		usemafthreshold = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants-mafgt" + mafthreshold + "." + ext;
 		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
-
-
+		
+		
 		// maf > 1%, imputed variants
 		usemafthreshold = false;
 		includeICVariants = false;
-		maxNrVariants = 692; // if including IDs
+		maxNrVariants = 3000; // if including IDs
 //		maxNrVariants = 689; // if not including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
-
+//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
+		
 		// maf > 1%, imputed variants
 		usemafthreshold = true;
 		includeICVariants = false;
@@ -182,10 +237,10 @@ public class PlotterAccuracy extends VariantCounter {
 //		out = outdir + diseaseprefix + "-plot1-excludedindels-imputed-mafgt" + mafthreshold + "." + ext;
 //		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
 //
-
+	
 	}
-
-
+	
+	
 	public void plot1(String[] files, String[] labels, String out, String bedregionsfile,
 					  boolean includeIndels,
 					  boolean usemafthreshold,
@@ -196,93 +251,97 @@ public class PlotterAccuracy extends VariantCounter {
 					  String variantsOnIC,
 					  String seqpanelvcf,
 					  String samplelist
-
-
+	
+	
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
 		ArrayList<ArrayList<Double>> vals = new ArrayList<ArrayList<Double>>();
-
+		
 		double upperthreshold = 1d;
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
 		System.out.println(variantsOnICHash.size() + " total on IC");
 		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
 				seqpanelvcf, bedregionsfile, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels, samplelist
 		);
-
+		
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
+		maxSize = seqpanel.size();
+		
 		ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
-
+		
 		System.out.println(seqpanel.size() + " variants in VCF");
 		System.out.println(variantsNotOnImmunoChip.size() + " not on IC");
 		System.out.println(variantsOnImmunoChip.size() + " on IC");
-
-
+		
+		
 		HashSet<String> sequencedVariantsHash = null;
 		ArrayList<VCFVariant> allvars = new ArrayList<>();
-
+		
 		if (includeICVariants) {
 			allvars.addAll(variantsNotOnImmunoChip);
 			allvars.addAll(variantsOnImmunoChip);
-
+			
 			sequencedVariantsHash = hashit(allvars, includeId);
 		} else {
 			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 		}
-
-
+		
+		
 		String[] newlabels = new String[labels.length];
 		for (int f = 0; f < files.length; f++) {
 			// get the imputation accuracies for these variants
 			TextFile tf2 = new TextFile(files[f], TextFile.R);
+//			System.out.println("parsing: " + files[f]);
 			ArrayList<Double> corvals = new ArrayList<>();
 			String[] elems = tf2.readLineElems(TextFile.tab);
 			int nrAboveQualThreshold = 0;
-
+			
 			ArrayList<String> missing = new ArrayList<String>();
-
-
+			
+			
 			ArrayList<String> variantsSeen = new ArrayList<>();
 			ArrayList<String[]> variantsBelowThresholds = new ArrayList<>();
 			ArrayList<String> variantsAboveThresholds = new ArrayList<>();
 			while (elems != null) {
-				if (!elems[rsqlcol].equals("null")) {
-					double val = Double.parseDouble(elems[rsqlcol]);
-					double maf = Double.parseDouble(elems[maf2col]);
-
-					String[] varElems = elems[0].split("_");
-
-					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
-
-					boolean abovethreshold = true;
-					if (sequenced) {
-
-						if (!usemafthreshold || (usemafthreshold && maf > mafthreshold)) {
-							corvals.add(val);
-							if (val > qualthreshold) {
-								nrAboveQualThreshold++;
-
+				if (elems.length > 12) {
+					if (!elems[rsqlcol].equals("null")) {
+						double val = Double.parseDouble(elems[rsqlcol]);
+						double maf = Double.parseDouble(elems[maf2col]);
+						
+						String[] varElems = elems[0].split("_");
+						
+						boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
+						
+						boolean abovethreshold = true;
+						if (sequenced) {
+							
+							if (!usemafthreshold || (usemafthreshold && maf > mafthreshold)) {
+								corvals.add(val);
+								if (val > qualthreshold) {
+									nrAboveQualThreshold++;
+									
+								} else {
+									abovethreshold = false;
+								}
 							} else {
 								abovethreshold = false;
 							}
-						} else {
-							abovethreshold = false;
-						}
-
-						if (!abovethreshold) {
-							variantsBelowThresholds.add(elems);
-						} else {
+							
+							if (!abovethreshold) {
+								variantsBelowThresholds.add(elems);
+							} else {
 //							String variant = Chromosome.parseChr(elems[0]).toString() + "_" + elems[1] + "_" + elems[2];
-							variantsAboveThresholds.add(elems[0]);
+								variantsAboveThresholds.add(elems[0]);
+							}
+							
+							
 						}
-
-
+						
+						variantsSeen.add(elems[0]);
+						
 					}
-
-					variantsSeen.add(elems[0]);
-
 				}
-
 				elems = tf2.readLineElems(TextFile.tab);
 			}
 			tf2.close();
@@ -290,15 +349,15 @@ public class PlotterAccuracy extends VariantCounter {
 			System.out.println(nrAboveQualThreshold + " > " + qualthreshold + "\t" + corvals.size() + " vals in path " + files[f]);
 			newlabels[f] = labels[f] + " - " + corvals.size() + " / " + maxSize;
 			vals.add(corvals);
-
-
+			
+			
 			TextFile outf = new TextFile(out + labels[f] + "-belowthresholds.txt", TextFile.W);
 			System.out.println("below thresh:\t" + outf.getFullPath());
 			for (String[] elem : variantsBelowThresholds) {
 				outf.writeln(Strings.concat(elem, Strings.tab));
 			}
 			outf.close();
-
+			
 			HashSet<String> variantsAboveThresholdHash = new HashSet<String>();
 			variantsAboveThresholdHash.addAll(variantsAboveThresholds);
 			System.out.println(variantsAboveThresholds.size() + " variants above threshold");
@@ -314,8 +373,8 @@ public class PlotterAccuracy extends VariantCounter {
 			}
 			System.out.println(missingnr + " missing");
 			outf2.close();
-
-
+			
+			
 			TextFile outf3 = new TextFile(out + labels[f] + "-neverimputed.txt", TextFile.W);
 			System.out.println("missing var:\t" + outf3.getFullPath());
 			HashSet<String> variantsImputedHash = new HashSet<String>();
@@ -330,21 +389,21 @@ public class PlotterAccuracy extends VariantCounter {
 			}
 			System.out.println(missingnr + " missing");
 			outf3.close();
-
+			
 		}
-
+		
 		System.out.println(maxSize + " total vals");
-
+		
 		double[][] x = new double[files.length][maxSize];
 		double[][] y = new double[files.length][maxSize];
-
+		
 		for (int ds = 0; ds < files.length; ds++) {
-
+			
 			for (int i = 0; i < maxSize; i++) {
 				x[ds][i] = ((double) i / maxSize) * 100;
 			}
 			ArrayList<Double> corvals = vals.get(ds);
-
+			
 			for (int i = 0; i < corvals.size(); i++) {
 				y[ds][i] = corvals.get(i);
 			}
@@ -352,7 +411,7 @@ public class PlotterAccuracy extends VariantCounter {
 				y[ds][i] = 0;
 			}
 		}
-
+		
 		vals = null;
 		Grid grid = new Grid(width, height, 1, 1, 100, 100);
 		ScatterplotPanel panel = new ScatterplotPanel(1, 1);
@@ -361,13 +420,13 @@ public class PlotterAccuracy extends VariantCounter {
 		range.roundX();
 		range.roundY();
 		panel.setDataRange(range);
-		// panel.setDatasetLabels(newlabels);
+		panel.setDatasetLabels(newlabels);
 		grid.addPanel(panel);
 		grid.draw(out);
 		System.out.println("Out: " + out);
 	}
-
-
+	
+	
 	public void plot2(String[] files, String[] datasetLabels, String out, int col,
 					  boolean includeIndels,
 					  boolean usemafthreshold,
@@ -378,7 +437,7 @@ public class PlotterAccuracy extends VariantCounter {
 					  ArrayList<Feature> bedregions
 	) throws IOException, DocumentException {
 		// plot 2: x-axis maf, y-axis correlation (boxplot)
-
+		
 		String[] binLabels = new String[]{
 				"0 - 0.005",
 				"0.005 - 0.01",
@@ -392,7 +451,7 @@ public class PlotterAccuracy extends VariantCounter {
 				"0.3 - 0.4",
 				"0.4 - 0.5"
 		};
-
+		
 		double[] lowerthreshold = new double[]{
 				0,
 				0.005,
@@ -419,15 +478,15 @@ public class PlotterAccuracy extends VariantCounter {
 				0.4,
 				0.5
 		};
-
+		
 		double[][][] bins = new double[files.length][upperthreshold.length][];
-
+		
 		double[][] binfreqs = new double[files.length][upperthreshold.length];
-
+		
 		for (int i = 0; i < files.length; i++) {
 			int loaded = 0;
 			String file = files[i];
-
+			
 			TextFile tf = new TextFile(file, TextFile.R);
 			String[] elems = tf.readLineElems(TextFile.tab);
 			ArrayList<ArrayList<Double>> filebins = new ArrayList<>();
@@ -442,7 +501,7 @@ public class PlotterAccuracy extends VariantCounter {
 				if (!includeIndels && isIndel) {
 					include = false;
 				}
-
+				
 				if (variantHash != null && plotOnlyImputed) {
 					boolean isOnIc = false;
 					isOnIc = isVariantInHash(elems, variantHash, true);
@@ -452,14 +511,14 @@ public class PlotterAccuracy extends VariantCounter {
 						include = false;
 					}
 				}
-
+				
 				if (onlyIc && variantHash != null) {
 					boolean isOnIc = false;
 					isOnIc = isVariantInHash(elems, variantHash, true);
 					include = isOnIc;
 				}
-
-
+				
+				
 				if (include) {
 					for (int bin = 0; bin < upperthreshold.length; bin++) {
 						if (maf >= lowerthreshold[bin] && maf <= upperthreshold[bin]) {
@@ -473,7 +532,7 @@ public class PlotterAccuracy extends VariantCounter {
 				elems = tf.readLineElems(TextFile.tab);
 			}
 			tf.close();
-
+			
 			// convert to double[]
 			for (int bin = 0; bin < upperthreshold.length; bin++) {
 				ArrayList<Double> d = filebins.get(bin);
@@ -483,8 +542,8 @@ public class PlotterAccuracy extends VariantCounter {
 			}
 			System.out.println("Loaded: " + loaded + " from path: " + file);
 		}
-
-
+		
+		
 		Grid grid = new Grid(width * 2, height, 1, 2, 100, 100);
 		BoxPlotPanel panel = new BoxPlotPanel(1, 1);
 		panel.setData(bins);
@@ -492,18 +551,18 @@ public class PlotterAccuracy extends VariantCounter {
 		panel.useTukeysDefault(true);
 		panel.setBinLabels(binLabels);
 		grid.addPanel(panel);
-
+		
 		HistogramPanel panel2 = new HistogramPanel(1, 1);
 		panel2.setData(binfreqs);
 		panel2.setDatasetLabels(datasetLabels);
 		panel2.setBinLabels(binLabels);
-
+		
 		grid.addPanel(panel2);
 		grid.draw(out);
-
-
+		
+		
 	}
-
+	
 	public void plot3(String[] files, String[] datasetLabels, String out, int col,
 					  boolean includeIndels,
 					  boolean usemafthreshold,
@@ -516,7 +575,7 @@ public class PlotterAccuracy extends VariantCounter {
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {
 			String file = files[i];
-
+			
 			ArrayList<Double> fy = new ArrayList<>();
 			ArrayList<Double> fx = new ArrayList<>();
 			int ctr = 0;
@@ -527,10 +586,10 @@ public class PlotterAccuracy extends VariantCounter {
 				double maf2 = Double.parseDouble(elems[maf2col]);
 				boolean isIndel = isIndel2(elems);
 				boolean belowmaf = maf2belowfthreshold(elems, mafthreshold);
-
+				
 				boolean include = isWithinRegion(bedregions, elems);
-
-
+				
+				
 				if (!includeIndels && isIndel) {
 					include = false;
 				}
@@ -539,7 +598,7 @@ public class PlotterAccuracy extends VariantCounter {
 				} else if (usemafthreshold && !requireabovemaf && !belowmaf) {
 					include = false;
 				}
-
+				
 				if (variantHash != null && plotOnlyImputed) {
 					boolean isOnIc = isVariantInHash(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
@@ -548,7 +607,7 @@ public class PlotterAccuracy extends VariantCounter {
 						include = false;
 					}
 				}
-
+				
 				if (include) {
 					fx.add(maf1);
 					fy.add(maf2);
@@ -557,17 +616,17 @@ public class PlotterAccuracy extends VariantCounter {
 				elems = tf.readLineElems(TextFile.tab);
 			}
 			tf.close();
-
+			
 			double[] x = Primitives.toPrimitiveArr(fx.toArray(new Double[0]));
 			double[] y = Primitives.toPrimitiveArr(fy.toArray(new Double[0]));
-
+			
 			ScatterplotPanel panel2 = new ScatterplotPanel(1, 1);
 			panel2.setData(x, y);
 			grid.addPanel(panel2);
 		}
 		grid.draw(out);
 	}
-
+	
 	public void plot4(String[] files, String[] datasetLabels, String out, int col,
 					  boolean includeIndels,
 					  boolean usemafthreshold,
@@ -580,7 +639,7 @@ public class PlotterAccuracy extends VariantCounter {
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {
 			String file = files[i];
-
+			
 			ArrayList<Double> fy = new ArrayList<>();
 			ArrayList<Double> fx = new ArrayList<>();
 			int ctr = 0;
@@ -591,7 +650,7 @@ public class PlotterAccuracy extends VariantCounter {
 				double maf2 = Double.parseDouble(elems[betacol]);
 				boolean isIndel = isIndel2(elems);
 				boolean belowmaf = maf2belowfthreshold(elems, mafthreshold);
-
+				
 				boolean include = isWithinRegion(bedregions, elems);
 				if (!includeIndels && isIndel) {
 					include = false;
@@ -601,7 +660,7 @@ public class PlotterAccuracy extends VariantCounter {
 				} else if (usemafthreshold && !requireabovemaf && !belowmaf) {
 					include = false;
 				}
-
+				
 				if (variantHash != null && plotOnlyImputed) {
 					boolean isOnIc = isVariantInHash(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
@@ -610,7 +669,7 @@ public class PlotterAccuracy extends VariantCounter {
 						include = false;
 					}
 				}
-
+				
 				if (include) {
 					fx.add(maf1);
 					fy.add(maf2);
@@ -619,17 +678,17 @@ public class PlotterAccuracy extends VariantCounter {
 				elems = tf.readLineElems(TextFile.tab);
 			}
 			tf.close();
-
+			
 			double[] x = Primitives.toPrimitiveArr(fx.toArray(new Double[0]));
 			double[] y = Primitives.toPrimitiveArr(fy.toArray(new Double[0]));
-
+			
 			ScatterplotPanel panel2 = new ScatterplotPanel(1, 1);
 			panel2.setData(x, y);
 			grid.addPanel(panel2);
 		}
 		grid.draw(out);
 	}
-
+	
 	public void plot5(String[] files, String[] datasetLabels, String out, int col,
 					  boolean includeIndels,
 					  boolean usemafthreshold,
@@ -642,7 +701,7 @@ public class PlotterAccuracy extends VariantCounter {
 		Grid grid = new Grid(width, height, 1, files.length, 100, 100);
 		for (int i = 0; i < files.length; i++) {
 			String file = files[i];
-
+			
 			ArrayList<Double> fy = new ArrayList<>();
 			ArrayList<Double> fx = new ArrayList<>();
 			int ctr = 0;
@@ -653,7 +712,7 @@ public class PlotterAccuracy extends VariantCounter {
 				double maf2 = Double.parseDouble(elems[rsqlcol]);
 				boolean isIndel = isIndel2(elems);
 				boolean belowmaf = maf2belowfthreshold(elems, mafthreshold);
-
+				
 				boolean include = isWithinRegion(bedregions, elems);
 				if (!includeIndels && isIndel) {
 					include = false;
@@ -663,7 +722,7 @@ public class PlotterAccuracy extends VariantCounter {
 				} else if (usemafthreshold && !requireabovemaf && !belowmaf) {
 					include = false;
 				}
-
+				
 				if (variantHash != null && plotOnlyImputed) {
 					boolean isOnIc = isVariantInHash(elems, variantHash, true);
 					if (plotOnlyImputed && isOnIc) {
@@ -672,7 +731,7 @@ public class PlotterAccuracy extends VariantCounter {
 						include = false;
 					}
 				}
-
+				
 				if (include) {
 					fx.add(maf1);
 					fy.add(maf2);
@@ -681,15 +740,15 @@ public class PlotterAccuracy extends VariantCounter {
 				elems = tf.readLineElems(TextFile.tab);
 			}
 			tf.close();
-
+			
 			double[] x = Primitives.toPrimitiveArr(fx.toArray(new Double[0]));
 			double[] y = Primitives.toPrimitiveArr(fy.toArray(new Double[0]));
-
+			
 			ScatterplotPanel panel2 = new ScatterplotPanel(1, 1);
 			panel2.setData(x, y);
 			grid.addPanel(panel2);
 		}
 		grid.draw(out);
 	}
-
+	
 }

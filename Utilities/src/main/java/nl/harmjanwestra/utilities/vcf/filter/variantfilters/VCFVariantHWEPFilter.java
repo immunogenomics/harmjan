@@ -11,13 +11,13 @@ public class VCFVariantHWEPFilter implements VCFVariantFilter {
 	public enum MODE {
 		CASES,
 		CONTROLS,
-		DEFAULT
+		OVERALL
 	}
 
 	private MODE m;
 
 	public VCFVariantHWEPFilter(double threshold) {
-		this(threshold, MODE.DEFAULT);
+		this(threshold, MODE.OVERALL);
 	}
 
 	public VCFVariantHWEPFilter(double threshold, MODE m) {

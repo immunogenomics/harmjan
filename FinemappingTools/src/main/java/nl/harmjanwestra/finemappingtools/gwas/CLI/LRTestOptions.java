@@ -229,6 +229,12 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 		
 		option = Option.builder()
+				.longOpt("filterlist")
+				.desc("Make a list of variants to filter out of results")
+				.build();
+		OPTIONS.addOption(option);
+		
+		option = Option.builder()
 				.longOpt("batchsize")
 				.hasArg()
 				.desc("Batch size for batchifying tasks")
@@ -342,10 +348,10 @@ public class LRTestOptions {
 				batchsize = Integer.parseInt(cmd.getOptionValue("batchsize"));
 			}
 			
-			if(cmd.hasOption("batchid")){
+			if (cmd.hasOption("batchid")) {
 				batchid = Integer.parseInt(cmd.getOptionValue("batchid"));
 			}
-			
+
 //			if(batchsize!=null && batchid !=null){
 //
 //			} else {
@@ -491,6 +497,8 @@ public class LRTestOptions {
 				analysisType = ANALYSIS.FINEMAP;
 			} else if (cmd.hasOption("multinomial")) {
 				analysisType = ANALYSIS.MULTINOMIAL;
+			} else if (cmd.hasOption("filterlist")) {
+				analysisType = ANALYSIS.FILTERLIST;
 			}
 			
 			if (cmd.hasOption("maxiter")) {
@@ -655,7 +663,7 @@ public class LRTestOptions {
 		NORMAL,
 		FINEMAP,
 		GUESS,
-		STATS;
+		STATS, FILTERLIST;
 		
 	}
 	

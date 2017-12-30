@@ -60,13 +60,13 @@ public class VCFFilter {
 		if (fam != null) {
 			variantFilters.add(new VCFVariantHWEPFilter(hwepthreshold, VCFVariantHWEPFilter.MODE.CONTROLS));
 		} else if (hwepthreshold > 0) {
-			variantFilters.add(new VCFVariantHWEPFilter(hwepthreshold, VCFVariantHWEPFilter.MODE.DEFAULT));
+			variantFilters.add(new VCFVariantHWEPFilter(hwepthreshold, VCFVariantHWEPFilter.MODE.OVERALL));
 		}
 		
 		if (fam != null) {
 			variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.CONTROLS));
 		} else {
-			variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.DEFAULT));
+			variantFilters.add(new VCFVariantMAFFilter(mafthreshold, VCFVariantMAFFilter.MODE.OVERALL));
 		}
 		
 		System.out.println(variantFilters.toString());

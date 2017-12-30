@@ -55,7 +55,7 @@ public class LRTest {
 	private HashMap<String, Integer> sampleToIntGenotypes;
 	private HashSet<String> snpLimit;
 	private ArrayList<Feature> bedRegions = null;
-	private boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
+	protected boolean[] genotypeSamplesWithCovariatesAndDiseaseStatus;
 	private ProgressBar progressBar;
 	
 	
@@ -999,7 +999,7 @@ public class LRTest {
 		}
 		filter.addFilter(new VCFVariantCallRateFilter(options.getCallrateThreshold()));
 		filter.addFilter(new VCFVariantImpQualFilter(options.getImputationqualitythreshold(), true));
-		filter.addFilter(new VCFVariantMAFFilter(options.getMafthresholdD(), VCFVariantMAFFilter.MODE.CONTROLS));
+		filter.addFilter(new VCFVariantMAFFilter(options.getMafthresholdD(), VCFVariantMAFFilter.MODE.OVERALL));
 		filter.addFilter(new VCFVariantHWEPFilter(options.getHWEPThreshold(), VCFVariantHWEPFilter.MODE.CONTROLS));
 		filter.addFilter(new VCFVariantRegionFilter(regions));
 		

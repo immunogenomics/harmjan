@@ -17,7 +17,7 @@ import java.util.HashSet;
  * Created by hwestra on 5/28/16.
  */
 public class VariantCounter {
-
+	
 	protected int idcol = 0;
 	protected int minorallele1col = 1;
 	protected int aleleles1col = 2;
@@ -35,7 +35,7 @@ public class VariantCounter {
 	protected int secol = 14;
 	protected int impqual1 = 15;
 	protected int impqual2 = 16;
-
+	
 	public static void main(String[] args) {
 		try {
 			VariantCounter c = new VariantCounter();
@@ -44,7 +44,7 @@ public class VariantCounter {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public void determineMissingVariants() throws IOException {
 		String[] files = new String[]{"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt"};
@@ -58,32 +58,32 @@ public class VariantCounter {
 		boolean includeICVariants = false;
 		boolean includeId = true;
 		boolean includeIndels = true;
-
-
+		
+		
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
 		System.out.println(variantsOnICHash.size() + " total on IC");
-
-
+		
+		
 		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
 				seqpanelvcf, bedregions, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels, samplelist
 		);
-
+		
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
 		ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
-
+		
 		System.out.println(seqpanel.size() + " variants in VCF");
 		System.out.println(variantsNotOnImmunoChip.size() + " not on IC");
 		System.out.println(variantsOnImmunoChip.size() + " on IC");
-
-
+		
+		
 		// get a list of imputed variants for each of the sequencing panels
-
-
+		
+		
 		System.out.println("MAF> " + mafthreshold);
 		System.out.println("INFO> " + infothreshold);
-
-
+		
+		
 		HashSet<String> sequencedVariantsHash = null;
 		if (includeICVariants) {
 			ArrayList<VCFVariant> allvars = new ArrayList<>();
@@ -93,36 +93,37 @@ public class VariantCounter {
 		} else {
 			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 		}
-
+		
 		System.out.println(sequencedVariantsHash.size() + " after hashing");
 		System.out.println(files.length + " files");
 		HashSet<String> variantsFound = new HashSet<String>();
+		
 		for (int f = 0; f < files.length; f++) {
 			// get the imputation accuracies for these variants
 			TextFile tf2 = new TextFile(files[f], TextFile.R);
-
+			
 			String[] elems = tf2.readLineElems(TextFile.tab);
 			int nrSequenced = 0;
 			int nrSequencedPassingRSQ = 0;
 			int nrSequencedPassingMaf = 0;
 			int nrSequencdPassingMafAndRSQ = 0;
 			while (elems != null) {
-
-
+				
+				
 				if (!elems[rsqlcol].equals("null")) {
 					double val = Double.parseDouble(elems[rsqlcol]);
 					double maf = Double.parseDouble(elems[maf2col]);
-
+					
 					String[] varElems = elems[0].split("_");
-
+					
 					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
-
+					
 					if (sequenced) {
 						String variant = Chromosome.parseChr(varElems[0]).toString() + "_" + varElems[1] + "_" + varElems[2];
 //						System.out.println(variant);
 						variantsFound.add(variant);
 					}
-
+					
 					if (sequenced) {
 						nrSequenced++;
 						if (maf > mafthreshold) {
@@ -136,7 +137,7 @@ public class VariantCounter {
 						}
 					}
 				}
-
+				
 				elems = tf2.readLineElems(TextFile.tab);
 			}
 			tf2.close();
@@ -149,10 +150,10 @@ public class VariantCounter {
 //			System.out.println("nrSequencedPassingMaf\t" + nrSequencedPassingMaf + "\t" + ((double) nrSequencedPassingMaf / sequencedVariantsHash.size()));
 //			System.out.println("nrSequencdPassingMafAndRSQ\t" + nrSequencdPassingMafAndRSQ + "\t" + ((double) nrSequencdPassingMafAndRSQ / sequencedVariantsHash.size()));
 //			System.out.println();
-
+			
 			System.out.println(nrSequenced + "\t" + nrSequencedPassingMaf + "\t" + nrSequencedPassingRSQ + "\t" + nrSequencdPassingMafAndRSQ);
 		}
-
+		
 		System.out.println(variantsFound.size() + " total variants found.");
 		int ctr = 0;
 		for (String var : sequencedVariantsHash) {
@@ -161,17 +162,17 @@ public class VariantCounter {
 				ctr++;
 			}
 		}
-
+		
 		System.out.println(ctr + " variants missing");
-
+		
 	}
-
+	
 	public void countAccuracy() throws IOException {
-
+		
 		String variantsOnIC = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
 		String seqpanelvcf = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/SequencingPanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
 		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-
+		
 		String[] files = new String[]{
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
 				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-EUR.txt",
@@ -199,27 +200,27 @@ public class VariantCounter {
 //				"EUR",
 //				"HRC / HRC / EAGLE"
 //		};
-
+		
 		// get a list of maf > 0.005 variants that on the sequencingpanel
-
-
+		
+		
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
 		double infothreshold = 0.8;
 		boolean includeICVariants = true;
-
+		
 		boolean includeId = true;
 		boolean includeIndels = false;
-
-
+		
+		
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
 		System.out.println(variantsOnICHash.size() + " total on IC");
-
-
+		
+		
 		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
 				seqpanelvcf, bedregions, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels, samplelist
 		);
-
+		
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
 		TextFile out = new TextFile("/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/SequencingPanel/usedVariants.txt", TextFile.W);
 		out.writeln("Chromosome\tPosition\tRsid\tRef\tAlt\tAF\tCallRate\tHWE-P");
@@ -236,22 +237,22 @@ public class VariantCounter {
 		}
 		out.close();
 		System.exit(-1);
-
+		
 		ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
-
+		
 		System.out.println(seqpanel.size() + " variants in VCF");
 		System.out.println(variantsNotOnImmunoChip.size() + " not on IC");
 		System.out.println(variantsOnImmunoChip.size() + " on IC");
-
-
+		
+		
 		// get a list of imputed variants for each of the sequencing panels
-
-
+		
+		
 		System.out.println("MAF> " + mafthreshold);
 		System.out.println("INFO> " + infothreshold);
-
-
+		
+		
 		HashSet<String> sequencedVariantsHash = null;
 		if (includeICVariants) {
 			ArrayList<VCFVariant> allvars = new ArrayList<>();
@@ -261,29 +262,29 @@ public class VariantCounter {
 		} else {
 			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 		}
-
+		
 		System.out.println(sequencedVariantsHash.size() + " after hashing");
 		System.out.println(files.length + " files");
 		for (int f = 0; f < files.length; f++) {
 			// get the imputation accuracies for these variants
 			TextFile tf2 = new TextFile(files[f], TextFile.R);
-
+			
 			String[] elems = tf2.readLineElems(TextFile.tab);
 			int nrSequenced = 0;
 			int nrSequencedPassingRSQ = 0;
 			int nrSequencedPassingMaf = 0;
 			int nrSequencdPassingMafAndRSQ = 0;
 			while (elems != null) {
-
-
+				
+				
 				if (!elems[rsqlcol].equals("null")) {
 					double val = Double.parseDouble(elems[rsqlcol]);
 					double maf = Double.parseDouble(elems[maf2col]);
-
+					
 					String[] varElems = elems[0].split("_");
-
+					
 					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
-
+					
 					if (sequenced) {
 						nrSequenced++;
 						if (maf > mafthreshold) {
@@ -297,7 +298,7 @@ public class VariantCounter {
 						}
 					}
 				}
-
+				
 				elems = tf2.readLineElems(TextFile.tab);
 			}
 			tf2.close();
@@ -310,14 +311,14 @@ public class VariantCounter {
 //			System.out.println("nrSequencedPassingMaf\t" + nrSequencedPassingMaf + "\t" + ((double) nrSequencedPassingMaf / sequencedVariantsHash.size()));
 //			System.out.println("nrSequencdPassingMafAndRSQ\t" + nrSequencdPassingMafAndRSQ + "\t" + ((double) nrSequencdPassingMafAndRSQ / sequencedVariantsHash.size()));
 //			System.out.println();
-
+			
 			System.out.println(nrSequenced + "\t" + nrSequencedPassingMaf + "\t" + nrSequencedPassingRSQ + "\t" + nrSequencdPassingMafAndRSQ);
 		}
-
-
+		
+		
 	}
-
-
+	
+	
 	public HashSet<String> loadVariantHash(String variantsOnIC, boolean includeId) throws IOException {
 		TextFile tf = new TextFile(variantsOnIC, TextFile.R);
 		HashSet<String> variantIds = new HashSet<String>();
@@ -333,14 +334,14 @@ public class VariantCounter {
 						variantIds.add(id);
 					}
 				}
-
+				
 			}
 			elems = tf.readLineElems(TextFile.tab);
 		}
 		tf.close();
 		return variantIds;
 	}
-
+	
 	public HashSet<String> hashit(ArrayList<VCFVariant> variantsNotOnImmunoChip, boolean includeId) {
 		HashSet<String> variantHash = new HashSet<String>();
 		for (VCFVariant var : variantsNotOnImmunoChip) {
@@ -352,16 +353,16 @@ public class VariantCounter {
 			}
 			variantHash.add(variant);
 		}
-
-
+		
+		
 		return variantHash;
 	}
-
+	
 	public boolean isIndel(String[] elems) {
-
+		
 		String alleles = elems[3] + "," + elems[4];
 		String[] alleleElems = alleles.split(",");
-
+		
 		for (String s : alleleElems) {
 			if (s.length() > 1) {
 				return true;
@@ -369,7 +370,7 @@ public class VariantCounter {
 		}
 		return false;
 	}
-
+	
 	public Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> loadSequencedVariants(String seqpanelvcf,
 																											 String bedregionsFile,
 																											 double mafthreshold,
@@ -378,14 +379,14 @@ public class VariantCounter {
 																											 boolean includeId,
 																											 boolean includeIndels,
 																											 String sampleList) throws IOException {
-
-
+		
+		
 		boolean[] includesamples = null;
 		if (sampleList != null) {
 			VCFGenotypeData d = new VCFGenotypeData(seqpanelvcf);
 			ArrayList<String> allsamples = d.getSamples();
 			d.close();
-
+			
 			TextFile tf = new TextFile(sampleList, TextFile.R);
 			String[] elems = tf.readLineElems(TextFile.tab);
 			HashSet<String> sampleSet = new HashSet<String>();
@@ -394,7 +395,7 @@ public class VariantCounter {
 				elems = tf.readLineElems(TextFile.tab);
 			}
 			tf.close();
-
+			
 			includesamples = new boolean[allsamples.size()];
 			int ctr = 0;
 			for (int i = 0; i < allsamples.size(); i++) {
@@ -405,18 +406,18 @@ public class VariantCounter {
 			}
 			System.out.println(ctr + " samples overlapping with: " + sampleList);
 		}
-
-
+		
+		
 		BedFileReader bfr = new BedFileReader();
 		ArrayList<Feature> regions = bfr.readAsList(bedregionsFile);
-
+		
 		TextFile tf = new TextFile(seqpanelvcf, TextFile.R);
 		String ln = tf.readLine();
-
+		
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = new ArrayList<>();
 		ArrayList<VCFVariant> variantsOnImmunoChip = new ArrayList<>();
 		ArrayList<VCFVariant> seqpanel = new ArrayList<>();
-
+		
 		while (ln != null) {
 			if (!ln.startsWith("#")) {
 				String[] elems = ln.split("\t");
@@ -424,11 +425,11 @@ public class VariantCounter {
 				if (chr.isAutosome()) {
 					VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, includesamples);
 					if (variant.getMAF() > mafthreshold && variant.getMAF() < upperthreshold) {
-
+						
 						boolean varOnIc = isVariantInHash(elems, variantsOnICHash, includeId);
 						boolean iswithinregion = isWithinRegion(regions, elems);
 						boolean indel = isIndel(elems);
-
+						
 						if (iswithinregion) {
 							seqpanel.add(variant);
 							if (includeIndels || (!includeIndels && !indel)) {
@@ -447,7 +448,7 @@ public class VariantCounter {
 		tf.close();
 		return new Triple<>(seqpanel, variantsOnImmunoChip, variantsNotOnImmunoChip);
 	}
-
+	
 	public boolean isVariantInHash(String[] elems, HashSet<String> variantHash, boolean includeId) {
 		if (includeId) {
 			String variant = Chromosome.parseChr(elems[0]).toString() + "_" + elems[1] + "_" + elems[2];
@@ -456,9 +457,9 @@ public class VariantCounter {
 			String variant = Chromosome.parseChr(elems[0]).toString() + "_" + elems[1];
 			return variantHash.contains(variant);
 		}
-
+		
 	}
-
+	
 	public boolean mafbelowfthreshold(String[] elems, double t) {
 		double maf = getMaf(elems);
 		if (maf < t) {
@@ -466,10 +467,10 @@ public class VariantCounter {
 		}
 		return false;
 	}
-
+	
 	public boolean isWithinRegion(ArrayList<Feature> list, String[] elems) {
 		Feature varfeat = new Feature();
-
+		
 		int pos = Integer.parseInt(elems[1]);
 		varfeat.setChromosome(Chromosome.parseChr(elems[0]));
 		varfeat.setStart(pos);
@@ -481,7 +482,7 @@ public class VariantCounter {
 		}
 		return false;
 	}
-
+	
 	public double getMaf(String[] elems) {
 		String[] infoElems = elems[7].split(";");
 		double maf = 1;
@@ -497,13 +498,13 @@ public class VariantCounter {
 					if (af < maf) {
 						maf = af;
 					}
-
+					
 				}
 			}
 		}
 		return maf;
 	}
-
+	
 	public double getInfo(String[] elems) {
 		String[] infoElems = elems[7].split(";");
 		double infoscore = 0;
@@ -515,7 +516,7 @@ public class VariantCounter {
 		}
 		return infoscore;
 	}
-
+	
 	public boolean isIndel1(String[] elems) {
 		String alleles = elems[minorallele1col];
 		String[] alleleElems = alleles.split(",");
@@ -527,7 +528,7 @@ public class VariantCounter {
 		}
 		return b;
 	}
-
+	
 	public boolean isIndel2(String[] elems) {
 		String alleles = elems[minorallele2col];
 		String[] alleleElems = alleles.split(",");
@@ -539,7 +540,7 @@ public class VariantCounter {
 		}
 		return b;
 	}
-
+	
 	public boolean maf1belowfthreshold(String[] elems, double t) {
 		Double d = Double.parseDouble(elems[maf1col]);
 		if (d < t) {
@@ -548,7 +549,7 @@ public class VariantCounter {
 			return false;
 		}
 	}
-
+	
 	public boolean maf2belowfthreshold(String[] elems, double t) {
 		Double d = Double.parseDouble(elems[maf2col]);
 		if (d < t) {
@@ -557,6 +558,6 @@ public class VariantCounter {
 			return false;
 		}
 	}
-
-
+	
+	
 }

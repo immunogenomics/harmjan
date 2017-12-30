@@ -58,6 +58,8 @@ public class Main {
 					new LRTestHaplotype(optionsLR);
 				} else if (optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.STATS)) {
 					new VariantStats(optionsLR);
+				} else if (optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.FILTERLIST)) {
+					new VariantFilterList(optionsLR);
 				} else {
 					new LRTest(optionsLR);
 				}
