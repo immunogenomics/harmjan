@@ -42,12 +42,15 @@ public class VariantFilterList extends LRTest {
 		filter.addFilter(new VCFVariantRegionFilter(regions));
 		
 		TextFile out = new TextFile(options.getOutputdir() + "-faillist.txt.gz", TextFile.W);
+		TextFile out3 = new TextFile(options.getOutputdir() + "-successlist.txt.gz", TextFile.W);
+		TextFile out2 = new TextFile(options.getOutputdir() + "-success.txt", TextFile.W);
 		TextFile in = new TextFile(options.getVcf(), TextFile.R);
 		String ln = in.readLine();
 		int ctr = 0;
 		int fail = 0;
 		int passed = 0;
 		System.out.println("Parsing: " + options.getVcf());
+		
 		while (ln != null) {
 			if (!ln.startsWith("#")) {
 				String outStr = p(ln, filter, genotypeSamplesWithCovariatesAndDiseaseStatus);
@@ -55,6 +58,8 @@ public class VariantFilterList extends LRTest {
 					out.writeln(outStr);
 					fail++;
 				} else {
+					VCFVariant v = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+					out3.writeln(v.asSNPFeature().toString());
 					passed++;
 				}
 			}
@@ -64,10 +69,12 @@ public class VariantFilterList extends LRTest {
 			}
 			ln = in.readLine();
 		}
+		out2.writeln(ctr + " lines parsed, " + fail + " failed, " + passed + " passed");
 		System.out.println("Done");
-		
+		out2.close();
 		out.close();
 		in.close();
+		out3.close();
 	}
 	
 	Feature tyk2 = new Feature(Chromosome.NINETEEN, 10396336, 10628468);
@@ -83,7 +90,7 @@ public class VariantFilterList extends LRTest {
 				VCFVariant v = new VCFVariant(substr, VCFVariant.PARSE.HEADER);
 				parseln = filters.passesRegionOrVariantFilter(v);
 				if (!parseln) {
-					return "" + v.asFeature().toString();
+					return "" + v.asSNPFeature().toString();
 				}
 			}
 			
@@ -105,14 +112,14 @@ public class VariantFilterList extends LRTest {
 							filters2.addFilter(new VCFVariantMAFFilter(0.005));
 						}
 						if (!filters2.passesFilters(v)) {
-							return "" + v.asFeature().toString();
+							return "" + v.asSNPFeature().toString();
 						} else {
 							return null;
 						}
 					}
 				} else if (filters != null) {
 					if (!filters.passesFilters(v)) {
-						return "" + v.asFeature().toString();
+						return "" + v.asSNPFeature().toString();
 					} else {
 						return null;
 					}

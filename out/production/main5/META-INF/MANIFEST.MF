@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+nl.harmjanwestra.txtr.Main-Class: CheckAssocationMultipleGeneProbes
+

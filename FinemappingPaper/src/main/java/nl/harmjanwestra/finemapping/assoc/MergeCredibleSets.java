@@ -53,13 +53,13 @@ public class MergeCredibleSets {
 
 //			c.determineRegionSignificanceThresholds(bedregions, assocfiles, datasetnames, genenames, outfile);
 			
-			String bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+			String bedregions = "d:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/overlapplots/regions.bed";
 //		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed";
-			String genenames = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
-			String geneAnnotation = "c:/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
+			String genenames = "d:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
+			String geneAnnotation = "d:/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz"; //"/Data/Ref/Annotation/UCSC/genes.gtf.gz";
 			
-			String outdir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\";
+			String outdir = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\normal\\";
 			String outfile = outdir + "mergedCredibleSets.txt";
 			String outeqtlfile = outdir + "mergedCredibleSets-eqtls.txt";
 			String outeqtlfileblueprint = outdir + "mergedCredibleSets-eqtls-blueprint";
@@ -112,14 +112,14 @@ public class MergeCredibleSets {
 			
 			// merge in TYK2
 			assocfiles = new String[]{
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt"
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-tyk2-chr19-gwas-0.txt"
 			};
 			String[] assocfiles2 = new String[]{
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-RA\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-T1D\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\normal\\1kg-META\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
 			};
 
 //			c.replaceLocus(assocfiles, assocfiles2, new Feature(Chromosome.NINETEEN, 10396336, 10628468), bedregions, maxPosteriorCredibleSet);
@@ -133,9 +133,9 @@ public class MergeCredibleSets {
 			
 			
 			assocfiles = new String[]{
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
 			};
 			datasetnames = new String[]{
 					"1kg-RA",
@@ -1828,7 +1828,7 @@ PValue  SNPName SNPChr  SNPChrPos       ProbeName       ProbeChr        ProbeCen
 					ArrayList<SNPFeature> variants = new ArrayList<>();
 					
 					if (topResults == null) {
-						System.out.println(i + " produces null results for region " + regionId + "\t" + region);
+						System.out.println(assocFiles[i] + " produces null results for region " + regionId + "\t" + region);
 						System.exit(-1);
 					}
 					

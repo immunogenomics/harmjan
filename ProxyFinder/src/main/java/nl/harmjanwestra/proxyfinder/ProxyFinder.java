@@ -1,5 +1,6 @@
 package nl.harmjanwestra.proxyfinder;
 
+
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
@@ -534,6 +535,62 @@ public class ProxyFinder {
 		}
 		
 		return output;
+	}
+	
+	public void defineCMWindows() throws IOException {
+		TextFile tf = new TextFile(options.snpfile, TextFile.R);
+		String ln = tf.readLine();
+		if (ln == null) {
+			System.out.println("Error with snp file. First line is null");
+			System.exit(-1);
+		}
+		int chrCol = 0;
+		int posCol = 1;
+		int rsCol = 2;
+		if (ln.trim().length() > 0) {
+			String[] firstlnelems = Strings.whitespace.split(ln);
+			if (firstlnelems.length >= 3 &&
+					firstlnelems[0].toLowerCase().equals("snp") &&
+					firstlnelems[1].toLowerCase().equals("chrom") &&
+					firstlnelems[2].toLowerCase().equals("bp")) {
+				// goshifter input file format
+				System.out.println("File is in GoShifter format...");
+				rsCol = 0;
+				chrCol = 1;
+				posCol = 2;
+				ln = tf.readLine();
+			} else {
+				System.out.println("Assuming three column format");
+			}
+		}
+		ArrayList<SNPFeature> snps = new ArrayList<>();
+		// format: chr pos rsid or chr_pos_rsid
+		while (ln != null) {
+			if (ln.trim().length() > 0) {
+				String[] elems = ln.split("\t");
+				if (elems.length >= 3) {
+					SNPFeature snp = new SNPFeature();
+					snp.setStart(Integer.parseInt(elems[posCol]));
+					snp.setStop(snp.getStart());
+					snp.setName(elems[rsCol]);
+					snp.setChromosome(Chromosome.parseChr(elems[chrCol]));
+					snps.add(snp);
+				} else if (elems.length == 2) {
+					// can't quite remember which format this was...
+					SNPFeature snp = SNPFeature.parseSNPFeature(elems[1]);
+					snps.add(snp);
+				}
+				ln = tf.readLine();
+			}
+		}
+		tf.close();
+		
+		// now load the hapmap
+
+		
+		
+		
+		
 	}
 	
 	

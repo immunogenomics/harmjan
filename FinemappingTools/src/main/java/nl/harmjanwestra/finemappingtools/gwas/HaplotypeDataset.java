@@ -51,7 +51,7 @@ public class HaplotypeDataset {
 							DoubleMatrix2D finalCovariates,
 							ArrayList<Integer> originalIndIdsIncluded,
 							ArrayList<VCFVariant> variants) {
-		this.finalDiseaseStatus = finalDiseaseStatus;
+		this.finalDiseaseStatus = finalDiseaseStatus; // individuals x diseases
 		this.finalCovariates = finalCovariates;
 		this.haplotypePairs = haplotypePairs;
 		this.availableHaplotypesList = availableHaplotypesList;
@@ -412,12 +412,16 @@ public class HaplotypeDataset {
 	}
 	
 	public double[][] getDiseaseStatus() {
-		int nrDiseases = finalDiseaseStatus.length;
-		double[][] diseaseStatus = new double[nrDiseases][getNrIndividuals()];
+		int nrDiseases = finalDiseaseStatus[0].length;
+		int nrIndividuals = getNrIndividuals();
+		double[][] diseaseStatus = new double[getNrIndividuals()][nrDiseases];
 		
-		for (int d = 0; d < finalDiseaseStatus.length; d++) {
+		System.out.println(nrDiseases + "\t" + nrIndividuals + "\t" + finalDiseaseStatus.length + "\t" + finalDiseaseStatus[0].length);
+		
+		
+		for (int individual = 0; individual < finalDiseaseStatus.length; individual++) {
 			for (int disease = 0; disease < nrDiseases; disease++) {
-				diseaseStatus[d][disease] = finalDiseaseStatus[d][disease].getNumber();
+				diseaseStatus[individual][disease] = finalDiseaseStatus[individual][disease].getNumber();
 			}
 		}
 		return diseaseStatus;

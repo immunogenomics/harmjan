@@ -20,6 +20,7 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -33,26 +34,32 @@ public class ExhaustivePlot {
 		try {
 			System.out.println("works");
 			BedFileReader reader = new BedFileReader();
-			ArrayList<Feature> regions = reader.readAsList("C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\exhaustive\\2017-11-15-exhaustiveregions.bed");
+			ArrayList<Feature> regions = reader.readAsList("D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\exhaustive\\2017-11-15-exhaustiveregions.bed");
 //			String[] diseases = new String[]{"RA", "T1D"};
-			String[] diseases = new String[]{"RA", "T1D", "META"};
-//			String[] diseases = new String[]{"T1D"};
+//			String[] diseases = new String[]{"RA", "T1D", "META"};
+			String[] diseases = new String[]{"META"};
 //			diseases = new String[]{"RA"};
 			int nrToPlot = 25;
-			
+			Feature tnfaip = new Feature(Chromosome.SIX, 137882875, 138275085);
 			for (Feature region : regions) {
+//				if (region.overlaps(tnfaip)) {
 				for (String d : diseases) {
 //					if (region.getChromosome().equals(Chromosome.SIX)) {
 					ExhaustivePlot p = new ExhaustivePlot();
+
+
 //						String output = "/Data/Projects/2016-Finemapping/Exhaustive/output/" + d + "-tyk2-" + region.toString();
-					String output = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\exhaustive\\plots\\" + d + "-" + region.toString();
+					String output = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\exhaustive\\plots2\\" + d + "-" + region.toString();
 //						String assocfile = "/Data/Projects/2016-Finemapping/Exhaustive/data/" + d + "-assoc0.3-COSMO-tyk2-chr" + region.getChromosome().getNumber() + "-pairwise-rewrite.txt.gz";
-					assocfile = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\exhaustive\\data\\" + d + "-assoc0.3-COSMO-chr" + region.getChromosome().getNumber() + "-pairwise.txt.gz";
+					assocfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\exhaustive\\data\\" + d + "-assoc0.3-COSMO-chr" + region.getChromosome().getNumber() + "-pairwise.txt.gz";
 					
-					String tabixfile = "C:\\Data\\Ref\\1kg\\ALL.chrCHR.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz";
-					String tabixsamplelimit = "C:\\Data\\Ref\\1kg-europeanpopulations.txt.gz";
+					if (region.overlaps(tnfaip)) {
+						assocfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\exhaustive\\data\\" + d + "-assoc0.3-COSMO-chr" + region.getChromosome().getNumber() + "-TNFAIP3-pairwise.txt.gz";
+					}
+					String tabixfile = "D:\\Data\\Ref\\1kg\\ALL.chrCHR.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz";
+					String tabixsamplelimit = "D:\\Data\\Ref\\1kg-europeanpopulations.txt.gz";
 					
-					String snpcombos = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\exhaustive\\snpcombos.txt";
+					String snpcombos = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\exhaustive\\snpcombos.txt";
 //						if (region.getChromosome().equals(Chromosome.SIX)) {
 					
 					if (Gpio.exists(assocfile)) {
@@ -70,6 +77,8 @@ public class ExhaustivePlot {
 
 //					System.exit(-1);
 				}
+//				}
+				
 			}
 			
 			
@@ -268,13 +277,15 @@ public class ExhaustivePlot {
 					}
 				}
 				
+				DecimalFormat fd = new DecimalFormat("#.##");
 				String[] snp1 = select.getSnp1().getName().split("_");
 				String[] snp2 = select.getSnp2().getName().split("_");
-				System.out.println(snp1[snp1.length - 1] + " + " + snp2[snp2.length - 1] + ", log10(p) = " + select.getP());
+				System.out.println(snp1[snp1.length - 1] + " + " + snp2[snp2.length - 1] + ", log10(p) = " + fd.format(select.getP()));
 				System.out.println(nrsmaller + " pairs with lower p-value out of " + String.format(Locale.US, "%,d", assocVals.size()).replace('.', ','));
 				String[] topsnp1 = top.getSnp1().getName().split("_");
 				String[] topsnp2 = top.getSnp2().getName().split("_");
-				System.out.println("Top pair: " + topsnp1[topsnp1.length - 1] + " + " + topsnp2[topsnp2.length - 1] + ", log10(p) = " + top.getP());
+				
+				System.out.println("Top pair: " + topsnp1[topsnp1.length - 1] + " + " + topsnp2[topsnp2.length - 1] + ", log10(p) = " + fd.format(top.getP()));
 				
 				
 			}

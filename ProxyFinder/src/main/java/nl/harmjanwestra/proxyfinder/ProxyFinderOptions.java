@@ -118,7 +118,7 @@ public class ProxyFinderOptions {
 	}
 
 	enum MODE {
-		PAIRWISE, LOCUSLD, PROXY
+		PAIRWISE, LOCUSLD, CMWINDOW, PROXY
 	}
 
 	public MODE mode;

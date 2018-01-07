@@ -1024,8 +1024,10 @@ public class LRTest {
 					for (int a = 1; a < nrAlleles; a++) {
 						VCFVariant v2 = v.variantFromAllele(a);
 						// recalculate imputation qual
-						if (filter.passesFilters(v2)) {
-							tmpVars.add(v2);
+						if (v2 != null) {
+							if (filter.passesFilters(v2)) {
+								tmpVars.add(v2);
+							}
 						}
 					}
 				} else {

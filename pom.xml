@@ -29,7 +29,6 @@
         <module>NGS</module>
         <module>GoSCializer</module>
         <module>GoShifter</module>
-        <module>Harmonics</module>
         <module>VCFUtils</module>
         <module>Pipeliner</module>
         <module>LiftOverTools</module>

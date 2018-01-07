@@ -15,6 +15,8 @@ public class Main {
 				finder.pairwiseLD();
 			} else if (options.mode.equals(ProxyFinderOptions.MODE.PROXY)) {
 				finder.findProxies();
+			} else if (options.mode.equals(ProxyFinderOptions.MODE.CMWINDOW)) {
+				finder.defineCMWindows();
 			}
 		} catch (IOException e) {
 			System.out.println("Unrecoverable error: ");
