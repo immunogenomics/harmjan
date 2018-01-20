@@ -9,14 +9,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class Meh {
+public class AssocVariantFilter {
 	
 	public static void main(String[] args) {
 		
 		String oldFile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
 		String newFile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
 		String blacklist = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\META-blacklist.txt";
-		Meh f = new Meh();
+		AssocVariantFilter f = new AssocVariantFilter();
 		try {
 			f.compareVariantLists(oldFile, newFile, blacklist);
 		} catch (IOException e) {
