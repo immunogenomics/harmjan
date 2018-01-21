@@ -104,6 +104,10 @@ public class LRTest {
 				System.out.println("Will convert data for FINEMAP");
 				
 				break;
+			case TRINCULO:
+				System.out.println("Will convert data for TRINCULO");
+				
+				break;
 			case STATS:
 				System.out.println("Will calculate variant stats");
 				
@@ -292,7 +296,7 @@ public class LRTest {
 		
 		boolean multinomial = false;
 		
-		if (options.getAnalysisType().equals(LRTestOptions.ANALYSIS.MULTINOMIAL)) {
+		if (options.getAnalysisType().equals(LRTestOptions.ANALYSIS.MULTINOMIAL) || options.getAnalysisType().equals(LRTestOptions.ANALYSIS.TRINCULO)) {
 			multinomial = true;
 		}
 		

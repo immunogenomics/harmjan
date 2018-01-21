@@ -41,7 +41,9 @@ public class Main {
 				new GUESS(new LRTestOptions(args));
 			} else if (options.mode.equals(MainOptions.MODE.FINEMAP)) {
 				new FINEMAP(new LRTestOptions(args));
-			} else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
+			} else if (options.mode.equals(MainOptions.MODE.TRINCULO)) {
+				new Trinculo(new LRTestOptions(args));
+			}else if (options.mode.equals(MainOptions.MODE.ASSOC)) {
 				LRTestOptions optionsLR = new LRTestOptions(args);
 				if (optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.HAPLOTYPE) ||
 						optionsLR.getAnalysisType().equals(LRTestOptions.ANALYSIS.CONDITIONALHAPLOTYPE)) {

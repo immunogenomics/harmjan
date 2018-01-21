@@ -39,6 +39,12 @@ public class MainOptions {
 		OPTIONS.addOption(option);
 		
 		option = Option.builder()
+				.desc("Run trinculo converter")
+				.longOpt("trinculo")
+				.build();
+		OPTIONS.addOption(option);
+		
+		option = Option.builder()
 				.desc("Run finemap converter")
 				.longOpt("finemap")
 				.build();
@@ -154,7 +160,9 @@ public class MainOptions {
 				mode = MODE.GUESS;
 			} else if (cmd.hasOption("finemap")) {
 				mode = MODE.FINEMAP;
-			} else if (cmd.hasOption("countvariants")) {
+			} else if (cmd.hasOption("trinculo")) {
+				mode = MODE.TRINCULO;
+			}else if (cmd.hasOption("countvariants")) {
 				mode = MODE.COUNTVARIANTS;
 			} else if (cmd.hasOption("updaters")) {
 				mode = MODE.UPDATERS;
@@ -184,7 +192,7 @@ public class MainOptions {
 		POSTERIORPVAL,
 		PLOTPOSTERIORS,
 		MERGE,
-		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, UPDATERS, STATS, GUESS, FINEMAP, PLINK, FILTERASSOC, NA
+		ASSOC, ANNOTATIONOVERLAPPLOT, BEDFILTER, CAVIAR, QTL, PROXYFINDER, GOSHIFTER, COUNTVARIANTS, UPDATERS, STATS, GUESS, FINEMAP, PLINK, FILTERASSOC, TRINCULO, NA
 	}
 	
 }

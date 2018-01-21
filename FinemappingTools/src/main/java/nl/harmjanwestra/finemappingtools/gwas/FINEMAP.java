@@ -30,7 +30,7 @@ public class FINEMAP extends LRTest {
 		super(options);
 		run();
 	}
-
+	
 	public void run() throws IOException {
 		// region1.k --> prior prob thresholds for k causal variants
 		// e.g.: 0.6 0.3 0.1
@@ -64,7 +64,6 @@ public class FINEMAP extends LRTest {
 		// region1.snp and region1.config, and region1.log are output files...
 		// z; 	ld; 	snp; 	config; 	k; 	log; 	n-ind
 		// region1.z; 	region1.ld; 	region1.snp; 	region1.config; 	region1.k; 	region1.log; 	5363
-
 		boolean append = false;
 		TextFile masterOut = null;
 		String masterfile = options.getOutputdir() + "-master";
@@ -77,8 +76,6 @@ public class FINEMAP extends LRTest {
 
 		if (exService == null) {
 			exService = Executors.newWorkStealingPool(options.getNrThreads());
-
-
 		}
 
 		for (Feature region : regions) {

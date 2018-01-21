@@ -47,6 +47,12 @@ public class LRTestOptions {
 		OPTIONS.addOption(option);
 		
 		option = Option.builder()
+				.longOpt("trinculo")
+				.desc("Run trinculo converter")
+				.build();
+		OPTIONS.addOption(option);
+		
+		option = Option.builder()
 				.longOpt("haplotype")
 				.desc("Determine haplotypes from variants and perform haplotype based test (warning: can only handle a limited number of haplotypes!)")
 				.build();
@@ -495,6 +501,8 @@ public class LRTestOptions {
 				analysisType = ANALYSIS.GUESS;
 			} else if (cmd.hasOption("finemap")) {
 				analysisType = ANALYSIS.FINEMAP;
+			}  else if (cmd.hasOption("trinculo")) {
+				analysisType = ANALYSIS.TRINCULO;
 			} else if (cmd.hasOption("multinomial")) {
 				analysisType = ANALYSIS.MULTINOMIAL;
 			} else if (cmd.hasOption("filterlist")) {
@@ -663,7 +671,7 @@ public class LRTestOptions {
 		NORMAL,
 		FINEMAP,
 		GUESS,
-		STATS, FILTERLIST;
+		STATS, FILTERLIST, TRINCULO;
 		
 	}
 	
