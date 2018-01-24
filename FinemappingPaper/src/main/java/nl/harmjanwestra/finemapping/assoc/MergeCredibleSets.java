@@ -146,7 +146,16 @@ public class MergeCredibleSets {
 			
 			outfile += "missp.txt";
 			
-			c.mergeCredibleSets(bedregions, assocfiles, datasetnames, genenames, outfile, maxPosteriorCredibleSet, significanceThreshold, nrVariantsInCredibleSet, geneAnnotation, includeAllLoci);
+			c.mergeCredibleSets(bedregions,
+					assocfiles,
+					datasetnames,
+					genenames,
+					outfile,
+					maxPosteriorCredibleSet,
+					significanceThreshold,
+					nrVariantsInCredibleSet,
+					geneAnnotation,
+					includeAllLoci);
 			System.out.println(outfile + "missp.txt");
 //
 //			boolean onlyincludevariantsbelowsignificancethreshold = true;

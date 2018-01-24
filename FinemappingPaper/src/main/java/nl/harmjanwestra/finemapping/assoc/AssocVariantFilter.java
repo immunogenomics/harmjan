@@ -12,16 +12,19 @@ import java.util.HashSet;
 public class AssocVariantFilter {
 	
 	public static void main(String[] args) {
-		
-		String oldFile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
-		String newFile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
-		String blacklist = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\META-blacklist.txt";
+
+//		String oldFile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
+//		String newFile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
+//		String oldFile = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\outputwithoutcohortcovariate\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
+//		String newFile = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\METAPCA-assoc0.3-COSMO-merged-posterior.txt.gz";
+
+//		String blacklist = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\META-blacklist.txt";
 		AssocVariantFilter f = new AssocVariantFilter();
-		try {
-			f.compareVariantLists(oldFile, newFile, blacklist);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			f.compareVariantLists(oldFile, newFile, blacklist);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		
 		
 		String[] d = new String[]{
@@ -33,9 +36,10 @@ public class AssocVariantFilter {
 		
 		for (String ds : d) {
 			
-			blacklist = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\" + ds + "-blacklist.txt";
+			String blacklist = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\" + ds + "-blacklist.txt";
 			String[] rafiles = new String[]{
-					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\" + ds + "-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\outputwithoutcohortcovariate\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
+//					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\" + ds + "-assoc0.3-COSMO-merged-posterior.txt.gz",
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\conditional\\output\\" + ds + "-assoc0.3-COSMO-gwas-0-merged.txt.gz",
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\conditional\\output\\" + ds + "-assoc0.3-COSMO-gwas-1-merged.txt.gz",
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\conditional\\output\\" + ds + "-assoc0.3-COSMO-gwas-2-merged.txt.gz",
@@ -55,11 +59,11 @@ public class AssocVariantFilter {
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\exhaustive\\data\\" + ds + "-assoc0.3-COSMO-chr19-pairwise.txt.gz",
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\exhaustive\\data\\" + ds + "-assoc0.3-COSMO-chr21-pairwise.txt.gz",
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\exhaustive\\data\\" + ds + "-assoc0.3-COSMO-chr6-TNFAIP3-pairwise.txt.gz",
-					
+			
 			};
 			
 			String[] raoutfiles = new String[]{
-					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\" + ds + "-assoc0.3-COSMO-merged.txt.gz",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\METAPCA-assoc0.3-COSMO-merged.txt.gz",
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\output\\" + ds + "-assoc0.3-COSMO-gwas-0-merged.txt.gz",
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\output\\" + ds + "-assoc0.3-COSMO-gwas-1-merged.txt.gz",
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\output\\" + ds + "-assoc0.3-COSMO-gwas-2-merged.txt.gz",
