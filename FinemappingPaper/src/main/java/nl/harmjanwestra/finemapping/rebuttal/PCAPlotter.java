@@ -1,7 +1,6 @@
-package nl.harmjanwestra.finemapping.rebuttal1;
+package nl.harmjanwestra.finemapping.rebuttal;
 
 import nl.harmjanwestra.utilities.graphics.Grid;
-import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.graphics.panels.ScatterplotPanel;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.math.matrix2.DoubleMatrixDataset;

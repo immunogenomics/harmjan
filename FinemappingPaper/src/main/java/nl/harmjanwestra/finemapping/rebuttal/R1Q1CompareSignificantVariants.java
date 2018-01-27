@@ -1,4 +1,4 @@
-package nl.harmjanwestra.finemapping.rebuttal1;
+package nl.harmjanwestra.finemapping.rebuttal;
 
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;

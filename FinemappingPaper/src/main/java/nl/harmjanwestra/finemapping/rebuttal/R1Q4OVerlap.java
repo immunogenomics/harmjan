@@ -1,4 +1,4 @@
-package nl.harmjanwestra.finemapping.rebuttal1;
+package nl.harmjanwestra.finemapping.rebuttal;
 
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
@@ -26,8 +26,8 @@ public class R1Q4OVerlap {
 
 //		String[] dirs = new String[]{
 ////				"D:\\Data\\ENCODE\\histone_macs",
-////				"D:\\Data\\ENCODE\\peakSeq",
-////				"D:\\Data\\ENCODE\\spp\\hub",
+////				"D:\\Data\\ENCODE\\peakSe
+//////				"D:\\Data\\ENCODE\\spp\\hub",
 ////				"D:\\Data\\ENCODE\\wgEncodeAwgDnaseUniform",
 ////				"D:\\Data\\ENCODE\\wgEncodeAwgTfbsUniform"
 //
@@ -141,7 +141,7 @@ public class R1Q4OVerlap {
 		};
 		
 		
-		String variants = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\2018-01-16-ListOfAssocIds.txt";
+		String variants = "C:\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\tables\\listofsnpswithposterior0.2.txt";
 		
 		for (int m = 0; m < maps.length; m++) {
 			try {
@@ -212,6 +212,7 @@ public class R1Q4OVerlap {
 		
 		
 		boolean[][] overlap = new boolean[annotations.size()][snps.size()];
+		boolean[] overlapsAny = new boolean[snps.size()];
 		ArrayList<String> celtypes = null;
 		for (int i = 0; i < annotations.size(); i++) {
 			
@@ -253,6 +254,7 @@ public class R1Q4OVerlap {
 							Feature snp = snps.get(s);
 							if (snp.overlaps(f)) {
 								overlap[celid][s] = true;
+								overlapsAny[s] = true;
 							}
 						}
 						elems = tf.readLineElems(Strings.whitespace);
@@ -286,6 +288,7 @@ public class R1Q4OVerlap {
 								Feature snp = snps.get(s);
 								if (snp.overlaps(f)) {
 									overlap[i][s] = true;
+									overlapsAny[s] = true;
 								}
 							}
 						}
@@ -299,6 +302,7 @@ public class R1Q4OVerlap {
 								Feature snp = snps.get(s);
 								if (snp.overlaps(f)) {
 									overlap[i][s] = true;
+									overlapsAny[s] = true;
 								}
 							}
 						}
@@ -327,6 +331,7 @@ public class R1Q4OVerlap {
 								Feature snp = snps.get(s);
 								if (snp.overlaps(f)) {
 									overlap[i][s] = true;
+									overlapsAny[s] = true;
 								}
 							}
 						}
@@ -342,7 +347,9 @@ public class R1Q4OVerlap {
 		
 		String header = "Annotation";
 		for (int s = 0; s < snps.size(); s++) {
-			header += "\t" + snps.get(s).toString();
+			if (overlapsAny[s]) {
+				header += "\t" + snps.get(s).toString();
+			}
 		}
 		out.writeln(header);
 		if (celtypes != null) {
@@ -350,11 +357,13 @@ public class R1Q4OVerlap {
 				String lnout = celtypes.get(a);
 				boolean overlaponce = false;
 				for (int s = 0; s < snps.size(); s++) {
-					if (overlap[a][s]) {
-						overlaponce = true;
-						lnout += "\t1";
-					} else {
-						lnout += "\t0";
+					if (overlapsAny[s]) {
+						if (overlap[a][s]) {
+							overlaponce = true;
+							lnout += "\t1";
+						} else {
+							lnout += "\t0";
+						}
 					}
 				}
 				if (overlaponce) {
@@ -366,11 +375,13 @@ public class R1Q4OVerlap {
 				String lnout = annotations.get(a).getLeft();
 				boolean overlaponce = false;
 				for (int s = 0; s < snps.size(); s++) {
-					if (overlap[a][s]) {
-						overlaponce = true;
-						lnout += "\t1";
-					} else {
-						lnout += "\t0";
+					if (overlapsAny[s]) {
+						if (overlap[a][s]) {
+							overlaponce = true;
+							lnout += "\t1";
+						} else {
+							lnout += "\t0";
+						}
 					}
 				}
 				if (overlaponce) {
