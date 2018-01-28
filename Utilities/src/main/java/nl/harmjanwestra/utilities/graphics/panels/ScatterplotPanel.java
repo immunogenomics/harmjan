@@ -5,12 +5,10 @@ import nl.harmjanwestra.utilities.graphics.Range;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
-import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 
 import java.awt.*;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.List;
 
 /**
  * Created by hwestra on 10/15/15.
@@ -25,6 +23,8 @@ public class ScatterplotPanel extends Panel {
 	private String yAxisLabel;
 	private String[] datasetLabels;
 	private boolean plotLinearRegression = false;
+	private boolean plotAxisTickLabels;
+	private boolean plotLegend;
 	
 	public ScatterplotPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -77,6 +77,11 @@ public class ScatterplotPanel extends Panel {
 	
 	public void setDataRange(Range dataRange) {
 		this.dataRange = dataRange;
+	}
+	
+	public void setPlotElems(boolean plotAxisTickLabels, boolean plotLegend) {
+		this.plotAxisTickLabels = plotAxisTickLabels;
+		this.plotLegend = plotLegend;
 	}
 	
 	@Override
@@ -161,8 +166,9 @@ public class ScatterplotPanel extends Panel {
 				maxlen = adv;
 			}
 			g2d.setFont(theme.getMediumFont());
-			g2d.drawString(formattedStr, startx - adv - 5, ypos);
-			
+			if (plotAxisTickLabels) {
+				g2d.drawString(formattedStr, startx - adv - 5, ypos);
+			}
 			
 		}
 		
@@ -195,7 +201,9 @@ public class ScatterplotPanel extends Panel {
 			g2d.drawLine(xpos, starty, xpos, stopy);
 			int adv = metrics.stringWidth(formattedStr);
 			g2d.setFont(theme.getMediumFont());
-			g2d.drawString(formattedStr, xpos - (adv / 2), stopy + 10);
+			if(plotAxisTickLabels) {
+				g2d.drawString(formattedStr, xpos - (adv / 2), stopy + 10);
+			}
 			
 		}
 		
@@ -231,7 +239,7 @@ public class ScatterplotPanel extends Panel {
 					int pixelX = x0 + marginX + (int) Math.ceil(nrPixelsMaxX * xperc);
 					int pixelY = y0 + marginY + (int) Math.ceil(nrPixelsMaxY - (nrPixelsMaxY * yperc));
 					
-					g2d.fillOval(pixelX - 2, pixelY - 2, 4, 4);
+					g2d.fillOval(pixelX - 3, pixelY - 3, 6, 6);
 					
 				} else {
 					// plot some markers somewhere?
@@ -287,7 +295,7 @@ public class ScatterplotPanel extends Panel {
 			}
 		}
 		
-		if (datasetLabels != null) {
+		if (plotLegend && datasetLabels != null) {
 			// plot a legend
 			
 			int maxStrWidth = 0;

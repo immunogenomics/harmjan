@@ -32,8 +32,11 @@ public class PlotterAccuracy extends VariantCounter {
 	final double mafthreshold = 0.01;
 	final boolean onlyIc = false;
 	final boolean windows = false;
-	final boolean includeId = true;
+	final boolean includeId = false;
 	double qualthreshold = 0.5;
+	String ext = "pdf";
+	boolean plotticks = true;
+	boolean plotlegend = true;
 	
 	public static void main(String[] args) {
 		PlotterAccuracy p = new PlotterAccuracy();
@@ -47,53 +50,136 @@ public class PlotterAccuracy extends VariantCounter {
 		String samplelist = null;
 		String outdir = null;
 		
-		variantsOnIC = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
-		bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		variantsOnIC = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
+		bedregions = "d:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		
 		try {
-			outdir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\output\\";
+			outdir = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\outputRA\\";
+			Gpio.createDir(outdir);
 			files = new String[]{
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-cosmo-HC.txt",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-eur-HC.txt",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-HRC-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-cosmo-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-PBWT-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-eur-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-HRC-HC.txt",
+				
 			};
 			labels = new String[]{
 					"COSMO",
+					"COSMO-PBWT",
 					"EUR",
-					"HRC"
+					"HRC",
 			};
 			diseaseprefix = "RA-HC";
-			seqpanelvcf = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			seqpanelvcf = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
 			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
 			
 			files = new String[]{
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-cosmo-UG.txt",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-eur-UG.txt",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-HRC-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-cosmo-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-PBWT-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-eur-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-HRC-UG.txt",
+				
 			};
 			labels = new String[]{
 					"COSMO",
+					"COSMO-PBWT",
 					"EUR",
-					"HRC"
+					"HRC",
+				
 			};
 			diseaseprefix = "RA-UG";
-			seqpanelvcf = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			seqpanelvcf = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
 			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
 			
 			files = new String[]{
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-cosmo-ST.txt",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-eur-ST.txt",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\RA-HRC-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-cosmo-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-PBWT-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-eur-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-HRC-ST.txt",
+				
 			};
 			labels = new String[]{
 					"COSMO",
+					"COSMO-PBWT",
 					"EUR",
-					"HRC"
+					"HRC",
+				
 			};
 			diseaseprefix = "RA-ST";
-			seqpanelvcf = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\accuracy\\panels\\samtools-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			seqpanelvcf = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\samtools-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
+//
+
+
+//////////////////////////////
+// T1D
+			
+			outdir = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\outputT1D\\";
+			Gpio.createDir(outdir);
+			files = new String[]{
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-cosmo-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-PBWT-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-eur-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-HRC-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-Michigan-HRC-HC.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-SHAPEIT-HRC-HC.txt",
+			};
+			labels = new String[]{
+					"COSMO",
+					"COSMO-PBWT",
+					"EUR",
+					"HRC-Sanger",
+					"HRC-Michigan",
+					"HRC-SHAPEIT",
+				
+			};
+			diseaseprefix = "T1D-HC";
+			seqpanelvcf = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
 			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
 			
+			files = new String[]{
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-cosmo-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-PBWT-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-eur-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-HRC-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-Michigan-HRC-UG.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-SHAPEIT-HRC-UG.txt",
+				
+			};
+			labels = new String[]{
+					"COSMO",
+					"COSMO-PBWT",
+					"EUR",
+					"HRC-Sanger",
+					"HRC-Michigan",
+					"HRC-SHAPEIT",
+				
+			};
+			diseaseprefix = "T1D-UG";
+			seqpanelvcf = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
+			
+			files = new String[]{
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-cosmo-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-PBWT-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-eur-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-HRC-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-Michigan-HRC-ST.txt",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-SHAPEIT-HRC-ST.txt",
+				
+			};
+			labels = new String[]{
+					"COSMO",
+					"COSMO-PBWT",
+					"EUR",
+					"HRC-Sanger",
+					"HRC-Michigan",
+					"HRC-SHAPEIT",
+				
+			};
+			diseaseprefix = "T1D-ST";
+			seqpanelvcf = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\samtools-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+			p.plotCorr(files, labels, diseaseprefix, seqpanelvcf, variantsOnIC, bedregions, samplelist, outdir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
@@ -146,25 +232,25 @@ public class PlotterAccuracy extends VariantCounter {
 //		bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 //		String outdir = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/" + diseaseprefix + "-plots/";
 //
-		String ext = "png";
-		
-		if (windows) {
-			
-			files = new String[]{
-					"D:\\tmp\\2016-05-19\\T1D\\T1D-EUR-merged.txt",
-					"D:\\tmp\\2016-05-19\\T1D\\T1D-COSMO-merged.txt",
-					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-merged.txt",
-					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-HRC-w100kb-merged.txt",
-					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-w100kb-merged.txt"
-			};
-			labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-HRC-w100kb", "HRC-COSMO-w100kb"};
-			variantsOnIC = "D:\\tmp\\2016-05-19\\T1D-recode-stats.vcf.gz";
-			bedregions = "D:\\tmp\\2016-05-19\\AllICLoci.bed";
-			outdir = "D:\\tmp\\2016-05-19\\T1D-plotsAccuracy\\";
-//			files2 = new String[]{
-//					"D:\\tmp\\2016-05-19\\ImmunoChipGenotyped.txt"
+
+
+//		if (windows) {
+//
+//			files = new String[]{
+//					"D:\\tmp\\2016-05-19\\T1D\\T1D-EUR-merged.txt",
+//					"D:\\tmp\\2016-05-19\\T1D\\T1D-COSMO-merged.txt",
+//					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-merged.txt",
+//					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-HRC-w100kb-merged.txt",
+//					"D:\\tmp\\2016-05-19\\T1D\\T1D-HRC-COSMO-w100kb-merged.txt"
 //			};
-		}
+//			labels = new String[]{"EUR", "COSMO", "HRC-COSMO", "HRC-HRC-w100kb", "HRC-COSMO-w100kb"};
+//			variantsOnIC = "D:\\tmp\\2016-05-19\\T1D-recode-stats.vcf.gz";
+//			bedregions = "D:\\tmp\\2016-05-19\\AllICLoci.bed";
+//			outdir = "D:\\tmp\\2016-05-19\\T1D-plotsAccuracy\\";
+////			files2 = new String[]{
+////					"D:\\tmp\\2016-05-19\\ImmunoChipGenotyped.txt"
+////			};
+//		}
 		
 		
 		BedFileReader reader = new BedFileReader();
@@ -186,58 +272,35 @@ public class PlotterAccuracy extends VariantCounter {
 		boolean usemafthreshold = false;
 		boolean includeICVariants = true;
 		
+		
+		// count variants in reference
+		
+		
+		// determine number of imputed variants
+		
+		
 		// including indels
-		int maxNrVariants = 3000;
+//		int maxNrVariants = 3000;
 		includeindels = true;
 		usemafthreshold = false;
 		includeICVariants = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants." + ext;
-//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
+		
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, 0, includeICVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
 		
 		// maf > 1%
 		usemafthreshold = true;
 		out = outdir + diseaseprefix + "-plot1-allvariants-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
 		
-		
-		// maf > 1%, imputed variants
-		usemafthreshold = false;
-		includeICVariants = false;
-		maxNrVariants = 3000; // if including IDs
-//		maxNrVariants = 689; // if not including IDs
-		out = outdir + diseaseprefix + "-plot1-allvariants-imputed." + ext;
-//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
 		
 		// maf > 1%, imputed variants
 		usemafthreshold = true;
 		includeICVariants = false;
-		maxNrVariants = 692; // if including IDs
-//		maxNrVariants = 689; // if not including IDs
+//		maxNrVariants = 692; // if including IDs
 		out = outdir + diseaseprefix + "-plot1-allvariants-imputed-mafgt" + mafthreshold + "." + ext;
-		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
-
-
-//		// excluding indels
-//		maxNrVariants = 1717;
-//		includeindels = false;
-//		usemafthreshold = false;
-//		includeICVariants = true;
-//		out = outdir + diseaseprefix + "-plot1-excludedindels." + ext;
-//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-//
-//		// maf > 1%
-//		usemafthreshold = true;
-//		out = outdir + diseaseprefix + "-plot1-excludedindels-mafgt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-//
-//		// maf > 1%, imputed variants
-//		usemafthreshold = true;
-//		includeICVariants = false;
-//		maxNrVariants = 548;
-//		out = outdir + diseaseprefix + "-plot1-excludedindels-imputed-mafgt" + mafthreshold + "." + ext;
-//		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, maxNrVariants, includeId, variantsOnIC, seqpanelvcf);
-//
-	
+		plot1(files, labels, out, bedregions, includeindels, usemafthreshold, mafthreshold, includeICVariants, includeId, variantsOnIC, seqpanelvcf, samplelist);
+		
 	}
 	
 	
@@ -246,12 +309,10 @@ public class PlotterAccuracy extends VariantCounter {
 					  boolean usemafthreshold,
 					  double mafthreshold,
 					  boolean includeICVariants,
-					  int maxSize,
 					  boolean includeId,
 					  String variantsOnIC,
 					  String seqpanelvcf,
 					  String samplelist
-	
 	
 	) throws IOException, DocumentException {
 		// plot 1: x-axis nr of variants, y-axis correlation,
@@ -265,8 +326,8 @@ public class PlotterAccuracy extends VariantCounter {
 		);
 		
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
-		maxSize = seqpanel.size();
 		
+		System.out.println("Setting max size: " + seqpanelvcf);
 		ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
 		
@@ -281,12 +342,12 @@ public class PlotterAccuracy extends VariantCounter {
 		if (includeICVariants) {
 			allvars.addAll(variantsNotOnImmunoChip);
 			allvars.addAll(variantsOnImmunoChip);
-			
 			sequencedVariantsHash = hashit(allvars, includeId);
 		} else {
 			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 		}
 		
+		int maxSize = sequencedVariantsHash.size();
 		
 		String[] newlabels = new String[labels.length];
 		for (int f = 0; f < files.length; f++) {
@@ -416,6 +477,7 @@ public class PlotterAccuracy extends VariantCounter {
 		Grid grid = new Grid(width, height, 1, 1, 100, 100);
 		ScatterplotPanel panel = new ScatterplotPanel(1, 1);
 		panel.setData(y, x);
+		panel.setPlotElems(plotticks, plotlegend);
 		Range range = new Range(0, 0, 1, 100);
 		range.roundX();
 		range.roundY();

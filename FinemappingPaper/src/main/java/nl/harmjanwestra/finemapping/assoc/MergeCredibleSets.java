@@ -158,18 +158,18 @@ public class MergeCredibleSets {
 					includeAllLoci);
 			System.out.println(outfile + "missp.txt");
 //
-//			boolean onlyincludevariantsbelowsignificancethreshold = true;
-//			c.makeCircularPlot(bedregions,
-//					assocfiles,
-//					datasetnames,
-//					genenames,
-//					outplot,
-//					significanceThreshold,
-//					onlyincludevariantsbelowsignificancethreshold,
-//					maxPosteriorCredibleSet,
-//					nrVariantsInCredibleSet,
-//					geneAnnotation);
-//			System.exit(-1);
+			boolean onlyincludevariantsbelowsignificancethreshold = true;
+			c.makeCircularPlot(bedregions,
+					assocfiles,
+					datasetnames,
+					genenames,
+					outplot,
+					significanceThreshold,
+					onlyincludevariantsbelowsignificancethreshold,
+					maxPosteriorCredibleSet,
+					nrVariantsInCredibleSet,
+					geneAnnotation);
+			System.exit(-1);
 //
 ////			System.exit(-1);
 //

@@ -235,7 +235,7 @@ public class VCFVariant {
 			}
 			String lnheader = ln.substring(0, substrlen);
 			//String[] tokenArr = Strings.tab.split(lnheader);
-			String[] tokenArr = Strings.split(lnheader, 0, Strings.tab);
+			String[] tokenArr = Strings.subsplit(lnheader, Strings.tab, 0, 10);
 			
 			for (int t = 0; t < 9; t++) {
 				if (t < tokenArr.length) {
@@ -338,161 +338,180 @@ public class VCFVariant {
 
 //				String[] tokenArr = Strings.split(ln, 0, Strings.tab);
 //				String[] tokenArr = Strings.tab.split(ln, 0);
-				String[] tokenArr = Strings.split(ln, 0, Strings.tab);
+//				String[] tokenArr =
+				
+				String[] tokenArr = null;
+				if (samplesToInclude == null) {
+					tokenArr = Strings.split(ln, 0, Strings.tab);
+				} else {
+					tokenArr = Strings.subsplit(ln, Strings.tab, 9, samplesToInclude);
+				}
 				ln = null;
 				
 				if (tokenArr.length > 9) { // allow VCFs without any actual genotypes
 					// parse actual genotypes.
-					int nrTokens = tokenArr.length;
-					int nrSamples = nrTokens - nrHeaderElems;
-					if (samplesToInclude != null) {
-						nrSamples = 0;
-						for (int i = 0; i < samplesToInclude.length; i++) {
-							if (samplesToInclude[i]) {
-								nrSamples++;
-							}
-						}
+
+//					int nrSamples = nrTokens - nrHeaderElems;
+//					if (samplesToInclude != null) {
+//						nrSamples = 0;
+//						for (int i = 0; i < samplesToInclude.length; i++) {
+//							if (samplesToInclude[i]) {
+//								nrSamples++;
+//							}
+//						}
+//					}
+					int nrSamples = tokenArr.length;
+					int offset = 0;
+					if (samplesToInclude == null) {
+						nrSamples = tokenArr.length - 9;
+						offset = 9;
 					}
-					
-					
+					int nrTokens = tokenArr.length;
 					genotypeAlleles = DoubleFactory2D.dense.make(nrSamples, 2, -1);// new DenseDoubleMatrix2D(nrSamples, 2);
 					
 					
 					genotypeProbabilies = null;
 					
 					int includedSampleCtr = 0;
-					for (int t = 9; t < nrTokens; t++) {
+					for (int t = offset; t < nrTokens; t++) {
 						String token = tokenArr[t];
 						int indPos = t - nrHeaderElems;
-						if (samplesToInclude == null || samplesToInclude[indPos]) {
-							String sampleColumn = token;
-							if (nullGenotype.equals(sampleColumn)) {
-								// not called
-								genotypeAlleles.setQuick(includedSampleCtr, 0, -1);
-								genotypeAlleles.setQuick(includedSampleCtr, 1, -1);
+//						if (samplesToInclude == null || samplesToInclude[indPos]) {
+						String sampleColumn = token;
+						if (nullGenotype.equals(sampleColumn)) {
+							// not called
+							genotypeAlleles.setQuick(includedSampleCtr, 0, -1);
+							genotypeAlleles.setQuick(includedSampleCtr, 1, -1);
+							
+						} else {
+							//String[] sampleElems = Strings.colon.split(sampleColumn);
+							
+							String[] sampleTokens = Strings.colon.split(sampleColumn);
+							for (int s = 0; s < sampleTokens.length; s++) {
+								String sampleToken = sampleTokens[s];
 								
-							} else {
-								//String[] sampleElems = Strings.colon.split(sampleColumn);
-								
-								String[] sampleTokens = Strings.colon.split(sampleColumn);
-								for (int s = 0; s < sampleTokens.length; s++) {
-									String sampleToken = sampleTokens[s];
-									
-									if (s == gtCol) {
-										String gt = sampleToken;
-										if (!nullGenotype.equals(gt)) {
-											
-											PHASE phase = PHASE.getPhase(gt);
-											String[] gtElems = phase.getPattern().split(gt);
-											this.phase = phase;
+								if (s == gtCol) {
+									String gt = sampleToken;
+									if (!nullGenotype.equals(gt)) {
+										
+										PHASE phase = PHASE.getPhase(gt);
+										String[] gtElems = phase.getPattern().split(gt);
+										this.phase = phase;
 //											if (gtElems.length == 1) { // phased genotypes ??
 //												gtElems = pipe.split(gt);
 //												phase = PHASE.PHASED;
 //											}
+										
+										if (!gtElems[0].equals(".")) {
 											
-											if (!gtElems[0].equals(".")) {
+											if (gtElems.length < 2) {
+												System.out.println(ln);
+												System.out.println();
+												System.out.println("TokenID: " + t);
+												System.out.println("Sample Token: " + sampleToken + "\tColumn: " + sampleColumn);
+												System.out.println("Token: " + token);
+												System.out.println("gtelems: " + Strings.concat(gtElems, Strings.tab));
+												System.out.println("length of GT Elems < 2");
+												System.out.println("Actual length: " + gtElems.length);
+												System.out.println("Number of total sample elems: " + sampleTokens.length);
+												System.out.println("Number of total tokens: " + nrTokens);
+												System.out.println("Number of elements in arr: " + tokenArr.length);
+												System.out.println("Offset: " + offset);
+												System.out.println("SampleFilter set: " + (samplesToInclude != null));
 												
-												if (gtElems.length < 2) {
-													System.out.println(ln);
-													System.out.println();
-													System.out.println("gtelems: " + Strings.concat(gtElems, Strings.tab));
-													System.out.println("length of GT Elems < 2");
-													System.out.println("Actual length: " + gtElems.length);
-													System.out.println("Number of total sample elems: " + sampleTokens.length);
-													System.out.println("Number of total tokens: " + nrTokens);
-													System.exit(-1);
-												}
-												
-												try {
-													byte gt1 = 0;
-													byte gt2 = 0;
-													gt1 = Byte.parseByte(gtElems[0]);
-													gt2 = Byte.parseByte(gtElems[1]);
-													
-													genotypeAlleles.setQuick(includedSampleCtr, 0, gt1);
-													genotypeAlleles.setQuick(includedSampleCtr, 1, gt2);
-													
-													
-												} catch (NumberFormatException e) {
-													
-													System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length + "\tVariant: " + chr + ":" + pos + "\t" + id);
-													System.out.println(e.getMessage());
-													for (int q = 0; q < gtElems.length; q++) {
-														System.out.println(q + ": " + gtElems[q]);
-													}
-													
-												}
+												System.exit(-1);
 											}
-										}
-									} else if (s == dsCol) {
-										// dosages
-										if (p.equals(PARSE.ALL)) {
-											try {
-												if (dosages == null) {
-													dosages = new DenseDoubleMatrix2D(nrSamples, alleles.length - 1);
-												}
-												
-												String[] dsElems = Strings.comma.split(sampleToken);
-												try {
-													for (int q = 0; q < dsElems.length; q++) {
-														dosages.set(includedSampleCtr, q, Double.parseDouble(dsElems[q]));
-													}
-												} catch (IndexOutOfBoundsException e) {
-													System.out.println(e.getMessage());
-													System.out.println("More dosage values than expected:" + sampleToken + " nr elems: " + dsElems.length + "\tVariant: " + chr + ":" + pos + "\t" + id);
-													System.out.println("Expected: " + (alleles.length - 1));
-													System.out.println("Sample: " + includedSampleCtr);
-													System.out.println(Strings.concat(alleles, Strings.semicolon));
-													System.exit(-1);
-												}
-												
-											} catch (NumberFormatException e) {
-											
-											}
-										}
-									} else if (s == gpCol) {
-										// genotype probs
-										if (p.equals(PARSE.ALL)) {
-											String[] gpElems = Strings.comma.split(sampleToken);
 											
 											try {
-												if (genotypeProbabilies == null) {
-													genotypeProbabilies = new DenseDoubleMatrix2D(nrSamples, gpElems.length);
-												}
+												byte gt1 = 0;
+												byte gt2 = 0;
+												gt1 = Byte.parseByte(gtElems[0]);
+												gt2 = Byte.parseByte(gtElems[1]);
 												
-												int g2 = 0;
-												try {
-													for (int g = 0; g < gpElems.length; g++) {
-														genotypeProbabilies.setQuick(includedSampleCtr, g, Double.parseDouble(gpElems[g]));
-														g2 = g;
-													}
-												} catch (java.lang.ArrayIndexOutOfBoundsException e2) {
-													e2.printStackTrace();
-													System.out.println("variant: " + chr + "\t" + pos + "\t" + id);
-													System.out.println("# alleles: " + alleles.length);
-													System.out.println("elemNr: " + g2);
-													System.out.println("nrElems: " + gpElems.length);
-													System.out.println("sample: " + includedSampleCtr);
-													System.out.println("matrix size: " + genotypeProbabilies.rows() + " x " + genotypeProbabilies.columns());
-													System.exit(-1);
-												}
+												genotypeAlleles.setQuick(includedSampleCtr, 0, gt1);
+												genotypeAlleles.setQuick(includedSampleCtr, 1, gt2);
+												
 												
 											} catch (NumberFormatException e) {
-											
+												
+												System.out.println("Cannot parse genotype string: " + token + " nr elems: " + gtElems.length + "\tVariant: " + chr + ":" + pos + "\t" + id);
+												System.out.println(e.getMessage());
+												for (int q = 0; q < gtElems.length; q++) {
+													System.out.println(q + ": " + gtElems[q]);
+												}
+												
 											}
 										}
-									} else if (s == adCol) {
-										// depth of sequencing per allele
-										String[] adElems = Strings.comma.split(sampleToken);
+									}
+								} else if (s == dsCol) {
+									// dosages
+									if (p.equals(PARSE.ALL)) {
 										try {
-											if (allelicDepth == null) {
-												allelicDepth = new ShortMatrix2D(nrSamples, alleles.length);
+											if (dosages == null) {
+												dosages = new DenseDoubleMatrix2D(nrSamples, alleles.length - 1);
 											}
+											
+											String[] dsElems = Strings.comma.split(sampleToken);
+											try {
+												for (int q = 0; q < dsElems.length; q++) {
+													dosages.set(includedSampleCtr, q, Double.parseDouble(dsElems[q]));
+												}
+											} catch (IndexOutOfBoundsException e) {
+												System.out.println(e.getMessage());
+												System.out.println("More dosage values than expected:" + sampleToken + " nr elems: " + dsElems.length + "\tVariant: " + chr + ":" + pos + "\t" + id);
+												System.out.println("Expected: " + (alleles.length - 1));
+												System.out.println("Sample: " + includedSampleCtr);
+												System.out.println(Strings.concat(alleles, Strings.semicolon));
+												System.exit(-1);
+											}
+											
+										} catch (NumberFormatException e) {
+											
+										}
+									}
+								} else if (s == gpCol) {
+									// genotype probs
+									if (p.equals(PARSE.ALL)) {
+										String[] gpElems = Strings.comma.split(sampleToken);
+										
+										try {
+											if (genotypeProbabilies == null) {
+												genotypeProbabilies = new DenseDoubleMatrix2D(nrSamples, gpElems.length);
+											}
+											
+											int g2 = 0;
+											try {
+												for (int g = 0; g < gpElems.length; g++) {
+													genotypeProbabilies.setQuick(includedSampleCtr, g, Double.parseDouble(gpElems[g]));
+													g2 = g;
+												}
+											} catch (java.lang.ArrayIndexOutOfBoundsException e2) {
+												e2.printStackTrace();
+												System.out.println("variant: " + chr + "\t" + pos + "\t" + id);
+												System.out.println("# alleles: " + alleles.length);
+												System.out.println("elemNr: " + g2);
+												System.out.println("nrElems: " + gpElems.length);
+												System.out.println("sample: " + includedSampleCtr);
+												System.out.println("matrix size: " + genotypeProbabilies.rows() + " x " + genotypeProbabilies.columns());
+												System.exit(-1);
+											}
+											
+										} catch (NumberFormatException e) {
+											
+										}
+									}
+								} else if (s == adCol) {
+									// depth of sequencing per allele
+									String[] adElems = Strings.comma.split(sampleToken);
+									try {
+										if (allelicDepth == null) {
+											allelicDepth = new ShortMatrix2D(nrSamples, alleles.length);
+										}
 
 //									try {
-											for (int g = 0; g < adElems.length; g++) {
-												allelicDepth.setQuick(includedSampleCtr, g, Short.parseShort(adElems[g]));
-											}
+										for (int g = 0; g < adElems.length; g++) {
+											allelicDepth.setQuick(includedSampleCtr, g, Short.parseShort(adElems[g]));
+										}
 //									} catch (ArrayIndexOutOfBoundsException e) {
 //										e.printStackTrace();
 //
@@ -504,44 +523,44 @@ public class VCFVariant {
 //										System.exit(-1);
 //									}
 										
-										} catch (NumberFormatException e) {
+									} catch (NumberFormatException e) {
 										
-										}
-									} else if (s == gqCol) {
-										// genotype quals
-										short gq = 0;
-										if (genotypeQuals == null) {
-											genotypeQuals = new short[nrSamples];
-										}
-										try {
-											if (gqCol != -1) {
-												gq = Short.parseShort(sampleToken);
-											}
-										} catch (NumberFormatException e) {
-										}
-										genotypeQuals[includedSampleCtr] = gq;
-										
-									} else if (s == dpCol) {
-										// approximate depth of sequencing
-										short depth = 0;
-										
-										if (approximateDepth == null) {
-											approximateDepth = new short[nrSamples];
-											
-										}
-										
-										try {
-											if (dpCol != -1) {
-												depth = Short.parseShort(sampleToken);
-											}
-										} catch (NumberFormatException e) {
-										}
-										approximateDepth[includedSampleCtr] = depth;
 									}
+								} else if (s == gqCol) {
+									// genotype quals
+									short gq = 0;
+									if (genotypeQuals == null) {
+										genotypeQuals = new short[nrSamples];
+									}
+									try {
+										if (gqCol != -1) {
+											gq = Short.parseShort(sampleToken);
+										}
+									} catch (NumberFormatException e) {
+									}
+									genotypeQuals[includedSampleCtr] = gq;
+									
+								} else if (s == dpCol) {
+									// approximate depth of sequencing
+									short depth = 0;
+									
+									if (approximateDepth == null) {
+										approximateDepth = new short[nrSamples];
+										
+									}
+									
+									try {
+										if (dpCol != -1) {
+											depth = Short.parseShort(sampleToken);
+										}
+									} catch (NumberFormatException e) {
+									}
+									approximateDepth[includedSampleCtr] = depth;
 								}
 							}
-							includedSampleCtr++;
 						}
+						includedSampleCtr++;
+//						}
 						
 					}
 					
