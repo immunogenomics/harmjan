@@ -2,10 +2,15 @@ package nl.harmjanwestra.finemapping.rebuttal;
 
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureComparator;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -31,11 +36,12 @@ public class R1Q1CompareSignificantVariants {
 		double threshold = 7.5E-7;
 		R1Q1CompareSignificantVariants c = new R1Q1CompareSignificantVariants();
 		try {
-//			c.compare(datasets, dsnames, threshold, outfile);
+			String regionfile = "d:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+			c.compare(datasets, dsnames, threshold, outfile, regionfile);
 			
 			String crediblesetsizes = "D:\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\Tables\\Rev1-Q1-SizesOfCredibleSets.txt";
 			outfile = "D:\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\Tables\\Rev1-Q1-SizesOfCredibleSets-";
-			c.conmpareCredibleSetSizes(crediblesetsizes, outfile);
+//			c.conmpareCredibleSetSizes(crediblesetsizes, outfile);
 			
 			
 		} catch (IOException e) {
@@ -154,43 +160,84 @@ public class R1Q1CompareSignificantVariants {
 		tf.close();
 	}
 	
-	private void compare(String[] datasets, String[] dsnames, double threshold, String outfile) throws IOException {
+	private void compare(String[] datasets, String[] dsnames, double threshold, String outfile, String regionfile) throws IOException {
+		
+		
+		BedFileReader reader = new BedFileReader();
+		ArrayList<Feature> regions = reader.readAsList(regionfile);
+		
 		
 		double log10threshold = -Math.log10(threshold);
 		
 		AssociationFile f = new AssociationFile();
+		
 		ArrayList<ArrayList<AssociationResult>> t = new ArrayList<>();
-		HashSet<String> vars = new HashSet<>();
-		ArrayList<HashMap<String, AssociationResult>> resultmap = new ArrayList<>();
+		HashSet<SNPFeature> vars = new HashSet<>();
+		ArrayList<HashMap<Feature, AssociationResult>> resultmap = new ArrayList<>();
+		ArrayList<HashMap<Feature, AssociationResult>> topassoc = new ArrayList<>();
+		
 		for (int d = 0; d < datasets.length; d++) {
 			ArrayList<AssociationResult> res = f.read(datasets[d]);
+			
 			t.add(res);
-			HashMap<String, AssociationResult> map = new HashMap<>();
+			HashMap<Feature, AssociationResult> map = new HashMap<>();
+			HashMap<Feature, AssociationResult> top = new HashMap<>();
 			for (AssociationResult r : res) {
-				vars.add(r.getSnp().toString());
-				map.put(r.getSnp().toString(), r);
+				vars.add(r.getSnp());
+				for (Feature region : regions) {
+					if (region.overlaps(r.getSnp())) {
+						if (top.containsKey(region)) {
+							if (top.get(region).getLog10Pval() < r.getLog10Pval()) {
+								top.put(region, r);
+							}
+						} else {
+							top.put(region, r);
+						}
+					}
+				}
+				map.put(r.getSnp(), r);
+				
 			}
+			topassoc.add(top);
 			resultmap.add(map);
 		}
 		
 		TextFile out = new TextFile(outfile, TextFile.W);
-		String header = "Variant\tSignificantInDs";
+		String header = "Variant\tRegion\tSignificantInDs";
 		for (int d = 0; d < dsnames.length; d++) {
-			header += "\tP" + dsnames[d] + "\tPosterior-" + dsnames[d];
+			header += "\tP" + dsnames[d] + "\tPosterior-" + dsnames[d] + "\tTopAssoc-" + dsnames[d];
 		}
 		out.writeln(header);
 		
-		for (String var : vars) {
-			String ln = var;
+		ArrayList<SNPFeature> vararr = new ArrayList<>();
+		vararr.addAll(vars);
+		
+		Collections.sort(vararr, new FeatureComparator(true));
+		
+		for (Feature var : vararr) {
+			String ln = var.toString();
+			Feature varregion = null;
+			for (Feature region : regions) {
+				if (var.overlaps(region)) {
+					varregion = region;
+					ln += "\t" + region.toString();
+					break;
+				}
+			}
 			
 			String significantin = "";
 			String dsln = "";
 			for (int d = 0; d < dsnames.length; d++) {
-				
-				HashMap<String, AssociationResult> map = resultmap.get(d);
+				HashMap<Feature, AssociationResult> top = topassoc.get(d);
+				HashMap<Feature, AssociationResult> map = resultmap.get(d);
 				AssociationResult r = map.get(var);
+				boolean istop = false;
+				AssociationResult topr = top.get(varregion);
+				if (topr.equals(r)) {
+					istop = true;
+				}
 				if (r == null) {
-					dsln += "\t-\t-";
+					dsln += "\t-\t-\t" + istop;
 				} else {
 					if (r.getPval() < threshold) {
 						if (significantin.length() > 0) {
@@ -199,7 +246,7 @@ public class R1Q1CompareSignificantVariants {
 							significantin += "" + dsnames[d];
 						}
 					}
-					dsln += "\t" + r.getPval() + "\t" + r.getPosterior();
+					dsln += "\t" + r.getPval() + "\t" + r.getPosterior() + "\t" + istop;
 				}
 			}
 			
