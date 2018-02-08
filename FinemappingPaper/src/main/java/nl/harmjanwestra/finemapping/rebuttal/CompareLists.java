@@ -61,7 +61,7 @@ public class CompareLists {
 				"Chr20_1497197-1689461",
 				"Chr21_43810084-43887145",
 				"Chr22_29925296-30668308",
-				"Chr22_37568670-37661414\n"
+				"Chr22_37568670-37661414"
 		};
 		
 		String[] comb = new String[]{
@@ -92,7 +92,7 @@ public class CompareLists {
 				"Chr18_67480632-67569547",
 				"Chr19_10396336-10628468",
 				"Chr21_43810084-43887145",
-				"Chr22_29925296-30668308\n"
+				"Chr22_29925296-30668308"
 		};
 		
 		int overlap = 0;
@@ -102,6 +102,7 @@ public class CompareLists {
 			for (String s2 : t1d) {
 				if (s.equals(s2)) {
 					overlap++;
+					System.out.println(s);
 				}
 			}
 			for (String s2 : comb) {

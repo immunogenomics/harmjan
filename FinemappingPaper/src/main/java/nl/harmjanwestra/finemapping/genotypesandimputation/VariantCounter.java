@@ -40,21 +40,28 @@ public class VariantCounter {
 		try {
 			VariantCounter c = new VariantCounter();
 			c.countAccuracy();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public void determineMissingVariants() throws IOException {
-		String[] files = new String[]{"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt"};
+		
+		String[] files = new String[]{
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
+				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt"
+		};
+		
 		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
 		String seqpanelvcf = "/Data/tmp/2016-05-28/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String samplelist = "";
+		
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
 		double infothreshold = 0.5;
+		
 		boolean includeICVariants = false;
 		boolean includeId = true;
 		boolean includeIndels = true;
@@ -108,8 +115,6 @@ public class VariantCounter {
 			int nrSequencedPassingMaf = 0;
 			int nrSequencdPassingMafAndRSQ = 0;
 			while (elems != null) {
-				
-				
 				if (!elems[rsqlcol].equals("null")) {
 					double val = Double.parseDouble(elems[rsqlcol]);
 					double maf = Double.parseDouble(elems[maf2col]);
@@ -168,151 +173,151 @@ public class VariantCounter {
 	}
 	
 	public void countAccuracy() throws IOException {
+		String[] variantsOnIC = new String[]{
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz"
+		};
 		
-		String variantsOnIC = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
-		String seqpanelvcf = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/SequencingPanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
+		String[] seqpanelvcfs = new String[]{
+//				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz"
+		};
+		
+		String[] seqpanelnames = new String[]{
+//				"UnifiedGenotyper"
+				"HaplotypeCaller"
+		};
+		
+		
 		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		
+		bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String[] files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-SHAPEIT.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-cosmo-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-PBWT-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-eur-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-HRC-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-cosmo-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-PBWT-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-eur-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-HRC-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-Michigan-HRC-HC.txt",
+				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-SHAPEIT-HRC-HC.txt",
 		};
 		String[] labels = new String[]{
-				"COSMO",
-				"EUR",
-				"HRC / HRC / EAGLE",
-				"HRC / HRC / SHAPEIT",
-				"HRC / HRC / EAGLE / MICHIGAN"
+				"RA / COSMO / BEAGLE",
+				"RA / COSMO / EAGLE / PBWT",
+				"RA / EUR / BEAGLE",
+				"RA / HRC / EAGLE / PBWT",
+				"T1D / COSMO / BEAGLE",
+				"T1D / COSMO / EAGLE / PBWT",
+				"T1D / EUR / BEAGLE",
+				"T1D / HRC / EAGLE / PBWT",
+				"T1D / HRC / EAGLE / SHAPEIT / PBWT",
+				"T1D / HRC / EAGLE / MACH"
 		};
+		
+		String outfile = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantCounter\\output";
 		String samplelist = null;
-
-//		files = new String[]{
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-COSMO.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-EUR.txt",
-//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-07-10-Accuracy/RA-HRC-w100kb.txt",
-//		};
-//
-//		labels = new String[]{
-//				"COSMO",
-//				"EUR",
-//				"HRC / HRC / EAGLE"
-//		};
 		
-		// get a list of maf > 0.005 variants that on the sequencingpanel
-		
-		
+		// get a list of maf > 0.005 variants that are on the sequencingpanel
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
-		double infothreshold = 0.8;
-		boolean includeICVariants = true;
-		
+		double infothreshold = 0.5;
+		boolean includeICVariants = false;
 		boolean includeId = true;
-		boolean includeIndels = false;
+		boolean includeIndels = true;
 		
 		
-		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
-		System.out.println(variantsOnICHash.size() + " total on IC");
-		
-		
-		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
-				seqpanelvcf, bedregions, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels, samplelist
-		);
-		
-		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
-		TextFile out = new TextFile("/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/SequencingPanel/usedVariants.txt", TextFile.W);
-		out.writeln("Chromosome\tPosition\tRsid\tRef\tAlt\tAF\tCallRate\tHWE-P");
-		for (VCFVariant var : seqpanel) {
-			out.writeln(var.getChr().toString()
-					+ "\t" + var.getPos()
-					+ "\t" + var.getId()
-					+ "\t" + var.getAlleles()[0]
-					+ "\t" + Strings.concat(var.getAlleles(), Strings.comma, 1, var.getAlleles().length)
-					+ "\t" + Strings.concat(var.getAlleleFrequencies(), Strings.semicolon)
-					+ "\t" + var.getCallrate()
-					+ "\t" + var.getHwep()
-			);
-		}
-		out.close();
-		System.exit(-1);
-		
-		ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
-		ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
-		
-		System.out.println(seqpanel.size() + " variants in VCF");
-		System.out.println(variantsNotOnImmunoChip.size() + " not on IC");
-		System.out.println(variantsOnImmunoChip.size() + " on IC");
-		
-		
-		// get a list of imputed variants for each of the sequencing panels
-		
-		
-		System.out.println("MAF> " + mafthreshold);
-		System.out.println("INFO> " + infothreshold);
-		
-		
-		HashSet<String> sequencedVariantsHash = null;
-		if (includeICVariants) {
-			ArrayList<VCFVariant> allvars = new ArrayList<>();
-			allvars.addAll(variantsNotOnImmunoChip);
-			allvars.addAll(variantsOnImmunoChip);
-			sequencedVariantsHash = hashit(allvars, includeId);
-		} else {
-			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
-		}
-		
-		System.out.println(sequencedVariantsHash.size() + " after hashing");
-		System.out.println(files.length + " files");
-		for (int f = 0; f < files.length; f++) {
-			// get the imputation accuracies for these variants
-			TextFile tf2 = new TextFile(files[f], TextFile.R);
+		for (int r = 0; r < seqpanelvcfs.length; r++) {
+			HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC[0], includeId);
+			System.out.println(variantsOnICHash.size() + " total on IC");
 			
-			String[] elems = tf2.readLineElems(TextFile.tab);
-			int nrSequenced = 0;
-			int nrSequencedPassingRSQ = 0;
-			int nrSequencedPassingMaf = 0;
-			int nrSequencdPassingMafAndRSQ = 0;
-			while (elems != null) {
+			Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
+					seqpanelvcfs[r], bedregions, mafthreshold, upperthreshold, variantsOnICHash, includeId, includeIndels, samplelist
+			);
+			
+			ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
+			TextFile out = new TextFile(outfile, TextFile.W);
+			out.writeln("Chromosome\tPosition\tRsid\tRef\tAlt\tAF\tCallRate\tHWE-P");
+			for (VCFVariant var : seqpanel) {
+				out.writeln(var.getChr().toString()
+						+ "\t" + var.getPos()
+						+ "\t" + var.getId()
+						+ "\t" + var.getAlleles()[0]
+						+ "\t" + Strings.concat(var.getAlleles(), Strings.comma, 1, var.getAlleles().length)
+						+ "\t" + Strings.concat(var.getAlleleFrequencies(), Strings.semicolon)
+						+ "\t" + var.getCallrate()
+						+ "\t" + var.getHwep()
+				);
+			}
+			out.close();
+//				System.exit(-1);
+			
+			ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
+			ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
+			
+			System.out.println(seqpanel.size() + " variants in VCF");
+			System.out.println(variantsNotOnImmunoChip.size() + " not on IC");
+			System.out.println(variantsOnImmunoChip.size() + " on IC");
+			
+			// get a list of imputed variants for each of the sequencing panels
+			System.out.println("MAF> " + mafthreshold);
+			System.out.println("INFO> " + infothreshold);
+			
+			HashSet<String> sequencedVariantsHash = null;
+			if (includeICVariants) {
+				ArrayList<VCFVariant> allvars = new ArrayList<>();
+				allvars.addAll(variantsNotOnImmunoChip);
+				allvars.addAll(variantsOnImmunoChip);
+				sequencedVariantsHash = hashit(allvars, includeId);
+			} else {
+				sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
+			}
+			
+			System.out.println(sequencedVariantsHash.size() + " after hashing");
+			System.out.println(files.length + " files");
+			for (int f = 0; f < files.length; f++) {
+				// get the imputation accuracies for these variants
+				TextFile tf2 = new TextFile(files[f], TextFile.R);
 				
-				
-				if (!elems[rsqlcol].equals("null")) {
-					double val = Double.parseDouble(elems[rsqlcol]);
-					double maf = Double.parseDouble(elems[maf2col]);
-					
-					String[] varElems = elems[0].split("_");
-					
-					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
-					
-					if (sequenced) {
-						nrSequenced++;
-						if (maf > mafthreshold) {
-							nrSequencedPassingMaf++;
-							if (val > infothreshold) {
-								nrSequencdPassingMafAndRSQ++;
+				String[] elems = tf2.readLineElems(TextFile.tab);
+				int nrSequenced = 0;
+				int nrSequencedPassingRSQ = 0;
+				int nrSequencedPassingMaf = 0;
+				int nrSequencdPassingMafAndRSQ = 0;
+				while (elems != null) {
+					if (elems.length > 1) {
+						if (!elems[rsqlcol].equals("null")) {
+							double val = Double.parseDouble(elems[rsqlcol]);
+							double maf = Double.parseDouble(elems[maf2col]);
+							
+							String[] varElems = elems[0].split("_");
+							
+							boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
+							
+							if (sequenced) {
+								nrSequenced++;
+								if (maf > mafthreshold) {
+									nrSequencedPassingMaf++;
+									if (val > infothreshold) {
+										nrSequencdPassingMafAndRSQ++;
+									}
+								}
+								if (val > infothreshold) {
+									nrSequencedPassingRSQ++;
+								}
 							}
 						}
-						if (val > infothreshold) {
-							nrSequencedPassingRSQ++;
-						}
 					}
+					elems = tf2.readLineElems(TextFile.tab);
 				}
+				tf2.close();
 				
-				elems = tf2.readLineElems(TextFile.tab);
+				System.out.println(seqpanelnames[r] + "\t" + labels[f]
+						+ "\t" + nrSequenced
+						+ "\t" + nrSequencedPassingMaf
+						+ "\t" + nrSequencedPassingRSQ
+						+ "\t" + nrSequencdPassingMafAndRSQ);
 			}
-			tf2.close();
-
-//			System.out.println("----");
-//			System.out.println();
-
-//			System.out.println("nrSequenced\t" + nrSequenced + "\t" + ((double) nrSequenced / sequencedVariantsHash.size()));
-//			System.out.println("nrSequencedPassingRSQ\t" + nrSequencedPassingRSQ + "\t" + ((double) nrSequencedPassingRSQ / sequencedVariantsHash.size()) + "\t" + ((double) nrSequencedPassingRSQ / nrSequenced));
-//			System.out.println("nrSequencedPassingMaf\t" + nrSequencedPassingMaf + "\t" + ((double) nrSequencedPassingMaf / sequencedVariantsHash.size()));
-//			System.out.println("nrSequencdPassingMafAndRSQ\t" + nrSequencdPassingMafAndRSQ + "\t" + ((double) nrSequencdPassingMafAndRSQ / sequencedVariantsHash.size()));
-//			System.out.println();
-			
-			System.out.println(nrSequenced + "\t" + nrSequencedPassingMaf + "\t" + nrSequencedPassingRSQ + "\t" + nrSequencdPassingMafAndRSQ);
 		}
 		
 		
@@ -421,27 +426,28 @@ public class VariantCounter {
 		while (ln != null) {
 			if (!ln.startsWith("#")) {
 				String[] elems = ln.split("\t");
-				Chromosome chr = Chromosome.parseChr(elems[0]);
-				if (chr.isAutosome()) {
-					VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL, includesamples);
-					if (variant.getMAF() > mafthreshold && variant.getMAF() < upperthreshold) {
-						
-						boolean varOnIc = isVariantInHash(elems, variantsOnICHash, includeId);
-						boolean iswithinregion = isWithinRegion(regions, elems);
-						boolean indel = isIndel(elems);
-						
-						if (iswithinregion) {
-							seqpanel.add(variant);
-							if (includeIndels || (!includeIndels && !indel)) {
-								if (!varOnIc) {
-									variantsNotOnImmunoChip.add(variant);
-								} else {
-									variantsOnImmunoChip.add(variant);
-								}
-							}
+//				Chromosome chr = Chromosome.parseChr(elems[0]);
+//				if (chr.isAutosome()) {
+				
+				VCFVariant variant = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+//					if (variant.getMAF() > mafthreshold && variant.getMAF() < upperthreshold) {
+				if (variant.asFeature().getChromosome().isAutosome() && variant.getMAF() > mafthreshold && variant.asFeature().overlaps(regions)) {
+					
+					boolean varOnIc = isVariantInHash(elems, variantsOnICHash, includeId);
+					boolean iswithinregion = isWithinRegion(regions, elems);
+					boolean indel = isIndel(elems);
+//						if (iswithinregion) {
+					seqpanel.add(variant);
+					if (includeIndels || (!includeIndels && !indel)) {
+						if (!varOnIc) {
+							variantsNotOnImmunoChip.add(variant);
+						} else {
+							variantsOnImmunoChip.add(variant);
 						}
 					}
+//						}
 				}
+//				}
 			}
 			ln = tf.readLine();
 		}

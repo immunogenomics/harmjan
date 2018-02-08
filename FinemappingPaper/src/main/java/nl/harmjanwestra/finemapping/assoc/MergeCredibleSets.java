@@ -235,6 +235,7 @@ public class MergeCredibleSets {
 					"/Data/eQTLs/BluePrint/neut_psi_peer_10_all_summary-fdr005.tab.gz",
 			};
 //			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outeqtlfileblueprint + "-neutrophils.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+			
 			eqtlfilenames = new String[]{
 					"TCell-eQTL",
 					"TCell-hQTL-K27AC",
@@ -243,6 +244,7 @@ public class MergeCredibleSets {
 					"TCell-sQTL"
 				
 			};
+			
 			eqtlfiles = new String[]{
 					"/Data/eQTLs/BluePrint/tcel_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
 					"/Data/eQTLs/BluePrint/tcel_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
@@ -263,7 +265,7 @@ public class MergeCredibleSets {
 					"/Data/eQTLs/Sun-pQTL/table1.tab.gz",
 					"/Data/eQTLs/Sun-pQTL/table2.tab.gz"
 			};
-//			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outpqtlfile + "-tcell.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+			c.eQTLOverlap(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outpqtlfile + "-tcell.txt", maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 			
 			
 			// GTEX
@@ -276,7 +278,7 @@ public class MergeCredibleSets {
 					"/Data/eQTLs/GTEx/v6peQTLsTab.txt"
 			};
 			boolean eQTLFileIsList = true;
-//			c.eQTLOverlapGTEX(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outgtex, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
+			c.eQTLOverlapGTEX(bedregions, eqtlfiles, eqtlfilenames, tabixprefix, tabixfilter, assocfiles, datasetnames, genenames, outgtex, maxPosteriorCredibleSet, nrVariantsInCredibleSet, geneAnnotation);
 //
 //			/*
 //			Bed file overlap

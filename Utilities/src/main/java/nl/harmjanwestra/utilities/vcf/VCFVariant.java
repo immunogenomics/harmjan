@@ -228,102 +228,99 @@ public class VCFVariant {
 		String ref = "";
 		
 		if (ln != null) {
-			int strlen = ln.length();
-			int substrlen = 1000; // this should capture most annotation //
-			if (strlen < substrlen) {
-				substrlen = strlen;
-			}
-			String lnheader = ln.substring(0, substrlen);
+			
 			//String[] tokenArr = Strings.tab.split(lnheader);
-			String[] tokenArr = Strings.subsplit(lnheader, Strings.tab, 0, 10);
+			String[] tokenArr = Strings.subsplit(ln, Strings.tab, 0, 10);
 			
 			for (int t = 0; t < 9; t++) {
 				if (t < tokenArr.length) {
 					String token = tokenArr[t];
-					
-					switch (t) {
-						case 0:
-							this.chr = new String(token).intern();
-							break;
-						case 1:
-							pos = Integer.parseInt(token);
-							break;
-						case 2:
-							id = new String(token);
-							break;
-						case 3:
-							ref = token;
-							break;
-						case 4:
-							String alt = token;
-							String[] alternateAlleles = alt.split(",");
-							alleles = new String[1 + alternateAlleles.length];
-							alleles[0] = new String(ref).intern();
-							for (int i = 0; i < alternateAlleles.length; i++) {
-								alleles[1 + i] = new String(alternateAlleles[i]).intern();
-							}
-//							System.out.println(id + "\t" + Strings.concat(alleles, Strings.comma));
-							nrAllelesObserved = new int[alternateAlleles.length + 1];
-							break;
-						case 5:
-							String qualStr = token;
-							try {
-								qual = Integer.parseInt(qualStr);
-							} catch (NumberFormatException e) {
-							
-							}
-							break;
-						case 6:
-							filter = new String(token).intern();
-							break;
-						case 7:
-							String infoStr = token;
-							parseInfoString(infoStr);
-							break;
-						case 8:
-							String[] format = Strings.colon.split(token);
-							
-							for (int c = 0; c < format.length; c++) {
-								if (format[c].equals("GT")) {
-									// genotype
-									gtCol = c;
-								} else if (format[c].equals("AD")) {
-									// allelic read depth
-//									System.out.println("ADCol=" + c);
-									adCol = c;
-								} else if (format[c].equals("AB")) {
-									abCol = c;
-								} else if (format[c].equals("DP")) {
-									// nominal read depth
-									dpCol = c;
-								} else if (format[c].equals("GQ")) {
-									// genotype qual
-									gqCol = c;
-								} else if (format[c].equals("PL")) {
-									plCol = c;
-								} else if (format[c].equals("PGT")) {
-									pgtCol = c;
-								} else if (format[c].equals("PID")) {
-									pidCol = c;
-								} else if (format[c].equals("DS")) {
-									// dosage
-									dsCol = c;
-								} else if (format[c].equals("GP")) {
-									// genotype probs
-									gpCol = c;
+					if (token != null) {
+						switch (t) {
+							case 0:
+								this.chr = new String(token).intern();
+								break;
+							case 1:
+								pos = Integer.parseInt(token);
+								break;
+							case 2:
+								id = new String(token);
+								break;
+							case 3:
+								ref = token;
+								break;
+							case 4:
+								String alt = token;
+								String[] alternateAlleles = alt.split(",");
+								alleles = new String[1 + alternateAlleles.length];
+								alleles[0] = new String(ref).intern();
+								for (int i = 0; i < alternateAlleles.length; i++) {
+									alleles[1 + i] = new String(alternateAlleles[i]).intern();
 								}
-								// GT:AD:DP:GQ:PGT:PID:PL
-							}
-							
-							if (gtCol == -1) {
-								System.err.println("No GT COL: " + token);
-								System.err.println("Id: " + this.toString());
-								System.out.println(token);
-								System.out.println(lnheader);
-								System.exit(-1);
-							}
-							break;
+//							System.out.println(id + "\t" + Strings.concat(alleles, Strings.comma));
+								nrAllelesObserved = new int[alternateAlleles.length + 1];
+								break;
+							case 5:
+								String qualStr = token;
+								try {
+									qual = Integer.parseInt(qualStr);
+								} catch (NumberFormatException e) {
+								
+								}
+								break;
+							case 6:
+								filter = new String(token).intern();
+								break;
+							case 7:
+								String infoStr = token;
+								parseInfoString(infoStr);
+								break;
+							case 8:
+								String[] format = Strings.colon.split(token);
+								
+								for (int c = 0; c < format.length; c++) {
+									if (format[c].equals("GT")) {
+										// genotype
+										gtCol = c;
+									} else if (format[c].equals("AD")) {
+										// allelic read depth
+//									System.out.println("ADCol=" + c);
+										adCol = c;
+									} else if (format[c].equals("AB")) {
+										abCol = c;
+									} else if (format[c].equals("DP")) {
+										// nominal read depth
+										dpCol = c;
+									} else if (format[c].equals("GQ")) {
+										// genotype qual
+										gqCol = c;
+									} else if (format[c].equals("PL")) {
+										plCol = c;
+									} else if (format[c].equals("PGT")) {
+										pgtCol = c;
+									} else if (format[c].equals("PID")) {
+										pidCol = c;
+									} else if (format[c].equals("DS")) {
+										// dosage
+										dsCol = c;
+									} else if (format[c].equals("GP")) {
+										// genotype probs
+										gpCol = c;
+									}
+									// GT:AD:DP:GQ:PGT:PID:PL
+								}
+								
+								if (gtCol == -1) {
+									System.err.println("No GT COL: " + token);
+									System.err.println("Id: " + this.toString());
+									System.out.println(token);
+									
+									System.exit(-1);
+								}
+								break;
+						}
 					}
+					
 				}
 				
 			}
@@ -1415,6 +1412,7 @@ public class VCFVariant {
 	
 	public SNPFeature asSNPFeature() {
 		SNPFeature output = new SNPFeature(Chromosome.parseChr(chr), pos, pos);
+		output.setAlleles(alleles);
 		output.setName(id);
 		return output;
 		

@@ -5,11 +5,13 @@
  */
 package nl.harmjanwestra.utilities.enums;
 
+import nl.harmjanwestra.utilities.features.Feature;
+
 /**
  * @author Harm-Jan
  */
 public enum Chromosome {
-
+	
 	ONE(1, "Chr1", 248956422),
 	TWO(2, "Chr2", 242193529),
 	THREE(3, "Chr3", 198295559),
@@ -36,17 +38,17 @@ public enum Chromosome {
 	Y(24, "ChrY", 57227415),
 	MT(25, "ChrMT", 1),
 	NA(26, "N/A", 1);
-
+	
 	private final int number;
 	private final String name;
 	private final int length;
-
+	
 	private Chromosome(int num, String name, int length) {
 		this.number = num;
 		this.name = name;
 		this.length = length;
 	}
-
+	
 	public static Chromosome parseChr(String chrStr) {
 		chrStr = chrStr.toLowerCase().trim();
 		if (chrStr.equals("chr1") || chrStr.equals("1")) {
@@ -127,28 +129,28 @@ public enum Chromosome {
 		if (chrStr.equals("chrm") || chrStr.equals("chrmt") || chrStr.equals("m") || chrStr.equals("mt")) {
 			return Chromosome.MT;
 		}
-
+		
 		return Chromosome.NA;
 	}
-
+	
 	public String getName() {
 		return name;
 	}
-
+	
 	public int getLength() {
 		return length;
 	}
-
+	
 	public int getNumber() {
 		return number;
 	}
-
+	
 	@Override
 	public String toString() {
 		return this.getName();
 	}
-
-
+	
+	
 	public int compare(Chromosome other) {
 		if (this.equals(other)) {
 			return 0;
@@ -158,11 +160,11 @@ public enum Chromosome {
 			return 0;
 		}
 	}
-
+	
 	public boolean equals(Chromosome other) {
 		return this.number == other.number;
 	}
-
+	
 	public boolean isAutosome() {
 		if (this.getNumber() > 0 && this.getNumber() < 23) {
 			return true;
@@ -170,5 +172,12 @@ public enum Chromosome {
 			return false;
 		}
 	}
-
+	
+	public Feature asFeature() {
+		Feature f = new Feature();
+		f.setChromosome(this);
+		f.setStart(0);
+		f.setStop(this.length);
+		return f;
+	}
 }

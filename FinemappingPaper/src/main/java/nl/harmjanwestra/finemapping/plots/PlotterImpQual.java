@@ -199,6 +199,7 @@ public class PlotterImpQual {
 			outdir = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\plotsRA\\";
 		} else {
 //		// T1D 2018
+			
 			files = new String[]{
 					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO.vcf.gz",
 					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO-EAGLE-PBWT.vcf.gz",

@@ -157,6 +157,7 @@ public class Strings {
 		if (ctr1 >= offset && (ctr1 - offset) < colsToInclude.length && colsToInclude[ctr1 - offset] && prevsta < ln.length()) {
 			// last element
 			String substr = ln.substring(prevsta, ln.length());
+			output[ctr2] = substr;
 //			System.out.println("outer loop " + ctr2 + "\t" + substr);
 //			output[output.length - 1] = new String(substr);
 			ctr2++;
@@ -206,7 +207,7 @@ public class Strings {
 			// last element
 			String substr = ln.substring(prevsta, ln.length());
 //			System.out.println("outer loop " + ctr2 + "\t" + substr);
-			output[output.length - 1] = substr;
+			output[ctr2] = substr;
 			ctr2++;
 		}
 //		System.out.println("end ctr2: " + ctr2);
