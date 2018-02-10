@@ -919,6 +919,7 @@ public class MissingVariantClustering {
 									nritersdistancesmallerandsignificant++;
 								}
 							}
+							i++;
 						}
 						
 						
