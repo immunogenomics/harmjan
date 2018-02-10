@@ -40,8 +40,9 @@ public class CompareDatasetsZScores {
 //		String regionToGenesFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 		
 		
+		String disk = "d:";
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ZScoreComparisons/regionsToCompare.bed";
-		bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci.bed";
+		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String outloc = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\woSharedSamples\\";
 		String[] assocfiles = new String[]{
 				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\woSharedSamples\\RA-assoc0.3-COSMO-merged.txt.gz",
@@ -53,19 +54,19 @@ public class CompareDatasetsZScores {
 				"T1D",
 		};
 		
-		String regionToGenesFile = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
+		String regionToGenesFile = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 		
-		
+		bedregions = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-significantregions-75e7.bed";
 		assocfiles = new String[]{
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\output\\META-ORIG-assoc0.3-COSMO-merged.txt.gz",
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\output\\META-assoc0.3-COSMO-merged.txt.gz"
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\METAPCA-assoc0.3-COSMO-merged.txt.gz"
 		};
 		assocfilenames = new String[]{
 				"META-covars",
 				"META-PCA",
 		};
 		
-		outloc = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\pcanonpcacomp";
+		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\pcanonpcacomp\\pcanonpcacomp";
 		
 		
 		CompareDatasetsZScores z = new CompareDatasetsZScores();
@@ -217,7 +218,7 @@ public class CompareDatasetsZScores {
 							String rsA = resultA[i].getSnp().getName();
 							double seA = resultA[i].getSe()[0][0];
 							int nA = resultA[i].getN();
-							
+
 //							if (betaA < 0 && z1[i] > 0 || z1[i] < 0 && betaA > 0) {
 //								double z = resultA[i].getZ();
 //								System.out.println(betaA + "\t" + seA + "\t" + z + "\t" + z1[i]);
@@ -268,7 +269,6 @@ public class CompareDatasetsZScores {
 									+ "\t" + metaPAbs
 							);
 						}
-						
 						
 						
 						double corr = Correlation.correlate(z1, z2);

@@ -145,7 +145,29 @@ public class MergeCredibleSets {
 			};
 			
 			outfile += "missp.txt";
+
+//			c.mergeCredibleSets(bedregions,
+//					assocfiles,
+//					datasetnames,
+//					genenames,
+//					outfile,
+//					maxPosteriorCredibleSet,
+//					significanceThreshold,
+//					nrVariantsInCredibleSet,
+//					geneAnnotation,
+//					includeAllLoci);
+			System.out.println(outfile + "missp.txt");
 			
+			bedregions = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-significantregions-75e7.bed";
+			assocfiles = new String[]{
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\METAPCA-assoc0.3-COSMO-merged-posterior.txt.gz"
+			};
+			datasetnames = new String[]{
+					"1kg-META",
+					"1kg-META-PCA"
+			};
+			outfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\NonPCaVsPCACredibleSetComp.txt";
 			c.mergeCredibleSets(bedregions,
 					assocfiles,
 					datasetnames,
@@ -156,7 +178,8 @@ public class MergeCredibleSets {
 					nrVariantsInCredibleSet,
 					geneAnnotation,
 					includeAllLoci);
-			System.out.println(outfile + "missp.txt");
+			System.exit(-1);
+
 //
 			boolean onlyincludevariantsbelowsignificancethreshold = true;
 			c.makeCircularPlot(bedregions,

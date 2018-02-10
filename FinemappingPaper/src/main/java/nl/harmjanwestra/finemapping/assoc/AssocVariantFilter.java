@@ -34,9 +34,10 @@ public class AssocVariantFilter {
 		};
 		
 		
+		
 		for (String ds : d) {
 			
-			String blacklist = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\" + ds + "-blacklist.txt";
+			String blacklist = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\DataRev2\\normalRerunOfAssoc\\" + ds + "-blacklist.txt";
 			String[] rafiles = new String[]{
 					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\outputwithoutcohortcovariate\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
 //					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\missp\\" + ds + "-assoc0.3-COSMO-merged-posterior.txt.gz",

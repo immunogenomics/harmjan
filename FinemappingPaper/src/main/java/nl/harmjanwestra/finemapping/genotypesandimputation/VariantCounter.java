@@ -1,5 +1,6 @@
 package nl.harmjanwestra.finemapping.genotypesandimputation;
 
+import nl.harmjanwestra.finemapping.rebuttal.KgVariant;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
@@ -40,6 +41,7 @@ public class VariantCounter {
 		try {
 			VariantCounter c = new VariantCounter();
 			c.countAccuracy();
+			
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -173,13 +175,14 @@ public class VariantCounter {
 	}
 	
 	public void countAccuracy() throws IOException {
+		String disk = "d:";
 		String[] variantsOnIC = new String[]{
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz"
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz"
 		};
 		
 		String[] seqpanelvcfs = new String[]{
 //				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz"
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz"
 		};
 		
 		String[] seqpanelnames = new String[]{
@@ -189,18 +192,18 @@ public class VariantCounter {
 		
 		
 		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		bedregions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String[] files = new String[]{
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-cosmo-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-PBWT-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-eur-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-HRC-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-cosmo-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-PBWT-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-eur-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-HRC-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-Michigan-HRC-HC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-SHAPEIT-HRC-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-cosmo-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-PBWT-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-eur-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-HRC-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-cosmo-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-PBWT-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-eur-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-HRC-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-Michigan-HRC-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-SHAPEIT-HRC-HC.txt",
 		};
 		String[] labels = new String[]{
 				"RA / COSMO / BEAGLE",
@@ -215,14 +218,15 @@ public class VariantCounter {
 				"T1D / HRC / EAGLE / MACH"
 		};
 		
-		String outfile = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantCounter\\output";
+		String outfile = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantCounter\\output";
 		String samplelist = null;
 		
 		// get a list of maf > 0.005 variants that are on the sequencingpanel
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
 		double infothreshold = 0.5;
-		boolean includeICVariants = false;
+		boolean includeICVariants = true;
+		boolean includeAlleles = false;
 		boolean includeId = true;
 		boolean includeIndels = true;
 		
@@ -272,6 +276,33 @@ public class VariantCounter {
 			} else {
 				sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 			}
+
+//			HashSet<KgVariant> allRefVariantsSet = new HashSet<>();
+//			ArrayList<KgVariant> refVariants = new ArrayList<>();
+//			for (int i = 0; i < seqpanel.size(); i++) {
+//				VCFVariant v = seqpanel.get(i);
+//				KgVariant var = new KgVariant();
+//				var.f = v.asSNPFeature();
+//
+//				var.maf = v.getMAF();
+//				var.hwep = v.getHwep();
+//
+//				var.f.useNameForComparison(false);
+//				if (var.f.isMultiAllelic()) {
+//					var.f.useAllelesForComparison(false);
+//				}
+//				if (!includeAlleles) {
+//					var.f.useAllelesForComparison(false);
+//				}
+//				if (!includeId) {
+//					var.f.setName(null);
+//				}
+//
+//				if (v.isIndel() && includeIndels || !v.isIndel()) {
+//					refVariants.add(var);
+//					allRefVariantsSet.add(var);
+//				}
+//			}
 			
 			System.out.println(sequencedVariantsHash.size() + " after hashing");
 			System.out.println(files.length + " files");
@@ -286,25 +317,24 @@ public class VariantCounter {
 				int nrSequencdPassingMafAndRSQ = 0;
 				while (elems != null) {
 					if (elems.length > 1) {
+						String[] varElems = elems[0].split("_");
+						boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
+						if (sequenced) {
+							nrSequenced++;
+						}
+						
 						if (!elems[rsqlcol].equals("null")) {
 							double val = Double.parseDouble(elems[rsqlcol]);
 							double maf = Double.parseDouble(elems[maf2col]);
 							
-							String[] varElems = elems[0].split("_");
-							
-							boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
-							
-							if (sequenced) {
-								nrSequenced++;
-								if (maf > mafthreshold) {
-									nrSequencedPassingMaf++;
-									if (val > infothreshold) {
-										nrSequencdPassingMafAndRSQ++;
-									}
-								}
+							if (maf > mafthreshold) {
+								nrSequencedPassingMaf++;
 								if (val > infothreshold) {
-									nrSequencedPassingRSQ++;
+									nrSequencdPassingMafAndRSQ++;
 								}
+							}
+							if (val > infothreshold) {
+								nrSequencedPassingRSQ++;
 							}
 						}
 					}
@@ -318,6 +348,181 @@ public class VariantCounter {
 						+ "\t" + nrSequencedPassingRSQ
 						+ "\t" + nrSequencdPassingMafAndRSQ);
 			}
+		}
+		
+		
+	}
+	
+	public void countINFO() throws IOException {
+		String disk = "d:";
+		String[] variantsOnIC = new String[]{
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz"
+		};
+		
+		String[] seqpanelvcfs = new String[]{
+//				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz"
+		};
+		
+		String[] seqpanelnames = new String[]{
+//				"UnifiedGenotyper"
+				"HaplotypeCaller"
+		};
+		
+		
+		String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		
+		
+		String[] files = new String[]{
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO-EAGLE-PBWT.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-EUR.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-HRC-EAGLE.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO-EAGLE-PBWT.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-EUR.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-EAGLE.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-SHAPEIT.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-Michigan.vcf.gz",
+		};
+		String[] labels = new String[]{
+				"RA / COSMO / BEAGLE",
+				"RA / COSMO / EAGLE / PBWT",
+				"RA / EUR / BEAGLE",
+				"RA / HRC / EAGLE / PBWT",
+				"T1D / COSMO / BEAGLE",
+				"T1D / COSMO / EAGLE / PBWT",
+				"T1D / EUR / BEAGLE",
+				"T1D / HRC / EAGLE / PBWT",
+				"T1D / HRC / SHAPEIT / PBWT",
+				"T1D / HRC / EAGLE / MACH"
+		};
+		
+		String[] rawinputs = new String[]{
+		
+		};
+		String[] matchedinputs = new String[]{
+		
+		};
+		
+		
+		String outfile = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantCounter\\outputINFO";
+		String samplelist = null;
+		
+		// get a list of maf > 0.005 variants that are on the sequencingpanel
+		double mafthreshold = 0.01;
+		double upperthreshold = 1;
+		double infothreshold = 0.8;
+		boolean includeICVariants = true;
+		boolean includeAlleles = false;
+		boolean includeId = true;
+		boolean includeIndels = true;
+		
+		
+		BedFileReader r = new BedFileReader();
+		ArrayList<Feature> regions = r.readAsList(bedregions);
+		
+		
+		System.out.println(files.length + " files");
+		for (int f = 0; f < files.length; f++) {
+			
+			
+			String rawinput = rawinputs[f];
+			String matchedinput = matchedinputs[f];
+			
+			// count input
+			int nrinput = 0;
+			TextFile tf = new TextFile(rawinput, TextFile.R);
+			String ln1 = tf.readLine();
+			while (ln1 != null) {
+				if (!ln1.startsWith("#")) {
+					VCFVariant v = new VCFVariant(ln1);
+					if (v.asFeature().overlaps(regions)) {
+						nrinput++;
+						
+					}
+				}
+				ln1 = tf.readLine();
+			}
+			tf.close();
+			
+			
+			int nrinputmaf005 = 0;
+			int nrinputmaf010 = 0;
+			TextFile tf3 = new TextFile(rawinput, TextFile.R);
+			String ln2 = tf.readLine();
+			while (ln2 != null) {
+				if (!ln2.startsWith("#")) {
+					VCFVariant v = new VCFVariant(ln1);
+					if (v.asFeature().overlaps(regions)) {
+						double af = Double.parseDouble(v.getInfo().get("AF"));
+						if (af > 0.5) {
+							af = 1 - af;
+						}
+						if (af > 0.005) {
+							nrinputmaf005++;
+						}
+						if (af > 0.01) {
+							nrinputmaf010++;
+						}
+					}
+				}
+				ln2 = tf.readLine();
+			}
+			tf.close();
+			
+			
+			// get the imputation accuracies for these variants
+			TextFile tf2 = new TextFile(files[f], TextFile.R);
+			
+			String ln = tf2.readLine();
+			int nrSequenced = 0;
+			int nrSequencedPassingRSQ = 0;
+			int nrSequencedPassingMaf = 0;
+			int nrSequencdPassingMafAndRSQ = 0;
+			int nrSequencdPassingMafAndRSQNonIndel = 0;
+			while (ln != null) {
+				if (!ln.startsWith("#")) {
+					VCFVariant v = new VCFVariant(ln);
+					if (v.asFeature().overlaps(regions)) {
+						double af = Double.parseDouble(v.getInfo().get("AF"));
+						if (af > 0.5) {
+							af = 1 - af;
+						}
+						double info = v.getImputationQualityScore();
+						if (af > mafthreshold) {
+							nrSequencedPassingMaf++;
+						}
+						if (info > infothreshold) {
+							nrSequencedPassingMaf++;
+						}
+						
+						if (info > infothreshold) {
+							if (af > mafthreshold) {
+								nrSequencdPassingMafAndRSQ++;
+							}
+							if (!v.isIndel()) {
+								nrSequencdPassingMafAndRSQNonIndel++;
+							}
+						}
+					}
+					
+					
+				}
+				ln = tf2.readLine();
+			}
+			tf2.close();
+			
+			System.out.println(labels[f]
+					+ "\t" + nrinput
+					+ "\t" + nrinputmaf005
+					+ "\t" + nrinputmaf010
+					+ "\t" + nrSequenced
+					+ "\t" + nrSequencedPassingRSQ
+					+ "\t" + nrSequencedPassingMaf
+					+ "\t" + nrSequencdPassingMafAndRSQ
+					+ "\t" + nrSequencdPassingMafAndRSQNonIndel);
 		}
 		
 		

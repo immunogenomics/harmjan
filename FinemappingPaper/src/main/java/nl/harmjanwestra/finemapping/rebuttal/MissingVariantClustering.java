@@ -12,6 +12,7 @@ import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Descriptives;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.TTest;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.WilcoxonMannWhitney;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 
@@ -32,76 +33,83 @@ public class MissingVariantClustering {
 				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO.vcf.gz"
 		};
 		
+		
+		String disk = "d:";
+		
 		imputedVCFs = new String[]{
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO-EAGLE-PBWT.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-EUR.vcf.gz",
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-HRC-EAGLE.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO-EAGLE-PBWT.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-EUR.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-EAGLE.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-SHAPEIT.vcf.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-Michigan.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO-EAGLE-PBWT.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-EUR.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-HRC-EAGLE.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO-EAGLE-PBWT.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-EUR.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-EAGLE.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-SHAPEIT.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-Michigan.vcf.gz",
 		};
 		
 		String[] diseaseassoc = new String[]{
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
 		};
 		
 		String[] diseaseout = new String[]{
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-COSMO.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-COSMO-EAGLE-PBWT.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-EUR.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-HRC.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-COSMO.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-COSMO-EAGLE-PBWT.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-EUR.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-EAGLE.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-SHAPEIT.txt",
-				"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-Michigan.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-COSMO.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-COSMO-EAGLE-PBWT.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-EUR.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-HRC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-COSMO.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-COSMO-EAGLE-PBWT.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-EUR.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-EAGLE.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-SHAPEIT.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-Michigan.txt",
 		};
 		
-		String stat1kgfile = "C:\\Data\\Ref\\1kg-maf\\stats.full.eur.txt.gz";
+		String stat1kgfile = disk + "\\Data\\Ref\\1kg-maf\\stats.full.eur.txt.gz";
 //		String stat1kgfile = "C:\\Data\\Ref\\1kg-maf\\stats.full.eur.txt.gz";
-		String regions = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		String regions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		
 		
 		int ldthreshold = 8;
 		double impqualthreshold = 0.3;
 		double mafthresholdref = 0.01;
 		double mafthresholdds = 0.01;
+		int nriter = 100;
 		boolean samplegenomewide = false;
 		boolean considerImputedButNotTestedAsMissing = false;
 		
 		try {
 //			c.countindels("C:\\Data\\tmp\\outputsamtools.vcf.gz", regions);
 //			System.exit(-1);
-//			c.determineIfMissingVariantsCluster(stat1kgfile,
-//					imputedVCFs,
-//					diseaseassoc,
-//					diseaseout,
-//					ldthreshold,
-//					mafthresholdref,
-//					mafthresholdds,
-//					impqualthreshold,
-//					regions,
-//					samplegenomewide,
-//					considerImputedButNotTestedAsMissing);
+			c.determineIfMissingVariantsCluster(stat1kgfile,
+					imputedVCFs,
+					diseaseassoc,
+					diseaseout,
+					ldthreshold,
+					mafthresholdref,
+					mafthresholdds,
+					impqualthreshold,
+					nriter,
+					regions,
+					
+					samplegenomewide,
+					considerImputedButNotTestedAsMissing);
+			System.exit(0);
 //
 			
 			imputedVCFs = new String[]{
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO-EAGLE-PBWT.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-EUR.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-HRC-EAGLE.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO-EAGLE-PBWT.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-EUR.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-EAGLE.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-SHAPEIT.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-Michigan.vcf.gz",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-cosmo-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-PBWT-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-eur-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-HRC-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-cosmo-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-PBWT-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-eur-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-HRC-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-Michigan-HRC-HC.txt",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-SHAPEIT-HRC-HC.txt",
 			};
 			
 			String[] diseasenames = new String[]{
@@ -118,23 +126,27 @@ public class MissingVariantClustering {
 			};
 			
 			String[] seqpanelvcf = new String[]{
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz",
-					"c:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz"
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz",
+					disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz"
 			};
 			String[] seqpanelnames = new String[]{
 					"UnifiedGenotyper",
 					"HaplotypeCaller"
 			};
-			String out = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantMissing\\";
+			String out = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantMissing\\";
 			
 			mafthresholdds = 0;
 			impqualthreshold = 0;
+			boolean useAllelesForComp = false;
+			boolean useIdForComp = false;
 			
 			c.determineMissingVariantTypes(regions,
 					imputedVCFs,
 					diseaseassoc,
 					diseasenames,
 					considerImputedButNotTestedAsMissing,
+					useIdForComp,
+					useAllelesForComp,
 					mafthresholdref,
 					mafthresholdds,
 					impqualthreshold,
@@ -212,24 +224,32 @@ public class MissingVariantClustering {
 		
 	}
 	
-	public void determineImputationOutputAccuracy() {
-	/*
-								All variants				Variants not on ImmunoChip
-Dataset	Reference Panel	Phased with	Imputed with	Server	Combined Name	Total	Accuracy (r2) > 0.5	MAF > 1%	MAF > 1% & Accuracy (r2) > 0.5	Total	Accuracy (r2) > 0.5	MAF > 1%	MAF > 1% & Accuracy (r2) > 0.5
-		 */
-		
-		
-	}
 	
-	public void determineIfMissingVariantsCluster() {
-	
-	}
+	protected int idcol = 0;
+	protected int minorallele1col = 1;
+	protected int aleleles1col = 2;
+	protected int maf1col = 3;
+	protected int cr1col = 4;
+	protected int minorallele2col = 5;
+	protected int aleleles2col = 6;
+	protected int maf2col = 7;
+	protected int cr2col = 8;
+	protected int dfcol = 9;
+	protected int samplecol = 10;
+	protected int rcol = 11;
+	protected int rsqlcol = 12;
+	protected int betacol = 13;
+	protected int secol = 14;
+	protected int impqual1 = 15;
+	protected int impqual2 = 16;
 	
 	public void determineMissingVariantTypes(String regionsFile,
 											 String[] imputedVCFFiles,
 											 String[] diseaseAssocFiles,
 											 String[] diseasenames,
 											 boolean considerImputedButNotTestedAsMissing,
+											 boolean includeIdForComparison,
+											 boolean includeAllelesForComparison,
 											 double mafthresholdref,
 											 double mafthresholdds,
 											 double impqualthreshold,
@@ -275,6 +295,12 @@ Dataset	Reference Panel	Phased with	Imputed with	Server	Combined Name	Total	Accu
 								}
 								
 								if (maf > mafthresholdds) {
+									if (!includeAllelesForComparison) {
+										vs.f.useAllelesForComparison(false);
+									}
+									if (!includeIdForComparison) {
+										vs.f.setName(null);
+									}
 									vars.add(vs);
 								}
 								
@@ -343,6 +369,12 @@ Dataset	Reference Panel	Phased with	Imputed with	Server	Combined Name	Total	Accu
 						var.f.useNameForComparison(false);
 						if (var.f.isMultiAllelic()) {
 							var.f.useAllelesForComparison(false);
+						}
+						if (!includeAllelesForComparison) {
+							var.f.useAllelesForComparison(false);
+						}
+						if (!includeIdForComparison) {
+							var.f.setName(null);
 						}
 						refVariants.add(var);
 						allRefVariantsSet.add(var);
@@ -595,6 +627,7 @@ Dataset	Reference Panel	Phased with	Imputed with	Server	Combined Name	Total	Accu
 												  double mafthresholdref,
 												  double mafthresholdds,
 												  double infoscorethreshold,
+												  int nriter,
 												  String regionsFile,
 												  boolean sampleGenomeWide,
 												  boolean considerImputedButNotTestedAsMissing) throws IOException {
@@ -747,11 +780,11 @@ Dataset	Reference Panel	Phased with	Imputed with	Server	Combined Name	Total	Accu
 					"\tRegionDistanceMean" +
 					"\tRegionDistanceVar" +
 					"\tRegionDistanceN" +
-					"\tNullDistanceMean" +
-					"\tNullDistanceVar" +
-					"\tNullDistanceN" +
-					"\tPStudent" +
-					"\tPWilcoxon";
+					"\tMeanMatchedNullDistance" +
+					"\tMeanMatchedNullVariance" +
+					"\t%SignificantDistanceDiff" +
+					"\t%SmallerDistance" +
+					"\t%SmallerDistanceAndSignificant";
 			TextFile outtf = new TextFile(diseaseout[d] + ".txt", TextFile.W);
 			if (allMissedVariants.size() < 2) {
 				outtf.writeln("Not enough missing variants");
@@ -780,10 +813,12 @@ Dataset	Reference Panel	Phased with	Imputed with	Server	Combined Name	Total	Accu
 								+ "\t" + 0
 								+ "\t" + 0
 								+ "\t" + 0
-								+ "\t" + 1
-								+ "\t" + 1;
+								+ "\t" + 0
+								+ "\t" + 0;
 						outtf.writeln(out);
 					} else {
+						
+						
 						for (int v = 0; v < missingKgVariantsInRegion.size(); v++) {
 							KgVariant var = missingKgVariantsInRegion.get(v);
 							KgVariant neighbor = null;
@@ -844,37 +879,63 @@ Dataset	Reference Panel	Phased with	Imputed with	Server	Combined Name	Total	Accu
 							}
 						}
 						
-						// now measure distance between matched snps
-						ArrayList<Integer> nullDistance = new ArrayList<>();
-						System.out.println(region.toString() + " - " + missingKgVariantsInRegion.size() + " missing variants " + variantsToSampleFrom.size() + " variants to sample from..");
-						nullDistance = matchVariants(variantsToSampleFrom, missingKgVariantsInRegion);
-						
 						// determine difference somehow
 						double[] a = new double[distances.size()];
 						for (int q = 0; q < a.length; q++) {
 							a[q] = distances.get(q);
 						}
-						double[] b = new double[nullDistance.size()];
-						for (int q = 0; q < b.length; q++) {
-							b[q] = nullDistance.get(q);
-						}
 						double regionmean = Descriptives.mean(a);
 						double regionvariance = Descriptives.variance(a);
-						double nullmean = Descriptives.mean(b);
-						double nullvariance = Descriptives.variance(b);
-						WilcoxonMannWhitney mwm = new WilcoxonMannWhitney();
-						double pwilcoxon = mwm.returnWilcoxonMannWhitneyPValue(a, b);
-						double pstudent = TTest.test(a, b);
+						int nriterssignificant = 0;
+						int nritersdistancesmaller = 0;
+						int nritersdistancesmallerandsignificant = 0;
+						ArrayList<Double> nullmeans = new ArrayList<>();
+						
+						int i = 0;
+						while (i < nriter) {
+							// now measure distance between matched snps
+							ArrayList<Integer> nullDistance = new ArrayList<>();
+							System.out.println(region.toString() + " - " + missingKgVariantsInRegion.size() + " missing variants " + variantsToSampleFrom.size() + " variants to sample from..");
+							nullDistance = matchVariants(variantsToSampleFrom, missingKgVariantsInRegion);
+							
+							double[] b = new double[nullDistance.size()];
+							for (int q = 0; q < b.length; q++) {
+								b[q] = nullDistance.get(q);
+							}
+							
+							double nullmean = Descriptives.mean(b);
+							nullmeans.add(nullmean);
+							double nullvariance = Descriptives.variance(b);
+							WilcoxonMannWhitney mwm = new WilcoxonMannWhitney();
+							double pwilcoxon = mwm.returnWilcoxonMannWhitneyPValue(a, b);
+							double pstudent = TTest.test(a, b);
+							
+							if (nullmean < regionmean) {
+								nritersdistancesmaller++;
+							}
+							if (pwilcoxon < 0.05 / regions.size()) {
+								nriterssignificant++;
+								if (nullmean < regionmean) {
+									nritersdistancesmallerandsignificant++;
+								}
+							}
+						}
+						
+						
+						double d2 = (double) nritersdistancesmaller / nriter;
+						double d1 = (double) nriterssignificant / nriter;
+						double d3 = (double) nritersdistancesmallerandsignificant / nriter;
 						
 						String out = region.toString()
 								+ "\t" + regionmean
 								+ "\t" + regionvariance
 								+ "\t" + distances.size()
-								+ "\t" + nullmean
-								+ "\t" + nullvariance
-								+ "\t" + nullDistance.size()
-								+ "\t" + pstudent
-								+ "\t" + pwilcoxon;
+								+ "\t" + Descriptives.mean(Primitives.toPrimitiveArr(nullmeans.toArray(new Double[0])))
+								+ "\t" + Descriptives.variance(Primitives.toPrimitiveArr(nullmeans.toArray(new Double[0])))
+								+ "\t" + d1
+								+ "\t" + d2
+								+ "\t" + d3;
+						
 						outtf.writeln(out);
 					}
 				}

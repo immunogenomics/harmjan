@@ -4,11 +4,11 @@ import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.SNPFeature;
 
 public class KgVariant implements Comparable<KgVariant> {
-	SNPFeature f;
-	int nproxies;
-	double maf;
-	double hwep;
-	double score;
+	public SNPFeature f;
+	public int nproxies;
+	public double maf;
+	public double hwep;
+	public double score;
 	
 	@Override
 	public int compareTo(KgVariant o) {
