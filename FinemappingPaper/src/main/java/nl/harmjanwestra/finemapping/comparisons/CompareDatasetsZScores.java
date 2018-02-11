@@ -40,7 +40,7 @@ public class CompareDatasetsZScores {
 //		String regionToGenesFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 		
 		
-		String disk = "d:";
+		String disk = "c:";
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ZScoreComparisons/regionsToCompare.bed";
 		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String outloc = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\woSharedSamples\\";
@@ -72,20 +72,37 @@ public class CompareDatasetsZScores {
 		
 		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		assocfiles = new String[]{
-				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged.txt.gz",
-				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
 		};
 		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\RAZscoreComp";
-		try {
-			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		assocfiles = new String[]{
-				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged.txt.gz",
-				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz"
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz"
 		};
 		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\T1DZscoreComp";
+		
+		
+		assocfiles = new String[]{
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+		};
+		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\RAZscoreComp";
+//		try {
+//			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+		assocfiles = new String[]{
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\wosharedsamples\\RA-assoc0.3-COSMO-merged.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\wosharedsamples\\T1D-assoc0.3-COSMO-merged.txt.gz"
+		};
+		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\wosharedsamples\\RAvsT1D.txt";
 		
 		
 		try {
