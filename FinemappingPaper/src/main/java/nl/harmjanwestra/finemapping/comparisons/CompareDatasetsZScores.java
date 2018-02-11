@@ -68,8 +68,25 @@ public class CompareDatasetsZScores {
 		
 		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\pcanonpcacomp\\pcanonpcacomp";
 		
-		
 		CompareDatasetsZScores z = new CompareDatasetsZScores();
+		
+		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		assocfiles = new String[]{
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged.txt.gz",
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+		};
+		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\RAZscoreComp";
+		try {
+			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		assocfiles = new String[]{
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged.txt.gz",
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz"
+		};
+		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\T1DZscoreComp";
+		
 		
 		try {
 			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);

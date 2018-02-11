@@ -141,7 +141,6 @@ public class MergeCredibleSets {
 					"1kg-RA",
 					"1kg-T1D",
 					"1kg-META"
-				
 			};
 			
 			outfile += "missp.txt";
@@ -168,6 +167,33 @@ public class MergeCredibleSets {
 					"1kg-META-PCA"
 			};
 			outfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\NonPCaVsPCACredibleSetComp.txt";
+//			c.mergeCredibleSets(bedregions,
+//					assocfiles,
+//					datasetnames,
+//					genenames,
+//					outfile,
+//					maxPosteriorCredibleSet,
+//					significanceThreshold,
+//					nrVariantsInCredibleSet,
+//					geneAnnotation,
+//					includeAllLoci);
+			
+			
+			bedregions = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.bed";
+			assocfiles = new String[]{
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\RA-posterior.txt.gz",
+					"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\T1D-posterior.txt.gz"
+					
+			};
+			datasetnames = new String[]{
+					"RA-COSMO",
+					"RA-COSMO+HRC",
+					"T1D-COSMO",
+					"T1D-COSMO+HRC"
+			};
+			outfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\CosmoVsCOSMOplusHRC.txt";
 			c.mergeCredibleSets(bedregions,
 					assocfiles,
 					datasetnames,
@@ -178,6 +204,7 @@ public class MergeCredibleSets {
 					nrVariantsInCredibleSet,
 					geneAnnotation,
 					includeAllLoci);
+			
 			System.exit(-1);
 
 //

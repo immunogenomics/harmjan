@@ -210,8 +210,8 @@ public class AssociationResult {
 		if (beta != null && se != null) {
 			double[][] output = new double[beta.length][beta[0].length];
 			for (int i = 0; i < output.length; i++) {
-				for(int j=0;j<output[i].length;j++) {
-					if(high) {
+				for (int j = 0; j < output[i].length; j++) {
+					if (high) {
 						output[i][j] = Math.exp(beta[i][j] + 1.96 * se[i][j]);
 					} else {
 						output[i][j] = Math.exp(beta[i][j] - 1.96 * se[i][j]);
@@ -259,5 +259,18 @@ public class AssociationResult {
 	
 	public double getZ() {
 		return ZScores.betaToZ(beta[0][0], se[0][0]);
+	}
+	
+	public void flip() {
+		double[][] betatmp = new double[beta.length][beta[0].length];
+		
+		for (int d = 0; d < beta.length; d++) {
+			for (int e = 0; e < beta[d].length; e++) {
+				betatmp[d][e] = -beta[d][e];
+				
+			}
+		}
+		beta = betatmp;
+		OR = null;
 	}
 }

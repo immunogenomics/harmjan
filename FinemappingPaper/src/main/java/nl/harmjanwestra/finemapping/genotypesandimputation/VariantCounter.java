@@ -40,13 +40,14 @@ public class VariantCounter {
 	public static void main(String[] args) {
 		try {
 			VariantCounter c = new VariantCounter();
-			c.countAccuracy();
-			
+//			c.countAccuracy();
+			c.countINFO();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+	
 	
 	public void determineMissingVariants() throws IOException {
 		
@@ -400,10 +401,31 @@ public class VariantCounter {
 		};
 		
 		String[] rawinputs = new String[]{
-		
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\RA-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\RA-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\RA-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\RA-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-RAW.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-RAW.vcf.gz"
+			
 		};
 		String[] matchedinputs = new String[]{
-		
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\RA-COSMO.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\RA-COSMO.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\RA-EUR.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\RA-HRC.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-COSMO.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-COSMO.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-EUR.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-HRC.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-HRC.vcf.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\imputeinput\\T1D-HRC.vcf.gz",
+			
+			
 		};
 		
 		
@@ -413,7 +435,7 @@ public class VariantCounter {
 		// get a list of maf > 0.005 variants that are on the sequencingpanel
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
-		double infothreshold = 0.8;
+		double infothreshold = 0.3;
 		boolean includeICVariants = true;
 		boolean includeAlleles = false;
 		boolean includeId = true;
@@ -450,11 +472,11 @@ public class VariantCounter {
 			
 			int nrinputmaf005 = 0;
 			int nrinputmaf010 = 0;
-			TextFile tf3 = new TextFile(rawinput, TextFile.R);
-			String ln2 = tf.readLine();
-			while (ln2 != null) {
-				if (!ln2.startsWith("#")) {
-					VCFVariant v = new VCFVariant(ln1);
+			TextFile tf3 = new TextFile(matchedinput, TextFile.R);
+			String ln3 = tf3.readLine();
+			while (ln3 != null) {
+				if (!ln3.startsWith("#")) {
+					VCFVariant v = new VCFVariant(ln3);
 					if (v.asFeature().overlaps(regions)) {
 						double af = Double.parseDouble(v.getInfo().get("AF"));
 						if (af > 0.5) {
@@ -468,49 +490,64 @@ public class VariantCounter {
 						}
 					}
 				}
-				ln2 = tf.readLine();
+				ln3 = tf3.readLine();
 			}
-			tf.close();
+			tf3.close();
 			
 			
 			// get the imputation accuracies for these variants
 			TextFile tf2 = new TextFile(files[f], TextFile.R);
 			
-			String ln = tf2.readLine();
+			String ln2 = tf2.readLine();
 			int nrSequenced = 0;
 			int nrSequencedPassingRSQ = 0;
 			int nrSequencedPassingMaf = 0;
 			int nrSequencdPassingMafAndRSQ = 0;
+			int nrSequencedNotPassingRSQ = 0;
 			int nrSequencdPassingMafAndRSQNonIndel = 0;
-			while (ln != null) {
-				if (!ln.startsWith("#")) {
-					VCFVariant v = new VCFVariant(ln);
+			while (ln2 != null) {
+				if (!ln2.startsWith("#")) {
+					VCFVariant v = new VCFVariant(ln2);
 					if (v.asFeature().overlaps(regions)) {
-						double af = Double.parseDouble(v.getInfo().get("AF"));
+						String afstr = v.getInfo().get("AF");
+						String[] split = afstr.split(",");
+						double lowest = 1;
+						for (int d = 0; d < split.length; d++) {
+							Double af = Double.parseDouble(split[d]);
+							if (af < lowest) {
+								lowest = af;
+							}
+						}
+						double af = lowest;
 						if (af > 0.5) {
 							af = 1 - af;
 						}
+						nrSequenced++;
 						double info = v.getImputationQualityScore();
 						if (af > mafthreshold) {
 							nrSequencedPassingMaf++;
 						}
-						if (info > infothreshold) {
-							nrSequencedPassingMaf++;
+						if (info >= infothreshold) {
+							nrSequencedPassingRSQ++;
+						} else {
+							nrSequencedNotPassingRSQ++;
 						}
+						
 						
 						if (info > infothreshold) {
 							if (af > mafthreshold) {
 								nrSequencdPassingMafAndRSQ++;
+								if (!v.isIndel()) {
+									nrSequencdPassingMafAndRSQNonIndel++;
+								}
 							}
-							if (!v.isIndel()) {
-								nrSequencdPassingMafAndRSQNonIndel++;
-							}
+							
 						}
 					}
 					
 					
 				}
-				ln = tf2.readLine();
+				ln2 = tf2.readLine();
 			}
 			tf2.close();
 			
@@ -523,6 +560,7 @@ public class VariantCounter {
 					+ "\t" + nrSequencedPassingMaf
 					+ "\t" + nrSequencdPassingMafAndRSQ
 					+ "\t" + nrSequencdPassingMafAndRSQNonIndel);
+//			System.out.println(nrSequencedNotPassingRSQ);
 		}
 		
 		
