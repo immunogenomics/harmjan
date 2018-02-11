@@ -14,19 +14,22 @@ public class CheckPreviousGWASVariants {
 	
 	
 	public static void main(String[] args) {
+		String disk = "d:";
 		String[] finemap = new String[]{
-		
-		
-		
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
 		};
 		String[] gwas = new String[]{
-		
+				disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz",
+				disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz"
 		};
 		String[] output = new String[]{
-		
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisonstoimmunobase\\RA.txt",
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisonstoimmunobase\\T1D.txt",
 		};
 		String[] gwashits = new String[]{
-		
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisonstoimmunobase\\RAhits.txt",
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisonstoimmunobase\\T1Dhits.txt",
 		};
 		
 		

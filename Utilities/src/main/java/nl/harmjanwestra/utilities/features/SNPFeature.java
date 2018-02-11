@@ -224,4 +224,19 @@ public class SNPFeature extends Feature {
 	public void useAllelesForComparison(boolean b) {
 		this.useAllelesForComparison = b;
 	}
+	
+	public void flip() {
+		
+		String[] allelestmp = new String[alleles.length];
+		for (int z = 0; z < alleles.length; z++) {
+			allelestmp[alleles.length - 1 - z] = alleles[z];
+		}
+		alleles = allelestmp;
+		
+		for (int i = 0; i < AFCases.length; i++) {
+			AFCases[i] = 1 - AFCases[i];
+			AFControls[i] = 1 - AFControls[i];
+		}
+		
+	}
 }

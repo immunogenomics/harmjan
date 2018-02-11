@@ -82,26 +82,21 @@ public class FlipGenotypedVariants {
 				AssociationResult r = assoc.get(a);
 				
 				String snpstr = r.getSnp().getChromosome().toString() + "_" + r.getSnp().getStart() + "_" + r.getSnp().getName();
-				if (snpstr.contains("rs1935836")) {
+				if (snpstr.contains("rs6698586")) {
 					System.out.println("Found it");
 				}
 				Boolean flipsnp = flip.get(snpstr);
 				Boolean complementsnp = complement.get(snpstr);
 				if (flipsnp != null && flipsnp) {
 					r.flip();
-					String[] allelestmp = r.getSnp().getAlleles();
-					String[] alleles = new String[allelestmp.length];
-					for (int z = 0; z < alleles.length; z++) {
-						alleles[alleles.length - 1 - z] = allelestmp[z];
-					}
-					r.getSnp().setAlleles(alleles);
+					
 					
 				}
 				if (complementsnp != null && complementsnp) {
 					String[] allelestmp = r.getSnp().getAlleles();
 					String[] alleles = new String[allelestmp.length];
 					for (int z = 0; z < alleles.length; z++) {
-						alleles[alleles.length - 1 - z] = BaseAnnot.getComplement(allelestmp[z]);
+						alleles[z] = BaseAnnot.getComplement(allelestmp[z]);
 					}
 					r.getSnp().setAlleles(alleles);
 					r.getSnp().setMinorAllele(BaseAnnot.getComplement(r.getSnp().getMinorAllele()));

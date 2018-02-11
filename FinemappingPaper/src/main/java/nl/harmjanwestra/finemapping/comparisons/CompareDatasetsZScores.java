@@ -5,6 +5,7 @@ import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
+import nl.harmjanwestra.utilities.legacy.genetica.io.trityper.util.BaseAnnot;
 import nl.harmjanwestra.utilities.legacy.genetica.util.Primitives;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
@@ -40,7 +41,7 @@ public class CompareDatasetsZScores {
 //		String regionToGenesFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/AllLoci-GenesPerLocus.txt";
 		
 		
-		String disk = "c:";
+		String disk = "d:";
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-09-06-SummaryStats/NormalHWEP1e4/ZScoreComparisons/regionsToCompare.bed";
 		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String outloc = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\woSharedSamples\\";
@@ -82,27 +83,31 @@ public class CompareDatasetsZScores {
 //			e.printStackTrace();
 //		}
 		assocfiles = new String[]{
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-flipgenotyped.txt.gz",
 				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz"
 		};
 		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\T1DZscoreComp";
-		
+		try {
+			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 		assocfiles = new String[]{
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged.txt.gz",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-flipgenotyped.txt.gz",
 				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
 		};
 		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\hrcimputedassoc\\merge\\RAZscoreComp";
-//		try {
-//			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		try {
+			z.run(assocfiles, assocfilenames, bedregions, regionToGenesFile, outloc);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		assocfiles = new String[]{
 				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\wosharedsamples\\RA-assoc0.3-COSMO-merged.txt.gz",
 				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\wosharedsamples\\T1D-assoc0.3-COSMO-merged.txt.gz"
 		};
-		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\wosharedsamples\\RAvsT1D.txt";
+		outloc = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\wosharedsamples\\RAvsT1D.txt-v2.txt";
 		
 		
 		try {
@@ -152,7 +157,6 @@ public class CompareDatasetsZScores {
 				"\tgenes" +
 				"\tpos" +
 				"\trsid1" +
-				
 				"\tBeta1" +
 				"\tse1" +
 				"\tZ1" +
@@ -161,6 +165,7 @@ public class CompareDatasetsZScores {
 				"\tor1" +
 				"\tAlleles1" +
 				"\tminorAllele1" +
+				"\tMAF1" +
 				"\trsid2" +
 				"\tBeta2" +
 				"\tse2" +
@@ -170,6 +175,7 @@ public class CompareDatasetsZScores {
 				"\tor2" +
 				"\tAlleles2" +
 				"\tminorAllele2" +
+				"\tMAF2" +
 				"\tMetaZ" +
 				"\tMetaP" +
 				"\tMetaZAbs" +
@@ -240,18 +246,13 @@ public class CompareDatasetsZScores {
 					
 					if (!shared.isEmpty()) {
 						
+						
 						Pair<double[], double[]> zs = removeNaN(z1, z2);
 						z1 = zs.getLeft();
 						z2 = zs.getRight();
 						
 						for (int i = 0; i < z1.length; i++) {
-							String allelesA = Strings.concat(resultA[i].getSnp().getAlleles(), Strings.comma);
-							String minorAlleleA = resultA[i].getSnp().getMinorAllele();
-							double betaA = resultA[i].getBeta()[0][0];
-							double orA = resultA[i].getORs()[0][0];
-							String rsA = resultA[i].getSnp().getName();
-							double seA = resultA[i].getSe()[0][0];
-							int nA = resultA[i].getN();
+
 
 //							if (betaA < 0 && z1[i] > 0 || z1[i] < 0 && betaA > 0) {
 //								double z = resultA[i].getZ();
@@ -259,50 +260,84 @@ public class CompareDatasetsZScores {
 //								System.exit(-1);
 //							}
 							
-							
+							String snp = resultA[i].getSnp().getName();
+							if (snp.equals("rs1235687")) {
+								System.out.println("Found it.");
+							}
+							String allelesA = Strings.concat(resultA[i].getSnp().getAlleles(), Strings.comma);
+							String allelesA2 = resultA[i].getSnp().getAlleles()[0] + "/" + resultA[i].getSnp().getAlleles()[1];
+							String minorAlleleA = resultA[i].getSnp().getMinorAllele();
 							String allelesB = Strings.concat(shared.get(i).getSnp().getAlleles(), Strings.comma);
+							String allelesb2 = shared.get(i).getSnp().getAlleles()[0] + "/" + shared.get(i).getSnp().getAlleles()[1];
 							String minorAlleleB = shared.get(i).getSnp().getMinorAllele();
-							double betaB = shared.get(i).getBeta()[0][0];
-							double orB = shared.get(i).getORs()[0][0];
-							String rsB = shared.get(i).getSnp().getName();
-							
-							double seB = shared.get(i).getSe()[0][0];
-							int nB = shared.get(i).getN();
-							
-							double metaZ = ZScores.getWeightedZ(new double[]{z1[i], z2[i]}, new int[]{nA, nB});
-							double metaP = ZScores.zToP(metaZ);
-							
-							double metaZAbs = ZScores.getWeightedZ(new double[]{Math.abs(Math.abs(z1[i])), Math.abs(z2[i])}, new int[]{nA, nB});
-							double metaPAbs = ZScores.zToP(metaZAbs);
 							
 							
-							out.writeln(region.toString()
-									+ "\t" + regionToGene.get(region.toString())
-									+ "\t" + shared.get(i).getSnp().getStart()
-									+ "\t" + rsA
-									+ "\t" + betaA
-									+ "\t" + seA
-									+ "\t" + z1[i]
-									+ "\t" + resultA[i].getPval()
-									+ "\t" + nA
-									+ "\t" + orA
-									+ "\t" + allelesA
-									+ "\t" + minorAlleleA
-									+ "\t" + rsB
-									+ "\t" + betaB
-									+ "\t" + seB
-									+ "\t" + z2[i]
-									+ "\t" + shared.get(i).getPval()
-									+ "\t" + nB
-									+ "\t" + orB
-									+ "\t" + allelesB
-									+ "\t" + minorAlleleB
-									+ "\t" + metaZ
-									+ "\t" + metaP
-									+ "\t" + metaZAbs
-									+ "\t" + metaPAbs
-							);
+							Boolean flip = BaseAnnot.flipalleles(allelesA2, resultA[i].getSnp().getAlleles()[1], allelesb2, shared.get(i).getSnp().getAlleles()[1]);
+							if (flip == null) {
+								z2[i] = Double.NaN;
+							} else {
+								
+								double betaA = resultA[i].getBeta()[0][0];
+								double orA = resultA[i].getORs()[0][0];
+								String rsA = resultA[i].getSnp().getName();
+								double seA = resultA[i].getSe()[0][0];
+								int nA = resultA[i].getN();
+								
+								if (flip) {
+									shared.get(i).flip();
+									shared.get(i).getSnp().setAlleles(resultA[i].getSnp().getAlleles());
+									shared.get(i).getSnp().setMinorAllele(minorAlleleB);
+									z2[i] *= -1;
+								}
+								
+								double betaB = shared.get(i).getBeta()[0][0];
+								
+								double orB = shared.get(i).getORs()[0][0];
+								String rsB = shared.get(i).getSnp().getName();
+								
+								double seB = shared.get(i).getSe()[0][0];
+								int nB = shared.get(i).getN();
+								
+								double metaZ = ZScores.getWeightedZ(new double[]{z1[i], z2[i]}, new int[]{nA, nB});
+								double metaP = ZScores.zToP(metaZ);
+								
+								double metaZAbs = ZScores.getWeightedZ(new double[]{Math.abs(Math.abs(z1[i])), Math.abs(z2[i])}, new int[]{nA, nB});
+								double metaPAbs = ZScores.zToP(metaZAbs);
+								
+								out.writeln(region.toString()
+										+ "\t" + regionToGene.get(region.toString())
+										+ "\t" + shared.get(i).getSnp().getStart()
+										+ "\t" + rsA
+										+ "\t" + betaA
+										+ "\t" + seA
+										+ "\t" + z1[i]
+										+ "\t" + resultA[i].getPval()
+										+ "\t" + nA
+										+ "\t" + orA
+										+ "\t" + allelesA
+										+ "\t" + minorAlleleA
+										+ "\t" + resultA[i].getSnp().getMaf()
+										+ "\t" + rsB
+										+ "\t" + betaB
+										+ "\t" + seB
+										+ "\t" + z2[i]
+										+ "\t" + shared.get(i).getPval()
+										+ "\t" + nB
+										+ "\t" + orB
+										+ "\t" + allelesB
+										+ "\t" + minorAlleleB
+										+ "\t" + shared.get(i).getSnp().getMaf()
+										+ "\t" + metaZ
+										+ "\t" + metaP
+										+ "\t" + metaZAbs
+										+ "\t" + metaPAbs
+								);
+							}
 						}
+						
+						zs = removeNaN(z1, z2);
+						z1 = zs.getLeft();
+						z2 = zs.getRight();
 						
 						
 						double corr = Correlation.correlate(z1, z2);

@@ -267,9 +267,11 @@ public class AssociationResult {
 		for (int d = 0; d < beta.length; d++) {
 			for (int e = 0; e < beta[d].length; e++) {
 				betatmp[d][e] = -beta[d][e];
-				
 			}
 		}
+		
+		snp.flip();
+		
 		beta = betatmp;
 		OR = null;
 	}

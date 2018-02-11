@@ -97,8 +97,8 @@ public class AssociationFile {
 						AssociationResult r = new AssociationResult();
 						r.setSnp(f2);
 						r.setPval(pval);
-						double[][] ors = new double[0][1];
-						ors[0][1] = or;
+						double[][] ors = new double[1][1];
+						ors[0][0] = or;
 						r.setOR(ors);
 						
 						output.add(r);
@@ -135,6 +135,10 @@ public class AssociationFile {
 			return readTabFile(file, region);
 		}
 		
+		if (file.endsWith("OKADA.gz")) {
+			return readOkada(file, region);
+		}
+		
 		if (region == null) {
 			ArrayList<Feature> f = null;
 			return read(file, f);
@@ -144,6 +148,110 @@ public class AssociationFile {
 		return read(file, regions);
 		
 		
+	}
+	
+	private ArrayList<AssociationResult> readOkada(String pvaluefile, Feature region) throws IOException {
+		System.out.println("Reading tab path: " + pvaluefile);
+		HashSet<String> variantHash = new HashSet<String>();
+		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
+		
+		ArrayList<AssociationResult> output = new ArrayList<AssociationResult>();
+		
+		// skip header
+		String[] headerelems = textfile.readLineElems(TextFile.tab);
+		
+		// Marker	Chr	Position	PValue	OR(MinAllele)	LowerOR	UpperOR	Alleles(Maj>Min)
+		int markercol = 0;
+		int chrcol = 0;
+		int poscol = 0;
+		int pvalcol = 0;
+		int orcol = 0;
+		int lowerorcol = 0;
+		int upperorcol = 0;
+		int a1col = 0;
+		int a2col = 0;
+		
+		for (int c = 0; c < headerelems.length; c++) {
+			String elem = headerelems[c].toLowerCase();
+			if (elem.equals("SNPID".toLowerCase())) {
+				markercol = c;
+			} else if (elem.equals("Chr".toLowerCase())) {
+				chrcol = c;
+			} else if (elem.equals("Position(hg19)".toLowerCase())) {
+				poscol = c;
+			} else if (elem.equals("P-val".toLowerCase())) {
+				pvalcol = c;
+			} else if (elem.equals("OR(A1)".toLowerCase())) {
+				orcol = c;
+			} else if (elem.equals("OR_95%CIlow".toLowerCase())) {
+				lowerorcol = c;
+			} else if (elem.equals("OR_95%CIup".toLowerCase())) {
+				upperorcol = c;
+			} else if (elem.equals("A1".toLowerCase())) {
+				a1col = c;
+			} else if (elem.equals("A2".toLowerCase())) {
+				a2col = c;
+			}
+		}
+		
+		String[] elems = textfile.readLineElems(TextFile.tab);
+		int pvalctr = 0;
+		while (elems != null) {
+			// Marker	Chr	Position	PValue	Odds Ratio
+			
+			Chromosome chr = Chromosome.parseChr(elems[1]);
+			if (region.getChromosome().equals(chr)) {
+				String variant = elems[chrcol] + "_" + elems[poscol] + "_" + elems[markercol];
+				SNPFeature f2 = new SNPFeature();
+				f2.setChromosome(chr);
+				f2.setStart(Integer.parseInt(elems[poscol]));
+				f2.setStop(Integer.parseInt(elems[poscol]));
+				if (f2.overlaps(region)) {
+					try {
+						
+						String a1 = elems[a1col];
+						String a2 = elems[a2col];
+						String[] allelesArr = new String[]{a1, a2};
+						f2.setAlleles(allelesArr);
+						if (allelesArr.length < 2) {
+							f2.setMinorAllele(allelesArr[0]);
+						} else {
+							f2.setMinorAllele(allelesArr[1]);
+						}
+						
+						Double or = Double.parseDouble(elems[orcol]);
+						
+						Double pval = 1d;
+						try {
+							pval = Double.parseDouble(elems[pvalcol]);
+						} catch (NumberFormatException e) {
+						
+						}
+						variantHash.add(variant);
+						
+						f2.setName(elems[markercol]);
+						AssociationResult r = new AssociationResult();
+						r.setSnp(f2);
+						r.setPval(pval);
+						double[][] ors = new double[1][1];
+						ors[0][0] = or;
+						r.setOR(ors);
+						
+						output.add(r);
+					} catch (NumberFormatException e) {
+						e.printStackTrace();
+					}
+					pvalctr++;
+				}
+				
+			}
+			elems = textfile.readLineElems(TextFile.tab);
+		}
+		textfile.close();
+		
+		System.out.println(pvalctr + " pvalues for " + pvalctr + " positions from path: " + pvaluefile);
+		
+		return output;
 	}
 	
 	public ArrayList<AssociationResult> read(String file, ArrayList<Feature> regions) throws IOException {
