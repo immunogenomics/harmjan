@@ -60,7 +60,7 @@ public class CompareJointAnalysisToSingleDatasetAnalyses {
 			AssociationResult[] top = new AssociationResult[assocfiles.length];
 
 			for (int i = 0; i < assocfiles.length; i++) {
-				ArrayList<AssociationResult> r = af.read(assocfiles[i], region);
+				ArrayList<AssociationResult> r = af.readRegion(assocfiles[i], region);
 				results[i] = r.toArray(new AssociationResult[0]);
 				double maxP = 0;
 				for (AssociationResult a : r) {

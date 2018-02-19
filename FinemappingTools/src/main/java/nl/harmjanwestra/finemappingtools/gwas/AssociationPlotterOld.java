@@ -648,7 +648,7 @@ public class AssociationPlotterOld {
 				// load IC p-values
 
 				AssociationFile f = new AssociationFile();
-				ArrayList<AssociationResult> icData = f.readTabFile(ic, region);
+				ArrayList<AssociationResult> icData = f.readRegion(ic, region);
 
 				ArrayList<Pair<Integer, Double>> icPvals = convertToPairs(icData, true);
 
@@ -709,7 +709,7 @@ public class AssociationPlotterOld {
 //							}
 
 							AssociationFile associationFile = new AssociationFile();
-							ArrayList<AssociationResult> associationResults = associationFile.read(assocFile, region);
+							ArrayList<AssociationResult> associationResults = associationFile.readRegion(assocFile, region);
 
 							String model = associationFile.getModel();
 

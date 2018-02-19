@@ -1087,10 +1087,15 @@ public class Main {
 //					System.err.println("Provide -l with --correlatevcf");
 //					run = false;
 //				}
+				
+				String regions = null;
+				if (cmd.hasOption("b")) {
+					regions = cmd.getOptionValue("b");
+				}
+				
 				if (run) {
 					VCFCorrelator c = new VCFCorrelator();
-					
-					c.run(input, v2, li, out, cmd.hasOption("writemissing"));
+					c.run(input, v2, li, out, regions, cmd.hasOption("writemissing"));
 					
 				} else {
 					printHelp();

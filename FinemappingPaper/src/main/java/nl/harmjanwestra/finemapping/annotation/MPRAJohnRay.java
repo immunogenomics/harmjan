@@ -178,7 +178,7 @@ public class MPRAJohnRay {
 
 
 		AssociationFile f = new AssociationFile();
-		ArrayList<AssociationResult> results = f.read(raresults, region);
+		ArrayList<AssociationResult> results = f.readRegion(raresults, region);
 
 		System.out.println(results.size() + " assoc results");
 

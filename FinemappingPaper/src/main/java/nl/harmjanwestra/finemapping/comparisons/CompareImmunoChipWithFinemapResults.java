@@ -136,8 +136,8 @@ public class CompareImmunoChipWithFinemapResults {
 			System.out.println(r + "/" + regions.size());
 			Feature region = regions.get(r);
 			
-			ArrayList<AssociationResult> icResults = assocfilereader.read(icTabFile, region);
-			ArrayList<AssociationResult> fmResults = assocfilereader.read(fmAssocFile, region);
+			ArrayList<AssociationResult> icResults = assocfilereader.readRegion(icTabFile, region);
+			ArrayList<AssociationResult> fmResults = assocfilereader.readRegion(fmAssocFile, region);
 			
 			AssociationResult bestICResult = getBestResult(icResults);
 			AssociationResult bestFMResult = getBestResult(fmResults);

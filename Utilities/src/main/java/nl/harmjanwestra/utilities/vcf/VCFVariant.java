@@ -226,11 +226,20 @@ public class VCFVariant {
 		
 		// parse line header
 		String ref = "";
-		
 		if (ln != null) {
 			
-			//String[] tokenArr = Strings.tab.split(lnheader);
-			String[] tokenArr = Strings.subsplit(ln, Strings.tab, 0, 10);
+			int strlen = 1000;
+			String lnheader = null;
+			if (strlen > ln.length()) {
+				strlen = ln.length();
+				lnheader = ln;
+			} else {
+				lnheader = ln.substring(0, strlen);
+			}
+			
+			
+			String[] tokenArr = Strings.tab.split(lnheader);
+//			String[] tokenArr = Strings.subsplit(ln, Strings.tab, 0, 10);
 			
 			for (int t = 0; t < 9; t++) {
 				if (t < tokenArr.length) {

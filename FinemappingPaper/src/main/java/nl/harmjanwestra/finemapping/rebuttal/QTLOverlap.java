@@ -428,7 +428,7 @@ public class QTLOverlap {
 		
 	}
 	
-	private VCFVariant getVariant(Feature snpFeature, ArrayList<VCFVariant> allvariants) {
+	public VCFVariant getVariant(Feature snpFeature, ArrayList<VCFVariant> allvariants) {
 		for (VCFVariant v : allvariants) {
 			if (v.asFeature().overlaps(snpFeature)) {
 				return v;

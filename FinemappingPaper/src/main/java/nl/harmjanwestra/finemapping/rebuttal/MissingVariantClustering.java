@@ -93,7 +93,6 @@ public class MissingVariantClustering {
 					impqualthreshold,
 					nriter,
 					regions,
-					
 					samplegenomewide,
 					considerImputedButNotTestedAsMissing);
 			System.exit(0);

@@ -19,7 +19,6 @@ public class CompareDatasetPosteriors {
 		};
 		String[] filedesc = new String[]{
 				"META-Covariates",
-				"META-PCA",
 				"META-Multinomial"
 		};
 		String out = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\multinomial\\outputwithcohortcovariate\\posteriorcomp.txt";

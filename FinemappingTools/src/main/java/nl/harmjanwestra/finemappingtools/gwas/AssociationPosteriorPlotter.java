@@ -272,7 +272,7 @@ public class AssociationPosteriorPlotter {
 					System.out.println("Reading: " + assocFiles[datasetNr]);
 					ArrayList<AssociationResult> associations = new ArrayList<>();
 					if (Gpio.exists(assocFileToRead)) {
-						associations = assocFile.read(assocFileToRead, region);
+						associations = assocFile.readRegion(assocFileToRead, region);
 					}
 					HashSet<AssociationResult> credibleSetSet = new HashSet<>();
 					boolean[] mark = null;

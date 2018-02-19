@@ -18,7 +18,7 @@ public class AssociationFile {
 	
 	private String model = null;
 	
-	public ArrayList<AssociationResult> readTabFile(String pvaluefile, Feature region) throws IOException {
+	public ArrayList<AssociationResult> readTabFile(String pvaluefile, ArrayList<Feature> region) throws IOException {
 		System.out.println("Reading tab path: " + pvaluefile);
 		HashSet<String> variantHash = new HashSet<String>();
 		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
@@ -65,50 +65,50 @@ public class AssociationFile {
 			// Marker	Chr	Position	PValue	Odds Ratio
 			
 			Chromosome chr = Chromosome.parseChr(elems[1]);
-			if (region.getChromosome().equals(chr)) {
-				String variant = elems[chrcol] + "_" + elems[poscol] + "_" + elems[markercol];
-				SNPFeature f2 = new SNPFeature();
-				f2.setChromosome(chr);
-				f2.setStart(Integer.parseInt(elems[poscol]));
-				f2.setStop(Integer.parseInt(elems[poscol]));
-				if (f2.overlaps(region)) {
-					try {
-						
-						String alleles = elems[allelescol];
-						String[] allelesArr = alleles.split(">");
-						f2.setAlleles(allelesArr);
-						if (allelesArr.length < 2) {
-							f2.setMinorAllele(allelesArr[0]);
-						} else {
-							f2.setMinorAllele(allelesArr[1]);
-						}
-						
-						Double or = Double.parseDouble(elems[orcol]);
-						
-						Double pval = 1d;
-						try {
-							pval = Double.parseDouble(elems[pvalcol]);
-						} catch (NumberFormatException e) {
-						
-						}
-						variantHash.add(variant);
-						
-						f2.setName(elems[markercol]);
-						AssociationResult r = new AssociationResult();
-						r.setSnp(f2);
-						r.setPval(pval);
-						double[][] ors = new double[1][1];
-						ors[0][0] = or;
-						r.setOR(ors);
-						
-						output.add(r);
-					} catch (NumberFormatException e) {
-						e.printStackTrace();
+//			if (region.getChromosome().equals(chr)) {
+			String variant = elems[chrcol] + "_" + elems[poscol] + "_" + elems[markercol];
+			SNPFeature f2 = new SNPFeature();
+			f2.setChromosome(chr);
+			f2.setStart(Integer.parseInt(elems[poscol]));
+			f2.setStop(Integer.parseInt(elems[poscol]));
+			if (region == null || f2.overlaps(region)) {
+				try {
+					
+					String alleles = elems[allelescol];
+					String[] allelesArr = alleles.split(">");
+					f2.setAlleles(allelesArr);
+					if (allelesArr.length < 2) {
+						f2.setMinorAllele(allelesArr[0]);
+					} else {
+						f2.setMinorAllele(allelesArr[1]);
 					}
-					pvalctr++;
+					
+					Double or = Double.parseDouble(elems[orcol]);
+					
+					Double pval = 1d;
+					try {
+						pval = Double.parseDouble(elems[pvalcol]);
+					} catch (NumberFormatException e) {
+						
+					}
+					variantHash.add(variant);
+					
+					f2.setName(elems[markercol]);
+					AssociationResult r = new AssociationResult();
+					r.setSnp(f2);
+					r.setPval(pval);
+					double[][] ors = new double[1][1];
+					ors[0][0] = or;
+					r.setOR(ors);
+					
+					output.add(r);
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
 				}
-				
+				pvalctr++;
 			}
+
+//			}
 			elems = textfile.readLineElems(TextFile.tab);
 		}
 		textfile.close();
@@ -124,12 +124,17 @@ public class AssociationFile {
 	}
 	
 	public ArrayList<AssociationResult> read(String file) throws IOException {
-		Feature region = null;
-		return read(file, region);
+		return readRegions(file, null);
+	}
+	
+	public ArrayList<AssociationResult> readRegion(String file, Feature f) throws IOException {
+		ArrayList<Feature> in = new ArrayList<>();
+		in.add(f);
+		return readRegions(file, in);
 	}
 	
 	
-	public ArrayList<AssociationResult> read(String file, Feature region) throws IOException {
+	public ArrayList<AssociationResult> readRegions(String file, ArrayList<Feature> region) throws IOException {
 		
 		if (file.endsWith("tab") || file.endsWith("tab.gz")) {
 			return readTabFile(file, region);
@@ -141,16 +146,16 @@ public class AssociationFile {
 		
 		if (region == null) {
 			ArrayList<Feature> f = null;
-			return read(file, f);
+			return readAssocFile(file, f);
 		}
-		ArrayList<Feature> regions = new ArrayList<>();
-		regions.add(region);
-		return read(file, regions);
+		
+		
+		return readAssocFile(file, region);
 		
 		
 	}
 	
-	private ArrayList<AssociationResult> readOkada(String pvaluefile, Feature region) throws IOException {
+	private ArrayList<AssociationResult> readOkada(String pvaluefile, ArrayList<Feature> region) throws IOException {
 		System.out.println("Reading tab path: " + pvaluefile);
 		HashSet<String> variantHash = new HashSet<String>();
 		TextFile textfile = new TextFile(pvaluefile, TextFile.R);
@@ -200,53 +205,53 @@ public class AssociationFile {
 			// Marker	Chr	Position	PValue	Odds Ratio
 			
 			Chromosome chr = Chromosome.parseChr(elems[1]);
-			if (region.getChromosome().equals(chr)) {
-				String variant = elems[chrcol] + "_" + elems[poscol] + "_" + elems[markercol];
-				SNPFeature f2 = new SNPFeature();
-				f2.setChromosome(chr);
-				f2.setStart(Integer.parseInt(elems[poscol]));
-				f2.setStop(Integer.parseInt(elems[poscol]));
-				if (f2.overlaps(region)) {
-					try {
-						
-						String a1 = elems[a1col];
-						String a2 = elems[a2col];
-						String[] allelesArr = new String[]{a1, a2};
-						f2.setAlleles(allelesArr);
-						if (allelesArr.length < 2) {
-							f2.setMinorAllele(allelesArr[0]);
-						} else {
-							f2.setMinorAllele(allelesArr[1]);
-						}
-						
-						Double or = Double.parseDouble(elems[orcol]);
-						
-						Double pval = 1d;
-						try {
-							pval = Double.parseDouble(elems[pvalcol]);
-						} catch (NumberFormatException e) {
-						
-						}
-						variantHash.add(variant);
-						
-						f2.setName(elems[markercol]);
-						AssociationResult r = new AssociationResult();
-						r.setSnp(f2);
-						r.setPval(pval);
-						double[][] ors = new double[1][1];
-						ors[0][0] = or;
-						r.setOR(ors);
-						
-						output.add(r);
-					} catch (NumberFormatException e) {
-						e.printStackTrace();
+//			if (region == null || region.getChromosome().equals(chr)) {
+			String variant = elems[chrcol] + "_" + elems[poscol] + "_" + elems[markercol];
+			SNPFeature f2 = new SNPFeature();
+			f2.setChromosome(chr);
+			f2.setStart(Integer.parseInt(elems[poscol]));
+			f2.setStop(Integer.parseInt(elems[poscol]));
+			if (region == null || f2.overlaps(region)) {
+				try {
+					
+					String a1 = elems[a1col];
+					String a2 = elems[a2col];
+					String[] allelesArr = new String[]{a1, a2};
+					f2.setAlleles(allelesArr);
+					if (allelesArr.length < 2) {
+						f2.setMinorAllele(allelesArr[0]);
+					} else {
+						f2.setMinorAllele(allelesArr[1]);
 					}
-					pvalctr++;
+					
+					Double or = Double.parseDouble(elems[orcol]);
+					
+					Double pval = 1d;
+					try {
+						pval = Double.parseDouble(elems[pvalcol]);
+					} catch (NumberFormatException e) {
+						
+					}
+					variantHash.add(variant);
+					
+					f2.setName(elems[markercol]);
+					AssociationResult r = new AssociationResult();
+					r.setSnp(f2);
+					r.setPval(pval);
+					double[][] ors = new double[1][1];
+					ors[0][0] = or;
+					r.setOR(ors);
+					
+					output.add(r);
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
 				}
-				
+				pvalctr++;
 			}
 			elems = textfile.readLineElems(TextFile.tab);
 		}
+
+//		}
 		textfile.close();
 		
 		System.out.println(pvalctr + " pvalues for " + pvalctr + " positions from path: " + pvaluefile);
@@ -254,7 +259,7 @@ public class AssociationFile {
 		return output;
 	}
 	
-	public ArrayList<AssociationResult> read(String file, ArrayList<Feature> regions) throws IOException {
+	public ArrayList<AssociationResult> readAssocFile(String file, ArrayList<Feature> regions) throws IOException {
 		
 		System.out.println("Reading assoc path: " + file);
 		TextFile tf = new TextFile(file, TextFile.R);
