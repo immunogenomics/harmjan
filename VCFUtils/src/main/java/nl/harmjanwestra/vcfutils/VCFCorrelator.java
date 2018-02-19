@@ -8,6 +8,7 @@ import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
 import java.io.File;
 import java.io.IOException;
@@ -286,7 +287,7 @@ public class VCFCorrelator {
 			
 		}
 		
-		System.out.println(varctr+" variants and " +posctr + " positions loaded from " + vcf1);
+		System.out.println(varctr + " variants and " + posctr + " positions loaded from " + vcf1);
 		
 		TextFile tfot = new TextFile(out, TextFile.W);
 //		HashMap<String, VCFVariant> variantMap2 = new HashMap<>();
@@ -401,6 +402,8 @@ public class VCFCorrelator {
 								
 								// calculateWithinDataset betas
 								
+								PearsonsCorrelation pc = new PearsonsCorrelation();
+								double pcc = pc.correlation(x, y);
 								double[] coeff = Regression.getLinearRegressionCoefficients(x, y);
 								double beta = coeff[0];
 								double se = coeff[2];
@@ -412,11 +415,11 @@ public class VCFCorrelator {
 								String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 								
 								if (Double.isNaN(r)) {
-									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
+									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore() + "\t" + pcc;
 									System.out.println("NaN correlation?");
 								} else {
 									double rsq = r * r;
-									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + beta + "\t" + se + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore();
+									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + beta + "\t" + se + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore() + "\t" + pcc;
 								}
 								tfot.writeln(ln);
 								writtenVariants.add(var1);

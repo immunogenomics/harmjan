@@ -24,7 +24,7 @@ public class Conditional {
 	public static void main(String[] args) {
 		
 		String assocfile = "";
-		String allregionsfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+//		String allregionsfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
 		String diseasespecificregionfile = "";
 		String out = "";
 		
@@ -32,9 +32,9 @@ public class Conditional {
 		Conditional b = new Conditional();
 		try {
 			
-			String indir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\";
+			String indir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\output\\";
 //			String outdir = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/conditional";
-			String outdir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\conditional\\";
+			String outdir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\output\\COMBINED";
 			
 			String[] significantRegionFiles = new String[]{
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/RA-significantloci-75e7.bed",
@@ -42,14 +42,14 @@ public class Conditional {
 					"/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2016-09-06-SummaryStats/NormalHWEP1e4/META-significantloci-75e7.bed",
 			};
 			significantRegionFiles = new String[]{
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\conditional\\interestingregions.bed",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\conditional\\interestingregions.bed",
-					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\conditional\\interestingregions.bed"
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\interestingregionsOrig.bed",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\interestingregionsOrig.bed",
+					"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\interestingregionsOrig.bed"
 			};
 			String[] assocFiles = new String[]{
-					indir + "/missp/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-					indir + "/missp/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-					indir + "/missp/META-assoc0.3-COSMO-merged-posterior.txt.gz"
+					indir + "/RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+					indir + "/T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+					indir + "/META-assoc0.3-COSMO-merged-posterior.txt.gz"
 			};
 			
 			
@@ -86,7 +86,7 @@ public class Conditional {
 			for (int a = 0; a < assocFiles.length; a++) {
 				assocfile = assocFiles[a];
 				diseasespecificregionfile = diseaseRegions[a];
-				b.determineRegionSignificanceThresholds(assocfile, allregionsfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
+				b.determineRegionSignificanceThresholds(assocfile, diseasespecificregionfile, diseasespecificregionfile, bonferroniOut[a], defaultthreshold, significantthreshold);
 				String regions = diseaseRegions[a];
 				String assoc = assocFiles[a];
 				
@@ -130,12 +130,12 @@ public class Conditional {
 
 //					String output = outdir + "/" + diseases[d] + "-bestAssocPerRegion.txt";
 //					String output = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/conditional/" + diseases[d] + "-bestAssocPerRegion-tyk2.txt";
-					String output = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4\\conditional\\" + diseases[d] + "-bestAssocPerRegion.txt";
+					String output = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\conditional\\output\\" + diseases[d] + "-bestAssocPerRegion.txt";
 					TextFile outtf = new TextFile(output, TextFile.W);
 					outtf.writeln("Iter\tRegion\tGenes\tmaxVariant\tPval\tLog10Pval\tGlobalThreshold\tGlobalSignificant\tNrVariantsInRegion\tLocalThreshold\tLocalSignificant");
 					for (int iter = 0; iter < maxiter; iter++) {
 						System.out.println(iter + "\t" + d);
-						String assoc = outdir + "\\output\\" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
+						String assoc = indir + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged.txt.gz";
 						
 						//tyk2
 //						assoc = "/Data/Projects/2016-Finemapping/genotypes/2017-04-10-rerun/" + diseases[d] + "out/" + diseases[d] + "-assoc0.3-COSMO-gwas-" + iter + "-merged-rewrite.txt.gz";

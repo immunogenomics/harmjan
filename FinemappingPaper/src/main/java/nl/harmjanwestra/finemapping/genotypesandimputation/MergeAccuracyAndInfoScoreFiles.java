@@ -14,31 +14,31 @@ import java.util.HashSet;
  * Created by hwestra on 6/30/16.
  */
 public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
-
-
+//
+	
 	public static void main(String[] args) {
-
-
+		
+		
 		boolean windows = false;
-		String seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
-		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
-
-		String[] files = new String[]{
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-EUR.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-COSMO.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-SHAPEIT.txt",
-				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
-		};
-		String[] labels = new String[]{
-				"EUR",
-				"COSMO",
-				"HRC / HRC / EAGLE",
-				"HRC / HRC / SHAPEIT",
-				"HRC / HRC / EAGLE / MICHIGAN"
-		};
-		String diseaseprefix = "T1D";
-		String samplelist = null;
+//		String seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz";
+//		String variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
+//
+//		String[] files = new String[]{
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-EUR.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-COSMO.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-SHAPEIT.txt",
+//				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/T1D-HRC-EAGLE-Michigan.txt"
+//		};
+//		String[] labels = new String[]{
+//				"EUR",
+//				"COSMO",
+//				"HRC / HRC / EAGLE",
+//				"HRC / HRC / SHAPEIT",
+//				"HRC / HRC / EAGLE / MICHIGAN"
+//		};
+//		String diseaseprefix = "T1D";
+//		String samplelist = null;
 //
 //		files = new String[]{
 //				"/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/2016-08-31-Accuracy/RA-EUR.txt",
@@ -52,27 +52,71 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 //		};
 //		diseaseprefix = "RA";
 
-		seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz-updatedRSId.vcf.gz";
-		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
-
+//		seqpanelvcf = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/seqpanel/seqpanelfiltered-maf0005-cr0950-rd10-gq30-runNamesFixed-RASampleNamesFixed-badSamplesRemoved-mixupsFixed.vcf.gz-updatedRSId.vcf.gz";
+//		variantsOnIC = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/2016-06-21-ImputationQuality/RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
+//
 		String bedregions = "/Sync/Dropbox/2016-03-RAT1D-Finemappng/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		String outfile = "/Data/tmp/2016-06-29-quals/T1D-INFOAndAccMerged.txt";
-
+		
 		boolean includeId = true;
 		boolean includeIndels = true;
 		boolean includeICVariants = false;
 		double mafthreshold = 0.01;
-
-
+		MergeAccuracyAndInfoScoreFiles c = new MergeAccuracyAndInfoScoreFiles();
+		String disk = "c:";
+		bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
+		String[] files = new String[]{
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-cosmo-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-PBWT-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-eur-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\RA-HRC-HC.txt",
+		};
+		String[] labels = new String[]{
+				"RA / COSMO / BEAGLE",
+				"RA / COSMO / EAGLE / PBWT",
+				"RA / EUR / BEAGLE",
+				"RA / HRC / EAGLE / PBWT"
+		};
+		String seqpanelvcf = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+		String variantsOnIC = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
+		String samplelist = null;
+		
+//		try {
+//			c.ttest(files, labels, seqpanelvcf, bedregions, mafthreshold, variantsOnIC, includeId, includeIndels, includeICVariants, samplelist);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		System.exit(-1);
+		
+		files = new String[]{
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-cosmo-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-PBWT-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-eur-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-HRC-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-Michigan-HRC-HC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\T1D-SHAPEIT-HRC-HC.txt",
+		};
+		
+		labels = new String[]{
+				"T1D / COSMO / BEAGLE",
+				"T1D / COSMO / EAGLE / PBWT",
+				"T1D / EUR / BEAGLE",
+				"T1D / HRC / EAGLE / PBWT",
+				"T1D / HRC / EAGLE / SHAPEIT / PBWT",
+				"T1D / HRC / EAGLE / MACH"
+		};
+		
 		try {
-			MergeAccuracyAndInfoScoreFiles c = new MergeAccuracyAndInfoScoreFiles();
+			
+			//	c.countINFO();
 			c.ttest(files, labels, seqpanelvcf, bedregions, mafthreshold, variantsOnIC, includeId, includeIndels, includeICVariants, samplelist);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		
 	}
-
+	
 	public void ttest(
 			String[] files,
 			String[] labels,
@@ -84,21 +128,21 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			boolean includeIndels,
 			boolean includeICVariants,
 			String samplelist) throws IOException {
-
-
+		
+		
 		HashSet<String> variantsOnICHash = loadVariantHash(variantsOnIC, includeId);
 		Triple<ArrayList<VCFVariant>, ArrayList<VCFVariant>, ArrayList<VCFVariant>> seqpanelvariants = loadSequencedVariants(
 				seqpanelvcf, bedregions, mafthreshold, 1d, variantsOnICHash, includeId, includeIndels, samplelist
 		);
-
+		
 		ArrayList<VCFVariant> seqpanel = seqpanelvariants.getLeft();
 		ArrayList<VCFVariant> variantsOnImmunoChip = seqpanelvariants.getMiddle();
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = seqpanelvariants.getRight();
-
+		
 		System.out.println(seqpanel.size() + " variants in VCF");
 		System.out.println(variantsNotOnImmunoChip.size() + " not on IC");
 		System.out.println(variantsOnImmunoChip.size() + " on IC");
-
+		
 		HashSet<String> sequencedVariantsHash = null;
 		if (includeICVariants) {
 			ArrayList<VCFVariant> allvars = new ArrayList<>();
@@ -108,17 +152,17 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 		} else {
 			sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 		}
-
+		
 		System.out.println(sequencedVariantsHash.size() + " after hashing");
 		System.out.println(files.length + " files");
-
+		
 		// load qual scores
 		double[][] values = new double[files.length][sequencedVariantsHash.size()];
-
+		
 		for (int f = 0; f < files.length; f++) {
 			// get the imputation accuracies for these variants
 			TextFile tf2 = new TextFile(files[f], TextFile.R);
-
+			
 			String[] elems = tf2.readLineElems(TextFile.tab);
 			int nrSequenced = 0;
 			int nrSequencedPassingRSQ = 0;
@@ -126,29 +170,29 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			int nrSequencdPassingMafAndRSQ = 0;
 			int ctr = 0;
 			while (elems != null) {
-
-
-				if (!elems[rsqlcol].equals("null")) {
-					double val = Double.parseDouble(elems[rsqlcol]);
-					double maf = Double.parseDouble(elems[maf2col]);
-
-					String[] varElems = elems[0].split("_");
-
-					boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
-
-					if (sequenced) {
-						nrSequenced++;
-						if (maf > mafthreshold) {
-							nrSequencedPassingMaf++;
-
-							//
-							values[f][ctr] = val;
-							ctr++;
+				if (elems.length > 12) {
+					
+					if (!elems[rsqlcol].equals("null")) {
+						double val = Double.parseDouble(elems[rsqlcol]);
+						double maf = Double.parseDouble(elems[maf2col]);
+						
+						String[] varElems = elems[0].split("_");
+						
+						boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
+						
+						if (sequenced) {
+							nrSequenced++;
+							if (maf > mafthreshold) {
+								nrSequencedPassingMaf++;
+								
+								//
+								values[f][ctr] = val;
+								ctr++;
+							}
+							
 						}
-
 					}
 				}
-
 				elems = tf2.readLineElems(TextFile.tab);
 			}
 			tf2.close();
@@ -161,10 +205,10 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 //			System.out.println("nrSequencedPassingMaf\t" + nrSequencedPassingMaf + "\t" + ((double) nrSequencedPassingMaf / sequencedVariantsHash.size()));
 //			System.out.println("nrSequencdPassingMafAndRSQ\t" + nrSequencdPassingMafAndRSQ + "\t" + ((double) nrSequencdPassingMafAndRSQ / sequencedVariantsHash.size()));
 //			System.out.println();
-
+			
 			System.out.println(nrSequenced + "\t" + nrSequencedPassingMaf + "\t" + nrSequencedPassingRSQ + "\t" + nrSequencdPassingMafAndRSQ);
 		}
-
+		
 		// now make the table
 		double[][] table = new double[files.length][files.length];
 		double[] medians = new double[files.length];
@@ -174,28 +218,28 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			for (int f2 = f + 1; f2 < files.length; f2++) {
 				double[] x = values[f];
 				double[] y = values[f2];
-
+				
 				org.apache.commons.math3.stat.inference.TTest t = new org.apache.commons.math3.stat.inference.TTest();
 				double p = t.pairedTTest(x, y);
 				double medianx = JSci.maths.ArrayMath.median(x);
 				double mediany = JSci.maths.ArrayMath.median(y);
-
+				
 				table[f][f2] = p;
 				table[f2][f] = (medianx - mediany);
-
+				
 			}
 			medians[f] = JSci.maths.ArrayMath.median(values[f]);
 			means[f] = JSci.maths.ArrayMath.mean(values[f]);
 			stdevs[f] = JSci.maths.ArrayMath.standardDeviation(values[f]);
 		}
-
+		
 		String header = "-";
 		for (int i = 0; i < files.length; i++) {
 			header += "\t" + labels[i];
 		}
-
+		
 		System.out.println(header + "\tmedian\tmean\tstdev");
-
+		
 		for (int i = 0; i < files.length; i++) {
 			String line = labels[i];
 			for (int j = 0; j < files.length; j++) {
@@ -207,28 +251,28 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			}
 			System.out.println(line + "\t" + medians[i] + "\t" + means[i] + "\t" + stdevs[i]);
 		}
-
+		
 	}
-
+	
 	public void merge(String seqpanelvcf, String variantsOnIC, String[] accfiles, String[] infofiles, String[] labels, String outfile) throws IOException {
-
+		
 		// get a list of maf > 0.005 variants that on the sequencingpanel
 		TextFile tf = new TextFile(seqpanelvcf, TextFile.R);
 		ArrayList<VCFVariant> seqpanel = new ArrayList<>();
 		String ln = tf.readLine();
-
+		
 		double mafthreshold = 0.01;
 		double upperthreshold = 1;
 //		double infothreshold = 0.5;
 		boolean includeICVariants = false;
-
+		
 		boolean includeId = true;
 		boolean includeIndels = true;
-
+		
 		VariantCounter counter = new VariantCounter();
 		HashSet<String> variantsOnICHash = counter.loadVariantHash(variantsOnIC, includeId);
-
-
+		
+		
 		System.out.println(variantsOnICHash.size() + " total on IC");
 		ArrayList<VCFVariant> variantsNotOnImmunoChip = new ArrayList<>();
 		ArrayList<VCFVariant> variantsOnImmunoChip = new ArrayList<>();
@@ -242,7 +286,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 						seqpanel.add(variant);
 						boolean varOnIc = counter.isVariantInHash(elems, variantsOnICHash, includeId);
 						boolean indel = counter.isIndel(elems);
-
+						
 						if (includeIndels || (!includeIndels && !indel)) {
 							if (!varOnIc) {
 								variantsNotOnImmunoChip.add(variant);
@@ -256,14 +300,14 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			ln = tf.readLine();
 		}
 		tf.close();
-
+		
 		System.out.println(seqpanel.size() + " variants in VCF");
 		System.out.println(variantsNotOnImmunoChip.size() + " not on IC");
 		System.out.println(variantsOnImmunoChip.size() + " on IC");
 		System.out.println("MAF> " + mafthreshold);
 //		System.out.println("INFO> " + infothreshold);
-
-
+		
+		
 		HashSet<String> sequencedVariantsHash = null;
 		ArrayList<VCFVariant> allvars = null;
 		if (includeICVariants) {
@@ -276,17 +320,17 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			allvars.addAll(variantsNotOnImmunoChip);
 			sequencedVariantsHash = counter.hashit(variantsNotOnImmunoChip, includeId);
 		}
-
+		
 		System.out.println(allvars.size() + " variants to evaluate");
-
+		
 		HashMap<String, Integer> variantToId = new HashMap<String, Integer>();
 		for (int v = 0; v < allvars.size(); v++) {
 			ln = allvars.get(v).toString();
 			variantToId.put(ln, v);
 		}
-
+		
 		double[][][] scores = new double[infofiles.length][sequencedVariantsHash.size()][2]; // [referencepanels][variants][info/acc]
-
+		
 		for (int q = 0; q < accfiles.length; q++) {
 			TextFile tf2 = new TextFile(accfiles[q], TextFile.R);
 			String[] elems = tf2.readLineElems(TextFile.tab);
@@ -300,7 +344,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			}
 			tf2.close();
 		}
-
+		
 		for (int q = 0; q < infofiles.length; q++) {
 			TextFile tf2 = new TextFile(infofiles[q], TextFile.R);
 			System.out.println("parsing: " + accfiles[q]);
@@ -318,15 +362,15 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 			}
 			tf.close();
 		}
-
+		
 		TextFile out = new TextFile(outfile, TextFile.W);
-
+		
 		String header = "variant\tmafInSeqPanel";
 		for (int l = 0; l < labels.length; l++) {
 			header += "\t" + labels[l] + "-Accuracy\t" + labels[l] + "-INFO";
 		}
 		out.writeln(header);
-
+		
 		for (int v = 0; v < allvars.size(); v++) {
 			ln = allvars.get(v).toString() + "\t" + allvars.get(v).getMAF();
 			for (int l = 0; l < labels.length; l++) {
@@ -336,5 +380,5 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 		}
 		out.close();
 	}
-
+	
 }
