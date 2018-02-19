@@ -12,6 +12,7 @@ import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -40,8 +41,8 @@ public class VariantCounter {
 	public static void main(String[] args) {
 		try {
 			VariantCounter c = new VariantCounter();
-//			c.countAccuracy();
-			c.countINFO();
+			c.countAccuracy();
+//			c.countINFO();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -175,6 +176,10 @@ public class VariantCounter {
 		
 	}
 	
+	enum SNPTTYPE {
+		INDEL, MULTI, SNP
+	}
+	
 	public void countAccuracy() throws IOException {
 		String disk = "d:";
 		String[] variantsOnIC = new String[]{
@@ -228,7 +233,7 @@ public class VariantCounter {
 		double infothreshold = 0.5;
 		boolean includeICVariants = true;
 		boolean includeAlleles = false;
-		boolean includeId = true;
+		boolean includeId = false;
 		boolean includeIndels = true;
 		
 		
@@ -269,14 +274,18 @@ public class VariantCounter {
 			System.out.println("INFO> " + infothreshold);
 			
 			HashSet<String> sequencedVariantsHash = null;
+			HashMap<String, SNPTTYPE> types = null;
+			
 			if (includeICVariants) {
 				ArrayList<VCFVariant> allvars = new ArrayList<>();
 				allvars.addAll(variantsNotOnImmunoChip);
 				allvars.addAll(variantsOnImmunoChip);
+				
 				sequencedVariantsHash = hashit(allvars, includeId);
 			} else {
 				sequencedVariantsHash = hashit(variantsNotOnImmunoChip, includeId);
 			}
+
 
 //			HashSet<KgVariant> allRefVariantsSet = new HashSet<>();
 //			ArrayList<KgVariant> refVariants = new ArrayList<>();
@@ -316,12 +325,24 @@ public class VariantCounter {
 				int nrSequencedPassingRSQ = 0;
 				int nrSequencedPassingMaf = 0;
 				int nrSequencdPassingMafAndRSQ = 0;
+				
+				// determine which variants are missing and what type they are...
+				int multiAllelicOverlap = 0;
+				int indeloverlap = 0;
+				int snpoverlap = 0;
+				
+				int multiAllelicMissing = 0;
+				int indeloverlapMissing = 0;
+				int snpoverlapMissing = 0;
+				
+				TextFile outf = new TextFile("D:\\Data\\tmp\\23018\\overlap" + f + ".txt", TextFile.W);
 				while (elems != null) {
 					if (elems.length > 1) {
 						String[] varElems = elems[0].split("_");
 						boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
 						if (sequenced) {
 							nrSequenced++;
+							outf.writeln(elems[0]);
 						}
 						
 						if (!elems[rsqlcol].equals("null")) {
@@ -341,6 +362,7 @@ public class VariantCounter {
 					}
 					elems = tf2.readLineElems(TextFile.tab);
 				}
+				outf.close();
 				tf2.close();
 				
 				System.out.println(seqpanelnames[r] + "\t" + labels[f]

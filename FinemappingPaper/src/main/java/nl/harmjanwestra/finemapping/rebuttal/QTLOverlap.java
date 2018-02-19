@@ -1,11 +1,9 @@
 package nl.harmjanwestra.finemapping.rebuttal;
 
 import nl.harmjanwestra.finemapping.annotation.EQTL;
+import nl.harmjanwestra.utilities.annotation.ensembl.EnsemblStructures;
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.features.FeatureComparator;
-import nl.harmjanwestra.utilities.features.FeatureTree;
-import nl.harmjanwestra.utilities.features.SNPFeature;
+import nl.harmjanwestra.utilities.features.*;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
@@ -15,6 +13,7 @@ import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
@@ -163,6 +162,7 @@ public class QTLOverlap {
 		
 		
 		QTLOverlap o = new QTLOverlap();
+		String ensembl = "D:\\Data\\Ref\\Ensembl\\GrCH37-b86-Structures.txt.gz";
 		double ldthresh = 0.8;
 		int ciswindow = 1000000;
 		String variantfile = disk + "\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\tables\\listofsnpswithposterior0.2.txt";
@@ -170,7 +170,7 @@ public class QTLOverlap {
 		String samplefile = disk + "\\Data\\Ref\\1kg-europeanpopulations.txt.gz";
 		String output = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\qtloverlap\\output.txt";
 		try {
-			o.run(variantfile, eqtlfiles, eqtlfilenames, tabix, samplefile, ciswindow, ldthresh, output);
+			o.run(variantfile, eqtlfiles, eqtlfilenames, tabix, samplefile, ciswindow, ldthresh, ensembl, output);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -185,6 +185,7 @@ public class QTLOverlap {
 					String samplefile,
 					int ciswindow,
 					double ldthresh,
+					String ens,
 					String output) throws IOException {
 		
 		// read the snps
@@ -193,6 +194,12 @@ public class QTLOverlap {
 		
 		ArrayList<SNPFeature> snps = new ArrayList<SNPFeature>();
 		
+		EnsemblStructures eg = new EnsemblStructures(ens);
+		Collection<Gene> genes = eg.getGenes();
+		HashMap<String, Gene> strToGene = new HashMap<>();
+		for (Gene g : genes) {
+			strToGene.put(g.getName(), g);
+		}
 		
 		while (ln != null) {
 			SNPFeature f = SNPFeature.parseSNPFeature(ln);
@@ -221,10 +228,10 @@ public class QTLOverlap {
 		String[][] outputlns = new String[qfiles.length][snps.size()];
 		
 		// write header;
-		ExecutorService ex = Executors.newFixedThreadPool(8);
+		ExecutorService ex = Executors.newFixedThreadPool(6);
 		boolean[] done = new boolean[snps.size()];
 		for (int s = 0; s < snps.size(); s++) {
-			ex.submit(new QTLOverLapTask(done, regions, s, snps, tabixprefix, samplefile, outputlns, eqtls, qfiles, ldthresh));
+			ex.submit(new QTLOverLapTask(done, regions, s, snps, tabixprefix, samplefile, outputlns, eqtls, qfiles, ldthresh, strToGene));
 		}
 		
 		while (!alldone(done)) {
@@ -301,6 +308,7 @@ public class QTLOverlap {
 		EQTL[][][] eqtls;
 		String[] qfiles;
 		double ldthresh;
+		HashMap<String, Gene> strToGene;
 		
 		public QTLOverLapTask(boolean[] done, ArrayList<Feature> regions,
 							  int s,
@@ -310,7 +318,8 @@ public class QTLOverlap {
 							  String[][] outputlns,
 							  EQTL[][][] eqtls,
 							  String[] qfiles,
-							  double ldthresh) {
+							  double ldthresh,
+							  HashMap<String, Gene> strToGene) {
 			this.done = done;
 			this.regions = regions;
 			this.s = s;
@@ -321,6 +330,7 @@ public class QTLOverlap {
 			this.eqtls = eqtls;
 			this.qfiles = qfiles;
 			this.ldthresh = ldthresh;
+			this.strToGene = strToGene;
 		}
 		
 		@Override
@@ -408,7 +418,18 @@ public class QTLOverlap {
 									ArrayList<String> estr = new ArrayList<>();
 									for (String k : gToP.keySet()) {
 										EQTL e = gToP.get(k);
-										String estrln = e.getGenename() + "_" + e.getSnp().toString();
+										
+										String genename = e.getGenename();
+										if (genename.startsWith("ENSG")) {
+											String[] splits = Strings.dot.split(genename);
+											Gene g = strToGene.get(splits[0]);
+											if (g != null) {
+												genename = g.getGeneSymbol();
+											}
+											
+										}
+										
+										String estrln = genename + "_" + e.getSnp().toString();
 										estr.add(estrln);
 									}
 									outputlns[q][s] = Strings.concat(estr, Strings.semicolon);
