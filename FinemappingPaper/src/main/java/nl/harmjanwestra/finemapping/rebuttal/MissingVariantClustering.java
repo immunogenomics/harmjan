@@ -4,6 +4,7 @@ package nl.harmjanwestra.finemapping.rebuttal;
 import nl.harmjanwestra.utilities.association.AssociationFile;
 import nl.harmjanwestra.utilities.association.AssociationResult;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
+import nl.harmjanwestra.utilities.enums.Chromosome;
 import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.features.SNPFeature;
@@ -38,15 +39,15 @@ public class MissingVariantClustering {
 		
 		imputedVCFs = new String[]{
 				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO.vcf.gz",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO-EAGLE-PBWT.vcf.gz",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-EUR.vcf.gz",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-HRC-EAGLE.vcf.gz",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-COSMO-EAGLE-PBWT.vcf.gz",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-EUR.vcf.gz",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\RA-HRC-EAGLE.vcf.gz",
 				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO.vcf.gz",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO-EAGLE-PBWT.vcf.gz",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-EUR.vcf.gz",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-EAGLE.vcf.gz",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-SHAPEIT.vcf.gz",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-Michigan.vcf.gz",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-COSMO-EAGLE-PBWT.vcf.gz",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-EUR.vcf.gz",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-EAGLE.vcf.gz",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-SHAPEIT.vcf.gz",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\INFO\\T1D-HRC-Michigan.vcf.gz",
 		};
 		
 		String[] diseaseassoc = new String[]{
@@ -55,16 +56,16 @@ public class MissingVariantClustering {
 		};
 		
 		String[] diseaseout = new String[]{
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-COSMO.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-COSMO-EAGLE-PBWT.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-EUR.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-HRC.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-COSMO.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-COSMO-EAGLE-PBWT.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-EUR.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-EAGLE.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-SHAPEIT.txt",
-				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-Michigan.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-COSMO-2nn.txt",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-COSMO-EAGLE-PBWT.txt",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-EUR.txt",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\ra-HRC.txt",
+				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-COSMO-2nn.txt",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-COSMO-EAGLE-PBWT.txt",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-EUR.txt",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-EAGLE.txt",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-SHAPEIT.txt",
+//				disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2-VariantClustering\\t1d-HRC-Michigan.txt",
 		};
 		
 		String stat1kgfile = disk + "\\Data\\Ref\\1kg-maf\\stats.full.eur.txt.gz";
@@ -77,12 +78,14 @@ public class MissingVariantClustering {
 		double mafthresholdref = 0.01;
 		double mafthresholdds = 0.01;
 		int nriter = 100;
+		int nrneighbors = 2;
 		boolean samplegenomewide = false;
 		boolean considerImputedButNotTestedAsMissing = false;
 		
 		try {
 //			c.countindels("C:\\Data\\tmp\\outputsamtools.vcf.gz", regions);
 //			System.exit(-1);
+<<<<<<< HEAD
 			c.determineIfMissingVariantsCluster(stat1kgfile,
 					imputedVCFs,
 					diseaseassoc,
@@ -96,6 +99,23 @@ public class MissingVariantClustering {
 					samplegenomewide,
 					considerImputedButNotTestedAsMissing);
 			System.exit(0);
+=======
+//			c.determineIfMissingVariantsCluster(stat1kgfile,
+//					imputedVCFs,
+//					diseaseassoc,
+//					diseaseout,
+//					ldthreshold,
+//					mafthresholdref,
+//					mafthresholdds,
+//					impqualthreshold,
+//					nriter,
+//					nrneighbors,
+//					regions,
+//
+//					samplegenomewide,
+//					considerImputedButNotTestedAsMissing);
+//			System.exit(0);
+>>>>>>> ab981443d4c47dd4749a44db02bc1ed11443ec43
 //
 			
 			imputedVCFs = new String[]{
@@ -263,57 +283,139 @@ public class MissingVariantClustering {
 		ArrayList<ArrayList<KgVariant>> imputedVariants = new ArrayList<>();
 		for (int d = 0; d < imputedVCFFiles.length; d++) {
 			ArrayList<KgVariant> vars = new ArrayList<>();
-			TextFile tf = new TextFile(imputedVCFFiles[d], TextFile.R);
-			System.out.println("parsing: " + imputedVCFFiles[d]);
-			String ln = tf.readLine();
 			
-			while (ln != null) {
-				if (!ln.startsWith("#")) {
-					VCFVariant v = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
-					
-					String af = v.getInfo().get("AF");
-					if (af != null) {
-						String[] split = af.split(",");
-						if (split.length == 1) {
-							Double maf = Double.parseDouble(af);
-							if (maf > 0.5) {
-								maf = 1 - maf;
-							}
-							double impqual = v.getImputationQualityScore();
-							if (maf > mafthresholdds && impqual > impqualthreshold && v.asFeature().overlaps(regions)) {
-								KgVariant vs = new KgVariant();
-								vs.f = v.asSNPFeature();
-								vs.f.useNameForComparison(false);
-								vs.maf = maf;
-								String hweps = v.getInfo().get("HWEP");
-								if (hweps != null) {
-									vs.hwep = Double.parseDouble(hweps);
+			if (imputedVCFFiles[d].endsWith(".vcf.gz")) {
+				TextFile tf = new TextFile(imputedVCFFiles[d], TextFile.R);
+				System.out.println("parsing: " + imputedVCFFiles[d]);
+				String ln = tf.readLine();
+				
+				while (ln != null) {
+					if (!ln.startsWith("#")) {
+						VCFVariant v = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+						
+						String af = v.getInfo().get("AF");
+						if (af != null) {
+							String[] split = af.split(",");
+							if (split.length == 1) {
+								Double maf = Double.parseDouble(af);
+								if (maf > 0.5) {
+									maf = 1 - maf;
 								}
-								if (vs.f.isMultiAllelic()) {
-									vs.f.useAllelesForComparison(false);
-								}
-								
-								if (maf > mafthresholdds) {
-									if (!includeAllelesForComparison) {
+								double impqual = v.getImputationQualityScore();
+								if (maf > mafthresholdds && impqual > impqualthreshold && v.asFeature().overlaps(regions)) {
+									KgVariant vs = new KgVariant();
+									vs.f = v.asSNPFeature();
+									vs.f.useNameForComparison(false);
+									vs.maf = maf;
+									String hweps = v.getInfo().get("HWEP");
+									if (hweps != null) {
+										vs.hwep = Double.parseDouble(hweps);
+									}
+									if (vs.f.isMultiAllelic()) {
 										vs.f.useAllelesForComparison(false);
 									}
-									if (!includeIdForComparison) {
-										vs.f.setName(null);
+									
+									if (maf > mafthresholdds) {
+										if (!includeAllelesForComparison) {
+											vs.f.useAllelesForComparison(false);
+										}
+										if (!includeIdForComparison) {
+											vs.f.setName(null);
+										}
+										vars.add(vs);
 									}
-									vars.add(vs);
+									
+									
 								}
-								
-								
+							} else {
+								// System.out.println("skipping multi-allelic variant " + v.getId() + " \t " + Strings.concat(v.getAlleles(), Strings.comma) + "\t" + af);
 							}
-						} else {
-							// System.out.println("skipping multi-allelic variant " + v.getId() + " \t " + Strings.concat(v.getAlleles(), Strings.comma) + "\t" + af);
+							
 						}
-						
 					}
+					ln = tf.readLine();
 				}
-				ln = tf.readLine();
+				tf.close();
+			} else {
+				TextFile tf2 = new TextFile(imputedVCFFiles[d], TextFile.R);
+				System.out.println("parsing: " + imputedVCFFiles[d]);
+				String ln = tf2.readLine();
+//				TextFile tf2 = new TextFile(files[f], TextFile.R);
+				
+				String[] elems = tf2.readLineElems(TextFile.tab);
+				int nrSequenced = 0;
+				int nrSequencedPassingRSQ = 0;
+				int nrSequencedPassingMaf = 0;
+				int nrSequencdPassingMafAndRSQ = 0;
+				
+				// determine which variants are missing and what type they are...
+				int multiAllelicOverlap = 0;
+				int indeloverlap = 0;
+				int snpoverlap = 0;
+				
+				int multiAllelicMissing = 0;
+				int indeloverlapMissing = 0;
+				int snpoverlapMissing = 0;
+				
+				
+				while (elems != null) {
+					if (elems.length > 1) {
+						String[] varElems = elems[0].split("_");
+
+//						boolean sequenced = isVariantInHash(varElems, sequencedVariantsHash, includeId);
+//						if (sequenced) {
+//							nrSequenced++;
+//						}
+						
+						if (!elems[rsqlcol].equals("null")) {
+							KgVariant vs = new KgVariant();
+							SNPFeature f = new SNPFeature();
+							f.setChromosome(Chromosome.parseChr(varElems[0]));
+							f.setStart(Integer.parseInt(varElems[1]));
+							f.setStop(f.getStart());
+							f.setName(varElems[2]);
+							vs.f = f;
+							vs.f.useNameForComparison(false);
+							vars.add(vs);
+//							vs.maf = maf;
+//							String hweps = v.getInfo().get("HWEP");
+//							if (hweps != null) {
+//								vs.hwep = Double.parseDouble(hweps);
+//							}
+//							if (vs.f.isMultiAllelic()) {
+//								vs.f.useAllelesForComparison(false);
+//							}
+//
+//							if (maf > mafthresholdds) {
+//								if (!includeAllelesForComparison) {
+//									vs.f.useAllelesForComparison(false);
+//								}
+//								if (!includeIdForComparison) {
+//									vs.f.setName(null);
+//								}
+//								vars.add(vs);
+//							}
+//
+//							double val = Double.parseDouble(elems[rsqlcol]);
+//							double maf = Double.parseDouble(elems[maf2col]);
+//
+//							if (maf > mafthreshold) {
+//								nrSequencedPassingMaf++;
+//								if (val > infothreshold) {
+//									nrSequencdPassingMafAndRSQ++;
+//								}
+//							}
+//							if (val > infothreshold) {
+//								nrSequencedPassingRSQ++;
+//							}
+						}
+					}
+					elems = tf2.readLineElems(TextFile.tab);
+				}
+				
+				tf2.close();
 			}
-			tf.close();
+			
 			System.out.println(vars.size() + " variants included after imputation for disease " + d);
 			imputedVariants.add(vars);
 		}
@@ -518,16 +620,21 @@ public class MissingVariantClustering {
 				reflist = allRefVariants.get(r);
 			}
 			
+			HashMap<String, KgVariant> refset = new HashMap<String, KgVariant>();
+			for (KgVariant v : reflist) {
+				refset.put(v.f.getChromosome().toString() + "_" + v.f.getStart(), v);
+			}
+			System.out.println(refset.size() + "  ids loaded");
+			
 			for (int d = 0; d < imputedVariants.size(); d++) {
 				ArrayList<KgVariant> list = imputedVariants.get(d);
-				HashSet<KgVariant> presentVariants = new HashSet<>();
+//				HashSet<KgVariant> presentVariants = new HashSet<>();
+				HashSet<String> visited = new HashSet<>();
+				HashSet<String> counted = new HashSet<String>();
 				for (KgVariant v : list) {
-					presentVariants.add(v);
-				}
-				
-				// now test agains the reference set
-				for (KgVariant rv : reflist) {
-					if (presentVariants.contains(rv)) {
+					String str = v.f.getChromosome().toString() + "_" + v.f.getStart();
+					if (refset.containsKey(str) && !counted.contains(str)) {
+						KgVariant rv = refset.get(str);
 						if (rv.f.isMultiAllelic()) {
 							multiallelicoverlapping[d][r]++;
 						} else if (rv.f.isIndel()) {
@@ -535,7 +642,18 @@ public class MissingVariantClustering {
 						} else {
 							snpsoverlapping[d][r]++;
 						}
-					} else {
+						String rstr = rv.f.getChromosome().toString() + "_" + rv.f.getStart();
+						counted.add(rstr);
+						
+					}
+					visited.add(str);
+				}
+				
+				
+				for (KgVariant rv : reflist) {
+					String str = rv.f.getChromosome().toString() + "_" + rv.f.getStart();
+					if (!visited.contains(str) && !counted.contains(str)) {
+						
 						if (rv.f.isMultiAllelic()) {
 							multiallelicmissing[d][r]++;
 						} else if (rv.f.isIndel()) {
@@ -543,8 +661,31 @@ public class MissingVariantClustering {
 						} else {
 							snpsmissing[d][r]++;
 						}
+						counted.add(str);
 					}
 				}
+
+
+//				// now test against the reference set
+//				for (KgVariant rv : reflist) {
+//					if (presentVariants.contains(rv)) {
+//						if (rv.f.isMultiAllelic()) {
+//							multiallelicoverlapping[d][r]++;
+//						} else if (rv.f.isIndel()) {
+//							indelsoverlapping[d][r]++;
+//						} else {
+//							snpsoverlapping[d][r]++;
+//						}
+//					} else {
+//						if (rv.f.isMultiAllelic()) {
+//							multiallelicmissing[d][r]++;
+//						} else if (rv.f.isIndel()) {
+//							indelsmissing[d][r]++;
+//						} else {
+//							snpsmissing[d][r]++;
+//						}
+//					}
+//				}
 			}
 		}
 		
@@ -627,6 +768,7 @@ public class MissingVariantClustering {
 												  double mafthresholdds,
 												  double infoscorethreshold,
 												  int nriter,
+												  int nrNeighbors,
 												  String regionsFile,
 												  boolean sampleGenomeWide,
 												  boolean considerImputedButNotTestedAsMissing) throws IOException {
@@ -783,7 +925,8 @@ public class MissingVariantClustering {
 					"\tMeanMatchedNullVariance" +
 					"\t%SignificantDistanceDiff" +
 					"\t%SmallerDistance" +
-					"\t%SmallerDistanceAndSignificant";
+					"\t%SmallerDistanceAndSignificant" +
+					"\tAvgMatchedVariants";
 			TextFile outtf = new TextFile(diseaseout[d] + ".txt", TextFile.W);
 			if (allMissedVariants.size() < 2) {
 				outtf.writeln("Not enough missing variants");
@@ -795,7 +938,7 @@ public class MissingVariantClustering {
 				}
 				
 				for (Feature region : regionsToTest) {
-					ArrayList<Integer> distances = new ArrayList<>();
+					ArrayList<Double> distances = new ArrayList<>();
 					ArrayList<KgVariant> missingKgVariantsInRegion = filter(allMissedVariants, region);
 					ArrayList<KgVariant> variantsToSampleFrom = null;
 					if (sampleGenomeWide) {
@@ -803,6 +946,24 @@ public class MissingVariantClustering {
 					} else {
 						variantsToSampleFrom = filter(kgVariantsInRegions, region);
 					}
+					
+					{
+						KgVariant var = null;
+						for (KgVariant variant : missingKgVariantsInRegion) {
+							if (var == null) {
+								var = variant;
+							} else {
+								if (variant.f.getStart() < var.f.getStart()) {
+									System.out.println(" Not properly sorted. " + variant.f.toString() + "\t" + var.f.toString());
+									System.exit(-1);
+								}
+								var = variant;
+							}
+							
+							
+						}
+					}
+					
 					
 					if (missingKgVariantsInRegion.size() < 2) {
 						String out = region.toString()
@@ -813,64 +974,15 @@ public class MissingVariantClustering {
 								+ "\t" + 0
 								+ "\t" + 0
 								+ "\t" + 0
-								+ "\t" + 0;
+								+ "\t" + 0
+								+ " \t" + 0;
 						outtf.writeln(out);
 					} else {
-						
-						
 						for (int v = 0; v < missingKgVariantsInRegion.size(); v++) {
-							KgVariant var = missingKgVariantsInRegion.get(v);
-							KgVariant neighbor = null;
-							Integer distance = null;
-							if (v == 0) {
-								// nearest is the next
-								neighbor = missingKgVariantsInRegion.get(v + 1);
-								if (neighbor.f.getChromosome().equals(var.f.getChromosome())) {
-									// measure distance
-									distance = Math.abs(neighbor.f.getStart() - var.f.getStart());
-								}
-							} else if (v == missingKgVariantsInRegion.size() - 1) {
-								// previous one is nearest
-								neighbor = missingKgVariantsInRegion.get(v - 1);
-								if (neighbor.f.getChromosome().equals(var.f.getChromosome())) {
-									// measure distance
-									distance = Math.abs(neighbor.f.getStart() - var.f.getStart());
-								}
-							} else {
-								
-								// either previous or next is nearest
-								KgVariant neighbor1 = missingKgVariantsInRegion.get(v - 1);
-								Integer d1 = null;
-								Integer d2 = null;
-								if (neighbor1.f.getChromosome().equals(var.f.getChromosome())) {
-									// measure distance
-									d1 = Math.abs(neighbor1.f.getStart() - var.f.getStart());
-								}
-								KgVariant neighbor2 = missingKgVariantsInRegion.get(v + 1);
-								if (neighbor2.f.getChromosome().equals(var.f.getChromosome())) {
-									// measure distance
-									d2 = Math.abs(neighbor2.f.getStart() - var.f.getStart());
-								}
-								
-								if (d1 != null && d2 != null) {
-									distance = Math.min(d1, d2);
-									if (distance.equals(d1)) {
-										neighbor = neighbor1;
-									} else {
-										neighbor = neighbor2;
-									}
-								} else if (d1 != null) {
-									distance = d1;
-									neighbor = neighbor1;
-								} else if (d2 != null) {
-									distance = d2;
-									neighbor = neighbor2;
-								}
-							}
-							
+							Double distance = knnDistance(v, nrNeighbors, missingKgVariantsInRegion);
 							if (distance != null) {
 								// got ourselves a missing variant with some friends
-								KgVariantPair p = new KgVariantPair(var, neighbor);
+								KgVariantPair p = new KgVariantPair(missingKgVariantsInRegion.get(v), missingKgVariantsInRegion.get(v));
 								if (!missingVariantPairs.contains(p)) {
 									distances.add(distance);
 									missingVariantPairs.add(p); // make sure we're only counting pairs once
@@ -891,12 +1003,13 @@ public class MissingVariantClustering {
 						ArrayList<Double> nullmeans = new ArrayList<>();
 						
 						int i = 0;
+						ArrayList<Integer> nrMatched = new ArrayList<>();
 						while (i < nriter) {
-							// now measure distance between matched snps
-							ArrayList<Integer> nullDistance = new ArrayList<>();
-							System.out.println(region.toString() + " - " + missingKgVariantsInRegion.size() + " missing variants " + variantsToSampleFrom.size() + " variants to sample from..");
-							nullDistance = matchVariants(variantsToSampleFrom, missingKgVariantsInRegion);
 							
+							// now measure distance between matched snps
+							System.out.println(region.toString() + " - " + missingKgVariantsInRegion.size() + " missing variants " + variantsToSampleFrom.size() + " variants to sample from..");
+							ArrayList<Double> nullDistance = matchVariants(variantsToSampleFrom, missingKgVariantsInRegion, nrNeighbors);
+							nrMatched.add(nullDistance.size());
 							double[] b = new double[nullDistance.size()];
 							for (int q = 0; q < b.length; q++) {
 								b[q] = nullDistance.get(q);
@@ -926,6 +1039,8 @@ public class MissingVariantClustering {
 						double d1 = (double) nriterssignificant / nriter;
 						double d3 = (double) nritersdistancesmallerandsignificant / nriter;
 						
+						double avgmatchedvariants = Descriptives.mean(Primitives.toPrimitiveArr(nrMatched.toArray(new Integer[0])));
+						
 						String out = region.toString()
 								+ "\t" + regionmean
 								+ "\t" + regionvariance
@@ -934,7 +1049,8 @@ public class MissingVariantClustering {
 								+ "\t" + Descriptives.variance(Primitives.toPrimitiveArr(nullmeans.toArray(new Double[0])))
 								+ "\t" + d1
 								+ "\t" + d2
-								+ "\t" + d3;
+								+ "\t" + d3
+								+ " \t" + avgmatchedvariants;
 						
 						outtf.writeln(out);
 					}
@@ -942,6 +1058,107 @@ public class MissingVariantClustering {
 			}
 			outtf.close();
 		}
+	}
+	
+	private Double knnDistance(int v, int nrNeighbors, ArrayList<KgVariant> variantPool) {
+		KgVariant var = variantPool.get(v);
+		KgVariant neighbor = null;
+		Double distance = null;
+		if (v == 0) {
+			// nearest is the next
+			ArrayList<Integer> z = new ArrayList<>();
+			int nrNeigh = 1;
+			while (nrNeigh < nrNeighbors + 1) {
+				if (v + nrNeigh < variantPool.size()) {
+					neighbor = variantPool.get(v + nrNeigh);
+					if (neighbor.f.getChromosome().equals(var.f.getChromosome())) {
+						// measure distance
+						int dist = Math.abs(neighbor.f.getStart() - var.f.getStart());
+						z.add(dist);
+					}
+				}
+				nrNeigh++;
+			}
+			distance = Descriptives.mean(Primitives.toPrimitiveArr(z.toArray(new Integer[0])));
+		} else if (v == variantPool.size() - 1) {
+			// previous one is nearest
+			ArrayList<Integer> z = new ArrayList<>();
+			int nrNeigh = 1;
+			while (nrNeigh < nrNeighbors + 1) {
+				if (v - nrNeigh > -1) {
+					neighbor = variantPool.get(v - nrNeigh);
+					if (neighbor.f.getChromosome().equals(var.f.getChromosome())) {
+						// measure distance
+						int dist = Math.abs(neighbor.f.getStart() - var.f.getStart());
+						z.add(dist);
+					}
+				}
+				nrNeigh++;
+			}
+			distance = Descriptives.mean(Primitives.toPrimitiveArr(z.toArray(new Integer[0])));
+		} else {
+			
+			ArrayList<Integer> z = new ArrayList<>();
+			
+			int uppos = v + 1;
+			int downpos = v - 1;
+			// determine which ones give the lowest distances
+			int nrNeighborsTmp = nrNeighbors;
+			if (nrNeighborsTmp > variantPool.size()) {
+				nrNeighborsTmp = variantPool.size();
+			}
+			
+			while (z.size() < nrNeighborsTmp) {
+				// either previous or next is nearest
+				
+				Integer dUp = null;
+				Integer dDown = null;
+				
+				KgVariant neighborUp = null;
+				if (uppos < variantPool.size()) {
+					variantPool.get(uppos);
+					neighborUp = variantPool.get(uppos);
+					if (neighborUp.f.getChromosome().equals(var.f.getChromosome())) {
+						// measure distance
+						dUp = Math.abs(neighborUp.f.getStart() - var.f.getStart());
+						
+					}
+				}
+				
+				KgVariant neigborDown = null;
+				if (downpos > -1) {
+					neigborDown = variantPool.get(downpos);
+					if (neigborDown.f.getChromosome().equals(var.f.getChromosome())) {
+						// measure distance
+						dDown = Math.abs(neigborDown.f.getStart() - var.f.getStart());
+					}
+				}
+				
+				if (dUp != null && dDown != null) {
+					Integer dist = Math.min(dUp, dDown);
+					if (dist.equals(dUp)) {
+						neighbor = neighborUp;
+						uppos++;
+					} else {
+						neighbor = neigborDown;
+						downpos--;
+					}
+				} else if (dUp != null) {
+					neighbor = neighborUp;
+					uppos++;
+				} else if (dDown != null) {
+					neighbor = neigborDown;
+					downpos--;
+				}
+				
+				if (neighbor != null) {
+					int dist = Math.abs(neighbor.f.getStart() - var.f.getStart());
+					z.add(dist);
+				}
+			}
+			distance = Descriptives.mean(Primitives.toPrimitiveArr(z.toArray(new Integer[0])));
+		}
+		return distance;
 	}
 	
 	private ArrayList<KgVariant> filter(ArrayList<KgVariant> kgVariantsInRegions, Feature region) {
@@ -954,8 +1171,8 @@ public class MissingVariantClustering {
 		return output;
 	}
 	
-	public ArrayList<Integer> matchVariants(ArrayList<KgVariant> refVariantsToSampleFrom, ArrayList<KgVariant> variantsToMatch) {
-		ArrayList<Integer> nullDistance = new ArrayList<>();
+	public ArrayList<Double> matchVariants(ArrayList<KgVariant> refVariantsToSampleFrom, ArrayList<KgVariant> variantsToMatch, int nrNeighbors) {
+		ArrayList<Double> nullDistance = new ArrayList<>();
 		
 		// bin the included variants
 		Bins b = new Bins(100);
@@ -982,41 +1199,9 @@ public class MissingVariantClustering {
 			if (matched != null) {
 				// get the variant index for variant matched
 				Integer id = ktoi.get(matched);
-				KgVariant neighbor = null;
 				
-				// get this variant's neighbor
-				if (id == refVariantsToSampleFrom.size() - 1) {
-					// can only go down from here
-					neighbor = refVariantsToSampleFrom.get(id - 1);
-				} else if (id
-						== 0) {
-					// reach the stars! there's only up from the bottom
-					neighbor = refVariantsToSampleFrom.get(1);
-				} else {
-					// could go up or down.. select the closest I guess?
-					KgVariant neigh1 = refVariantsToSampleFrom.get(id - 1);
-					int d1 = Math.abs(matched.f.getStart() - neigh1.f.getStart());
-					KgVariant neigh2 = refVariantsToSampleFrom.get(id + 1);
-					int d2 = Math.abs(matched.f.getStart() - neigh2.f.getStart());
-					if (neigh1.f.getChromosome().equals(matched.f.getChromosome()) && neigh2.f.getChromosome().equals(matched.f.getChromosome())) {
-						// both neighbors are on same chr as our matched candidate
-						if (d1 > d2) {
-							neighbor = neigh2;
-						} else {
-							neighbor = neigh1;
-						}
-					} else if (neigh1.f.getChromosome().equals(matched.f.getChromosome())) {
-						neighbor = neigh1;
-					} else if (neigh2.f.getChromosome().equals(matched.f.getChromosome())) {
-						neighbor = neigh2;
-					}
-				}
-				
-				// check whether the chromosome is identical
-				if (neighbor != null && neighbor.f.getChromosome().equals(matched.f.getChromosome())) {
-					// measure distance
-					nullDistance.add(Math.abs(neighbor.f.getStart() - matched.f.getStart()));
-				}
+				Double distance = knnDistance(id, nrNeighbors, refVariantsToSampleFrom);
+				nullDistance.add(distance);
 			}
 		}
 		
