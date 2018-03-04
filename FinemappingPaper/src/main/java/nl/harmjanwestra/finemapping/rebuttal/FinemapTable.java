@@ -56,26 +56,35 @@ public class FinemapTable {
 //		}
 
 //		System.exit(-1);
+//		String[] regions = new String[]{
+//				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-significantregions-75e7.bed",
+//				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-significantregions-75e7.bed",
+//				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-significantregions-75e7.bed",
+//		};
 		String[] regions = new String[]{
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-significantregions-75e7.bed",
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-significantregions-75e7.bed",
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-significantregions-75e7.bed",
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\raloci.txt",
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\t1dloci.txt",
+				"D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\metaloci.txt",
 		};
 //		String allregionsfile = "";
-		String conditionalFile = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\2017-11-14-conditionalVariants.txt";
+		String[] conditionalFile = new String[]{
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\2017-11-14-conditionalVariantsRA.txt",
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\2017-11-14-conditionalVariantsT1D.txt",
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\2017-11-14-conditionalVariants.txt"
+		};
 		String[] datasets = new String[]{
 				"RA",
 				"T1D",
 				"META"
 		};
 		String[] assocfiles = new String[]{
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
-				"C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz"
 		};
-		String finemapdir = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\";
+		String finemapdir = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\";
 		int maxk = 5;
-		String output = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\output\\";
+		String output = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\finemap\\output\\";
 		
 		FinemapTable t = new FinemapTable();
 		try {
@@ -85,9 +94,8 @@ public class FinemapTable {
 		}
 	}
 	
-	public void run(String[] regions, String conditionalFile, String[] assocfiles, String[] datasets, String finemapdir, int maxk, String output) throws IOException {
+	public void run(String[] regions, String[] conditionalFile, String[] assocfiles, String[] datasets, String finemapdir, int maxk, String output) throws IOException {
 		
-		HashMap<String, ArrayList<String>> conditionalVariants = loadConditional(conditionalFile);
 		
 		ArrayList<ArrayList<AssociationResult>> assocs = new ArrayList<>();
 		for (int d = 0; d < assocfiles.length; d++) {
@@ -134,7 +142,7 @@ public class FinemapTable {
 //			}
 //			diseaseregions = tmp;
 			
-			String header = "Locus\tTopAssoc\tTopAssocPval\tTopAssocPosterior\tSizeOfCredibleSet\tConditionalVars";
+			String header = "Locus\tTopAssoc\tTopAssocPval\tTopAssocPosterior\tSizeOfCredibleSet\tNConditionalVars\tConditionalVars";
 			for (int k = 0; k < maxk; k++) {
 				int printk = k + 1;
 				header += "\t" + printk + "p(k)\t"
@@ -164,7 +172,7 @@ public class FinemapTable {
 					System.out.println(regionAssocs.size());
 					System.exit(-1);
 				}
-				AssociationResult topassoc = getTopAssoc(regionAssocs, region);
+				AssociationResult topassoc = getTopAssoc(regionAssocs, region, true);
 				ArrayList<AssociationResult> cs = abf.createCredibleSet(regionAssocs, 0.95);
 				
 				if (cs == null) {
@@ -178,13 +186,14 @@ public class FinemapTable {
 						topassoc.getPosterior() + "\t" +
 						cs.size();
 				
+				HashMap<String, ArrayList<String>> conditionalVariants = loadConditional(conditionalFile[d]);
 				ArrayList<String> conditionalVars = conditionalVariants.get(region.toString());
 				
 				if (conditionalVars == null) {
 					// get the variant from the assoc file, I guess. leave empty for now
-					outln += "\t-";
+					outln += "\t0\t-";
 				} else {
-					outln += "\t" + Strings.concat(conditionalVars, Strings.semicolon);
+					outln += "\t" + conditionalVars.size() + "\t" + Strings.concat(conditionalVars, Strings.semicolon);
 				}
 				if (region.getChromosome().equals(Chromosome.TWO)) {
 					if (conditionalVars == null) {
@@ -267,15 +276,23 @@ public class FinemapTable {
 		return out;
 	}
 	
-	private AssociationResult getTopAssoc(ArrayList<AssociationResult> associationResults, Feature region) {
+	private AssociationResult getTopAssoc(ArrayList<AssociationResult> associationResults, Feature region, boolean matchonposterior) {
 		double max = 0;
 		AssociationResult maxsnp = null;
 		for (AssociationResult r : associationResults) {
 			if (r.getSnp().overlaps(region)) {
-				if (r.getLog10Pval() > max) {
-					max = r.getLog10Pval();
-					maxsnp = r;
+				if (matchonposterior) {
+					if (r.getPosterior() > max) {
+						max = r.getPosterior();
+						maxsnp = r;
+					}
+				} else {
+					if (r.getLog10Pval() > max) {
+						max = r.getLog10Pval();
+						maxsnp = r;
+					}
 				}
+				
 			}
 		}
 		return maxsnp;

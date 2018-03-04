@@ -1,13 +1,18 @@
 package nl.harmjanwestra.vcfutils;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.enums.Chromosome;
+import nl.harmjanwestra.utilities.features.Feature;
 import nl.harmjanwestra.utilities.genotypes.GenotypeTools;
 import nl.harmjanwestra.utilities.vcf.*;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantFilters;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantMAFFilter;
+import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantRegionFilter;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
 import java.io.File;
@@ -140,8 +145,13 @@ public class VCFCorrelator {
 		threadPool.shutdown();
 	}
 	
-	public void run(String vcf1, String vcf2, String variantsToTestFile, String out, boolean writemissingvariants) throws IOException {
+	public void run(String vcf1, String vcf2, String variantsToTestFile, String out, String regionfile, boolean writemissingvariants) throws IOException {
 		
+		ArrayList<Feature> regions = null;
+		if (regionfile != null) {
+			BedFileReader b = new BedFileReader();
+			regions = b.readAsList(regionfile);
+		}
 		
 		// get samples in vcf1 and 2
 		// index samples
@@ -234,43 +244,34 @@ public class VCFCorrelator {
 			variantMap.put(chr, new HashMap<>());
 			variantMap2.put(chr, new HashMap<>());
 		}
-		ArrayList<VCFVariant> variants1 = new ArrayList<VCFVariant>();
-		int ctr1 = 0;
 		
-		TextFile tfvcf1 = new TextFile(vcf1, TextFile.R);
-		String vcf1ln = tfvcf1.readLine();
-		while (vcf1ln != null) {
-			if (!vcf1ln.startsWith("#")) {
-				VCFVariant var = null;
-				if (calculateMAFOverAllSamples) {
-					var = new VCFVariant(vcf1ln, VCFVariant.PARSE.ALL);
-				} else {
-					var = new VCFVariant(vcf1ln, VCFVariant.PARSE.ALL, includeSamples1);
-				}
-				Chromosome chr = Chromosome.parseChr(var.getChr());
-				
-				if (!chr.equals(Chromosome.X)) {
-					String varStr = var.toString();
-					if (varsToTest == null || varsToTest.contains(varStr)) {
-						HashMap<Integer, ArrayList<VCFVariant>> positionMap = variantMap.get(var.getChrObj());
-						ArrayList<VCFVariant> varsOnPos = positionMap.get(var.getPos());
-						if (varsOnPos == null) {
-							varsOnPos = new ArrayList<>();
-						}
-						varsOnPos.add(var);
-						positionMap.put(var.getPos(), varsOnPos);
-						variantMap.put(var.getChrObj(), positionMap);
-					}
-				}
-				ctr1++;
-				if (ctr1 % 1000 == 0) {
-					System.out.println(ctr1 + " variants parsed from vcf1");
-				}
-			}
-			
-			vcf1ln = tfvcf1.readLine();
+		
+		int ctr1 = 0;
+
+//		TextFile tfvcf1 = new TextFile(vcf1, TextFile.R);
+		
+		VCFVariantLoader loader = new VCFVariantLoader();
+		VCFVariantFilters filter = new VCFVariantFilters();
+		filter.add(new VCFVariantMAFFilter(0.01));
+		if (regions != null) {
+			VCFVariantRegionFilter f = new VCFVariantRegionFilter(regions);
+			filter.add(f);
 		}
-		tfvcf1.close();
+		ArrayList<VCFVariant> variants1 = loader.run(vcf1, filter, 64);
+		for (VCFVariant var : variants1) {
+			String varStr = var.toString();
+			if (varsToTest == null || varsToTest.contains(varStr)) {
+				HashMap<Integer, ArrayList<VCFVariant>> positionMap = variantMap.get(var.getChrObj());
+				ArrayList<VCFVariant> varsOnPos = positionMap.get(var.getPos());
+				if (varsOnPos == null) {
+					varsOnPos = new ArrayList<>();
+				}
+				varsOnPos.add(var);
+				positionMap.put(var.getPos(), varsOnPos);
+				variantMap.put(var.getChrObj(), positionMap);
+			}
+		}
+		
 		
 		int posctr = 0;
 		int varctr = 0;
@@ -289,173 +290,192 @@ public class VCFCorrelator {
 		
 		System.out.println(varctr + " variants and " + posctr + " positions loaded from " + vcf1);
 		
+		filter = new VCFVariantFilters();
+//		filter.add(new VCFVariantMAFFilter(0.01));
+		if (regions != null) {
+			VCFVariantRegionFilter f1 = new VCFVariantRegionFilter(regions);
+			filter.add(f1);
+			}
+		ArrayList<Feature> variantRegions = new ArrayList<>();
+		for (VCFVariant v : variants1) {
+			variantRegions.add(v.asFeature());
+		}
+		VCFVariantRegionFilter f = new VCFVariantRegionFilter(variantRegions);
+		filter.add(f);
+		ArrayList<VCFVariant> variants2infile = loader.run(vcf2, filter, 64);
+		
+		
 		TextFile tfot = new TextFile(out, TextFile.W);
 //		HashMap<String, VCFVariant> variantMap2 = new HashMap<>();
 		HashSet<VCFVariant> writtenVariants = new HashSet<VCFVariant>();
 		int ctr2 = 0;
-		TextFile tfVCF2 = new TextFile(vcf2, TextFile.R);
-		String ln = tfVCF2.readLine();
+//		TextFile tfVCF2 = new TextFile(vcf2, TextFile.R);
+//		String ln = tfVCF2.readLine();
 		VCFMerger merger = new VCFMerger();
 		GenotypeTools gtools = new GenotypeTools();
-		while (ln != null) {
-			if (!ln.startsWith("#")) {
-				
-				int strlen = ln.length();
-				int substrlen = 500;
-				if (strlen < substrlen) {
-					substrlen = strlen;
-				}
-				String lnheader = ln.substring(0, substrlen);
-				
-				
-				VCFVariant var2 = new VCFVariant(lnheader, VCFVariant.PARSE.HEADER);
-				// return this.chr + "_" + this.pos + "_" + this.id;
-				VCFVariant var1 = null;
-				// try to find matching variant...
-				HashMap<Integer, ArrayList<VCFVariant>> positionMap = variantMap.get(var2.getChrObj());
-				ArrayList<VCFVariant> varMap = positionMap.get(var2.getPos());
-				
-				if (varMap != null) {
-					VCFVariant select = null;
-					int nrIdenticalAllelesSelect = 0;
-					boolean print = false;
-					if (varMap.size() > 1) {
-						System.out.println(varMap.size() + " candidates for " + var2.toString() + "\tAlleles:\t" + Strings.concat(var2.getAlleles(), Strings.comma));
-						print = true;
-					}
-					
-					for (VCFVariant candidate : varMap) {
-						// match variant...
-						String[] refAlleles = candidate.getAlleles();
-						String[] testVariantAlleles = var2.getAlleles();
-						
-						int nridenticalalleles = merger.countIdenticalAlleles(refAlleles, testVariantAlleles);
-						
-						boolean complement = false;
-						if (nridenticalalleles == 0) {
-							// try complement
-							complement = true;
-							String[] complementAlleles2 = gtools.convertToComplement(testVariantAlleles);
-							nridenticalalleles = merger.countIdenticalAlleles(refAlleles, complementAlleles2);
-							
-						}
-						
-						if (nridenticalalleles > nrIdenticalAllelesSelect) {
-							nrIdenticalAllelesSelect = nridenticalalleles;
-							select = candidate;
-						}
-						
-						if (print) {
-							System.out.println(candidate.toString() + "\tAlleles:\t" + Strings.concat(candidate.getAlleles(), Strings.comma) + "\tNrEqual:\t" + nridenticalalleles + "\tComplement: " + complement);
-						}
-						
-					}
-					
-					if (select != null && var2.getNrAlleles() == select.getNrAlleles() && nrIdenticalAllelesSelect == var2.getNrAlleles()) {
-						var1 = select;
-					}
+		
+		for (VCFVariant var2 : variants2infile) {
+			VCFVariant var1 = null;
+			// try to find matching variant...
+			HashMap<Integer, ArrayList<VCFVariant>> positionMap = variantMap.get(var2.getChrObj());
+			ArrayList<VCFVariant> varMap = positionMap.get(var2.getPos());
+			
+			if (varMap != null) {
+				VCFVariant select = null;
+				int nrIdenticalAllelesSelect = 0;
+				boolean print = false;
+				if (varMap.size() > 1) {
+					System.out.println(varMap.size() + " candidates for " + var2.toString() + "\tAlleles:\t" + Strings.concat(var2.getAlleles(), Strings.comma));
+					print = true;
 				}
 				
-				if (var1 != null) {
-					if (calculateMAFOverAllSamples) {
-						var2 = new VCFVariant(ln, VCFVariant.PARSE.ALL);
-					} else {
-						var2 = new VCFVariant(ln, VCFVariant.PARSE.ALL, includeSamples2);
+				for (VCFVariant candidate : varMap) {
+					// match variant...
+					String[] refAlleles = candidate.getAlleles();
+					String[] testVariantAlleles = var2.getAlleles();
+					
+					int nridenticalalleles = merger.countIdenticalAlleles(refAlleles, testVariantAlleles);
+					
+					boolean complement = false;
+					if (nridenticalalleles == 0) {
+						// try complement
+						complement = true;
+						String[] complementAlleles2 = gtools.convertToComplement(testVariantAlleles);
+						nridenticalalleles = merger.countIdenticalAlleles(refAlleles, complementAlleles2);
 					}
+					
+					if (nridenticalalleles > nrIdenticalAllelesSelect) {
+						nrIdenticalAllelesSelect = nridenticalalleles;
+						select = candidate;
+					}
+					
+					if (print) {
+						System.out.println(candidate.toString() + "\tAlleles:\t" + Strings.concat(candidate.getAlleles(), Strings.comma) + "\tNrEqual:\t" + nridenticalalleles + "\tComplement: " + complement);
+					}
+					
+				}
+				
+				if (select != null && var2.getNrAlleles() == select.getNrAlleles() && nrIdenticalAllelesSelect == var2.getNrAlleles()) {
+					var1 = select;
+				}
+			}
+			
+			if (var1 != null) {
+//				if (calculateMAFOverAllSamples) {
+//					var2 = new VCFVariant(ln, VCFVariant.PARSE.ALL);
+//				} else {
+//					var2 = new VCFVariant(ln, VCFVariant.PARSE.ALL, includeSamples2);
+//				}
 //					if (var2.getTokens() != null) {
 //						var2.parseGenotypes(var2.getTokens(), VCFVariant.PARSE.ALL);
 //						var2.cleartokens();
 //					} else {
 //						System.out.println(var2.toString());
 //					}
+				
+				
+				fixImpQuals(var1);
+				fixImpQuals(var2);
+				
+				double[][] gprobs1 = var1.getDosage();
+				double[][] gprobs2 = var2.getDosage(); // format [samples][alleles]
+				
+				
+				// check if variants have the same number of alleles
+				if (gprobs1[0].length == gprobs2[0].length) {
 					
-					
-					fixImpQuals(var1);
-					fixImpQuals(var2);
-					
-					double[][] gprobs1 = var1.getDosage();
-					
-					
-					double[][] gprobs2 = var2.getDosage(); // format [samples][alleles]
-					
-					
-					// check if variants have the same number of alleles
-					if (gprobs1[0].length == gprobs2[0].length) {
-						
-						// recode: make sure sample ordering is identical
-						gprobs1 = reorder(gprobs1, samples1, sharedSamplesIndex, sharedSamples.size());
+					// recode: make sure sample ordering is identical
+					gprobs1 = reorder(gprobs1, samples1, sharedSamplesIndex, sharedSamples.size());
 //						System.out.println("x1:" + gprobs1.length + "x" + gprobs1[0].length);
-						
-						gprobs2 = reorder(gprobs2, samples2, sharedSamplesIndex, sharedSamples.size());
+					
+					gprobs2 = reorder(gprobs2, samples2, sharedSamplesIndex, sharedSamples.size());
 //						System.out.println("x2:" + gprobs2.length + "x" + gprobs2[0].length);
+					
+					// remove missing genotypes
+					Pair<double[][], double[][]> data = removeNulls(gprobs1, gprobs2);
+					
+					for (int a = 0; a < gprobs1[0].length; a++) {
+						// do some remapping here
+						double[] x = toArr(data.getLeft(), a);
+						double[] y = toArr(data.getRight(), a);
 						
-						// remove missing genotypes
-						Pair<double[][], double[][]> data = removeNulls(gprobs1, gprobs2);
+						if (x.length > 0 && y.length > 0) {
 						
-						for (int a = 0; a < gprobs1[0].length; a++) {
-							// do some remapping here
-							double[] x = toArr(data.getLeft(), a);
-							double[] y = toArr(data.getRight(), a);
+							double r = JSci.maths.ArrayMath.correlation(x, y);
 							
-							if (x.length > 0 && y.length > 0) {
-								double r = JSci.maths.ArrayMath.correlation(x, y);
-								
-								// calculateWithinDataset betas
-								
-								PearsonsCorrelation pc = new PearsonsCorrelation();
-								double pcc = pc.correlation(x, y);
-								double[] coeff = Regression.getLinearRegressionCoefficients(x, y);
-								double beta = coeff[0];
-								double se = coeff[2];
-								
-								var1.recalculateMAFAndCallRate();
-								var2.recalculateMAFAndCallRate();
-								
-								String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
-								String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
-								
-								if (Double.isNaN(r)) {
-									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore() + "\t" + pcc;
-									System.out.println("NaN correlation?");
-								} else {
-									double rsq = r * r;
-									ln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + beta + "\t" + se + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore() + "\t" + pcc;
-								}
-								tfot.writeln(ln);
-								writtenVariants.add(var1);
+							// calculateWithinDataset betas
+							
+							PearsonsCorrelation pc = new PearsonsCorrelation();
+							double pcc = pc.correlation(x, y);
+							double[] coeff = Regression.getLinearRegressionCoefficients(x, y);
+							double beta = coeff[0];
+							double se = coeff[2];
+							
+							var1.recalculateMAFAndCallRate();
+							var2.recalculateMAFAndCallRate();
+							
+							String var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
+							String var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
+							String outln = "";
+							if (Double.isNaN(pcc)) {
+								outln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore() + "\t" + pcc;
+								System.out.println("NaN correlation?");
 							} else {
-								System.out.println("length == 0: i1:" + x.length + ", i2: " + y.length);
+								double rsq = pcc * pcc;
+								outln = var1.toString() + "\t" + var1Str + "\t" + var2Str + "\t" + (a + 1) + "\t" + data.getLeft().length + "\t" + r + "\t" + rsq + "\t" + beta + "\t" + se + "\t" + var1.getImputationQualityScore() + "\t" + var2.getImputationQualityScore() + "\t" + pcc;
 							}
-							
+							tfot.writeln(outln);
+							writtenVariants.add(var1);
+						} else {
+							System.out.println("length == 0: i1:" + x.length + ", i2: " + y.length);
 						}
-					} else {
-						// ?
-						System.out.println("Unequal lengths? " + gprobs1[0].length + "\t" + gprobs2[0].length);
+						
 					}
 				} else {
-					
-					if (varsToTest != null && varsToTest.contains(var2.toString())) {
-						var2 = new VCFVariant(ln);
-						HashMap<Integer, ArrayList<VCFVariant>> positionMap2 = variantMap2.get(var2.getChrObj());
-						ArrayList<VCFVariant> variants2 = positionMap2.get(var2.getPos());
-						if (variants2 == null) {
-							variants2 = new ArrayList<>();
-						}
-						
-						variants2.add(var2);
-						positionMap2.put(var2.getPos(), variants2);
-						variantMap2.put(var2.getChrObj(), positionMap2);
-						
-					}
+					// ?
+					System.out.println("Unequal lengths? " + gprobs1[0].length + "\t" + gprobs2[0].length);
 				}
-				ctr2++;
-				if (ctr2 % 1000 == 0) {
-					System.out.print(ctr2 + " variants parsed from vcf2\r");
+			} else {
+				
+				if (varsToTest != null && varsToTest.contains(var2.toString())) {
+					
+					HashMap<Integer, ArrayList<VCFVariant>> positionMap2 = variantMap2.get(var2.getChrObj());
+					ArrayList<VCFVariant> variants2 = positionMap2.get(var2.getPos());
+					if (variants2 == null) {
+						variants2 = new ArrayList<>();
+					}
+					
+					variants2.add(var2);
+					positionMap2.put(var2.getPos(), variants2);
+					variantMap2.put(var2.getChrObj(), positionMap2);
+					
 				}
 			}
-			ln = tfVCF2.readLine();
 		}
-		tfVCF2.close();
+
+//		while (ln != null) {
+//			if (!ln.startsWith("#")) {
+//
+//				int strlen = ln.length();
+//				int substrlen = 500;
+//				if (strlen < substrlen) {
+//					substrlen = strlen;
+//				}
+//
+//				VCFVariant var2 = new VCFVariant(ln, VCFVariant.PARSE.HEADER);
+//				if (regions == null || var2.asFeature().overlaps(regions)) {
+//					// return this.chr + "_" + this.pos + "_" + this.id;
+//
+//				}
+//
+//				ctr2++;
+//				if (ctr2 % 1000 == 0) {
+//					System.out.print(ctr2 + " variants parsed from vcf2\r");
+//				}
+//			}
+//			ln = tfVCF2.readLine();
+//		}
+//		tfVCF2.close();
 		System.out.println();
 		
 		// write variants that are not in variantlist
@@ -519,7 +539,7 @@ public class VCFCorrelator {
 							var1Str = null + "\t" + null + "\t" + 0;
 							var2Str = var2.getMinorAllele() + "\t" + Strings.concat(var2.getAlleles(), Strings.comma) + "\t" + var2.getMAF() + "\t" + var2.getCallrate();
 						}
-						ln = varstr + "\t" + var1Str + "\t" + var2Str + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + infoStr1 + "\t" + infoStr2;
+						String ln = varstr + "\t" + var1Str + "\t" + var2Str + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + infoStr1 + "\t" + infoStr2;
 						tfot.writeln(ln);
 					}
 				}
@@ -539,7 +559,7 @@ public class VCFCorrelator {
 					var1Str = var1.getMinorAllele() + "\t" + Strings.concat(var1.getAlleles(), Strings.comma) + "\t" + var1.getMAF() + "\t" + var1.getCallrate();
 					var2Str = null + "\t" + null + "\t" + 0;
 					
-					ln = varstr + "\t" + var1Str + "\t" + var2Str + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + infoStr1 + "\t" + infoStr2;
+					String ln = varstr + "\t" + var1Str + "\t" + var2Str + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + infoStr1 + "\t" + infoStr2;
 					tfot.writeln(ln);
 				}
 			}

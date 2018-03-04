@@ -23,7 +23,6 @@
     <modules>
         <module>Utilities</module>
         <module>RNAAccess</module>
-        <module>VisualizationTool</module>
         <module>PolyPeak</module>
         <module>MiscScripts</module>
         <module>NGS</module>
@@ -33,13 +32,11 @@
         <module>Pipeliner</module>
         <module>LiftOverTools</module>
         <module>FinemappingPaper</module>
-        <module>BroRunner</module>
         <module>TXTr</module>
         <module>chromhmmsplitter</module>
         <module>Coverage</module>
         <module>FinemappingTools</module>
         <module>ProxyFinder</module>
-        <module>IBSScan</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

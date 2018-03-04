@@ -142,8 +142,14 @@ public class R1Q4OVerlap {
 //				"D:\\Data\\ENCODE\\GTRD_overlap.txt"
 		};
 		
+		maps = new String[]{
+				"d:\\Data\\CD4TimelinePilot\\listwindows.txt"
+		};
+		outs = new String[]{
+				"d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\enhanceroverlap\\atac.txt"
+		};
 		
-		String variants = "C:\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\tables\\listofsnpswithposterior0.2.txt";
+		String variants = "d:\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\tables\\listofsnpswithposterior0.2.txt";
 		
 		for (int m = 0; m < maps.length; m++) {
 			try {
@@ -199,6 +205,7 @@ public class R1Q4OVerlap {
 		}
 		t1.close();
 		
+		System.out.println(annotations.size() + "  annotations.");
 		TextFile t2 = new TextFile(variantfile, TextFile.R);
 		String ln = t2.readLine();
 		while (ln != null) {
@@ -211,7 +218,7 @@ public class R1Q4OVerlap {
 		t2.close();
 		
 		Collections.sort(snps, new FeatureComparator(true));
-		
+		System.out.println(snps.size() + " snps");
 		
 		boolean[][] overlap = new boolean[annotations.size()][snps.size()];
 		boolean[] overlapsAny = new boolean[snps.size()];

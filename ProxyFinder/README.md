@@ -82,8 +82,8 @@ Sadly, this mode is not multi-threaded, yet.
 #### Input file format
 As input, you can use either the three column format specified above (note, not the GoShifter format), and ProxyFinder will make all possible combinations (fun!). Or, you can specify the pairs you want to calculate, using a six column input:
 <pre>
-chr5	1279790	rs10069690	rs10941679	chr5	44706498
-chr2	202149589	rs1045485	rs16857609	chr2	218296508
+chr5	1279790	rs10069690	chr5	44706498 rs10941679
+chr2	202149589	rs1045485	chr2	218296508 rs16857609
 </pre>
 
 # LocusLD mode

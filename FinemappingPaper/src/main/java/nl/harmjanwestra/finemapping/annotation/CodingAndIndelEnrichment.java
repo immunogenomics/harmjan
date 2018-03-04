@@ -93,7 +93,7 @@ public class CodingAndIndelEnrichment {
 		double maxPosteriorCredibleSet = 0.9;
 		int maxNrVariantsInCredibleSet = 10;
 		System.out.println("Reading: " + assocFile);
-		ArrayList<AssociationResult> allData = f.read(assocFile, regions);
+		ArrayList<AssociationResult> allData = f.readRegions(assocFile, regions);
 		System.out.println(allData.size() + " associations loaded.");
 		for (int d = 0; d < regions.size(); d++) {
 			boolean hasSet = false;

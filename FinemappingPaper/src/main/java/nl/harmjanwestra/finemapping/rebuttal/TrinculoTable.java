@@ -6,6 +6,7 @@ import nl.harmjanwestra.utilities.association.AssociationResultPValuePair;
 import nl.harmjanwestra.utilities.association.approximatebayesposterior.ApproximateBayesPosterior;
 import nl.harmjanwestra.utilities.bedfile.BedFileReader;
 import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureComparator;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
@@ -14,21 +15,39 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class TrinculoTable {
 	
 	public static void main(String[] args) {
 		TrinculoTable t = new TrinculoTable();
-		String prefix = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\input\\META-COSMO-0.3-chr";
-		String regionfile = "c:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
-		String origassocfile = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
+		String disk = "d:";
+		String prefix = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\input\\META-COSMO-0.3-chr";
+		String prefixfreq = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\inputFrequentist\\META-COSMO-0.3-chr";
+		String regionfile = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		
-		String pcafile = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\METAPCA-assoc0.3-COSMO-merged.txt.gz";
+		regionfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\signifciantT1DOnly.txt";
+		
+		String origassocfile = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\META-assoc0.3-COSMO-merged-posterior.txt.gz";
+		
+		String pcafile = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\multinomial\\METAPCA-assoc0.3-COSMO-merged.txt.gz";
 		try {
-			String output = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\table-multinomcomp.txt";
-			t.compareToMultiNom(prefix, regionfile, origassocfile, output);
-			output = "C:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\table-pcacomp.txt";
-			t.compareToPCA(regionfile, origassocfile, pcafile, output);
+			regionfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\sigBoth.txt";
+			String output = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\table-multinomcomp-signshared.txt";
+			t.compareToMultiNom(prefix, prefixfreq, regionfile, origassocfile, output);
+			
+			regionfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\sigRAOnly.txt";
+			output = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\table-multinomcomp-signra.txt";
+			t.compareToMultiNom(prefix, prefixfreq, regionfile, origassocfile, output);
+			
+			regionfile = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\sigT1DOnly.txt";
+			output = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\table-multinomcomp-signt1d.txt";
+			t.compareToMultiNom(prefix, prefixfreq, regionfile, origassocfile, output);
+			
+			
+			
+			output = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\trinculo\\output\\table-pcacomp.txt";
+//			t.compareToPCA(regionfile, origassocfile, pcafile, output);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -37,8 +56,21 @@ public class TrinculoTable {
 	public void compareToPCA(String regionfile, String origassocfile, String pcaassocfile, String output) throws IOException {
 		BedFileReader b = new BedFileReader();
 		ArrayList<Feature> regions = b.readAsList(regionfile);
-		ArrayList<TrinculoAssoc> allassocs = new ArrayList<>();
 		
+		Collections.sort(regions, new FeatureComparator(false));
+		ArrayList<Feature> set = new ArrayList<>();
+		HashSet<String> strings = new HashSet<>();
+		for (Feature f : regions) {
+			String s = f.toString();
+			if (!strings.contains(s)) {
+				set.add(f);
+				strings.add(s);
+			}
+		}
+		
+		regions = set;
+		System.out.println(regions.size() + " regions after sort");
+		ArrayList<TrinculoAssoc> allassocs = new ArrayList<>();
 		AssociationFile f = new AssociationFile();
 		ArrayList<AssociationResult> origAssocs = f.read(origassocfile);
 		
@@ -64,6 +96,8 @@ public class TrinculoTable {
 				"TopPCAVariantSignificant";
 		out.writeln(header);
 		
+		int written = 0;
+		System.out.println(regions.size() + "  regions");
 		for (Feature region : regions) {
 			// META-COSMO-0.3-chr1-region-Chr1_113863087-114527968.out.assoc.finemap.gz
 			ArrayList<AssociationResult> regionassoc = t.getRegionAssocs(pcaAssocs, region);
@@ -157,17 +191,29 @@ public class TrinculoTable {
 			
 			
 			out.writeln(ln);
-			
+			written++;
 		}
 		out.close();
-		
+		System.out.println(written + "  written? " + out.getFileName());
 		
 	}
 	
-	public void compareToMultiNom(String prefix, String regionfile, String origassocfile, String output) throws IOException {
+	public void compareToMultiNom(String prefix, String prefixFreq, String regionfile, String origassocfile, String output) throws IOException {
 		
 		BedFileReader b = new BedFileReader();
 		ArrayList<Feature> regions = b.readAsList(regionfile);
+		Collections.sort(regions, new FeatureComparator(false));
+		ArrayList<Feature> set = new ArrayList<>();
+		HashSet<String> strings = new HashSet<>();
+		for (Feature f : regions) {
+			String s = f.toString();
+			if (!strings.contains(s)) {
+				set.add(f);
+				strings.add(s);
+			}
+		}
+		
+		regions = set;
 		ArrayList<TrinculoAssoc> allassocs = new ArrayList<>();
 		
 		AssociationFile f = new AssociationFile();
@@ -178,6 +224,7 @@ public class TrinculoTable {
 		ApproximateBayesPosterior bp = new ApproximateBayesPosterior();
 		
 		String header = "Region\t" +
+				"#AssociationsBinomial\t" +
 				"#AssociationsTrinculo\t" +
 				"DiseaseORCorrelationPearson\t" +
 				"DiseaseORCorrelationSpearman\t" +
@@ -191,14 +238,16 @@ public class TrinculoTable {
 				"TopBinomialVariantSignificant\t" +
 				"TopMultinomialVariant\t" +
 				"TopMultinomialVariantBF\t" +
+				"TopMultinomialVariantP\t" +
 				"TopMultinomialVariantPosterior\t" +
 				"TopMultinomialVariantSignificant";
 		out.writeln(header);
 		
-		
+		System.out.println(regions.size() + "  regions loaded	");
 		for (Feature region : regions) {
 			// META-COSMO-0.3-chr1-region-Chr1_113863087-114527968.out.assoc.finemap.gz
-			ArrayList<TrinculoAssoc> regionassoc = parseAssoc(prefix + region.getChromosome().getNumber() + "-region-" + region.toString() + ".out.assoc.finemap.gz");
+			ArrayList<TrinculoAssoc> regionassoc = parseAssoc(prefix + region.getChromosome().getNumber() + "-region-" + region.toString() + ".out.assoc.finemap.gz", true);
+			ArrayList<TrinculoAssoc> regionassocFreq = parseAssoc(prefixFreq + region.getChromosome().getNumber() + "-region-" + region.toString() + ".out.assoc.multinom.gz", false);
 			Collections.sort(regionassoc);
 			
 			ArrayList<AssociationResult> origregionassoc = t.getRegionAssocs(origAssocs, region);
@@ -256,6 +305,14 @@ public class TrinculoTable {
 			}
 			
 			
+			// find the frequentist equivalent
+			TrinculoAssoc topassocfreq = null;
+			for (TrinculoAssoc a : regionassocFreq) {
+				if (a.rsid.equals(topassoc.rsid)) {
+					topassocfreq = a;
+				}
+			}
+			
 			SpearmansCorrelation corrs = new SpearmansCorrelation();
 			PearsonsCorrelation corrp = new PearsonsCorrelation();
 			double spearmanOR = corrs.correlation(xOR, yOR);
@@ -267,6 +324,7 @@ public class TrinculoTable {
 			double log10p = -Math.log10(7.5E-7);
 			
 			String ln = region.toString()
+					+ "\t" + origregionassoc.size()
 					+ "\t" + regionassoc.size()
 					+ "\t" + pearsonOR
 					+ "\t" + spearmanOR
@@ -280,8 +338,9 @@ public class TrinculoTable {
 					+ "\t" + (tophjwassoc.getLog10Pval() > log10p)
 					+ "\t" + topassoc.rsid
 					+ "\t" + topassoc.logbf
+					+ "\t" + -Math.log10(topassocfreq.logbf)
 					+ "\t" + topassoc.pcausal
-					+ "\t" + (topassoc.logbf > log10p);
+					+ "\t" + (-Math.log10(topassocfreq.logbf) > log10p);
 			
 			
 			out.writeln(ln);
@@ -293,7 +352,7 @@ public class TrinculoTable {
 		
 	}
 	
-	public ArrayList<TrinculoAssoc> parseAssoc(String assoc) throws IOException {
+	public ArrayList<TrinculoAssoc> parseAssoc(String assoc, boolean bayes) throws IOException {
 		System.out.println("Parsing " + assoc);
 		TextFile tf = new TextFile(assoc, TextFile.R);
 		
@@ -310,7 +369,10 @@ public class TrinculoTable {
 			a.lp0 = Double.parseDouble(elems[3]);
 			a.lp1 = Double.parseDouble(elems[4]);
 			a.logbf = Double.parseDouble(elems[5]);
-			a.pcausal = Double.parseDouble(elems[6]);
+			
+			if (bayes) {
+				a.pcausal = Double.parseDouble(elems[6]);
+			}
 			assocs.add(a);
 			elems = tf.readLineElems(TextFile.tab);
 		}

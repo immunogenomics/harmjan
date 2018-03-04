@@ -99,11 +99,16 @@ public class CompareLists {
 		int overlap2 = 0;
 		int overlap3 = 0;
 		for (String s : ra) {
+			boolean overlapb =false;
 			for (String s2 : t1d) {
 				if (s.equals(s2)) {
 					overlap++;
-					System.out.println(s);
+					overlapb=true;
+//					System.out.println(s);
 				}
+			}
+			if(!overlapb){
+				System.out.println("RA SPEC:\t"+s);
 			}
 			for (String s2 : comb) {
 				if (s.equals(s2)) {
@@ -116,6 +121,15 @@ public class CompareLists {
 				if (s.equals(s2)) {
 					overlap3++;
 				}
+			}
+			boolean overlapb=false;
+			for(String s2:ra){
+				if(s.equals(s2)){
+					overlapb=true;
+				}
+			}
+			if(!overlapb){
+				System.out.println("T1D SPEC:\t"+s);
 			}
 		}
 		System.out.println(overlap + "\t" + overlap2);
