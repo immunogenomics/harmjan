@@ -30,22 +30,27 @@ public class CodingAndIndelEnrichment {
 		CodingAndIndelEnrichment c = new CodingAndIndelEnrichment();
 
 		try {
+		
+//			String[] diseaseassoc = new String[]{
+//					disk +
+//					disk + "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz",
+//			};
 			String annot = "/Data/Ref/Ensembl/GrCH37-b86-Structures.txt.gz";
 
 			int nrCellTypesRequired = 0;
-			String exacAnnotation = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/exac/exac.vcf.gz";
+			String exacAnnotation = "d:/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/exac/exac.vcf.gz";
 			String annotationfiles = "/Data/Enhancers/Roadmap/dnase-groups.txt";
 //			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMPromotorsEnhancers-groups.txt";
-			annotationfiles = "/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
-			String bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-significantregions-75e7.bed";
-			String assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
+			annotationfiles = "d:/Data/Enhancers/ChromHMM/ChromHMMEnhancers-groups.txt";
+			String bedregions = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-significantregions-75e7.bed";
+			String assocfile = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
 //			c.compare(annot, bedregions, annotationfiles, assocfile, true);
 			c.run(annot, bedregions, annotationfiles, assocfile, exacAnnotation, nrCellTypesRequired, true);
 
 
 			System.out.println();
-			bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-significantregions-75e7.bed";
-			assocfile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/2017-03-25-SummaryStats/normal/RA-assoc0.3-COSMO-merged-posterior.txt.gz";
+			bedregions = "D:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-significantregions-75e7.bed";
+			assocfile = "d:\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz";
 //			c.compare(annot, bedregions, annotationfiles, assocfile, true);
 			c.run(annot, bedregions, annotationfiles, assocfile, exacAnnotation, nrCellTypesRequired, true);
 		} catch (IOException e) {

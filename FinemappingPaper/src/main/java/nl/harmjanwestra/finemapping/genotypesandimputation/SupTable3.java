@@ -13,9 +13,10 @@ public class SupTable3 {
 	
 	
 	public static void main(String[] args) {
-		String disk = "c:";
-		String in = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
-		String out = disk + "\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\StagingArea\\tables\\Supplementary Table 3 - SequencedVariants.txt";
+		String disk = "d:";
+//		String in = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+		String in = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\unifiedgenotyper-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
+		String out = disk + "\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\StagingArea\\tables\\Supplementary Table 3 - SequencedVariants-UG.txt";
 		String bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		
 		SupTable3 z = new SupTable3();
