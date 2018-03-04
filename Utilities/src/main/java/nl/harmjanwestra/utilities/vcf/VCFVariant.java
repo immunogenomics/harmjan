@@ -229,17 +229,17 @@ public class VCFVariant {
 		if (ln != null) {
 			
 			int strlen = 1000;
-			String lnheader = null;
-			if (strlen > ln.length()) {
-				strlen = ln.length();
-				lnheader = ln;
-			} else {
-				lnheader = ln.substring(0, strlen);
-			}
+//			String lnheader = null;
+//			if (strlen > ln.length()) {
+//				strlen = ln.length();
+//				lnheader = ln;
+//			} else {
+//				lnheader = ln.substring(0, strlen);
+//			}
 			
 			
-			String[] tokenArr = Strings.tab.split(lnheader);
-//			String[] tokenArr = Strings.subsplit(ln, Strings.tab, 0, 10);
+//			String[] tokenArr = Strings.tab.split(lnheader);
+			String[] tokenArr = Strings.subsplit(ln, Strings.tab, 0, 10);
 			
 			for (int t = 0; t < 9; t++) {
 				if (t < tokenArr.length) {
@@ -954,6 +954,7 @@ public class VCFVariant {
 		int nrCalled = 0;
 		int nrCalledCases = 0;
 		int nrCalledControls = 0;
+		
 		nrAllelesObserved = new int[alleles.length];
 		
 		if (sampleDiseaseStatus != null) {

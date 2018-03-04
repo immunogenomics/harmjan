@@ -807,7 +807,7 @@ public class PlayGround {
 				Feature chrfeat = new Feature();
 				chrfeat.setChromosome(chrin);
 				chrfeat.setStart(0);
-				chrfeat.setStop(chrin.getLength());
+				chrfeat.setStop(chrin.getLengthB37());
 				if (d == 0) {
 					String chrout = "/Data/Projects/2014-FR-Reseq/2015-finalRun/2015-06-22-Assoc/AssociationOutput/AssociationFiles/T1D/";
 					mergeAssociationResults(chrfeat, names, files, impquals, chrout);

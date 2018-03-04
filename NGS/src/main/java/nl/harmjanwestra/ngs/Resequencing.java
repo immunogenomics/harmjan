@@ -1240,7 +1240,7 @@ public class Resequencing {
 				c = Chromosome.parseChr("MT");
 			}
 			outfile.writeln(c.getName() +
-							"\t" + c.getLength() +
+							"\t" + c.getLengthB37() +
 							"\t" + nrReadsMappedPerChr[i] +
 							"\t" + nrMarkedDuplicatesPerChr[i] +
 							"\t" + nrUniqueReadsWMapQ30PerChr[i] +

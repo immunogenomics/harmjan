@@ -85,21 +85,6 @@ public class MissingVariantClustering {
 		try {
 //			c.countindels("C:\\Data\\tmp\\outputsamtools.vcf.gz", regions);
 //			System.exit(-1);
-<<<<<<< HEAD
-			c.determineIfMissingVariantsCluster(stat1kgfile,
-					imputedVCFs,
-					diseaseassoc,
-					diseaseout,
-					ldthreshold,
-					mafthresholdref,
-					mafthresholdds,
-					impqualthreshold,
-					nriter,
-					regions,
-					samplegenomewide,
-					considerImputedButNotTestedAsMissing);
-			System.exit(0);
-=======
 //			c.determineIfMissingVariantsCluster(stat1kgfile,
 //					imputedVCFs,
 //					diseaseassoc,
@@ -115,7 +100,6 @@ public class MissingVariantClustering {
 //					samplegenomewide,
 //					considerImputedButNotTestedAsMissing);
 //			System.exit(0);
->>>>>>> ab981443d4c47dd4749a44db02bc1ed11443ec43
 //
 			
 			imputedVCFs = new String[]{

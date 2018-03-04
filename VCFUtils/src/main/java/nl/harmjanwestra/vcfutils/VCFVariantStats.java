@@ -488,7 +488,7 @@ public class VCFVariantStats {
 					}
 					
 				} else {
-					overlappingSet = tree.getFeatureSet(f1.getChromosome(), 0, f1.getChromosome().getLength());
+					overlappingSet = tree.getFeatureSet(f1.getChromosome(), 0, f1.getChromosome().getLengthB37());
 					
 					for (Feature f : overlappingSet) {
 						if (f.overlaps(f1)) {

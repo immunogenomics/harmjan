@@ -90,7 +90,7 @@ public class CalculateLDVariantStats {
 			
 			Chromosome chr = Chromosome.parseChr("" + c);
 			
-			for (int rstart = 0; rstart < chr.getLength(); rstart += window) {
+			for (int rstart = 0; rstart < chr.getLengthB37(); rstart += window) {
 				totalr++;
 			}
 			
@@ -101,9 +101,9 @@ public class CalculateLDVariantStats {
 			String vcf = ref.replaceAll("CHR", "" + c);
 			
 			Chromosome chr = Chromosome.parseChr("" + c);
-			System.out.println((chr.getLength() / window) + " total windows ");
+			System.out.println((chr.getLengthB37() / window) + " total windows ");
 			
-			for (int rstart = 0; rstart < chr.getLength(); rstart += window) {
+			for (int rstart = 0; rstart < chr.getLengthB37(); rstart += window) {
 				int overlap = window / 10;
 				int rend = rstart + window;
 				int overlapStart = rstart - overlap;
@@ -112,15 +112,15 @@ public class CalculateLDVariantStats {
 				if (overlapStart < 0) {
 					rstart = 0;
 				}
-				if (overlapEnd > chr.getLength()) {
-					overlapEnd = chr.getLength();
+				if (overlapEnd > chr.getLengthB37()) {
+					overlapEnd = chr.getLengthB37();
 				}
 				
 				if (overlapStart < 0) {
 					overlapStart = 0;
 				}
-				if (overlapEnd > chr.getLength()) {
-					overlapEnd = chr.getLength();
+				if (overlapEnd > chr.getLengthB37()) {
+					overlapEnd = chr.getLengthB37();
 				}
 				
 				Feature testregion = new Feature(chr, rstart, rend);

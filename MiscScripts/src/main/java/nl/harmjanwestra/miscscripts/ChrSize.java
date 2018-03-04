@@ -20,7 +20,7 @@ public class ChrSize {
         // TODO code application logic here
         Chromosome[] values = Chromosome.values();
         for (Chromosome v : values) {
-            System.out.println(v.getName().toLowerCase() + "\t0\t" + v.getLength());
+            System.out.println(v.getName().toLowerCase() + "\t0\t" + v.getLengthB37());
 
         }
     }

@@ -206,8 +206,8 @@ public class BedOverlap {
 			if (regionstart < 0) {
 				regionstart = 1;
 			}
-			if (regionstop > variant.getChromosome().getLength()) {
-				regionstop = variant.getChromosome().getLength();
+			if (regionstop > variant.getChromosome().getLengthB37()) {
+				regionstop = variant.getChromosome().getLengthB37();
 			}
 
 			Feature region = new Feature(variant.getChromosome(), regionstart, regionstop);

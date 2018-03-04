@@ -31,7 +31,6 @@ import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -1608,8 +1607,8 @@ public class MergeCredibleSets {
 				eqtlregion.setStart(0);
 			}
 			eqtlregion.setStop(eqtlregion.getStop() + 1000000);
-			if (eqtlregion.getStop() > eqtlregion.getChromosome().getLength()) {
-				eqtlregion.setStop(eqtlregion.getChromosome().getLength());
+			if (eqtlregion.getStop() > eqtlregion.getChromosome().getLengthB37()) {
+				eqtlregion.setStop(eqtlregion.getChromosome().getLengthB37());
 			}
 			eqtlregions.add(eqtlregion);
 		}

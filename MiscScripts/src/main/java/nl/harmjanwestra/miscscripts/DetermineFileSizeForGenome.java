@@ -15,7 +15,7 @@ public class DetermineFileSizeForGenome {
 			int nr = chr.getNumber();
 
 			if (nr < 23) {
-				int len = chr.getLength();
+				int len = chr.getLengthB37();
 				sumOfBases += len;
 				System.out.println(chr.getName() + "\t" + nr + "\t" + len + "\t" + sumOfBases+"\t"+Gpio.humanizeFileSize(len*8)+"\t"+len/1000);
 			}

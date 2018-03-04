@@ -2,7 +2,6 @@ package nl.harmjanwestra.utilities.vcf;
 
 import htsjdk.tribble.readers.TabixReader;
 import nl.harmjanwestra.utilities.features.Feature;
-import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.legacy.genetica.io.Gpio;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
@@ -69,13 +68,11 @@ public class VCFTabix {
 	public TabixReader.Iterator query(Feature region) throws IOException {
 		int start = region.getStart() - 10;
 		if (start < 0) {
-			start = 1;
+			start = 0;
 		}
 		int stop = region.getStop() + 10;
-		if (stop > region.getChromosome().getLength()) {
-			stop = region.getChromosome().getLength();
-		}
 		
+		System.out.println("Query: " + region.getChromosome().getNumber() + ":" + start + "-" + stop + "\t" + treader.getSource());
 		TabixReader.Iterator window = treader.query(region.getChromosome().getNumber() + ":" + start + "-" + stop);
 		
 		return window;

@@ -404,6 +404,7 @@ public class ProxyFinder {
 		
 		TextFile out = new TextFile(options.output, TextFile.W);
 		out.writeln("ChromA\tPosA\tRsIdA\tChromB\tPosB\tRsIdB\tDistance\tRSquared\tDprime");
+		ProgressBar pb = new ProgressBar(pairs.size(), "Calculatinng LD...");
 		for (Pair<SNPFeature, SNPFeature> p : pairs) {
 			
 			SNPFeature snpfeature1 = p.getLeft();
@@ -440,6 +441,7 @@ public class ProxyFinder {
 					nr++;
 				}
 			} else {
+				System.out.println();
 				if (variant1 == null) {
 					System.out.println(snpfeature1.toString() + " not found in reference");
 				}
@@ -447,7 +449,9 @@ public class ProxyFinder {
 					System.out.println(snpfeature2.toString() + " not found in reference");
 				}
 			}
+			pb.iterate();
 		}
+		pb.close();
 		out.close();
 		
 		System.out.println(nr + " of " + pairs.size() + " have rsq>" + options.threshold);
@@ -497,19 +501,30 @@ public class ProxyFinder {
 		VCFTabix reader = new VCFTabix(tabixfile);
 		boolean[] snpSampleFilter = reader.getSampleFilter(options.samplefilter);
 		
+		System.out.println(tabixfile);
 		
 		Feature snpF = new Feature(snp);
 		snpF.setStart(snpF.getStart() - 1);
-		snpF.setStop(snpF.getStop() + 1);
+		snpF.setStop(snpF.getStart() + 1);
 		
 		TabixReader.Iterator inputSNPiter = reader.query(snpF);
 		String snpStr = inputSNPiter.next();
 		VCFVariant testSNPObj1 = null;
-		
+		System.out.println("Looking for: " + snp.toString());
 		while (snpStr != null) {
-			VCFVariant variant = new VCFVariant(snpStr, VCFVariant.PARSE.ALL, snpSampleFilter);
+			VCFVariant variant = null;
+			try {
+				variant = new VCFVariant(snpStr, VCFVariant.PARSE.ALL, snpSampleFilter);
+				System.out.println(variant.asFeature().toString());
+			} catch (NullPointerException e) {
+				String str = snpStr;
+				if (str.length() > 1000) {
+					str = str.substring(0, 1000);
+				}
+				System.out.println("Error parsing line: " + str);
+				System.exit(-1);
+			}
 			if (variant.asFeature().overlaps(snp) && variant.asFeature().getStart() == snp.getStart()) {
-				
 				if (!options.matchrsid) {
 					testSNPObj1 = variant;
 				} else if (variant.getId().equals(snp.getName())) {
@@ -586,9 +601,6 @@ public class ProxyFinder {
 		tf.close();
 		
 		// now load the hapmap
-
-		
-		
 		
 		
 	}

@@ -81,7 +81,7 @@ public class PolyPeakOld {
         int maxReadLen = 200;
         for (Chromosome chr : allChromosomes) {
             LOG.info("Processing: " + chr.toString());
-            int chromosomeLength = chr.getLength();
+            int chromosomeLength = chr.getLengthB37();
             int windowStart = 0;
             while (windowStart < chromosomeLength) {
                 // get all reads in window

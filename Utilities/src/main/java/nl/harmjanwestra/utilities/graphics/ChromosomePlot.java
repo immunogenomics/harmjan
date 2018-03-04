@@ -96,11 +96,11 @@ public class ChromosomePlot extends DefaultGraphics {
 		int fontsize = 15;
 
 		for (Chromosome chr : allChr) {
-			if (chr.getLength() > 1) {
+			if (chr.getLengthB37() > 1) {
 				nrChr++;
 			}
-			if (chr.getLength() > maxSize) {
-				maxSize = chr.getLength();
+			if (chr.getLengthB37() > maxSize) {
+				maxSize = chr.getLengthB37();
 
 			}
 		}
@@ -132,7 +132,7 @@ public class ChromosomePlot extends DefaultGraphics {
 			// get cytobands
 
 
-			if (chr.getLength() > 1) {
+			if (chr.getLengthB37() > 1) {
 
 
 				int row = (int) Math.floor(ctr / nrPerRow);
@@ -143,7 +143,7 @@ public class ChromosomePlot extends DefaultGraphics {
 				// draw a circle
 				int starty = margin + (maxChrHeight * row) + (betweenChrMarginY * row);
 				int startx = margin + (betweenChrMarginX * colNr) + (chrWidth * colNr);
-				int chrHeight = (int) Math.ceil(pixelsPerBp * chr.getLength());
+				int chrHeight = (int) Math.ceil(pixelsPerBp * chr.getLengthB37());
 				System.out.println(chr.getName() + "\t" + row + "\t" + colNr + "\t" + startx + "\t" + starty + "\t" + chrHeight);
 
 				boolean centromereseen = false;
@@ -468,11 +468,11 @@ public class ChromosomePlot extends DefaultGraphics {
 		int fontsize = 15;
 
 		for (Chromosome chr : allChr) {
-			if (chr.getLength() > 1) {
+			if (chr.getLengthB37() > 1) {
 				nrChr++;
 			}
-			if (chr.getLength() > maxSize) {
-				maxSize = chr.getLength();
+			if (chr.getLengthB37() > maxSize) {
+				maxSize = chr.getLengthB37();
 
 			}
 		}
@@ -558,7 +558,7 @@ public class ChromosomePlot extends DefaultGraphics {
 
 		for (Chromosome chr : allChr) {
 			// get cytobands
-			if (chr.getLength() > 1) {
+			if (chr.getLengthB37() > 1) {
 				ArrayList<Feature> lociOnChr = new ArrayList<Feature>();
 				for (int loc = 0; loc < allLoci.size(); loc++) {
 					Feature f = allLoci.get(loc);

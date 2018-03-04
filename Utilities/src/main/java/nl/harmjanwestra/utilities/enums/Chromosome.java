@@ -12,41 +12,43 @@ import nl.harmjanwestra.utilities.features.Feature;
  */
 public enum Chromosome {
 	
-	ONE(1, "Chr1", 248956422),
-	TWO(2, "Chr2", 242193529),
-	THREE(3, "Chr3", 198295559),
-	FOUR(4, "Chr4", 190214555),
-	FIVE(5, "Chr5", 181538259),
-	SIX(6, "Chr6", 170805979),
-	SEVEN(7, "Chr7", 159345973),
-	EIGHT(8, "Chr8", 145138636),
-	NINE(9, "Chr9", 138394717),
-	TEN(10, "Chr10", 133797422),
-	ELEVEN(11, "Chr11", 135086622),
-	TWELVE(12, "Chr12", 133275309),
-	THIRTEEN(13, "Chr13", 114364328),
-	FOURTEEN(14, "Chr14", 107043718),
-	FIFTEEN(15, "Chr15", 101991189),
-	SIXTEEN(16, "Chr16", 90338345),
-	SEVENTEEN(17, "Chr17", 83257441),
-	EIGHTEEN(18, "Chr18", 80373285),
-	NINETEEN(19, "Chr19", 58617616),
-	TWENTY(20, "Chr20", 64444167),
-	TWENTYONE(21, "Chr21", 46709983),
-	TWENTYTWO(22, "Chr22", 50818468),
-	X(23, "ChrX", 156040895),
-	Y(24, "ChrY", 57227415),
-	MT(25, "ChrMT", 1),
-	NA(26, "N/A", 1);
+	ONE(1, "Chr1", 249250621, 248956422),
+	TWO(2, "Chr2", 243199373, 242193529),
+	THREE(3, "Chr3", 198022430, 198295559),
+	FOUR(4, "Chr4", 191154276, 190214555),
+	FIVE(5, "Chr5", 180915260, 181538259),
+	SIX(6, "Chr6", 171115067, 170805979),
+	SEVEN(7, "Chr7", 159138663, 159345973),
+	EIGHT(8, "Chr8", 146364022, 145138636),
+	NINE(9, "Chr9", 141213431, 138394717),
+	TEN(10, "Chr10", 135534747, 133797422),
+	ELEVEN(11, "Chr11", 135006516, 135086622),
+	TWELVE(12, "Chr12", 133851895, 133275309),
+	THIRTEEN(13, "Chr13", 115169878, 114364328),
+	FOURTEEN(14, "Chr14", 107349540, 107043718),
+	FIFTEEN(15, "Chr15", 102531392, 101991189),
+	SIXTEEN(16, "Chr16", 90354753, 90338345),
+	SEVENTEEN(17, "Chr17", 81195210, 83257441),
+	EIGHTEEN(18, "Chr18", 78077248, 80373285),
+	NINETEEN(19, "Chr19", 59128983, 58617616),
+	TWENTY(20, "Chr20", 63025520, 64444167),
+	TWENTYONE(21, "Chr21", 48129895, 46709983),
+	TWENTYTWO(22, "Chr22", 51304566, 50818468),
+	X(23, "ChrX", 155270560, 156040895),
+	Y(24, "ChrY", 59373566, 57227415),
+	MT(25, "ChrMT", 0, 1),
+	NA(26, "N/A", 0, 1);
 	
 	private final int number;
 	private final String name;
-	private final int length;
+	private final int lengthb38;
+	private final int lengthb37;
 	
-	private Chromosome(int num, String name, int length) {
+	private Chromosome(int num, String name, int lengthb37, int lengthb38) {
 		this.number = num;
 		this.name = name;
-		this.length = length;
+		this.lengthb38 = lengthb38;
+		this.lengthb37 = lengthb37;
 	}
 	
 	public static Chromosome parseChr(String chrStr) {
@@ -137,8 +139,12 @@ public enum Chromosome {
 		return name;
 	}
 	
-	public int getLength() {
-		return length;
+	public int getLengthB37() {
+		return lengthb37;
+	}
+	
+	public int getLengthB38() {
+		return lengthb38;
 	}
 	
 	public int getNumber() {
@@ -173,11 +179,19 @@ public enum Chromosome {
 		}
 	}
 	
-	public Feature asFeature() {
+	public Feature asFeatureB37() {
 		Feature f = new Feature();
 		f.setChromosome(this);
 		f.setStart(0);
-		f.setStop(this.length);
+		f.setStop(this.lengthb37);
+		return f;
+	}
+	
+	public Feature asFeatureB38() {
+		Feature f = new Feature();
+		f.setChromosome(this);
+		f.setStart(0);
+		f.setStop(this.lengthb38);
 		return f;
 	}
 }
