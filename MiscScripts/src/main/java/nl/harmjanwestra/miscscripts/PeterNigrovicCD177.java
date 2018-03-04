@@ -69,7 +69,7 @@ public class PeterNigrovicCD177 {
 		GTFAnnotation annotation = new GTFAnnotation(annotationfile);
 		for (Feature f : regions) {
 			AssociationFile associationFile = new AssociationFile();
-			ArrayList<AssociationResult> associationresults = associationFile.read(ib, f);
+			ArrayList<AssociationResult> associationresults = associationFile.readRegion(ib, f);
 
 			ArrayList<Pair<Integer, Double>> allPvalue = new ArrayList<Pair<Integer, Double>>();
 			TextFile outtf = new TextFile(out + f.toString() + "-assoc.txt", TextFile.W);
