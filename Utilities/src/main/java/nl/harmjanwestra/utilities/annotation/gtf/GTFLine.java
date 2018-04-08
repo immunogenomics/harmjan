@@ -40,6 +40,7 @@ public class GTFLine {
 	private String tssId;
 	private String typeStr;
 	
+	
 	public GTFLine(String ln) {
 		try {
 			String[] elems = Strings.tab.split(ln);

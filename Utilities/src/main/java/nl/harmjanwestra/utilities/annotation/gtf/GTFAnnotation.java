@@ -76,6 +76,9 @@ public class GTFAnnotation extends Annotation {
 						strToGene.put(tmpGene.getName(), currentGene);
 					}
 					
+					
+					
+					
 					Exon e = new Exon(lineObj.getType(), lineObj.getChr(), lineObj.getStr(), currentGene, lineObj.getStart(), lineObj.getStop());
 					e.setName(lineObj.getExonId());
 					
