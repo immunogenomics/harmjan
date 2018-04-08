@@ -41,8 +41,8 @@ public class VariantCounter {
 	public static void main(String[] args) {
 		try {
 			VariantCounter c = new VariantCounter();
-			c.countAccuracy();
-//			c.countINFO();
+//			c.countAccuracy();
+			c.countINFO();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
