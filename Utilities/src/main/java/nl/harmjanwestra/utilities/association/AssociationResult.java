@@ -134,18 +134,34 @@ public class AssociationResult {
 		String str = snp.getChromosome().toString()
 				+ "\t" + snp.getStart()
 				+ "\t" + snp.getName()
-				+ "\t" + snp.toString()
-				+ "\t" + Strings.concat(snp.getAlleles(), Strings.comma)
-				+ "\t" + snp.getMinorAllele()
+				+ "\t" + snp.toString();
+		if (snp.getAlleles() != null) {
+			str += "\t" + Strings.concat(snp.getAlleles(), Strings.comma);
+		} else {
+			str += "?/?";
+		}
+		
+		
+		str += "\t" + snp.getMinorAllele()
 				+ "\t" + snp.getImputationQualityScore()
 				+ "\t" + n
 				+ "\t" + snp.getCrCases()
 				+ "\t" + snp.getCrControls()
 				+ "\t" + snp.getMissingnessP()
-				+ "\t" + snp.getMaf()
-				+ "\t" + Strings.concat(snp.getAFCasesArray(), Strings.comma)
-				+ "\t" + Strings.concat(snp.getAFControlsArray(), Strings.comma)
-				+ "\t" + snp.getHwep();
+				+ "\t" + snp.getMaf();
+		if (snp.getAFCasesArray() != null) {
+			str += "\t" + Strings.concat(snp.getAFCasesArray(), Strings.comma);
+		} else {
+			str += "\t-";
+		}
+		if (snp.getAFControlsArray() != null) {
+			str += "\t" + Strings.concat(snp.getAFControlsArray(), Strings.comma);
+		} else {
+			str += "\t-";
+		}
+		
+		
+		str += "\t" + snp.getHwep();
 		
 		
 		// Chr     Pos     Id      CombinedId      N       MAF     DevianceNull    DevianceGeno    Df      Beta(Genotype)  SE(Genotype)    OR      OR-Hi   OR-Lo   Pval    -Log10(pval)

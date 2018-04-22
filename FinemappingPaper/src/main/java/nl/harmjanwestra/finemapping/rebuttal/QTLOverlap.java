@@ -3,7 +3,10 @@ package nl.harmjanwestra.finemapping.rebuttal;
 import nl.harmjanwestra.finemapping.annotation.EQTL;
 import nl.harmjanwestra.utilities.annotation.ensembl.EnsemblStructures;
 import nl.harmjanwestra.utilities.enums.Chromosome;
-import nl.harmjanwestra.utilities.features.*;
+import nl.harmjanwestra.utilities.features.Feature;
+import nl.harmjanwestra.utilities.features.FeatureComparator;
+import nl.harmjanwestra.utilities.features.Gene;
+import nl.harmjanwestra.utilities.features.SNPFeature;
 import nl.harmjanwestra.utilities.legacy.genetica.containers.Pair;
 import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
@@ -16,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,70 +29,70 @@ public class QTLOverlap {
 		String disk = "d:";
 		
 		String[] eqtlfiles = new String[]{
-				disk + "\\Data\\eQTLs\\ImmVar\\Raj\\tableS12_meta_cd4T_cis_fdr05-upd.tab",
-				disk + "\\Data\\eQTLs\\Milani\\CD4-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
-				disk + "\\Data\\eQTLs\\Milani\\CD8-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
-				disk + "\\Data\\eQTLs\\BiosEQTLs\\eQTLsFDR0.05-ProbeLevel.txt.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\mono_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\mono_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\mono_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\mono_meth_M_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\mono_psi_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\neut_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\neut_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\neut_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\neut_meth_M_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\neut_psi_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\tcel_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\tcel_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\tcel_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\tcel_meth_M_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\BluePrint\\tcel_psi_peer_10_all_summary-fdr005.tab.gz",
-				disk + "\\Data\\eQTLs\\Sun-pQTL\\table1.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Adipose_Subcutaneous_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Adipose_Visceral_Omentum_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Adrenal_Gland_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Artery_Aorta_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Artery_Coronary_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Artery_Tibial_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Anterior_cingulate_cortex_BA24_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Caudate_basal_ganglia_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Cerebellar_Hemisphere_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Cerebellum_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Cortex_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Frontal_Cortex_BA9_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Hippocampus_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Hypothalamus_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Nucleus_accumbens_basal_ganglia_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Putamen_basal_ganglia_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Breast_Mammary_Tissue_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Cells_EBV-transformed_lymphocytes_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Cells_Transformed_fibroblasts_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Colon_Sigmoid_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Colon_Transverse_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Esophagus_Gastroesophageal_Junction_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Esophagus_Mucosa_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Esophagus_Muscularis_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Heart_Atrial_Appendage_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Heart_Left_Ventricle_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Liver_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Lung_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Muscle_Skeletal_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Nerve_Tibial_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Ovary_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Pancreas_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Pituitary_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Prostate_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Skin_Not_Sun_Exposed_Suprapubic_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Skin_Sun_Exposed_Lower_leg_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Small_Intestine_Terminal_Ileum_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Spleen_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Stomach_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Testis_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Thyroid_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Uterus_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Vagina_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
-				disk + "\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Whole_Blood_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz"
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\ImmVar\\Raj\\tableS12_meta_cd4T_cis_fdr05-upd.tab",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\Milani\\CD4-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\Milani\\CD8-cis-eQTLs-ProbeLevelFDR0.5.txt.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BiosEQTLs\\eQTLsFDR0.05-ProbeLevel.txt.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\mono_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\mono_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\mono_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\mono_meth_M_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\mono_psi_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\neut_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\neut_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\neut_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\neut_meth_M_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\neut_psi_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\tcel_gene_nor_combat_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\tcel_K27AC_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\tcel_K4ME1_log2rpm_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\tcel_meth_M_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\BluePrint\\tcel_psi_peer_10_all_summary-fdr005.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\Sun-pQTL\\table1.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Adipose_Subcutaneous_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Adipose_Visceral_Omentum_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Adrenal_Gland_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Artery_Aorta_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Artery_Coronary_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Artery_Tibial_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Anterior_cingulate_cortex_BA24_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Caudate_basal_ganglia_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Cerebellar_Hemisphere_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Cerebellum_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Cortex_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Frontal_Cortex_BA9_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Hippocampus_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Hypothalamus_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Nucleus_accumbens_basal_ganglia_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Brain_Putamen_basal_ganglia_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Breast_Mammary_Tissue_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Cells_EBV-transformed_lymphocytes_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Cells_Transformed_fibroblasts_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Colon_Sigmoid_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Colon_Transverse_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Esophagus_Gastroesophageal_Junction_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Esophagus_Mucosa_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Esophagus_Muscularis_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Heart_Atrial_Appendage_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Heart_Left_Ventricle_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Liver_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Lung_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Muscle_Skeletal_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Nerve_Tibial_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Ovary_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Pancreas_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Pituitary_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Prostate_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Skin_Not_Sun_Exposed_Suprapubic_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Skin_Sun_Exposed_Lower_leg_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Small_Intestine_Terminal_Ileum_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Spleen_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Stomach_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Testis_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Thyroid_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Uterus_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Vagina_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz",
+				disk + "\\Sync\\SyncThing\\Data\\eQTLs\\GTEx\\GTEx_Analysis_v6p_eQTL/Whole_Blood_Analysis.v6p.signif_snpgene_pairs.txt.gz.tab.gz"
 		};
 		
 		String[] eqtlfilenames = new String[]{
@@ -162,6 +164,21 @@ public class QTLOverlap {
 		
 		
 		QTLOverlap o = new QTLOverlap();
+		String gene = "ENSG00000084093";
+		int[] snppos = new int[]{57764324,
+				57823476
+		};
+		String[] snpname = new String[]{
+				"rs13353552",
+				"rs17081935"
+		};
+		Feature region = new Feature(Chromosome.FOUR, 0, Integer.MAX_VALUE);
+		try {
+			o.findGene(region, eqtlfiles, eqtlfilenames, gene, snppos, snpname);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.exit(-1);
 		String ensembl = "D:\\Data\\Ref\\Ensembl\\GrCH37-b86-Structures.txt.gz";
 		double ldthresh = 0.8;
 		int ciswindow = 1000000;
@@ -174,6 +191,56 @@ public class QTLOverlap {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+	}
+	
+	private void findGene(Feature region, String[] qfiles, String[] eqtlfilenames, String gene, int[] snppos, String[] snpname) throws IOException {
+		ArrayList<Feature> regions = new ArrayList<>();
+		regions.add(region);
+		EQTL[][][] eqtls = loadEQTLs(qfiles, regions); // [filenames][regions][eqtls]
+		
+		System.out.println("Tissue\ttopeQTLSNP\ttopeQTLSNPP\tQuerySNPs");
+		for (int f = 0; f < eqtlfilenames.length; f++) {
+
+//			String[] qfile = new String[]{qfiles[f]};
+			
+			EQTL[] matches = new EQTL[snppos.length];
+			EQTL[] es = eqtls[f][0];
+			double maxp = 1;
+			EQTL maxe = null;
+			for (EQTL e : es) {
+				if (e.getGenename().contains(gene)) {
+					if (e.getPval() < maxp) {
+						maxp = e.getPval();
+						maxe = e;
+					}
+					for (int s = 0; s < snppos.length; s++) {
+						if (e.getSnp().getStart() == snppos[s]) {
+							matches[s] = e;
+						}
+					}
+				}
+			}
+			
+			if (maxe == null) {
+				System.out.println(eqtlfilenames[f] + "\tNotSignificant");
+			} else {
+				
+				String ln = eqtlfilenames[f] + "\t" + maxe.getSnp() + "\t" + maxe.getPval();
+				for (int m = 0; m < matches.length; m++) {
+					if (matches[m] == null) {
+						ln += "\t" + snpname[m] + " not found";
+					} else {
+						ln += "\t" + snpname[m] + ": " + matches[m].getPval();
+					}
+				}
+				
+				System.out.println(ln);
+				
+			}
+			
+		}
+		
 		
 	}
 	
@@ -448,6 +515,7 @@ public class QTLOverlap {
 		}
 		
 	}
+	
 	
 	public VCFVariant getVariant(Feature snpFeature, ArrayList<VCFVariant> allvariants) {
 		for (VCFVariant v : allvariants) {

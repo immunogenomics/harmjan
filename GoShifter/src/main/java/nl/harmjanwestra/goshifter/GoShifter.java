@@ -60,6 +60,7 @@ public class GoShifter {
 			} else {
 				String f = elems[0];
 				annotationFiles.add(f);
+				annotationFileNames.add(f);
 			}
 
 			elems = tf.readLineElems(TextFile.tab);
