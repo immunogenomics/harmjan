@@ -32,24 +32,24 @@ public class CompareImmunoChipWithFinemapResults {
 			String tabixprefix = disk + "\\Data\\Ref\\1kg\\ALL.chrCHR.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz";
 			String samplefilter = disk + "\\Data\\Ref\\1kg-europeanpopulations.txt.gz";
 			
-			String indir = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\";
-			String outdir = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisonstoimmunobase\\";
+			String indir = disk + "\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\";
+			String outdir = disk + "\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisonstoimmunobase\\";
 //			Gpio.createDir(outdir);
 
 //			/// RA
-//			icTabFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
+//			icTabFile = "/Sync/SyncThing/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
 //			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
-//			locusFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed";
+//			locusFile = "/Sync/SyncThing/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseRALoci.bed";
 //			outfile = outdir + "2016-06-19-RA-LocusComparisonWithOkada-OkadaSignificant.txt";
 //			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, samplefilter, outfile);
 			
-			icTabFile = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
+			icTabFile = disk + "/Sync/SyncThing/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ra_okada_4_19_1.tab.gz";
 			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
 			locusFile = indir + "RA-assoc0.3-COSMO-merged-significantregions-75e7.bed";
 			outfile = outdir + "RA-vsOkada-LocusComparisonWithOkada-SignificantLoci.txt";
 //			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, samplefilter, outfile);
 			
-			icTabFile = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Okada\\RA.OKADA.gz";
+			icTabFile = disk + "\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Okada\\RA.OKADA.gz";
 			fmAssocFile = indir + "RA-assoc0.3-COSMO-merged-posterior.txt.gz";
 			locusFile = indir + "RA-assoc0.3-COSMO-merged-significantregions-75e7.bed";
 			outfile = outdir + "RA-vsOkadaEUR-LocusComparisonWithOkada-SignificantLoci.txt";
@@ -57,19 +57,19 @@ public class CompareImmunoChipWithFinemapResults {
 			
 			//
 //			// T1D
-//			icTabFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
+//			icTabFile = "/Sync/SyncThing/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
 //			fmAssocFile = indir + "/T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
-//			locusFile = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
+//			locusFile = "/Sync/SyncThing/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci-woMHC.txt";
 //			outfile = outdir + "2016-06-19-T1D-LocusComparisonWithOnengutCC.txt";
 //			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, samplefilter, outfile);
 			
-			icTabFile = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
+			icTabFile = disk + "/Sync/SyncThing/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_cc_4_19_1.tab.gz";
 			fmAssocFile = indir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
 			locusFile = indir + "T1D-assoc0.3-COSMO-merged-significantregions-75e7.bed";
 			outfile = outdir + "T1D-vsOnenGut-LocusComparisonWithOnengutCC-SignificantLoci.txt";
 //			m.make(locusFile, icTabFile, fmAssocFile, tabixprefix, samplefilter, outfile);
 			
-			icTabFile = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_meta_4_19_1.tab.gz";
+			icTabFile = disk + "/Sync/SyncThing/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_meta_4_19_1.tab.gz";
 			fmAssocFile = indir + "T1D-assoc0.3-COSMO-merged-posterior.txt.gz";
 			locusFile = indir + "T1D-assoc0.3-COSMO-merged-significantregions-75e7.bed";
 			outfile = outdir + "T1D-vsOnenGutMeta-LocusComparisonWithOnengutCC-SignificantLoci.txt";
