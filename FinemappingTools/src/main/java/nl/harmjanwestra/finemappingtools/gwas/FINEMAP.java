@@ -173,8 +173,6 @@ rs3 	3.71
 
 
 						double[][] corMat = new double[sharedVariants.size()][sharedVariants.size()];
-
-
 						int nrSamples = sampleAnnotation.getSampleDiseaseStatus().length;
 
 						CompletionService<Pair<Integer, double[]>> service = new ExecutorCompletionService<Pair<Integer, double[]>>(exService);

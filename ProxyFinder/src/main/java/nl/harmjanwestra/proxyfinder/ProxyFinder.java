@@ -97,15 +97,17 @@ public class ProxyFinder {
 		}
 		tf.close();
 		
+		
 		if (snps.isEmpty()) {
 			System.err.println("Error: no snps in " + options.snpfile);
 			System.exit(-1);
 		} else {
+			
 			// check whether the reference VCFs are here..
 			boolean allfilespresent = true;
 			for (Feature queryVariantFeature : snps) {
 				String tabixfile = options.tabixrefprefix.replaceAll("CHR", "" + queryVariantFeature.getChromosome().getNumber());
-				System.out.println("Trying to locate: " + tabixfile);
+				//System.out.println("Trying to locate: " + tabixfile);
 				if (!Gpio.exists(tabixfile)) {
 					System.out.println("Could not find required path: " + tabixfile);
 					allfilespresent = false;
@@ -142,10 +144,12 @@ public class ProxyFinder {
 			}
 		}
 		
+		System.out.println(snps.size() + " input variants. ");
+		
 		int returned = 0;
 		TextFile outFile = new TextFile(options.output, TextFile.W);
 		outFile.writeln("ChromA\tPosA\tRsIdA\tChromB\tPosB\tRsIdB\tDistance\tRSquared\tDprime");
-//		ProgressBar pb = new ProgressBar(submit);
+		ProgressBar pb = new ProgressBar(submit);
 		while (returned < submit) {
 			try {
 				ArrayList<String> proxies = jobHandler.take().get();
@@ -155,7 +159,16 @@ public class ProxyFinder {
 					}
 				}
 				returned++;
-//				pb.set(returned);
+				if (returned % 10 == 0) {
+					System.out.println();
+//					System.out.println(returned + " SNPs done out of " + submit + "\t" + ((double) returned / submit));
+					
+					pb.set(returned);
+					pb.print();
+					
+					System.out.println();
+				}
+				
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
@@ -500,8 +513,8 @@ public class ProxyFinder {
 		String tabixfile = options.tabixrefprefix.replace("CHR", "" + snp.getChromosome().getNumber());
 		VCFTabix reader = new VCFTabix(tabixfile);
 		boolean[] snpSampleFilter = reader.getSampleFilter(options.samplefilter);
-		
-		System.out.println(tabixfile);
+
+//		System.out.println(tabixfile);
 		
 		Feature snpF = new Feature(snp);
 		snpF.setStart(snpF.getStart() - 1);
@@ -510,12 +523,12 @@ public class ProxyFinder {
 		TabixReader.Iterator inputSNPiter = reader.query(snpF);
 		String snpStr = inputSNPiter.next();
 		VCFVariant testSNPObj1 = null;
-		System.out.println("Looking for: " + snp.toString());
+//		System.out.println("Looking for: " + snp.toString());
 		while (snpStr != null) {
 			VCFVariant variant = null;
 			try {
 				variant = new VCFVariant(snpStr, VCFVariant.PARSE.ALL, snpSampleFilter);
-				System.out.println(variant.asFeature().toString());
+//				System.out.println(variant.asFeature().toString());
 			} catch (NullPointerException e) {
 				String str = snpStr;
 				if (str.length() > 1000) {
@@ -650,8 +663,17 @@ public class ProxyFinder {
 			String tabixfile = options.tabixrefprefix.replace("CHR", "" + testSNPObj.getChrObj().getNumber());
 			VCFTabix tabix = new VCFTabix(tabixfile);
 			Feature SNPRegion = testSNPObj.asFeature();
-			SNPRegion.setStart(SNPRegion.getStart() - windowsize);
-			SNPRegion.setStop(SNPRegion.getStop() + windowsize);
+			int start = SNPRegion.getStart() - windowsize;
+			if (start < 1) {
+				start = 1;
+			}
+			SNPRegion.setStart(start);
+			int stop = SNPRegion.getStop();
+			if (stop < 0) {
+				stop = Integer.MAX_VALUE;
+			}
+			SNPRegion.setStop(stop);
+			
 			TabixReader.Iterator window = tabix.query(SNPRegion);
 			String next = window.next();
 			

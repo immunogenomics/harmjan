@@ -67,12 +67,12 @@ public class VCFTabix {
 	
 	public TabixReader.Iterator query(Feature region) throws IOException {
 		int start = region.getStart() - 10;
-		if (start < 0) {
-			start = 0;
+		if (start < 1) {
+			start = 1;
 		}
 		int stop = region.getStop() + 10;
 		
-		System.out.println("Query: " + region.getChromosome().getNumber() + ":" + start + "-" + stop + "\t" + treader.getSource());
+//		System.out.println("Query: " + region.getChromosome().getNumber() + ":" + start + "-" + stop + "\t" + treader.getSource());
 		TabixReader.Iterator window = treader.query(region.getChromosome().getNumber() + ":" + start + "-" + stop);
 		
 		return window;
