@@ -38,16 +38,18 @@ public class R3LinkageWithLeadSNPs {
 //		};
 		
 		String[] leadsnpfiles = new String[]{
-				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\leadsnps\\2018-04-15-ComparisonsToMakeRA.txt",
-				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\leadsnps\\2018-04-15-ComparisonsToMakeT1D.txt"
+				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisontoimmunobase2\\leadsnps\\2018-04-15-ComparisonsToMakeRA.txt",
+				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisontoimmunobase2\\leadsnps\\2018-04-15-ComparisonsToMakeRA-WithSecondaryHits.txt",
+				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisontoimmunobase2\\leadsnps\\2018-04-15-ComparisonsToMakeT1D.txt"
 		};
 		
 		String[] regionfiles = new String[]{
 				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-significantregions-75e7.bed",
+				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-significantregions-75e7.bed",
 				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-significantregions-75e7.bed"
 		};
 
-		String tabix = disk + "Sync\\SyncThing\\Data\\Ref\\1kg\\ALL.chrCHR.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz";
+		String tabix = disk + "\\Sync\\SyncThing\\Data\\Ref\\1kg\\ALL.chrCHR.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz";
 
 //		String[] outfiles = new String[]{
 //				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisontoimmunobase2\\ra.txt",
@@ -61,7 +63,8 @@ public class R3LinkageWithLeadSNPs {
 //		};
 		String[] outfiles = new String[]{
 				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisontoimmunobase2\\2018-04-15-ra.txt",
-				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisontoimmunobase2\\2018-04-15-t1d.txt"
+				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisontoimmunobase2\\2018-04-15-ra-wsecondary.txt",
+				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\comparisontoimmunobase2\\2018-04-15-t1d.txt",
 		};
 		
 		R3LinkageWithLeadSNPs r = new R3LinkageWithLeadSNPs();

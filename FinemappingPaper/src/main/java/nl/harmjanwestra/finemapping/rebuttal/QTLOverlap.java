@@ -15,10 +15,7 @@ import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -164,40 +161,41 @@ public class QTLOverlap {
 		
 		
 		QTLOverlap o = new QTLOverlap();
-		String gene = "ENSG00000084093";
-		int[] snppos = new int[]{57764324,
-				57823476
-		};
-		String[] snpname = new String[]{
-				"rs13353552",
-				"rs17081935"
-		};
-		Feature region = new Feature(Chromosome.FOUR, 0, Integer.MAX_VALUE);
-		try {
-			o.findGene(region, eqtlfiles, eqtlfilenames, gene, snppos, snpname);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		System.exit(-1);
-		String ensembl = "D:\\Data\\Ref\\Ensembl\\GrCH37-b86-Structures.txt.gz";
+//		String gene = "ENSG00000084093";
+//		int[] snppos = new int[]{57764324,
+//				57823476
+//		};
+//		String[] snpname = new String[]{
+//				"rs13353552",
+//				"rs17081935"
+//		};
+//		Feature region = new Feature(Chromosome.FOUR, 0, Integer.MAX_VALUE);
+//		try {
+//			o.findGene(region, eqtlfiles, eqtlfilenames, gene, snppos, snpname);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		System.exit(-1);
+		String ensembl = "D:\\Sync\\SyncThing\\Data\\Ref\\Ensembl\\GrCH37-b86-Structures.txt.gz";
 		double ldthresh = 0.8;
 		int ciswindow = 1000000;
 		String variantfile = disk + "\\Sync\\Dropbox\\FineMap\\2018-01-Rebuttal\\tables\\listofsnpswithposterior0.2.txt";
-		String tabix = disk + "\\Data\\Ref\\1kg\\ALL.chrCHR.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz";
-		String samplefile = disk + "\\Data\\Ref\\1kg-europeanpopulations.txt.gz";
-		String output = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\qtloverlap\\output.txt";
+		String tabix = disk + "\\Sync\\SyncThing\\Data\\Ref\\1kg\\ALL.chrCHR.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz";
+		String samplefile = disk + "\\Sync\\SyncThing\\Data\\Ref\\1kg-europeanpopulations.txt.gz";
+		String output = disk + "\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\qtloverlap\\2018-04-22-output-topassoc.txt";
+		boolean onlytestagainstopeqtl = true;
 		try {
-			o.run(variantfile, eqtlfiles, eqtlfilenames, tabix, samplefile, ciswindow, ldthresh, ensembl, output);
+			o.run(variantfile, eqtlfiles, eqtlfilenames, tabix, samplefile, ciswindow, ldthresh, ensembl, onlytestagainstopeqtl, output);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
 	}
 	
-	private void findGene(Feature region, String[] qfiles, String[] eqtlfilenames, String gene, int[] snppos, String[] snpname) throws IOException {
+	private void findGene(Feature region, String[] qfiles, String[] eqtlfilenames, String gene, int[] snppos, boolean onlytestagainstopeqtl, String[] snpname) throws IOException {
 		ArrayList<Feature> regions = new ArrayList<>();
 		regions.add(region);
-		EQTL[][][] eqtls = loadEQTLs(qfiles, regions); // [filenames][regions][eqtls]
+		EQTL[][][] eqtls = loadEQTLs(qfiles, regions, onlytestagainstopeqtl); // [filenames][regions][eqtls]
 		
 		System.out.println("Tissue\ttopeQTLSNP\ttopeQTLSNPP\tQuerySNPs");
 		for (int f = 0; f < eqtlfilenames.length; f++) {
@@ -253,6 +251,7 @@ public class QTLOverlap {
 					int ciswindow,
 					double ldthresh,
 					String ens,
+					boolean onlytestagainstopeqtl,
 					String output) throws IOException {
 		
 		// read the snps
@@ -288,7 +287,7 @@ public class QTLOverlap {
 		}
 		
 		// read qtls
-		EQTL[][][] eqtls = loadEQTLs(qfiles, regions);
+		EQTL[][][] eqtls = loadEQTLs(qfiles, regions, onlytestagainstopeqtl);
 		DetermineLD ldcal = new DetermineLD();
 		
 		
@@ -336,12 +335,18 @@ public class QTLOverlap {
 		
 		for (int q = 0; q < outputlns.length; q++) {
 			String lnout = qfilenames[q];
+			int nrnonna = 0;
 			for (int s = 0; s < snps.size(); s++) {
 				if (includecol[s]) {
 					lnout += "\t" + outputlns[q][s];
+					if (!outputlns[q][s].equals("-")) {
+						nrnonna++;
+					}
 				}
 			}
-			out.writeln(lnout);
+			if (nrnonna > 0) {
+				out.writeln(lnout);
+			}
 		}
 		
 		out.close();
@@ -412,6 +417,7 @@ public class QTLOverlap {
 				}
 				ArrayList<VCFVariant> allvariants = t.getAllVariants(region, filter);
 				VCFVariant v1 = getVariant(snps.get(s), allvariants);
+				int nrwitheqtl = 0;
 				for (int q = 0; q < qfiles.length; q++) {
 					EQTL[] regioneqtls = eqtls[q][s];
 					
@@ -428,9 +434,13 @@ public class QTLOverlap {
 								}
 							}
 							ArrayList<String> estr = new ArrayList<>();
+							if (!overlap.isEmpty()) {
+								nrwitheqtl++;
+							}
 							for (EQTL e : overlap) {
 								String estrln = e.getGenename() + "_" + e.getSnp().toString();
 								estr.add(estrln);
+								
 							}
 							outputlns[q][s] = Strings.concat(estr, Strings.semicolon);
 						} else {
@@ -451,6 +461,7 @@ public class QTLOverlap {
 									estr.add(estrln);
 								}
 								outputlns[q][s] = Strings.concat(estr, Strings.semicolon);
+								nrwitheqtl++;
 							} else {
 								// use LD
 								System.out.println("PrimaryVarPresentUsingLD\tFile: " + q + "\tSNP: " + s + "\t" + regioneqtls.length);
@@ -499,6 +510,7 @@ public class QTLOverlap {
 										String estrln = genename + "_" + e.getSnp().toString();
 										estr.add(estrln);
 									}
+									nrwitheqtl++;
 									outputlns[q][s] = Strings.concat(estr, Strings.semicolon);
 								} else {
 									outputlns[q][s] = "-";
@@ -527,14 +539,17 @@ public class QTLOverlap {
 		
 	}
 	
-	private EQTL[][][] loadEQTLs(String[] eqtlfilenames, ArrayList<Feature> regions) throws IOException {
+	private EQTL[][][] loadEQTLs(String[] eqtlfilenames, ArrayList<Feature> regions, boolean loadOnlyTopAssoc) throws IOException {
 		EQTL[][][] output = new EQTL[eqtlfilenames.length][regions.size()][];
+		
 		
 		for (int d = 0; d < eqtlfilenames.length; d++) {
 			System.out.println("Parsing: " + eqtlfilenames[d]);
 			
 			
 			ArrayList<EQTL> allEQTLs = new ArrayList<>();
+			HashMap<String, EQTL> topEQTLs = new HashMap<>();
+			
 			String filename = eqtlfilenames[d];
 			if (filename.endsWith("tab") || filename.endsWith("tab.gz")) {
 				
@@ -558,7 +573,18 @@ public class QTLOverlap {
 					eqtl.setPval(pval);
 					
 					if (eqtloverlap(eqtl, regions)) {
-						allEQTLs.add(eqtl);
+						if (loadOnlyTopAssoc) {
+							EQTL top = topEQTLs.get(gene);
+							if (top == null) {
+								topEQTLs.put(gene, eqtl);
+							} else {
+								if (eqtl.getPval() < top.getPval()) {
+									topEQTLs.put(gene, eqtl);
+								}
+							}
+						} else {
+							allEQTLs.add(eqtl);
+						}
 					}
 					
 					elems = tf.readLineElems(TextFile.tab);
@@ -636,7 +662,21 @@ PValue  SNPName SNPChr  SNPChrPos       ProbeName       ProbeChr        ProbeCen
 						}
 					}
 					if (sig && eqtloverlap(eqtl, regions)) {
-						allEQTLs.add(eqtl);
+						if (eqtloverlap(eqtl, regions)) {
+							String gene = elems[genecol];
+							if (loadOnlyTopAssoc) {
+								EQTL top = topEQTLs.get(gene);
+								if (top == null) {
+									topEQTLs.put(gene, eqtl);
+								} else {
+									if (eqtl.getPval() < top.getPval()) {
+										topEQTLs.put(gene, eqtl);
+									}
+								}
+							} else {
+								allEQTLs.add(eqtl);
+							}
+						}
 					}
 					
 					ctr++;
@@ -646,6 +686,14 @@ PValue  SNPName SNPChr  SNPChrPos       ProbeName       ProbeChr        ProbeCen
 					elems = tf.readLineElems(TextFile.tab);
 				}
 				tf.close();
+			}
+			
+			if (loadOnlyTopAssoc) {
+				allEQTLs = new ArrayList<>();
+				Set<String> keys = topEQTLs.keySet();
+				for (String key : keys) {
+					allEQTLs.add(topEQTLs.get(key));
+				}
 			}
 			
 			System.out.println(allEQTLs.size() + " eqtls finally loaded from: " + filename);
