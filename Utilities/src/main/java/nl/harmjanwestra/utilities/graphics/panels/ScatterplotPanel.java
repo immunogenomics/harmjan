@@ -8,7 +8,8 @@ import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Regression;
 
 import java.awt.*;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by hwestra on 10/15/15.
@@ -25,6 +26,7 @@ public class ScatterplotPanel extends Panel {
 	private boolean plotLinearRegression = false;
 	private boolean plotAxisTickLabels;
 	private boolean plotLegend;
+	private float alpha = 1.0f;
 	
 	public ScatterplotPanel(int nrRows, int nrCols) {
 		super(nrRows, nrCols);
@@ -33,6 +35,10 @@ public class ScatterplotPanel extends Panel {
 	public void setData(double[][] x, double[][] y) {
 		this.x = x;
 		this.y = y;
+	}
+	
+	public void setAlpha(float a) {
+		this.alpha = a;
 	}
 	
 	public void setData(double[] x, double[] y, int[] rowGroups) {
@@ -201,7 +207,7 @@ public class ScatterplotPanel extends Panel {
 			g2d.drawLine(xpos, starty, xpos, stopy);
 			int adv = metrics.stringWidth(formattedStr);
 			g2d.setFont(theme.getMediumFont());
-			if(plotAxisTickLabels) {
+			if (plotAxisTickLabels) {
 				g2d.drawString(formattedStr, xpos - (adv / 2), stopy + 10);
 			}
 			
@@ -226,8 +232,12 @@ public class ScatterplotPanel extends Panel {
 			g2d.drawString(title, titlePosX, titlePosY);
 		}
 		
+		
 		// plot the points
 		for (int i = 0; i < x.length; i++) {
+			
+			theme.getColorSetOpacity(0, alpha);
+			
 			g2d.setColor(theme.getColor(i));
 			for (int j = 0; j < x[i].length; j++) {
 				double xval = x[i][j];
