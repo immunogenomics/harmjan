@@ -24,6 +24,7 @@ public class ScatterplotPanel extends Panel {
 	private String yAxisLabel;
 	private String[] datasetLabels;
 	private boolean plotLinearRegression = false;
+	private boolean plothistogram = false;
 	private boolean plotAxisTickLabels;
 	private boolean plotLegend;
 	private float alpha = 1.0f;
@@ -141,6 +142,55 @@ public class ScatterplotPanel extends Panel {
 		Range plotRange = dataRange;
 		// plot the points
 		
+		if (plothistogram) {
+			// histogram the x and y axis
+			double[] histx = new double[100];
+			double[] histy = new double[100];
+			double xsum = 0;
+			double ysum = 0;
+			for (int i = 0; i < x.length; i++) {
+				for (int j = 0; j < x[i].length; j++) {
+					double xval = x[i][j];
+					double yval = y[i][j];
+					
+					if (!Double.isNaN(xval) && !Double.isNaN(yval)) {
+						double xperc = dataRange.getRelativePositionX(xval);
+						double yperc = dataRange.getRelativePositionY(yval);
+						int xpercbin = (int) Math.floor(histx.length * xperc);
+						if (xpercbin < 0) {
+							xpercbin = 0;
+						}
+						if (xpercbin > histx.length) {
+							xpercbin = histx.length;
+						}
+						histx[xpercbin]++;
+						xsum++;
+						int ypercbin = (int) Math.floor(histx.length * yperc);
+						if (ypercbin < 0) {
+							ypercbin = 0;
+						}
+						if (ypercbin > histx.length) {
+							ypercbin = histx.length;
+						}
+						histy[ypercbin]++;
+						ysum++;
+					}
+				}
+			}
+			int histwidth = 25;
+			for (int i = 0; i < histx.length; i++) {
+				histx[i] /= xsum;
+				histy[i] /= ysum;
+				
+				// plot the bar on the x-axis
+				double xpos = dataRange.getMinX() + (i * (dataRange.getRangeX() / histx.length));
+				double xperc = dataRange.getRelativePositionX(xpos);
+//				g2d.fillRect(xpos);
+				
+			}
+		}
+		
+		
 		int nrPixelsMaxX = width - (2 * marginX);
 		int nrPixelsMaxY = height - (2 * marginY);
 		
@@ -173,6 +223,9 @@ public class ScatterplotPanel extends Panel {
 			}
 			g2d.setFont(theme.getMediumFont());
 			if (plotAxisTickLabels) {
+				if (formattedStr.equals("-0")) {
+					formattedStr = "0";
+				}
 				g2d.drawString(formattedStr, startx - adv - 5, ypos);
 			}
 			
@@ -203,12 +256,16 @@ public class ScatterplotPanel extends Panel {
 			int xpos = xPosXAxis + (int) Math.ceil(xPerc * nrPixelsMaxX);
 			int starty = yPosXAxis;
 			int stopy = starty + 5;
+			
 			String formattedStr = decimalFormat.format(x);
+			if (formattedStr.equals("-0")) {
+				formattedStr = "0";
+			}
 			g2d.drawLine(xpos, starty, xpos, stopy);
 			int adv = metrics.stringWidth(formattedStr);
 			g2d.setFont(theme.getMediumFont());
 			if (plotAxisTickLabels) {
-				g2d.drawString(formattedStr, xpos - (adv / 2), stopy + 10);
+				g2d.drawString(formattedStr, xpos - (adv / 2), stopy + 15);
 			}
 			
 		}
@@ -232,13 +289,32 @@ public class ScatterplotPanel extends Panel {
 			g2d.drawString(title, titlePosX, titlePosY);
 		}
 		
+		// plot cross
+		g2d.setStroke(theme.getStrokeDashed());
+		g2d.setColor(theme.getLightGrey());
+		if (dataRange.getMinX() < 0 && dataRange.getMaxX() > 0) {
+			double perc = dataRange.getRelativePositionX(0);
+			int pixelX = x0 + marginX + (int) Math.ceil(nrPixelsMaxX * perc);
+			int ystart = y0 + marginY + nrPixelsMaxY;
+			int ystop = y0 + marginY;
+			g2d.drawLine(pixelX, ystart, pixelX, ystop);
+		}
+		
+		if (dataRange.getMinY() < 0 && dataRange.getMaxY() > 0) {
+			double perc = dataRange.getRelativePositionY(0);
+			int pixelY = x0 + marginX + (int) Math.ceil(nrPixelsMaxY * perc);
+			int xstart = x0 + marginX + nrPixelsMaxX;
+			int xstop = x0 + marginX;
+			g2d.drawLine(xstart, pixelY, xstop, pixelY);
+		}
 		
 		// plot the points
+		g2d.setStroke(theme.getStroke());
 		for (int i = 0; i < x.length; i++) {
 			
-			theme.getColorSetOpacity(0, alpha);
+			Color c = theme.getColorSetOpacity(0, alpha);
 			
-			g2d.setColor(theme.getColor(i));
+			g2d.setColor(c);
 			for (int j = 0; j < x[i].length; j++) {
 				double xval = x[i][j];
 				double yval = y[i][j];
