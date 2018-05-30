@@ -15,6 +15,7 @@ import nl.harmjanwestra.utilities.math.DetermineLD;
 import nl.harmjanwestra.utilities.vcf.VCFTabix;
 import nl.harmjanwestra.utilities.vcf.VCFVariant;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,10 +26,12 @@ public class R3LinkageWithLeadSNPs {
 		String disk = "d:";
 		String[] diseasefiles = new String[]{
 				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
+				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\RA-assoc0.3-COSMO-merged-posterior.txt.gz",
 				"D:\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\missp\\T1D-assoc0.3-COSMO-merged-posterior.txt.gz"
 		};
 		
 		String[] gwasfiles = new String[]{
+				disk + "\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Okada\\RA.OKADA.gz",
 				disk + "\\Sync\\SyncThing\\Postdoc\\2016-03-RAT1D-Finemapping\\Okada\\RA.OKADA.gz",
 				disk + "/Sync/SyncThing/Postdoc/2016-03-RAT1D-Finemapping/Data/ImmunoBase/hg19_gwas_ic_t1d_onengut_meta_4_19_1.tab.gz"
 		};

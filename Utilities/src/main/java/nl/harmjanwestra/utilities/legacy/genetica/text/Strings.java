@@ -239,6 +239,8 @@ public class Strings {
 		
 		if (s == null) {
 			return null;
+		} else if (s.length == 0) {
+			return "";
 		}
 		
 		int approximateFinalStrLen = 0;
@@ -266,7 +268,11 @@ public class Strings {
 	}
 	
 	public static String concat(Object[] s, Pattern t) {
-		
+		if (s == null) {
+			return null;
+		} else if (s.length == 0) {
+			return "";
+		}
 		StringBuilder output = new StringBuilder();
 		for (int i = 0; i < s.length; i++) {
 			if (i == 0) {
@@ -284,6 +290,11 @@ public class Strings {
 	}
 	
 	public static String concat(double[] s, Pattern t, DecimalFormat f) {
+		if (s == null) {
+			return null;
+		} else if (s.length == 0) {
+			return "";
+		}
 		
 		StringBuilder output = new StringBuilder();
 		for (int i = 0; i < s.length; i++) {
@@ -305,7 +316,11 @@ public class Strings {
 	}
 	
 	public static String concat(double[] s, DecimalFormat f, Pattern t) {
-		
+		if (s == null) {
+			return null;
+		} else if (s.length == 0) {
+			return "";
+		}
 		StringBuilder output = new StringBuilder();
 		for (int i = 0; i < s.length; i++) {
 			if (i == 0) {
@@ -318,7 +333,11 @@ public class Strings {
 	}
 	
 	public static String concat(float[] s, DecimalFormat f, Pattern t) {
-		
+		if (s == null) {
+			return null;
+		} else if (s.length == 0) {
+			return "";
+		}
 		StringBuilder output = new StringBuilder();
 		for (int i = 0; i < s.length; i++) {
 			if (i == 0) {
@@ -331,7 +350,11 @@ public class Strings {
 	}
 	
 	public static String concat(int[] s, Pattern t) {
-		
+		if (s == null) {
+			return null;
+		} else if (s.length == 0) {
+			return "";
+		}
 		StringBuilder output = new StringBuilder();
 		for (int i = 0; i < s.length; i++) {
 			if (i == 0) {
@@ -349,6 +372,11 @@ public class Strings {
 	}
 	
 	public static String concat(String[] s, Pattern t, int start, int end) {
+		if (s == null) {
+			return null;
+		} else if (s.length == 0) {
+			return "";
+		}
 		String[] data = new String[end - start];
 		for (int i = start; i < end; i++) {
 			data[i - start] = s[i];
@@ -387,6 +415,11 @@ public class Strings {
 	}
 	
 	public static String concat(double[] d, Pattern t, int start, int end) {
+		if (d == null) {
+			return null;
+		} else if (d.length == 0) {
+			return "";
+		}
 		String[] data = new String[end - start];
 		for (int i = start; i < end; i++) {
 			data[i - start] = "" + d[i];
@@ -395,6 +428,11 @@ public class Strings {
 	}
 	
 	public static String concat(int[] d, Pattern t, int start, int end) {
+		if (d == null) {
+			return null;
+		} else if (d.length == 0) {
+			return "";
+		}
 		String[] data = new String[end - start];
 		for (int i = start; i < end; i++) {
 			data[i - start] = "" + d[i];
