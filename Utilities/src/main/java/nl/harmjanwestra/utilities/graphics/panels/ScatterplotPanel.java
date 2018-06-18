@@ -289,7 +289,7 @@ public class ScatterplotPanel extends Panel {
 			g2d.drawString(title, titlePosX, titlePosY);
 		}
 		
-		// plot cross
+		// plot cross X
 		g2d.setStroke(theme.getStrokeDashed());
 		g2d.setColor(theme.getLightGrey());
 		if (dataRange.getMinX() < 0 && dataRange.getMaxX() > 0) {
@@ -300,9 +300,10 @@ public class ScatterplotPanel extends Panel {
 			g2d.drawLine(pixelX, ystart, pixelX, ystop);
 		}
 		
+		// plot cross Y
 		if (dataRange.getMinY() < 0 && dataRange.getMaxY() > 0) {
 			double perc = dataRange.getRelativePositionY(0);
-			int pixelY = x0 + marginX + (int) Math.ceil(nrPixelsMaxY * perc);
+			int pixelY = y0 + marginY + (int) Math.ceil(nrPixelsMaxY * perc);
 			int xstart = x0 + marginX + nrPixelsMaxX;
 			int xstop = x0 + marginX;
 			g2d.drawLine(xstart, pixelY, xstop, pixelY);
