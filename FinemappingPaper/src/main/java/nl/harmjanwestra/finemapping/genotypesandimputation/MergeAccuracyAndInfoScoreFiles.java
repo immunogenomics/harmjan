@@ -63,6 +63,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 		boolean includeICVariants = false;
 		double mafthreshold = 0.01;
 		MergeAccuracyAndInfoScoreFiles c = new MergeAccuracyAndInfoScoreFiles();
+		
 		String disk = "c:";
 		bedregions = "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
 		bedregions = disk + "/Sync/OneDrive/Postdoc/2016-03-RAT1D-Finemapping/Data/LocusDefinitions/AllICLoci-overlappingWithImmunobaseT1DOrRALoci.bed";
@@ -78,6 +79,7 @@ public class MergeAccuracyAndInfoScoreFiles extends VariantCounter {
 				"RA / EUR / BEAGLE",
 				"RA / HRC / EAGLE / PBWT"
 		};
+		
 		String seqpanelvcf = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2017-08-16-Reimpute4Filtered\\accuracy\\R2\\panels\\hapcaller-maf0005-cr0950-rd10-gq30.vcf.gz-samplenamefix-mixupfix-nonmatchingremoved.vcf.gz";
 		String variantsOnIC = disk + "\\Sync\\OneDrive\\Postdoc\\2016-03-RAT1D-Finemapping\\Data\\2016-06-21-ImputationQuality\\RAAndT1D-recode-maf0005-ICRegionsW100kb-samplenamefix.vcf.gz-updatedRSId-stats.vcf.gz";
 		String samplelist = null;
