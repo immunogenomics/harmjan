@@ -25,4 +25,6 @@ public interface Theme {
 	abstract Color getColorSetOpacity(int i, float v);
 
 	abstract Color getDarkerColor(Color color, double perc);
+
+
 }

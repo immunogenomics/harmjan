@@ -313,7 +313,7 @@ public class ScatterplotPanel extends Panel {
 		g2d.setStroke(theme.getStroke());
 		for (int i = 0; i < x.length; i++) {
 			
-			Color c = theme.getColorSetOpacity(0, alpha);
+			Color c = theme.getColorSetOpacity(i, alpha);
 			
 			g2d.setColor(c);
 			for (int j = 0; j < x[i].length; j++) {
