@@ -175,6 +175,7 @@ public class HeatmapPanel extends Panel {
 				int dy = y0 - (boxHeight * (5 - 1));
 				int op = baseOpacity + (int) Math.ceil((255 - baseOpacity) * 1);
 				Color c = changeOpacity(colors[r], op);
+				
 				g2d.setColor(c);
 				g2d.fillRect(dx, dy, boxWidth, boxHeight);
 				g2d.setColor(theme.getDarkGrey());

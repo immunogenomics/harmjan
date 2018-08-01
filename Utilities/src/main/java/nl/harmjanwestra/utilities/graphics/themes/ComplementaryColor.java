@@ -33,7 +33,7 @@ public class ComplementaryColor implements Theme {
 			new Color(255, 211, 51),
 			new Color(255, 167, 51),
 			new Color(255, 129, 51),
-
+			new Color(255, 51, 51),
 
 	};
 

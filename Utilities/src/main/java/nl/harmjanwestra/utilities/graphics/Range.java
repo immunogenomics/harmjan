@@ -11,32 +11,43 @@ public class Range {
 	private double minX;
 	private double minY;
 	private Double unitY;
-
-
+	
+	@Override
+	public String toString() {
+		return "Range{" +
+				"maxX=" + maxX +
+				", maxY=" + maxY +
+				", minX=" + minX +
+				", minY=" + minY +
+				", unitY=" + unitY +
+				", unitX=" + unitX +
+				'}';
+	}
+	
 	private Double unitX;
-
+	
 	public Range(double minX, double minY, double maxX, double maxY) {
 		this.minX = minX;
 		this.minY = minY;
 		this.maxX = maxX;
 		this.maxY = maxY;
 	}
-
+	
 	public Range(double[] x, double[] y) {
-
+		
 		minX = ArrayMath.min(x);
 		maxX = ArrayMath.max(x);
 		minY = ArrayMath.min(y);
 		maxY = ArrayMath.max(y);
-
-
+		
+		
 	}
-
+	
 	public Range(double[][] dataY) {
-
+		
 		minX = 0;
 		maxX = dataY[0].length;
-
+		
 		for (int i = 0; i < dataY.length; i++) {
 			double min = ArrayMath.min(dataY[i]);
 			if (min < minY) {
@@ -48,11 +59,11 @@ public class Range {
 			}
 		}
 	}
-
+	
 	public Range(double[][][] dataY) {
 		maxY = -Double.MAX_VALUE;
 		minY = Double.MAX_VALUE;
-
+		
 		for (int r = 0; r < dataY.length; r++) {
 			for (int c = 0; c < dataY[r].length; c++) {
 				for (int q = 0; q < dataY[r][c].length; q++) {
@@ -67,23 +78,23 @@ public class Range {
 			}
 		}
 	}
-
+	
 	public double getMaxX() {
 		return maxX;
 	}
-
+	
 	public double getMaxY() {
 		return maxY;
 	}
-
+	
 	public double getMinX() {
 		return minX;
 	}
-
+	
 	public double getMinY() {
 		return minY;
 	}
-
+	
 	public void roundX() {
 		// round up max X
 		double rangeX = Math.abs(maxX - minX);
@@ -92,17 +103,15 @@ public class Range {
 		if (remainder != 0) {
 			maxX += (unitX - remainder);
 		}
-
+		
 		// round down min X
 		remainder = Math.abs(minX) % unitX;
+		System.out.println(remainder+" remainder minx");
 		if (remainder != 0) {
 			minX -= (unitX - remainder);
-			if (minX < 0) {
-				minX = 0;
-			}
 		}
 	}
-
+	
 	public void roundY() {
 		// round up max Y
 		double rangeY = Math.abs(maxY - minY);
@@ -111,43 +120,40 @@ public class Range {
 		if (remainder != 0) {
 			maxY += (unitY - remainder);
 		}
-
+		
 		// round down min Y
 		remainder = Math.abs(minY) % unitY;
 		if (remainder != 0) {
 			minY -= (unitY - remainder);
-			if (minY < 0) {
-				minY = 0;
-			}
 		}
 	}
-
+	
 	public void round() {
 		roundX();
 		roundY();
 	}
-
+	
 	public double getRangeX() {
 		double rangeX = Math.abs(maxX - minX);
 		return rangeX;
 	}
-
+	
 	public double getRangeY() {
 		double rangeY = Math.abs(maxY - minY);
 		return rangeY;
 	}
-
+	
 	public double determineUnit(double range) {
-
+		
 		double divisor = Math.log10(range);
 		divisor = Math.floor(divisor);
 		divisor = Math.pow(10, divisor);
 		return divisor;
 	}
-
+	
 	public double getRelativePositionX(double x) {
 		double tmpmaxX = maxX;
-
+		
 		// move to 0..maxX
 		double tmpX = x;
 		if (minX < 0) {
@@ -159,10 +165,10 @@ public class Range {
 		}
 		return tmpX / tmpmaxX;
 	}
-
+	
 	public double getRelativePositionY(double y) {
 		double tmpmaxY = maxY;
-
+		
 		// move to 0..maxX
 		double tmpY = y;
 		if (minY < 0) {
@@ -174,14 +180,14 @@ public class Range {
 		}
 		return tmpY / tmpmaxY;
 	}
-
+	
 	public double getUnitX() {
 		if (unitX == null) {
 			unitX = determineUnit(getRangeX());
 		}
 		return unitX;
 	}
-
+	
 	public double getUnitY() {
 		if (unitY == null) {
 			unitY = determineUnit(getRangeY());

@@ -240,6 +240,7 @@ public class AssociationPosteriorPlotter {
 				grid.addPanel(genePanel, 0, i);
 			}
 
+			
 			ArrayList<ArrayList<AssociationPanel>> allPanels = new ArrayList<>();
 
 			for (int datasetNr = 0; datasetNr < assocFiles.length; datasetNr++) {
