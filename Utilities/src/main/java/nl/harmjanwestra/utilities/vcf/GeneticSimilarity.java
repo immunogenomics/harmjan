@@ -179,7 +179,7 @@ public class GeneticSimilarity {
 							}
 
 							returned++;
-							pb2.iterate();
+							pb2.set(returned);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						} catch (ExecutionException e) {
@@ -341,6 +341,7 @@ public class GeneticSimilarity {
 
 			int nrMissing = 0;
 			for (int j = 0; j < nrSamples2; j++) {
+				nrMissing = 0;
 				double[] x = new double[nrVariants];
 				double[] y = new double[nrVariants];
 

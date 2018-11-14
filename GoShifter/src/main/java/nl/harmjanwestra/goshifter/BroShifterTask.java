@@ -612,7 +612,7 @@ public class BroShifterTask implements Callable<Pair<String, ArrayList<String>>>
 	public ArrayList<SNPFeature> readPosteriors(String file, Feature region) throws IOException {
 
 		AssociationFile assocFile = new AssociationFile();
-		ArrayList<AssociationResult> results = assocFile.read(file, region);
+		ArrayList<AssociationResult> results = assocFile.readRegion(file, region);
 
 		ArrayList<SNPFeature> features = new ArrayList<>(results.size());
 		for (AssociationResult r : results) {

@@ -14,16 +14,14 @@ import nl.harmjanwestra.utilities.legacy.genetica.io.text.TextFile;
 import nl.harmjanwestra.utilities.legacy.genetica.math.stats.Correlation;
 import nl.harmjanwestra.utilities.legacy.genetica.text.Strings;
 import nl.harmjanwestra.utilities.math.DetermineLD;
-import nl.harmjanwestra.utilities.vcf.VCFTabix;
-import nl.harmjanwestra.utilities.vcf.VCFVariant;
-import nl.harmjanwestra.utilities.vcf.VCFVariantComparator;
-import nl.harmjanwestra.utilities.vcf.VCFVariantLoader;
+import nl.harmjanwestra.utilities.vcf.*;
 import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantFilters;
 import nl.harmjanwestra.utilities.vcf.filter.variantfilters.VCFVariantSetFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.concurrent.*;
 
 /**
@@ -279,6 +277,51 @@ public class ProxyFinder {
 				}
 				pb.close();
 				out.close();
+				
+				boolean savegenotypes = true;
+				if (savegenotypes) {
+					VCFGenotypeData d = new VCFGenotypeData(tabixfile);
+					ArrayList<String> samples = d.getSamples();
+					String header = "-";
+					// out = new TextFile(options.output + "-" + f.toString() + ".txt.gz", TextFile.W);
+					TextFile outf = new TextFile(options.output + "-" + f.toString() + "-genotypes.txt.gz", TextFile.W);
+					TextFile outf2 = new TextFile(options.output + "-" + f.toString() + "-alleles.txt.gz", TextFile.W);
+					outf2.writeln("RsID\tAlleles\tMinor\tMAF");
+					if (sampleSelect != null) {
+						for (int s = 0; s < samples.size(); s++) {
+							if (sampleSelect[s]) {
+								header += "\t" + samples.get(s);
+							}
+						}
+					} else {
+						header += "\t" + Strings.concat(samples, Strings.tab);
+					}
+					
+					outf.writeln(header);
+					for (VCFVariant var : variants) {
+						
+						if (var.isBiallelic()) {
+							byte[] gt = var.getGenotypesAsByteVector();
+							
+							String id = var.getId();
+							if (id.length() < 2) {
+								id = var.getChr() + ":" + var.getPos();
+							}
+							String lnout = id;
+							for (byte b : gt) {
+								lnout += "\t" + b;
+							}
+							outf.writeln(lnout);
+							
+							String lnout2 = id + "\t" + Strings.concat(var.getAlleles(), Strings.comma) + "\t" + var.getMinorAllele() + "\t" + var.getMAF();
+							outf2.writeln(lnout2);
+						}
+						
+						
+					}
+					outf.close();
+					outf2.close();
+				}
 			}
 			
 		}
@@ -307,7 +350,7 @@ public class ProxyFinder {
 				if (elems[0].trim().length() > 0) {
 					SNPFeature f = SNPFeature.parseSNPFeature(elems[0]);
 					toCombine.add(f);
-					System.out.println(f.toString());
+//					System.out.println(f.toString());
 				}
 			} else if (elems.length == 2) {
 				// format
@@ -348,7 +391,7 @@ public class ProxyFinder {
 				for (int j = i + 1; j < toCombine.size(); j++) {
 					Pair<SNPFeature, SNPFeature> p = new Pair(toCombine.get(i), toCombine.get(j));
 					pairs.add(p);
-					System.out.println(p.toString());
+//					System.out.println(p.toString());
 				}
 			}
 			
@@ -364,21 +407,18 @@ public class ProxyFinder {
 			// check whether the reference VCFs are here..
 			System.out.println(pairs.size() + " variant pairs loaded.");
 			boolean allfilespresent = true;
+			HashSet<SNPFeature> snpset = new HashSet<SNPFeature>();
+			for (Pair<SNPFeature, SNPFeature> p : pairs) {
+				snpset.add(p.getLeft());
+				snpset.add(p.getRight());
+			}
+			System.out.println(snpset.size() + " unique snps");
 			if (options.tabixrefprefix != null) {
-				for (Pair<SNPFeature, SNPFeature> p : pairs) {
+				for (SNPFeature f : snpset) {
 					
-					SNPFeature snp1 = p.getLeft();
-					SNPFeature snp2 = p.getRight();
-					
-					
-					String tabixfile1 = options.tabixrefprefix.replaceAll("CHR", "" + snp1.getChromosome().getNumber());
-					String tabixfile2 = options.tabixrefprefix.replaceAll("CHR", "" + snp2.getChromosome().getNumber());
+					String tabixfile1 = options.tabixrefprefix.replaceAll("CHR", "" + f.getChromosome().getNumber());
 					if (!Gpio.exists(tabixfile1)) {
 						System.out.println("Could not find required path: " + tabixfile1);
-						allfilespresent = false;
-					}
-					if (!Gpio.exists(tabixfile2)) {
-						System.out.println("Could not find required path: " + tabixfile2);
 						allfilespresent = false;
 					}
 				}
@@ -386,6 +426,8 @@ public class ProxyFinder {
 				if (!allfilespresent) {
 					System.out.println("Some VCF files are missing");
 					System.exit(-1);
+				} else {
+					System.out.println("All VCF files seem to be there.");
 				}
 			} else {
 				if (options.vcf == null || !Gpio.exists(options.vcf)) {
@@ -394,6 +436,7 @@ public class ProxyFinder {
 				}
 			}
 		}
+		
 		
 		int nr = 0;
 		ArrayList<VCFVariant> allVariants = null;
@@ -415,8 +458,9 @@ public class ProxyFinder {
 			Collections.sort(allVariants, new VCFVariantComparator());
 		}
 		
+		
 		TextFile out = new TextFile(options.output, TextFile.W);
-		out.writeln("ChromA\tPosA\tRsIdA\tChromB\tPosB\tRsIdB\tDistance\tRSquared\tDprime");
+		out.writeln("ChromA\tPosA\tRsIdA\tChromB\tPosB\tRsIdB\tDistance\tRSquared\tDprime\tPearsonCor\tPearsonCorRsq");
 		ProgressBar pb = new ProgressBar(pairs.size(), "Calculatinng LD...");
 		for (Pair<SNPFeature, SNPFeature> p : pairs) {
 			
@@ -446,7 +490,7 @@ public class ProxyFinder {
 				
 				String outStr = variant1.getChrObj().toString() + "\t" + variant1.getPos() + "\t" + variant1.getId()
 						+ "\t" + variant2.getChrObj().toString() + "\t" + variant2.getPos() + "\t" + variant2.getId()
-						+ "\t" + ldvals.getRight() + "\t" + ldvals.getLeft();
+						+ "\t" + ldvals.getRight() + "\t" + ldvals.getLeft() + "\t" + corr + "\t" + rsq;
 				
 				out.writeln(outStr);
 				

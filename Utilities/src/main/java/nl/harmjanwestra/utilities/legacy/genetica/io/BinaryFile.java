@@ -13,22 +13,22 @@ import java.util.zip.GZIPOutputStream;
  * @author harm-jan
  */
 public class BinaryFile {
-
+	
 	public static final boolean W = true;
 	public static final boolean R = false;
 	protected final DataOutputStream os;
 	protected final DataInputStream is;
 	protected final String loc;
 	protected final boolean writeable;
-
-
+	
+	
 	public BinaryFile(String loc, boolean mode) throws IOException {
 		if (loc.trim().length() == 0) {
 			throw new IOException("Could not find path: no path specified");
 		}
 		this.writeable = mode;
 		this.loc = loc;
-
+		
 		if (writeable) {
 			is = null;
 			if (loc.endsWith(".gz")) {
@@ -45,16 +45,16 @@ public class BinaryFile {
 			}
 			os = null;
 		}
-
+		
 	}
-
+	
 	public BinaryFile(String loc, boolean mode, int buffersize) throws IOException {
 		if (loc.trim().length() == 0) {
 			throw new IOException("Could not find path: no path specified");
 		}
 		this.writeable = mode;
 		this.loc = loc;
-
+		
 		if (writeable) {
 			is = null;
 			if (loc.endsWith(".gz")) {
@@ -71,7 +71,7 @@ public class BinaryFile {
 			os = null;
 		}
 	}
-
+	
 	public void writeBytes(byte[] v) throws IOException {
 		if (writeable) {
 			os.write(v);
@@ -79,7 +79,7 @@ public class BinaryFile {
 			throw new IOException("File is read only.");
 		}
 	}
-
+	
 	public void writeInt(int v) throws IOException {
 		if (writeable) {
 			os.writeInt(v);
@@ -87,15 +87,16 @@ public class BinaryFile {
 			throw new IOException("File is read only.");
 		}
 	}
-
+	
 	public void writeString(String s) throws IOException {
 		if (writeable) {
-			os.writeChars(s);
+//			os.writeChars(s);
+			os.writeUTF(s);
 		} else {
 			throw new IOException("File is read only.");
 		}
 	}
-
+	
 	public void writeBool(boolean b) throws IOException {
 		if (writeable) {
 			os.writeBoolean(b);
@@ -103,7 +104,7 @@ public class BinaryFile {
 			throw new IOException("File is read only.");
 		}
 	}
-
+	
 	public void writeFloat(float f) throws IOException {
 		if (writeable) {
 			os.writeFloat(f);
@@ -111,7 +112,7 @@ public class BinaryFile {
 			throw new IOException("File is read only.");
 		}
 	}
-
+	
 	public void writeDouble(double d) throws IOException {
 		if (writeable) {
 			os.writeDouble(d);
@@ -119,7 +120,7 @@ public class BinaryFile {
 			throw new IOException("File is read only.");
 		}
 	}
-
+	
 	public void writeLong(long l) throws IOException {
 		if (writeable) {
 			os.writeLong(l);
@@ -127,7 +128,7 @@ public class BinaryFile {
 			throw new IOException("File is read only.");
 		}
 	}
-
+	
 	// read functions
 	public int readInt() throws IOException, EOFException {
 		if (writeable) {
@@ -136,7 +137,7 @@ public class BinaryFile {
 			return is.readInt();
 		}
 	}
-
+	
 	public boolean readBool() throws IOException, EOFException {
 		if (writeable) {
 			throw new IOException("File is write only.");
@@ -144,7 +145,7 @@ public class BinaryFile {
 			return is.readBoolean();
 		}
 	}
-
+	
 	public String readString() throws IOException, EOFException {
 		if (writeable) {
 			throw new IOException("File is write only.");
@@ -152,16 +153,16 @@ public class BinaryFile {
 			return is.readUTF();
 		}
 	}
-
+	
 	public float readFloat() throws IOException, EOFException {
 		if (writeable) {
 			throw new IOException("File is write only.");
 		} else {
 			return is.readFloat();
-
+			
 		}
 	}
-
+	
 	public double readDouble() throws IOException, EOFException {
 		if (writeable) {
 			throw new IOException("File is write only.");
@@ -169,7 +170,7 @@ public class BinaryFile {
 			return is.readDouble();
 		}
 	}
-
+	
 	public long readLong() throws IOException, EOFException {
 		if (writeable) {
 			throw new IOException("File is write only.");
@@ -177,7 +178,7 @@ public class BinaryFile {
 			return is.readLong();
 		}
 	}
-
+	
 	public void close() throws IOException {
 		if (writeable) {
 			os.close();
@@ -185,7 +186,7 @@ public class BinaryFile {
 			is.close();
 		}
 	}
-
+	
 	public void writeByte(byte b) throws IOException {
 		if (writeable) {
 			os.writeByte(b);
@@ -193,14 +194,14 @@ public class BinaryFile {
 			throw new IOException("File is read only.");
 		}
 	}
-
+	
 	public int read() throws IOException {
 		return is.read();
 	}
-
+	
 	public void write(int b) throws IOException {
 		os.write(b);
 	}
-
-
+	
+	
 }

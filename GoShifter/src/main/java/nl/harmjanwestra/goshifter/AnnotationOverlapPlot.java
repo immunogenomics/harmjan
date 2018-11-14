@@ -138,7 +138,8 @@ public class AnnotationOverlapPlot {
 			Feature region = regions.get(r);
 
 			AssociationFile assocFile = new AssociationFile();
-			ArrayList<AssociationResult> results = assocFile.read(options.posteriorFile, region);
+			ArrayList<AssociationResult> results = assocFile.readRegion(options.posteriorFile, region);
+
 			ApproximateBayesPosterior ab = new ApproximateBayesPosterior();
 			ArrayList<AssociationResult> credibleSet = ab.createCredibleSet(results, options.credibleSetThreshold);
 			ArrayList<SNPFeature> snps = new ArrayList<>(results.size());
@@ -311,7 +312,7 @@ public class AnnotationOverlapPlot {
 
 			Feature region = regions.get(r);
 			AssociationFile assocFile = new AssociationFile();
-			ArrayList<AssociationResult> results = assocFile.read(options.posteriorFile, region);
+			ArrayList<AssociationResult> results = assocFile.readRegion(options.posteriorFile, region);
 			ApproximateBayesPosterior ab = new ApproximateBayesPosterior();
 			ArrayList<AssociationResult> credibleSet = ab.createCredibleSet(results, options.credibleSetThreshold);
 			ArrayList<SNPFeature> snps = new ArrayList<>(results.size());
@@ -442,7 +443,7 @@ public class AnnotationOverlapPlot {
 			Feature region = regions.get(r);
 
 			AssociationFile assocFile = new AssociationFile();
-			ArrayList<AssociationResult> results = assocFile.read(options.posteriorFile, region);
+			ArrayList<AssociationResult> results = assocFile.readRegion(options.posteriorFile, region);
 			ApproximateBayesPosterior ab = new ApproximateBayesPosterior();
 			ArrayList<AssociationResult> credibleSet = ab.createCredibleSet(results, options.credibleSetThreshold);
 			ArrayList<SNPFeature> snps = new ArrayList<>(results.size());
